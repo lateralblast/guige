@@ -2,7 +2,7 @@
 #!/bin/bash
 
 # Name:         guige (Generic Ubuntu ISO Generation Engine)
-# Version:      0.0.3
+# Version:      0.0.4
 # Release:      1
 # License:      CC-BA (Creative Commons By Attribution)
 #               http://creativecommons.org/licenses/by/4.0/legalcode
@@ -17,19 +17,28 @@
 # Defaults
 
 args=$@
-release=$(lsb_release -cs)
-hostname="ubuntu"
-realname="Ubuntu"
-username="ubuntu"
-timezome="Australia/Melbourne"
+default_release=$(lsb_release -cs)
+default_hostname="ubuntu"
+default_realname="Ubuntu"
+default_username="ubuntu"
+default_timezome="Australia/Melbourne"
+default_password="P455w0rD"
+release=""
+hostname=""
+realname=""
+username=""
+timezome=""
+password=""
 arch="amd64"
 test_mode="1"
 verbose_mode="1"
+default_mode="0"
+interactve_mode="0"
 verbose_switch=""
 grub_timeout="10"
-chroot_packages="zfsutils-linux grub-efi zfs-initramfs net-tools curl wget"
+chroot_packages=""
+default_packages="zfsutils-linux grub-efi zfs-initramfs net-tools curl wget"
 required_packages="p7zip-full wget xorriso whois"
-password="P455w0rD"
 
 # Default work directories
 
@@ -63,6 +72,16 @@ print_help () {
   Usage: ${0##*/} [OPTIONS...]
     -h  Help/Usage Information
     -V  Script Version
+    -v  Verbose output
+    -t  Test mode
+    -D  Use defaultd
+    -I  Interactive mode (will ask for input rather than using command line options or defaults)
+    -p  Packages to add to ISO
+    -P  Password
+    -U  Username
+    -R  Realname
+    -H  Hostname
+    -T  Timezone
 HELP
 }
 
@@ -641,9 +660,14 @@ prepare_autoinstall_iso () {
   -e '--interval:appended_partition_2:::' -no-emul-boot ."
 }
 
+# Set function variables
+
+do_required_packages="0"
+do_check_work_dir="0"
+
 # Handle command line arguments
 
-while getopts ":dhVvp:" args; do
+while getopts ":dhH:hIi:P:p:U:u:Vv" args; do
   case $args in
     V)
       echo $script_version
@@ -656,26 +680,83 @@ while getopts ":dhVvp:" args; do
     v)
       verbose_mode="1"
       ;;
-    v)
+    t)
       test_mode="1"
       ;;
     d)
       function="download"
       ;;
+    D)
+      default_mode="1"
+      ;;
     i)
       iso_file="$OPTARG"
       ;;
+    I)
+      interactive_mode="I"
+      ;;
     p)
+      chroot_packages="$OPTARG"
+      ;;
+    P)
       password="$OPTARG"
       ;;
     r)
       install_required_packages $verbose_mode $test_mode
+      ;;
+    R)
+      realname="$OPTARG"
+      ;;
+    T)
+      timezome="$OPTARG"
+      ;;
+    U)
+      username="$OPTARG"
+      ;;
+    W)
+      work_dir="$OPTARG"
       ;;
     w)
       check_work_dir_exists $verbose_mode $test_mode 
       ;;
   esac
 done
+
+# Set any unset values to defaults
+
+if [ "$interactve_mode" == "1" ]; then
+  echo "Enter hostname:"
+  read hostname
+  echo "Enter timezome"
+  read timezome
+  echo "Enter username:"
+  read username
+  echo "Enter user real name"
+  enter realname
+  echo "Enter password:"
+  read -s password
+  echo "Additional packages:"
+  read chroot_packages
+else
+  if [ "$username" = "" ] || [ "$default_mode" = "1" ]; then
+    username=$default_username
+  fi
+  if [ "$realname" = "" ] || [ "$default_mode" = "1" ]; then
+    realname=$default_realname
+  fi
+  if [ "$hostname" = "" ] || [ "$default_mode" = "1" ]; then
+    hostname = $default_hostname
+  fi
+  if [ "$password" = "" ] || [ "$default_mode" = "1" ]; then
+    password = $default_password
+  fi
+  if [ "$chroot_packages" = "" ] || [ "$default_mode" = "1" ]; then
+    chroot_packages = $default_packages
+  fi
+  if [ "$timezome" = "" ] || [ "$default_mode" = "1" ]; then
+    timezome = $default_timezome
+  fi
+fi
 
 # Check work directories
 # Check required packages are installed
