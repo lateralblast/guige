@@ -51,7 +51,8 @@ install_mount="/cdrom"
 
 # Default file names/locations
 
-iso_file="$work_dir/$release-live-server-$arch.iso"
+default_iso_file="$work_dir/$release-live-server-$arch.iso"
+default_output_file="$work_dir/$release-live-server-$arch-autoinstall.iso"
 squashfs_file="$iso_mount_dir/casper/ubuntu-server-minimal.squashfs"
 grub_fule="$work_dir/grub.cfg"
 sda_user_file="$work_dir/sda-user-data"
@@ -124,7 +125,7 @@ execute_command () {
 #
 # mkdir -p ./isomount ./isonew/squashfs ./isonew/cd ./isonew/custom
 
-check_work_dir_exists () {
+check_work_dir () {
   verbose_mode=$1
   test_mode=$2
   for iso_dir in $iso_mount_dir $iso_new_dir new_dir/cd $iso_new_dir/custom; do
@@ -662,7 +663,8 @@ prepare_autoinstall_iso () {
 
 # Set function variables
 
-do_required_packages="0"
+do_install_required_packages="0"
+do_get_base_packages="0"
 do_check_work_dir="0"
 
 # Handle command line arguments
@@ -684,7 +686,7 @@ while getopts ":dhH:hIi:P:p:U:u:Vv" args; do
       test_mode="1"
       ;;
     d)
-      function="download"
+      do_get_base_packages="1"
       ;;
     D)
       default_mode="1"
@@ -702,7 +704,7 @@ while getopts ":dhH:hIi:P:p:U:u:Vv" args; do
       password="$OPTARG"
       ;;
     r)
-      install_required_packages $verbose_mode $test_mode
+      do_install_required_packages="1"
       ;;
     R)
       realname="$OPTARG"
@@ -717,7 +719,7 @@ while getopts ":dhH:hIi:P:p:U:u:Vv" args; do
       work_dir="$OPTARG"
       ;;
     w)
-      check_work_dir_exists $verbose_mode $test_mode 
+      do_check_work_dir="1"
       ;;
   esac
 done
@@ -735,8 +737,12 @@ if [ "$interactve_mode" == "1" ]; then
   enter realname
   echo "Enter password:"
   read -s password
-  echo "Additional packages:"
+  echo "Enter additional packages:"
   read chroot_packages
+  echo "Enter source ISO file:"
+  read iso_file
+  echo "Enter output ISO file:"
+  read output_file
 else
   if [ "$username" = "" ] || [ "$default_mode" = "1" ]; then
     username=$default_username
@@ -756,20 +762,20 @@ else
   if [ "$timezome" = "" ] || [ "$default_mode" = "1" ]; then
     timezome = $default_timezome
   fi
+  if [ "$iso_file" = "" ] || [ "$default_mode" = "1" ]; then
+    iso_file = $default_iso_file
+  fi
 fi
 
 # Check work directories
 # Check required packages are installed
 # Check we have a base iso to work with
 
-check_work_dir_exists $verbose_mode $test_mode
-if [ "$function" = "required" ]; then
+check_work_dir $verbose_mode $test_mode
+if [ "$do_install_required_packages" = "1" ]; then
   install_required_packages $verbose_mode $test_mode
 fi
-if [ "$function" = "download" ]; then
-  get_base_iso $verbose_mode $test_mode $release $iso_file
-  exit
-else
+if [ "$do_get_base_iso" = "1" ]; then
   get_base_iso $verbose_mode $test_mode $release $iso_file
 fi
 
