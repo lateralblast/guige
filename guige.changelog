@@ -5,3 +5,15 @@
 # Converted to functions
 # 0.0.3: Mon  2 Jan 2023 17:22:28 AEDT
 # Basic working functionality - Initial commit
+# 0.0.4: Fri  6 Jan 2023 17:00:01 AEDT
+# More functionality
+# 0.0.5: Sat 07 Jan 2023 07:19:55 AEDT
+# Cleaned up variables
+# 0.0.6: Sat 07 Jan 2023 11:15:31 AEDT
+# Cleaned up code
+# 0.0.7: Sat 07 Jan 2023 12:17:36 AEDT
+# Bug fixes
+# 0.0.8: Sat 07 Jan 2023 16:45:08 AEDT
+# Code cleanup
+# 0.0.9: Sat 07 Jan 2023 17:30:04 AEDT
+# ran commands through a execute function so the script can be used to generate a script

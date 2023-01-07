@@ -30,3 +30,6 @@ So that the additional packages added to the install do not require network acce
 the squashfs filesystem is mounted and the packages are installed into it with the download option,
 then the packages are copied to the ISO image that is created.
 Doing it this way also ensures packages dependencies are also handled.
+
+Rather than being directly run, the commands are wrappered and run through
+an execute function so that the script can be used to produce another script.
