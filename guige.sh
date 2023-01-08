@@ -72,21 +72,22 @@ print_help () {
     -C  Run chroot script
     -c  Create ISO
     -D  Use defaults
+    -d  Get base ISO
+    -H: Hostname
     -h  Help/Usage Information
     -I  Interactive mode (will ask for input rather than using command line options or defaults)
-    -i  Input/base ISO file
-    -H  Hostname
-    -o  Output ISO file
-    -P  Password
-    -p  Packages to add to ISO
-    -R  Realname
+    -i: Input/base ISO file
+    -o: Output ISO file
+    -P: Password
+    -p: Packages to add to ISO
+    -R: Realname
     -r  Install required packages on host
-    -T  Timezone
+    -T: Timezone
     -t  Test mode
-    -U  Username
+    -U: Username
     -V  Script Version
     -v  Verbose output
-    -W  Work directory
+    -W: Work directory
     -w  Check work directories
 HELP
 }
@@ -126,6 +127,7 @@ execute_command () {
 
 # Function: Check work directories exist
 #
+# Example:
 # mkdir -p ./isomount ./isonew/squashfs ./isonew/cd ./isonew/custom
 
 check_work_dir () {
@@ -141,6 +143,7 @@ check_work_dir () {
 
 # Function: Install required packages
 #
+# Example:
 # sudo apt install -y p7zip-full wget xorriso
 
 install_required_packages () {
@@ -153,8 +156,9 @@ install_required_packages () {
   done
 }
 
-# Grab ISO from Ubuntu
+# Function: Grab ISO from Ubuntu
 # 
+# Examples:
 # https://cdimage.ubuntu.com/ubuntu-server/jammy/daily-live/current/jammy-live-server-amd64.iso
 # wget https://cdimage.ubuntu.com/releases/22.04/RELEASE/ubuntu-22.04.1-live-server-amd64.iso
 
@@ -177,8 +181,9 @@ mount_iso () {
   execute_command "sudo mount -o loop $WORK_DIR/$ISO_FILE $ISO_MOUNT_DIR"
 }
 
-# Copy contents of ISO to a RW location so we can work with them
+# Function: Copy contents of ISO to a RW location so we can work with them
 #
+# Examples:
 # rsync --exclude=/casper/ubuntu-server-minimal.squashfs -av ./isomount/ ./isonew/cd
 # rsync -av ./isomount/ ./isonew/cd
 
@@ -190,8 +195,9 @@ copy_iso () {
   fi
 }
 
-# Mount squashfs and copy giles into it
+# Function: Mount squashfs and copy giles into it
 #
+# Examples:
 # sudo mount -t squashfs -o loop ./isomount/casper/ubuntu-server-minimal.squashfs ./isonew/squashfs/
 # sudo rsync -av ./isonew/squashfs/ ./isonew/custom
 # sudo cp /etc/resolv.conf /etc/hosts ./isonew/custom/etc/
@@ -208,17 +214,19 @@ copy_squashfs () {
   execute_command "sudo cp /etc/apt/sources.list $ISO_NEW_DIR/etc/apt/"
 }
 
-# Chroot into environment and run script on chrooted environmnet
+# Function: Chroot into environment and run script on chrooted environmnet
 #
+# Examples:
 # sudo chroot ./isonew/custom
 
 execute_chroot_script () {
   execute_command "sudo chroot $ISO_NEW_DIR/custom /tmp/modify_chroot.sh"
 }
 
-# Create script to drop into chrooted environment
-# Inside chrooted environment, mount filesystems and packages
+# Function: Create script to drop into chrooted environment
+#           Inside chrooted environment, mount filesystems and packages
 # 
+# Examples:
 # mount -t proc none /proc/
 # mount -t sysfs none /sys/
 # mount -t devpts none /dev/pts
