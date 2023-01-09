@@ -17,3 +17,9 @@
 # Code cleanup
 # 0.0.9: Sat 07 Jan 2023 17:30:04 AEDT
 # ran commands through a execute function so the script can be used to generate a script
+# 0.1.0: Mon 09 Jan 2023 17:17:23 AEDT
+# Code cleanup and added release switch
+# 0.1.1:
+# Fixed ISO url
+# 0.1.2:
+# Code fixes

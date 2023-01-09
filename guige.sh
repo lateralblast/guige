@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Name:         guige (Generic Ubuntu ISO Generation Engine)
-# Version:      0.0.9
+# Version:      0.1.1
 # Release:      1
 # License:      CC-BA (Creative Commons By Attribution)
 #               http://creativecommons.org/licenses/by/4.0/legalcode
@@ -16,7 +16,7 @@
 # Defaults
 
 ARGS=$@
-DEFAULT_RELEASE=$(lsb_release -cs)
+DEFAULT_RELEASE=$( lsb_release -cs )
 DEFAULT_HOSTNAME="ubuntu"
 DEFAULT_REALNAME="Ubuntu"
 DEFAULT_USERNAME="ubuntu"
@@ -29,7 +29,7 @@ USERNAME=""
 TIMEZONE=""
 PASSWORD=""
 ARCH="amd64"
-TEST_MODE="1"
+TEST_MODE="0"
 VERBOSE_MODE="1"
 DEFAULTS_MODE="0"
 INTERACTIVE_MODE="0"
@@ -49,8 +49,8 @@ INSTALL_MOUNT="/cdrom"
 
 # Default file names/locations
 
-DEFAULT_ISO_FILE="$WORK_DIR/$RELEASE-live-server-$ARCH.iso"
-DEFAULT_OUTPUT_FILE="$WORK_DIR/$RELEASE-live-server-$ARCH-autoinstall.iso"
+DEFAULT_ISO_FILE="$WORK_DIR/$DEFAULT_RELEASE-live-server-$ARCH.iso"
+DEFAULT_OUTPUT_FILE="$WORK_DIR/$DEFAULT_RELEASE-live-server-$ARCH-autoinstall.iso"
 SQUASHFS_FILE="$ISO_MOUNT_DIR/casper/ubuntu-server-minimal.squashfs"
 GRUB_FILE="$WORK_DIR/grub.cfg"
 SDA_USER_FILE="$WORK_DIR/sda-user-data"
@@ -77,6 +77,7 @@ print_help () {
     -h  Help/Usage Information
     -I  Interactive mode (will ask for input rather than using command line options or defaults)
     -i: Input/base ISO file
+    -L: LSB release
     -o: Output ISO file
     -P: Password
     -p: Packages to add to ISO
@@ -103,11 +104,16 @@ fi
 
 handle_output () {
   OUTPUT_TEXT=$1
+  OUTPUT_TYPE=$2
   if [ "$VERBOSE_MODE" = "1" ]; then
     if [ "$TEST_MODE" = "1" ]; then
       echo "$OUTPUT_TEXT"
     else
-      echo "Executing: $OUTPUT_TEXT"
+      if [ "$OUTPUT_TYPE" = "TEXT" ]; then
+        echo "$OUTPUT_TEXT"
+      else
+        echo "Executing: $OUTPUT_TEXT"
+      fi
     fi
   fi
 }
@@ -117,10 +123,10 @@ handle_output () {
 execute_command () {
   COMMAND=$1
   if [ "$TEST_MODE" = "0" ]; then
-    handle_output "# Execute: $COMMAND"
+    handle_output "$COMMAND" SHELL
     $COMMAND
   else
-    handle_output "$COMMAND"
+    handle_output "$COMMAND" SHELL
   fi
 }
 
@@ -131,12 +137,15 @@ execute_command () {
 # mkdir -p ./isomount ./isonew/squashfs ./isonew/cd ./isonew/custom
 
 check_work_dir () {
-  handle_output "# Check work directories"
+  handle_output "# Check work directories" TEXT
   for ISO_DIR in $ISO_MOUNT_DIR $ISO_NEW_DIR/squashfs $ISO_NEW_DIR/cd $ISO_NEW_DIR/custom; do
-    handle_output "# Check directory $ISO_DIR exists"
+    handle_output "# Check directory $ISO_DIR exists" TEXT
+    COMMAND="mkdir -p $ISO_DIR"
     if ! [ -d "$ISO_DIR" ]; then
-      handle_output "# Create $ISO_DIR if it doesn't exist"
-      execute_command "mkdir -p $ISO_DIR"
+      handle_output "# Create $ISO_DIR if it doesn't exist" TEXT
+      execute_command "$COMMAND"
+    else
+      handle_output "$COMMAND" TEXT
     fi
   done
 }
@@ -147,9 +156,9 @@ check_work_dir () {
 # sudo apt install -y p7zip-full wget xorriso
 
 install_required_packages () {
-  handle_output "# Check required packages are installed"
+  handle_output "# Check required packages are installed" TEXT
   for PACKAGE in $REQUIRED_PACKAGES; do
-    VERSION=$(apt show $PACKAGE 2>&1 |grep Version)
+    VERSION=$( apt show $PACKAGE 2>&1 |grep Version )
     if ! [ -x "$VERSION" ]; then
       execute_command "sudo apt install -y $PACKAGE"
     fi
@@ -163,11 +172,14 @@ install_required_packages () {
 # wget https://cdimage.ubuntu.com/releases/22.04/RELEASE/ubuntu-22.04.1-live-server-amd64.iso
 
 get_base_iso () {
-  handle_output "# Check source ISO exists and grab it if it doesn't"
-  BASE_ISO_FILE=$(basename $ISO_FILE)
-  ISO_URL="https://cdimage.ubuntu.com/ubuntu-server/$RELEASE/daily-live/$BASE_ISO_FILE"
-  if ! [ -f "$WORK_DIR/$ISO_FILE" ]; then
-    execute_command "cd $WORK_DIR ; wget $ISO_URL"
+  handle_output "# Check source ISO exists and grab it if it doesn't" TEXT
+  BASE_ISO_FILE=$( basename $ISO_FILE )
+  ISO_URL="https://cdimage.ubuntu.com/ubuntu-server/$RELEASE/daily-live/current/$BASE_ISO_FILE"
+  COMMAND="wget $ISO_URL -O $WORK_DIR/$BASE_ISO_FILE"
+  if ! [ -f "$WORK_DIR/$BASE_ISO_FILE" ]; then
+    execute_command "$COMMAND"
+  else
+    handle_output "$COMMAND" TEXT
   fi
 }
 
@@ -269,9 +281,9 @@ create_chroot_script () {
 get_password_crypt () {
   PASSWORD=$1
   if [ "$TEST_MODE" = "$1" ]; then
-    handle_output "export PASSWORD_CRYPT=\$(echo $PASSWORD |mkpasswd --method=SHA-512 --stdin)"
+    handle_output "export PASSWORD_CRYPT=\$(echo $PASSWORD |mkpasswd --method=SHA-512 --stdin)" SHELL 
   else
-    PASSWORD_CRYPT=$(echo $PASSWORD |mkpasswd --method=SHA-512 --stdin)
+    PASSWORD_CRYPT=$( echo $PASSWORD |mkpasswd --method=SHA-512 --stdin )
   fi
 }
 
@@ -466,7 +478,7 @@ get_password_crypt () {
 # -partition_cyl_align off
 # -partition_offset 16
 # --mbr-force-bootable
-# -APPEND_PARTition 2 28732ac11ff8d211ba4b00a0c93ec93b --interval:local_fs:2871452d-2879947d::'ubuntu-22.04.1-live-server-amd64.iso'
+# -append_partition 2 28732ac11ff8d211ba4b00a0c93ec93b --interval:local_fs:2871452d-2879947d::'ubuntu-22.04.1-live-server-amd64.iso'
 # -appended_part_as_gpt
 # -iso_mbr_part_type a2a0d0ebe5b9334487c068b6b72699c7
 # -c '/boot.catalog'
@@ -487,17 +499,29 @@ get_password_crypt () {
 # -appended_part_as_gpt -iso_mbr_part_type $ISO_MBR_PART_TYPE -c '/boot/boot.cat' -e '--interval:appended_partition_2:::' -no-emul-boot
 
 create_autoinstall_iso () {
-  execute_command "cd $WORK_DIR ; export APPEND_PART=\$(xorriso -indev $ISO_FILE -report_el_torito as_mkisofs |grep append_partition |tail -1 |awk '{print $3}' 2>&1)"
-  execute_command "cd $WORK_DIR ; export ISO_MBR_PART_TYPE=\$(xorriso -indev $ISO_FILE -report_el_torito as_mkisofs |grep iso_mbr_part_type |tail -1 |awk '{print $2}' 2>&1)"
-  execute_command "cd $ISO_SOURCE_DIR ; xorriso -as mkisofs -r -V 'Ubuntu 22.04 LTS AUTO (EFIBIOS)' -o ../$OUTPUT_FILE \
+  handle_output "# Create ISO"
+  handle_output "cd $WORK_DIR ; export APPEND_PART=\$( xorriso -indev $ISO_FILE -report_el_torito as_mkisofs |grep append_partition |tail -1 |awk '{print $3}' 2>&1 )" SHELL
+  handle_output "cd $WORK_DIR ; export ISO_MBR_PART_TYPE=\$( xorriso -indev $ISO_FILE -report_el_torito as_mkisofs |grep iso_mbr_part_type |tail -1 |awk '{print $2}' 2>&1 )" SHELL
+  handle_output "cd $ISO_SOURCE_DIR ; xorriso -as mkisofs -r -V 'Ubuntu 22.04 LTS AUTO (EFIBIOS)' -o ../$OUTPUT_FILE \
   --grub2-mbr ../BOOT/1-Boot-NoEmul.img -partition_offset 16 --mbr-force-bootable \
   -append_partition 2 $APPEND_PART ../BOOT/2-Boot-NoEmul.img -appended_part_as_gpt \
   -iso_mbr_part_type $ISO_MBR_PART_TYPE -c /boot.catalog -b /boot/grub/i386-pc/eltorito.img \
   -no-emul-boot -boot-load-size 4 -boot-info-table --grub2-boot-info -eltorito-alt-boot \
-  -e '--interval:appended_partition_2:::' -no-emul-boot ."
+  -e '--interval:appended_partition_2:::' -no-emul-boot ." SHELL
+  if [ "$TEXT_MODE" = "0" ]; then
+    cd $WORK_DIR ; APPEND_PART=$( xorriso -indev $ISO_FILE -report_el_torito as_mkisofs |grep append_partition |tail -1 |awk '{print $3}' 2>&1 )
+    cd $WORK_DIR ; ISO_MBR_PART_TYPE=$( xorriso -indev $ISO_FILE -report_el_torito as_mkisofs |grep iso_mbr_part_type |tail -1 |awk '{print $2}' 2>&1 )
+    cd $ISO_SOURCE_DIR ; xorriso -as mkisofs -r -V 'Ubuntu 22.04 LTS AUTO (EFIBIOS)' -o ../$OUTPUT_FILE \
+    --grub2-mbr ../BOOT/1-Boot-NoEmul.img -partition_offset 16 --mbr-force-bootable \
+    -append_partition 2 $APPEND_PART ../BOOT/2-Boot-NoEmul.img -appended_part_as_gpt \
+    -iso_mbr_part_type $ISO_MBR_PART_TYPE -c /boot.catalog -b /boot/grub/i386-pc/eltorito.img \
+    -no-emul-boot -boot-load-size 4 -boot-info-table --grub2-boot-info -eltorito-alt-boot \
+    -e '--interval:appended_partition_2:::' -no-emul-boot .
+  fi
 }
 
 prepare_autoinstall_iso () {
+  handle_output "# Create autoinstall files"
   get_password_crypt $PASSWORD
   PACKAGE_DIR="$ISO_SOURCE_DIR/$INSTALL_DIR/packages"
   CONFIG_DIR="$ISO_SOURCE_DIR/$INSTALL_DIR/configs"
@@ -667,23 +691,24 @@ prepare_autoinstall_iso () {
 # Set function variables
 
 DO_INSTALL_REQUIRED_PACKAGES="0"
-DO_GET_BASE_PACKAGES="0"
+DO_GET_BASE_ISO="0"
 DO_CHECK_WORK_DIR="0"
 DO_PREPARE_AUTOINSTALL_ISO="0"
 DO_CREATE_AUTOINSTALL_ISO="0"
 DO_EXECUTE_CHROOT_SCRIPT="0"
+DO_PRINT_HELP="1"
 
 # Handle command line arguments
 
-while getopts ":CcdhH:hIi:o:P:p:R:r:T:tU:u:VvW:w" ARGS; do
-  case $ARGS in
+while getopts ":CcdhH:hIi:L:o:P:p:R:rT:tU:u:VvW:w" OPTS; do
+  case $OPTS in
     C)
-      DO_RUN_CHROOT_SCRIPT="1"
+      DO_EXECUTE_CHROOT_SCRIPT="1"
       ;;
     c)
+      DO_CHECK_WORK_DIR="1"
       DO_INSTALL_REQUIRED_PACKAGES="1"
       DO_GET_BASE_PACKAGES="1"
-      DO_CHECK_WORK_DIR="1"
       DO_PREPARE_AUTOINSTALL_ISO="1"
       DO_EXECUTE_CHROOT_SCRIPT="1"
       DO_CREATE_AUTOINSTALL_ISO="1"
@@ -692,7 +717,8 @@ while getopts ":CcdhH:hIi:o:P:p:R:r:T:tU:u:VvW:w" ARGS; do
       DEFAULTS_MODE="1"
       ;;
     d)
-      DO_GET_BASE_PACKAGES="1"
+      DO_CHECK_WORK_DIR="1"
+      DO_GET_BASE_ISO="1"
       ;;
     h)
       print_help
@@ -703,6 +729,11 @@ while getopts ":CcdhH:hIi:o:P:p:R:r:T:tU:u:VvW:w" ARGS; do
       ;;
     i)
       ISO_FILE="$OPTARG"
+      ;;
+    L)
+      RELEASE="$OPTARG"
+      DEFAULT_ISO_FILE="$WORK_DIR/$RELEASE-live-server-$ARCH.iso"
+      DEFAULT_OUTPUT_FILE="$WORK_DIR/$RELEASE-live-server-$ARCH-autoinstall.iso"
       ;;
     o)
       OUTPUT_FILE="$OPTARG"
@@ -795,15 +826,19 @@ fi
 # Create ISO
 
 if [ "$DO_CHECK_WORK_DIR" = "1" ]; then
+  DO_PRINT_HELP="0"
   check_work_dir
 fi
 if [ "$DO_INSTALL_REQUIRED_PACKAGES" = "1" ]; then
+  DO_PRINT_HELP="0"
   install_required_packages
 fi
 if [ "$DO_GET_BASE_ISO" = "1" ]; then
+  DO_PRINT_HELP="0"
   get_base_iso
 fi
 if [ "$DO_CREATE_AUTOINSTALL_ISO" = "1" ]; then
+  DO_PRINT_HELP="0"
   mount_iso
   copy_iso
   copy_squashfs
@@ -813,10 +848,16 @@ if [ "$DO_CREATE_AUTOINSTALL_ISO" = "1" ]; then
   create_autoinstall_iso
 else
   if [ "$DO_EXECUTE_CHROOT_SCRIPT" = "1" ]; then
+    DO_PRINT_HELP="0"
     mount_iso
     execute_chroot_script 
   fi
   if [ "$DO_PREPARE_AUTOINSTALL_ISO" = "1" ]; then
+    DO_PRINT_HELP="0"
     prepare_autoinstall_iso
   fi
+fi
+
+if [ "$DO_PRINT_HELP" = "1" ]; then
+  print_help
 fi
