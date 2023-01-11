@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Name:         guige (Generic Ubuntu ISO Generation Engine)
-# Version:      0.1.7
+# Version:      0.1.9
 # Release:      1
 # License:      CC-BA (Creative Commons By Attribution)
 #               http://creativecommons.org/licenses/by/4.0/legalcode
@@ -31,6 +31,7 @@ PASSWORD=""
 ARCH="amd64"
 TEST_MODE="0"
 FORCE_MODE="0"
+FULL_FORCE_MODE="0"
 VERBOSE_MODE="0"
 DEFAULTS_MODE="0"
 INTERACTIVE_MODE="0"
@@ -84,7 +85,7 @@ print_help () {
   cat <<-HELP
   Usage: ${0##*/} [OPTIONS...]
     -C  Run chroot script
-    -c  Create ISO (perform all steps)
+    -c  Create ISO (perform all steps - e.g. grub, packages, etc)
     -D  Use defaults
     -d  Get base ISO
     -f  Remove previously created files
@@ -93,6 +94,7 @@ print_help () {
     -I  Interactive mode (will ask for input rather than using command line options or defaults)
     -i: Input/base ISO file
     -L: LSB release
+    -l  Create ISO (perform last step only - just run xoriso)
     -o: Output ISO file
     -P: Password
     -p: Packages to add to ISO
@@ -101,6 +103,7 @@ print_help () {
     -T: Timezone
     -t  Test mode
     -U: Username
+    -u  Unmount loopback filesystems
     -V  Script Version
     -v  Verbose output
     -W: Work directory
@@ -143,6 +146,17 @@ check_work_dir () {
   for ISO_DIR in $ISO_MOUNT_DIR $ISO_NEW_DIR/squashfs $ISO_NEW_DIR/cd $ISO_NEW_DIR/custom; do
     handle_output "# Check directory $ISO_DIR exists" TEXT
     handle_output "mkdir -p $ISO_DIR"
+    if [ "$FORCE_MODE" = "1" ]; then
+      if [ -d "$ISO_DIR" ]; then
+        handle_output "# Remove existing directory $ISO_DIR"
+        handle_output "sudo rm -rf $ISO_DIR"
+        if [[ $ISO_DIR =~ [0-9a-zA-Z] ]]; then
+          if [ "$TEST_MODE" = "0" ]; then
+            sudo rm -rf $ISO_DIR
+          fi
+        fi
+      fi
+    fi
     if ! [ -d "$ISO_DIR" ]; then
       handle_output "# Create $ISO_DIR if it doesn't exist" TEXT
       if [ "$TEST_MODE" = "0" ]; then
@@ -179,12 +193,29 @@ install_required_packages () {
 get_base_iso () {
   handle_output "# Check source ISO exists and grab it if it doesn't" TEXT
   BASE_ISO_FILE=$( basename $ISO_FILE )
+  if [ "$FULL_FORCE_MODE" = "1" ]; then
+    handle_output "rm $WORK_DIR/$ISO_FILE" 
+    if [ "$TEST_MODE" = "0" ]; then
+      rm $WORK_DIR/$ISO_FILE
+    fi
+  fi
   ISO_URL="https://cdimage.ubuntu.com/ubuntu-server/$RELEASE/daily-live/current/$BASE_ISO_FILE"
   handle_output "wget $ISO_URL -O $WORK_DIR/$BASE_ISO_FILE"
   if ! [ -f "$WORK_DIR/$BASE_ISO_FILE" ]; then
     if [ "$TEST_MODE" = "0" ]; then
       wget $ISO_URL -O $WORK_DIR/$BASE_ISO_FILE
     fi
+  fi
+}
+# Function unmount loopback ISO filesystem
+#
+# Examples:
+# sudo umount -l /home/user/ubuntu-iso/isomount
+
+unmount_iso () {
+  handle_output "sudo umount -l $ISO_MOUNT_DIR"
+  if [ "$TEST_MODE" = "0" ]; then
+    sudo umount -l $ISO_MOUNT_DIR
   fi
 }
 
@@ -199,6 +230,13 @@ mount_iso () {
   handle_output "sudo mount -o loop $WORK_DIR/$BASE_ISO_FILE $ISO_MOUNT_DIR"
   if [ "$TEST_MODE" = "0" ]; then
     sudo mount -o loop $WORK_DIR/$BASE_ISO_FILE $ISO_MOUNT_DIR
+  fi
+}
+
+unmount_squashfs () {
+  handle_output "sudo umount $ISO_NEW_DIR/squashfs"
+  if [ "$TEST_MODE" = "0" ]; then
+    sudo umount $ISO_NEW_DIR/squashfs
   fi
 }
 
@@ -291,6 +329,8 @@ create_chroot_script () {
   handle_output "echo \"mount -t devpts none /dev/pts\" >> $ORIG_SCRIPT"
   handle_output "echo \"export HOME=/root\" >> $ORIG_SCRIPT"
   handle_output "echo \"sudo apt update\" >> $ORIG_SCRIPT"
+  handle_output "echo \"sudo apt clean\" >> $ORIG_SCRIPT"
+  handle_output "echo \"rm /var/cache/apt/archives/*.deb\" >> $ORIG_SCRIPT"
   handle_output "echo \"sudo apt install -y --download-only $CHROOT_PACKAGES\" >> $ORIG_SCRIPT"
   handle_output "echo \"sudo apt install -y $CHROOT_PACKAGES\" >> $ORIG_SCRIPT"
   handle_output "echo \"umount /proc/\" >> $ORIG_SCRIPT"
@@ -307,6 +347,8 @@ create_chroot_script () {
       echo "mount -t devpts none /dev/pts" >> $ORIG_SCRIPT
       echo "export HOME=/root" >> $ORIG_SCRIPT
       echo "sudo apt update" >> $ORIG_SCRIPT
+      echo "sudo apt clean" >> $ORIG_SCRIPT
+      echo "rm /var/cache/apt/archives/*.deb" >> $ORIG_SCRIPT
       echo "sudo apt install -y --download-only $CHROOT_PACKAGES" >> $ORIG_SCRIPT
       echo "sudo apt install -y $CHROOT_PACKAGES" >> $ORIG_SCRIPT
       echo "umount /proc/" >> $ORIG_SCRIPT
@@ -630,17 +672,17 @@ prepare_autoinstall_iso () {
     handle_output "echo \"menuentry 'UEFI Firmware Settings' {\" >> $ISO_SOURCE_DIR/boot/grub/grub.cfg"
     handle_output "echo \"  fwsetup\" >> $ISO_SOURCE_DIR/boot/grub/grub.cfg"
     handle_output "echo \"}\" >> $ISO_SOURCE_DIR/boot/grub/grub.cfg"
-    if [ "TEST_MODE" = "0" ]; then
+    if [ "$TEST_MODE" = "0" ]; then
       echo "set timeout=$GRUB_TIMEOUT" > $ISO_SOURCE_DIR/boot/grub/grub.cfg
       echo "loadfont unicode" >> $ISO_SOURCE_DIR/boot/grub/grub.cfg
       echo "menuentry 'Autoinstall Ubuntu Server - Physical' {" >> $ISO_SOURCE_DIR/boot/grub/grub.cfg
       echo "  set gfxpayload=keep" >> $ISO_SOURCE_DIR/boot/grub/grub.cfg
-      echo "  linux   /casper/vmlinuz quiet autoinstall ds=nocloud\;s=/$INSTALL_MOUNT/$INSTALL_DIRs/configs/sda/  ---" >> $ISO_SOURCE_DIR/boot/grub/grub.cfg
+      echo "  linux   /casper/vmlinuz quiet autoinstall ds=nocloud\;s=$INSTALL_MOUNT/$INSTALL_DIR/configs/sda/  ---" >> $ISO_SOURCE_DIR/boot/grub/grub.cfg
       echo "  initrd  /casper/initrd" >> $ISO_SOURCE_DIR/boot/grub/grub.cfg
       echo "}" >> $ISO_SOURCE_DIR/boot/grub/grub.cfg
       echo "  menuentry 'Autoinstall Ubuntu Server - Virtual - KVM' {" >> $ISO_SOURCE_DIR/boot/grub/grub.cfg
       echo "  set gfxpayload=keep" >> $ISO_SOURCE_DIR/boot/grub/grub.cfg
-      echo "  linux   /casper/vmlinuz quiet autoinstall ds=nocloud\;s=/$INSTALL_MOUNT/$INSTALL_DIRs/configs/vda/  ---" >> $ISO_SOURCE_DIR/boot/grub/grub.cfg
+      echo "  linux   /casper/vmlinuz quiet autoinstall ds=nocloud\;s=$INSTALL_MOUNT/$INSTALL_DIR/configs/vda/  ---" >> $ISO_SOURCE_DIR/boot/grub/grub.cfg
       echo "  initrd  /casper/initrd" >> $ISO_SOURCE_DIR/boot/grub/grub.cfg
       echo "}" >> $ISO_SOURCE_DIR/boot/grub/grub.cfg
       echo "menuentry 'Try or Install Ubuntu Server' {" >> $ISO_SOURCE_DIR/boot/grub/grub.cfg
@@ -915,12 +957,13 @@ DO_GET_BASE_ISO="0"
 DO_CHECK_WORK_DIR="0"
 DO_PREPARE_AUTOINSTALL_ISO="0"
 DO_CREATE_AUTOINSTALL_ISO="0"
+DO_CREATE_AUTOINSTALL_ISO_ONLY="0"
 DO_EXECUTE_CHROOT_SCRIPT="0"
 DO_PRINT_HELP="1"
 
 # Handle command line arguments
 
-while getopts ":CcDdfhH:hIi:L:o:P:p:R:rT:tU:u:VvW:w" OPTS; do
+while getopts ":CcDdfFhH:hIi:L:lo:P:p:R:rT:tU:uVvW:w" OPTS; do
   case $OPTS in
     C)
       DO_EXECUTE_CHROOT_SCRIPT="1"
@@ -943,6 +986,9 @@ while getopts ":CcDdfhH:hIi:L:o:P:p:R:rT:tU:u:VvW:w" OPTS; do
     f)
       FORCE_MODE="1"
       ;;
+    F)
+      FULL_FORCE_MODE="1"
+      ;;
     h)
       print_help
       exit
@@ -952,6 +998,9 @@ while getopts ":CcDdfhH:hIi:L:o:P:p:R:rT:tU:u:VvW:w" OPTS; do
       ;;
     i)
       ISO_FILE="$OPTARG"
+      ;;
+    l)
+      DO_CREATE_AUTOINSTALL_ISO_ONLY="1"
       ;;
     L)
       RELEASE="$OPTARG"
@@ -981,6 +1030,9 @@ while getopts ":CcDdfhH:hIi:L:o:P:p:R:rT:tU:u:VvW:w" OPTS; do
       ;;
     U)
       USERNAME="$OPTARG"
+      ;;
+    u)
+      DO_UMOUNT_ISO="1"
       ;;
     V)
       echo $script_version
@@ -1062,6 +1114,8 @@ if [ "$DO_GET_BASE_ISO" = "1" ]; then
 fi
 if [ "$DO_CREATE_AUTOINSTALL_ISO" = "1" ]; then
   DO_PRINT_HELP="0"
+  unmount_iso
+  unmount_squashfs
   mount_iso
   copy_iso
   copy_squashfs
@@ -1069,6 +1123,8 @@ if [ "$DO_CREATE_AUTOINSTALL_ISO" = "1" ]; then
   execute_chroot_script
   prepare_autoinstall_iso
   create_autoinstall_iso
+  unmount_iso
+  unmount_squashfs
 else
   if [ "$DO_EXECUTE_CHROOT_SCRIPT" = "1" ]; then
     DO_PRINT_HELP="0"
@@ -1078,6 +1134,13 @@ else
   if [ "$DO_PREPARE_AUTOINSTALL_ISO" = "1" ]; then
     DO_PRINT_HELP="0"
     prepare_autoinstall_iso
+  fi
+  if [ "$DO_CREATE_AUTOINSTALL_ISO_ONLY" = "1" ]; then
+    create_autoinstall_iso
+  fi
+  if [ "$DO_UMOUNT_ISO" = "1" ]; then
+    unmount_iso
+    unmount_squashfs
   fi
 fi
 

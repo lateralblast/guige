@@ -33,3 +33,7 @@
 # Further code cleanup
 # 0.1.7: Wed 11 Jan 2023 13:33:35 AEDT
 # More fixes
+# 0.1.8: Wed 11 Jan 2023 13:55:37 AEDT
+# More bug fixes
+# 0.1.9: Wed 11 Jan 2023 16:37:08 AEDT
+# Added code to unmount loopback filesystems
