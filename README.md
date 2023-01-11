@@ -21,7 +21,7 @@ used to hang a shield on the shoulder or neck when not in use.
 Currently this is WIP and this comment will be removed when the first working edition is complete.
 It is being converted from a set of shell commands.
 
-I particular this script provides support for creating autoinstall ISO with:
+In particular this script provides support for creating autoinstall ISO with:
 
 - ZFS root 
 - Adding packages to installation
@@ -33,3 +33,66 @@ Doing it this way also ensures packages dependencies are also handled.
 
 Rather than being directly run, the commands are wrappered and run through
 an execute function so that the script can be used to produce another script.
+
+
+Usage
+-----
+
+You can get help using the -h switch:
+
+```
+  Usage: guige.sh [OPTIONS...]
+    -C  Run chroot script
+    -c  Create ISO (perform all steps)
+    -D  Use defaults
+    -d  Get base ISO
+    -H: Hostname
+    -h  Help/Usage Information
+    -I  Interactive mode (will ask for input rather than using command line options or defaults)
+    -i: Input/base ISO file
+    -L: LSB release
+    -o: Output ISO file
+    -P: Password
+    -p: Packages to add to ISO
+    -R: Realname
+    -r  Install required packages on host
+    -T: Timezone
+    -t  Test mode
+    -U: Username
+    -V  Script Version
+    -v  Verbose output
+    -W: Work directory
+    -w  Check work directories
+
+```
+
+Examples
+--------
+
+Install required packages:
+
+```
+./guide.sh -r
+```
+
+Download base ISO (jammy)
+
+```
+./guide.sh -d -L jammy
+```
+
+Create ISO (performs all steps):
+
+```
+./guide.sh -c -L jammy
+```
+
+Run the previous command but in test mode (don't execute commands) to produce output suitable for creating a script:
+
+
+```
+./guide.sh -c -t -L jammy
+```
+
+
+

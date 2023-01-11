@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Name:         guige (Generic Ubuntu ISO Generation Engine)
-# Version:      0.1.1
+# Version:      0.1.7
 # Release:      1
 # License:      CC-BA (Creative Commons By Attribution)
 #               http://creativecommons.org/licenses/by/4.0/legalcode
@@ -16,7 +16,7 @@
 # Defaults
 
 ARGS=$@
-DEFAULT_RELEASE=$( lsb_release -cs )
+CURRENT_RELEASE="jammy"
 DEFAULT_HOSTNAME="ubuntu"
 DEFAULT_REALNAME="Ubuntu"
 DEFAULT_USERNAME="ubuntu"
@@ -30,13 +30,27 @@ TIMEZONE=""
 PASSWORD=""
 ARCH="amd64"
 TEST_MODE="0"
-VERBOSE_MODE="1"
+FORCE_MODE="0"
+VERBOSE_MODE="0"
 DEFAULTS_MODE="0"
 INTERACTIVE_MODE="0"
 GRUB_TIMEOUT="10"
 CHROOT_PACKAGES=""
 DEFAULT_PACKAGES="zfsutils-linux grub-efi zfs-initramfs net-tools curl wget"
 REQUIRED_PACKAGES="p7zip-full wget xorriso whois"
+
+# Get default release
+
+if [ -f "/usr/bin/lsb_release" ]; then
+  if [ "$( lsb_release -d |awk '{print $2}' )" = "Ubuntu" ]; then
+    DEFAULT_RELEASE=$( lsb_release -cs )
+  else
+    DEFAULT_RELEASE="$CURRENT_RELEASE"
+  fi
+else
+  DEFAULT_RELEASE="$CURRENT_RELEASE"
+fi
+
 
 # Default work directories
 
@@ -70,9 +84,10 @@ print_help () {
   cat <<-HELP
   Usage: ${0##*/} [OPTIONS...]
     -C  Run chroot script
-    -c  Create ISO
+    -c  Create ISO (perform all steps)
     -D  Use defaults
     -d  Get base ISO
+    -f  Remove previously created files
     -H: Hostname
     -h  Help/Usage Information
     -I  Interactive mode (will ask for input rather than using command line options or defaults)
@@ -118,19 +133,6 @@ handle_output () {
   fi
 }
 
-# Function: Execute command and enable debug or script writing mode
-
-execute_command () {
-  COMMAND=$1
-  if [ "$TEST_MODE" = "0" ]; then
-    handle_output "$COMMAND" SHELL
-    $COMMAND
-  else
-    handle_output "$COMMAND" SHELL
-  fi
-}
-
-
 # Function: Check work directories exist
 #
 # Example:
@@ -140,12 +142,12 @@ check_work_dir () {
   handle_output "# Check work directories" TEXT
   for ISO_DIR in $ISO_MOUNT_DIR $ISO_NEW_DIR/squashfs $ISO_NEW_DIR/cd $ISO_NEW_DIR/custom; do
     handle_output "# Check directory $ISO_DIR exists" TEXT
-    COMMAND="mkdir -p $ISO_DIR"
+    handle_output "mkdir -p $ISO_DIR"
     if ! [ -d "$ISO_DIR" ]; then
       handle_output "# Create $ISO_DIR if it doesn't exist" TEXT
-      execute_command "$COMMAND"
-    else
-      handle_output "$COMMAND" TEXT
+      if [ "$TEST_MODE" = "0" ]; then
+        mkdir -p $ISO_DIR
+      fi
     fi
   done
 }
@@ -160,7 +162,10 @@ install_required_packages () {
   for PACKAGE in $REQUIRED_PACKAGES; do
     VERSION=$( apt show $PACKAGE 2>&1 |grep Version )
     if ! [ -x "$VERSION" ]; then
-      execute_command "sudo apt install -y $PACKAGE"
+      handle_output "sudo apt install -y $PACKAGE"
+      if [ "$TEST_MODE" = "0" ]; then
+        sudo apt install -y $PACKAGE
+      fi
     fi
   done
 }
@@ -175,11 +180,11 @@ get_base_iso () {
   handle_output "# Check source ISO exists and grab it if it doesn't" TEXT
   BASE_ISO_FILE=$( basename $ISO_FILE )
   ISO_URL="https://cdimage.ubuntu.com/ubuntu-server/$RELEASE/daily-live/current/$BASE_ISO_FILE"
-  COMMAND="wget $ISO_URL -O $WORK_DIR/$BASE_ISO_FILE"
+  handle_output "wget $ISO_URL -O $WORK_DIR/$BASE_ISO_FILE"
   if ! [ -f "$WORK_DIR/$BASE_ISO_FILE" ]; then
-    execute_command "$COMMAND"
-  else
-    handle_output "$COMMAND" TEXT
+    if [ "$TEST_MODE" = "0" ]; then
+      wget $ISO_URL -O $WORK_DIR/$BASE_ISO_FILE
+    fi
   fi
 }
 
@@ -190,7 +195,11 @@ get_base_iso () {
 
 mount_iso () {
   get_base_iso
-  execute_command "sudo mount -o loop $WORK_DIR/$ISO_FILE $ISO_MOUNT_DIR"
+  BASE_ISO_FILE=$( basename $ISO_FILE )
+  handle_output "sudo mount -o loop $WORK_DIR/$BASE_ISO_FILE $ISO_MOUNT_DIR"
+  if [ "$TEST_MODE" = "0" ]; then
+    sudo mount -o loop $WORK_DIR/$BASE_ISO_FILE $ISO_MOUNT_DIR
+  fi
 }
 
 # Function: Copy contents of ISO to a RW location so we can work with them
@@ -201,9 +210,15 @@ mount_iso () {
 
 copy_iso () {
   if [ "$VERBOSE_MODE" = "1" ]; then
-    execute_command "cd $WORK_DIR ; rsync -av $ISO_MOUNT_DIR/ $ISO_NEW_DIR/cd"
+    handle_output "rsync -av $ISO_MOUNT_DIR/ $ISO_NEW_DIR/cd"
+    if [ "$TEST_MODE" = "0" ]; then
+      rsync -av $ISO_MOUNT_DIR/ $ISO_NEW_DIR/cd
+    fi
   else
-    execute_command "cd $WORK_DIR ; rsync -a $ISO_MOUNT_DIR/ $ISO_NEW_DIR/cd"
+    handle_output "rsync -a $ISO_MOUNT_DIR/ $ISO_NEW_DIR/cd"
+    if [ "$TEST_MODE" = "0" ]; then
+      rsync -a $ISO_MOUNT_DIR/ $ISO_NEW_DIR/cd
+    fi
   fi
 }
 
@@ -216,14 +231,27 @@ copy_iso () {
 # sudo cp /etc/apt/sources.list ./isonew/custom/etc/apt/
 
 copy_squashfs () {
-  execute_command "sudo mount -t squashfs -o loop $SQUASHFS_FILE $ISO_NEW_DIR/squashfs/"
-  if [ "$VERBOSE_MODE" = "1" ]; then
-    execute_command "sudo rsync -av . $ISO_NEW_DIR/squashfs/ $ISO_NEW_DIR/custom"
-  else
-    execute_command "sudo rsync -a . $ISO_NEW_DIR/squashfs/ $ISO_NEW_DIR/custom"
+  handle_output "sudo mount -t squashfs -o loop $SQUASHFS_FILE $ISO_NEW_DIR/squashfs/"
+  if [ "$TEST_MODE" = "0" ]; then
+    sudo mount -t squashfs -o loop $SQUASHFS_FILE $ISO_NEW_DIR/squashfs/
   fi
-  execute_command "sudo cp /etc/resolv.conf /etc/hosts $ISO_NEW_DIR/custom/etc/"
-  execute_command "sudo cp /etc/apt/sources.list $ISO_NEW_DIR/etc/apt/"
+  if [ "$VERBOSE_MODE" = "1" ]; then
+    handle_output "sudo rsync -av $ISO_NEW_DIR/squashfs/ $ISO_NEW_DIR/custom"
+    if [ "$TEST_MODE" = "0" ]; then
+      sudo rsync -av $ISO_NEW_DIR/squashfs/ $ISO_NEW_DIR/custom
+    fi
+  else
+    handle_output "sudo rsync -a $ISO_NEW_DIR/squashfs/ $ISO_NEW_DIR/custom"
+    if [ "$TEST_MODE" = "0" ]; then
+      sudo rsync -a $ISO_NEW_DIR/squashfs/ $ISO_NEW_DIR/custom
+    fi
+  fi
+  handle_output "sudo cp /etc/resolv.conf /etc/hosts $ISO_NEW_DIR/custom/etc/"
+  handle_output "sudo cp /etc/apt/sources.list $ISO_NEW_DIR/etc/apt/"
+  if [ "$TEST_MODE" = "0" ]; then
+    sudo cp /etc/resolv.conf /etc/hosts $ISO_NEW_DIR/custom/etc/
+    sudo cp /etc/apt/sources.list $ISO_NEW_DIR/etc/apt/
+  fi
 }
 
 # Function: Chroot into environment and run script on chrooted environmnet
@@ -232,7 +260,10 @@ copy_squashfs () {
 # sudo chroot ./isonew/custom
 
 execute_chroot_script () {
-  execute_command "sudo chroot $ISO_NEW_DIR/custom /tmp/modify_chroot.sh"
+  handle_output "sudo chroot $ISO_NEW_DIR/custom /tmp/modify_chroot.sh"
+  if [ "$TEST_MODE" = "0" ]; then
+    sudo chroot $ISO_NEW_DIR/custom /tmp/modify_chroot.sh
+  fi
 }
 
 # Function: Create script to drop into chrooted environment
@@ -254,23 +285,39 @@ execute_chroot_script () {
 create_chroot_script () {
   ORIG_SCRIPT="$WORK_DIR/modify_chroot.sh"
   CHROOT_SCRIPT="$ISO_NEW_DIR/custom/tmp/modify_chroot.sh"
-  if ! [ -f "$ORIG_SCRIPT" ]; then
-    execute_command "echo \"#!/usr/bin/bash\" > $ORIG_SCRIPT"
-    execute_command "echo \"mount -t proc none /proc/\" >> $ORIG_SCRIPT"
-    execute_command "echo \"mount -t sysfs none /sys/\" >> $ORIG_SCRIPT"
-    execute_command "echo \"mount -t devpts none /dev/pts\" >> $ORIG_SCRIPT"
-    execute_command "echo \"export HOME=/root\" >> $ORIG_SCRIPT"
-    execute_command "echo \"sudo apt update\" >> $ORIG_SCRIPT"
-    execute_command "echo \"sudo apt install -y --download-only $CHROOT_PACKAGES\" >> $ORIG_SCRIPT"
-    execute_command "echo \"sudo apt install -y $CHROOT_PACKAGES\" >> $ORIG_SCRIPT"
-    execute_command "echo \"umount /proc/\" >> $ORIG_SCRIPT"
-    execute_command "echo \"umount /sys/\" >> $ORIG_SCRIPT"
-    execute_command "echo \"umount /dev/pts/\" >> $ORIG_SCRIPT"
-    execute_command "echo \"exit\" >> $ORIG_SCRIPT"
-  fi
-  if ! [ -f "$CHROOT_SCRIPT" ]; then
-    execute_command "sudo cp $ORIG_SCRIPT $CHROOT_SCRIPT"
-    execute_command "sudo chmod +x $CHROOT_SCRIPT"
+  handle_output "echo \"#!/usr/bin/bash\" > $ORIG_SCRIPT"
+  handle_output "echo \"mount -t proc none /proc/\" >> $ORIG_SCRIPT"
+  handle_output "echo \"mount -t sysfs none /sys/\" >> $ORIG_SCRIPT"
+  handle_output "echo \"mount -t devpts none /dev/pts\" >> $ORIG_SCRIPT"
+  handle_output "echo \"export HOME=/root\" >> $ORIG_SCRIPT"
+  handle_output "echo \"sudo apt update\" >> $ORIG_SCRIPT"
+  handle_output "echo \"sudo apt install -y --download-only $CHROOT_PACKAGES\" >> $ORIG_SCRIPT"
+  handle_output "echo \"sudo apt install -y $CHROOT_PACKAGES\" >> $ORIG_SCRIPT"
+  handle_output "echo \"umount /proc/\" >> $ORIG_SCRIPT"
+  handle_output "echo \"umount /sys/\" >> $ORIG_SCRIPT"
+  handle_output "echo \"umount /dev/pts/\" >> $ORIG_SCRIPT"
+  handle_output "echo \"exit\" >> $ORIG_SCRIPT"
+  handle_output "sudo cp $ORIG_SCRIPT $CHROOT_SCRIPT"
+  handle_output "sudo chmod +x $CHROOT_SCRIPT"
+  if [ "$TEST_MODE" = "0" ]; then
+    if ! [ -f "$ORIG_SCRIPT" ]; then
+      echo "#!/usr/bin/bash" > $ORIG_SCRIPT
+      echo "mount -t proc none /proc/" >> $ORIG_SCRIPT
+      echo "mount -t sysfs none /sys/" >> $ORIG_SCRIPT
+      echo "mount -t devpts none /dev/pts" >> $ORIG_SCRIPT
+      echo "export HOME=/root" >> $ORIG_SCRIPT
+      echo "sudo apt update" >> $ORIG_SCRIPT
+      echo "sudo apt install -y --download-only $CHROOT_PACKAGES" >> $ORIG_SCRIPT
+      echo "sudo apt install -y $CHROOT_PACKAGES" >> $ORIG_SCRIPT
+      echo "umount /proc/" >> $ORIG_SCRIPT
+      echo "umount /sys/" >> $ORIG_SCRIPT
+      echo "umount /dev/pts/" >> $ORIG_SCRIPT
+      echo "exit" >> $ORIG_SCRIPT
+    fi
+    if ! [ -f "$CHROOT_SCRIPT" ]; then
+      sudo cp $ORIG_SCRIPT $CHROOT_SCRIPT
+      sudo chmod +x $CHROOT_SCRIPT
+    fi
   fi
 }
 
@@ -280,9 +327,8 @@ create_chroot_script () {
 
 get_password_crypt () {
   PASSWORD=$1
-  if [ "$TEST_MODE" = "$1" ]; then
-    handle_output "export PASSWORD_CRYPT=\$(echo $PASSWORD |mkpasswd --method=SHA-512 --stdin)" SHELL 
-  else
+  handle_output "export PASSWORD_CRYPT=\$(echo $PASSWORD |mkpasswd --method=SHA-512 --stdin)"
+  if [ "$TEST_MODE" = "0" ]; then
     PASSWORD_CRYPT=$( echo $PASSWORD |mkpasswd --method=SHA-512 --stdin )
   fi
 }
@@ -500,18 +546,18 @@ get_password_crypt () {
 
 create_autoinstall_iso () {
   handle_output "# Create ISO"
-  handle_output "cd $WORK_DIR ; export APPEND_PART=\$( xorriso -indev $ISO_FILE -report_el_torito as_mkisofs |grep append_partition |tail -1 |awk '{print $3}' 2>&1 )" SHELL
-  handle_output "cd $WORK_DIR ; export ISO_MBR_PART_TYPE=\$( xorriso -indev $ISO_FILE -report_el_torito as_mkisofs |grep iso_mbr_part_type |tail -1 |awk '{print $2}' 2>&1 )" SHELL
+  handle_output "cd $WORK_DIR ; export APPEND_PART=\$( xorriso -indev $ISO_FILE -report_el_torito as_mkisofs |grep append_partition |tail -1 |awk '{print \$3}' 2>&1 )"
+  handle_output "cd $WORK_DIR ; export ISO_MBR_PART_TYPE=\$( xorriso -indev $ISO_FILE -report_el_torito as_mkisofs |grep iso_mbr_part_type |tail -1 |awk '{print \$2}' 2>&1 )"
   handle_output "cd $ISO_SOURCE_DIR ; xorriso -as mkisofs -r -V 'Ubuntu 22.04 LTS AUTO (EFIBIOS)' -o ../$OUTPUT_FILE \
   --grub2-mbr ../BOOT/1-Boot-NoEmul.img -partition_offset 16 --mbr-force-bootable \
   -append_partition 2 $APPEND_PART ../BOOT/2-Boot-NoEmul.img -appended_part_as_gpt \
   -iso_mbr_part_type $ISO_MBR_PART_TYPE -c /boot.catalog -b /boot/grub/i386-pc/eltorito.img \
   -no-emul-boot -boot-load-size 4 -boot-info-table --grub2-boot-info -eltorito-alt-boot \
-  -e '--interval:appended_partition_2:::' -no-emul-boot ." SHELL
-  if [ "$TEXT_MODE" = "0" ]; then
-    cd $WORK_DIR ; APPEND_PART=$( xorriso -indev $ISO_FILE -report_el_torito as_mkisofs |grep append_partition |tail -1 |awk '{print $3}' 2>&1 )
-    cd $WORK_DIR ; ISO_MBR_PART_TYPE=$( xorriso -indev $ISO_FILE -report_el_torito as_mkisofs |grep iso_mbr_part_type |tail -1 |awk '{print $2}' 2>&1 )
-    cd $ISO_SOURCE_DIR ; xorriso -as mkisofs -r -V 'Ubuntu 22.04 LTS AUTO (EFIBIOS)' -o ../$OUTPUT_FILE \
+  -e '--interval:appended_partition_2:::' -no-emul-boot ."
+  if [ "$TEST_MODE" = "0" ]; then
+    APPEND_PART=$( xorriso -indev $ISO_FILE -report_el_torito as_mkisofs |grep append_partition |tail -1 |awk '{print $3}' 2>&1 )
+    ISO_MBR_PART_TYPE=$( xorriso -indev $ISO_FILE -report_el_torito as_mkisofs |grep iso_mbr_part_type |tail -1 |awk '{print $2}' 2>&1 )
+    cd $ISO_SOURCE_DIR ; xorriso -as mkisofs -r -V 'Ubuntu 22.04 LTS AUTO (EFIBIOS)' -o $OUTPUT_FILE \
     --grub2-mbr ../BOOT/1-Boot-NoEmul.img -partition_offset 16 --mbr-force-bootable \
     -append_partition 2 $APPEND_PART ../BOOT/2-Boot-NoEmul.img -appended_part_as_gpt \
     -iso_mbr_part_type $ISO_MBR_PART_TYPE -c /boot.catalog -b /boot/grub/i386-pc/eltorito.img \
@@ -525,165 +571,339 @@ prepare_autoinstall_iso () {
   get_password_crypt $PASSWORD
   PACKAGE_DIR="$ISO_SOURCE_DIR/$INSTALL_DIR/packages"
   CONFIG_DIR="$ISO_SOURCE_DIR/$INSTALL_DIR/configs"
-  execute_command "cd $WORK_DIR ; mv $ISO_SOURCE_DIR/\[BOOT\] ./BOOT"
-  execute_command "mkdir -p $PACKAGE_DIR"
-  execute_command "cd $WORK_DIR ; 7z -y x $WORK_DIR/$ISO_FILE -o$ISO_SOURCE_DIR"
+  BASE_ISO_FILE=$( basename $ISO_FILE )
+  handle_output "7z -y x $WORK_DIR/$BASE_ISO_FILE -o$ISO_SOURCE_DIR"
+  handle_output "rm -rf $WORK_DIR/BOOT"
+  handle_output "mkdir -p $PACKAGE_DIR"
+  handle_output "cp $ISO_CUSTOM_DIR/var/cache/apt/archives/*.deb $PACKAGE_DIR"
   for SUB_DIR in sda vda; do
-    execute_command "mkdir -p $CONFIG_DIR/$SUB_DIR"
-    execute_command "touch $CONFIG_DIR/$SUB_DIR/meta-data"
+    handle_output "mkdir -p $CONFIG_DIR/$SUB_DIR"
+    handle_output "touch $CONFIG_DIR/$SUB_DIR/meta-data"
   done
-  execute_command "cp $ISO_CUSTOM_DIR/var/cache/apt/archives/*.dev $PACKAGE_DIR"
-  if [ -f "$WORK_DIR/grub.cfg" ]; then
-    execute_command "cp $WORK_DIR/grub.cfg $ISO_SOURCE_DIR/boot/grub/grub.cfg"
+  if [ "$TEST_MODE" = "0" ]; then
+    7z -y x $WORK_DIR/$BASE_ISO_FILE -o$ISO_SOURCE_DIR
+    mkdir -p $PACKAGE_DIR
+    for SUB_DIR in sda vda; do
+      mkdir -p $CONFIG_DIR/$SUB_DIR
+      touch $CONFIG_DIR/$SUB_DIR/meta-data
+    done
+    cp $ISO_CUSTOM_DIR/var/cache/apt/archives/*.deb $PACKAGE_DIR
+  fi
+  if [ -d "$WORK_DIR/BOOT" ]; then
+    if [ "$TEST_MODE" = "0" ]; then
+      if [ "$FORCE_MODE" = "1" ]; then
+        rm -rf $WORK_DIR/BOOT
+        mv $ISO_SOURCE_DIR/\[BOOT\] $WORK_DIR/BOOT
+      fi
+    fi
   else
-    execute_command "echo \"set timeout=$GRUB_TIMEOUT\" > $ISO_SOURCE_DIR/boot/grub/grub.cfg"
-    execute_command "echo \"loadfont unicode\" >> $ISO_SOURCE_DIR/boot/grub/grub.cfg"
-    execute_command "echo \"menuentry 'Autoinstall Ubuntu Server - Physical' {\" >> $ISO_SOURCE_DIR/boot/grub/grub.cfg"
-    execute_command "echo \"  set gfxpayload=keep\" >> $ISO_SOURCE_DIR/boot/grub/grub.cfg"
-    execute_command "echo \"  linux   /casper/vmlinuz quiet autoinstall ds=nocloud\;s=/$INSTALL_MOUNT/$INSTALL_DIRs/configs/sda/  ---\" >> $ISO_SOURCE_DIR/boot/grub/grub.cfg"
-    execute_command "echo \"  initrd  /casper/initrd\" >> $ISO_SOURCE_DIR/boot/grub/grub.cfg"
-    execute_command "echo \"}\" >> $ISO_SOURCE_DIR/boot/grub/grub.cfg"
-    execute_command "echo \"  menuentry 'Autoinstall Ubuntu Server - Virtual - KVM' {\" >> $ISO_SOURCE_DIR/boot/grub/grub.cfg"
-    execute_command "echo \"  set gfxpayload=keep\" >> $ISO_SOURCE_DIR/boot/grub/grub.cfg"
-    execute_command "echo \"  linux   /casper/vmlinuz quiet autoinstall ds=nocloud\;s=/$INSTALL_MOUNT/$INSTALL_DIRs/configs/vda/  ---\" >> $ISO_SOURCE_DIR/boot/grub/grub.cfg"
-    execute_command "echo \"  initrd  /casper/initrd\" >> $ISO_SOURCE_DIR/boot/grub/grub.cfg"
-    execute_command "echo \"}\" >> $ISO_SOURCE_DIR/boot/grub/grub.cfg"
-    execute_command "echo \"menuentry 'Try or Install Ubuntu Server' {\" >> $ISO_SOURCE_DIR/boot/grub/grub.cfg"
-    execute_command "echo \"  set gfxpayload=keep\" >> $ISO_SOURCE_DIR/boot/grub/grub.cfg"
-    execute_command "echo \"  linux /casper/vmlinuz quiet ---\" >> $ISO_SOURCE_DIR/boot/grub/grub.cfg"
-    execute_command "echo \"  initrd  /casper/initrd\" >> $ISO_SOURCE_DIR/boot/grub/grub.cfg"
-    execute_command "echo \"}\" >> $ISO_SOURCE_DIR/boot/grub/grub.cfg"
-    execute_command "echo \"menuentry 'Boot from next volume' {\" >> $ISO_SOURCE_DIR/boot/grub/grub.cfg"
-    execute_command "echo \"  exit 1\" >> $ISO_SOURCE_DIR/boot/grub/grub.cfg"
-    execute_command "echo \"}\" >> $ISO_SOURCE_DIR/boot/grub/grub.cfg"
-    execute_command "echo \"menuentry 'UEFI Firmware Settings' {\" >> $ISO_SOURCE_DIR/boot/grub/grub.cfg"
-    execute_command "echo \"  fwsetup\" >> $ISO_SOURCE_DIR/boot/grub/grub.cfg"
-    execute_command "echo \"}\" >> $ISO_SOURCE_DIR/boot/grub/grub.cfg"
+    if [ "$TEST_MODE" = "0" ]; then
+      mv $ISO_SOURCE_DIR/\[BOOT\] $WORK_DIR/BOOT
+    fi
+  fi
+  if [ -f "$WORK_DIR/grub.cfg" ]; then
+    handle_output "cp $WORK_DIR/grub.cfg $ISO_SOURCE_DIR/boot/grub/grub.cfg"
+    if [ "$TEST_MODE" = "0" ]; then
+      cp $WORK_DIR/grub.cfg $ISO_SOURCE_DIR/boot/grub/grub.cfg
+    fi
+  else
+    handle_output "echo \"set timeout=$GRUB_TIMEOUT\" > $ISO_SOURCE_DIR/boot/grub/grub.cfg"
+    handle_output "echo \"loadfont unicode\" >> $ISO_SOURCE_DIR/boot/grub/grub.cfg"
+    handle_output "echo \"menuentry 'Autoinstall Ubuntu Server - Physical' {\" >> $ISO_SOURCE_DIR/boot/grub/grub.cfg"
+    handle_output "echo \"  set gfxpayload=keep\" >> $ISO_SOURCE_DIR/boot/grub/grub.cfg"
+    handle_output "echo \"  linux   /casper/vmlinuz quiet autoinstall ds=nocloud\;s=/$INSTALL_MOUNT/$INSTALL_DIRs/configs/sda/  ---\" >> $ISO_SOURCE_DIR/boot/grub/grub.cfg"
+    handle_output "echo \"  initrd  /casper/initrd\" >> $ISO_SOURCE_DIR/boot/grub/grub.cfg"
+    handle_output "echo \"}\" >> $ISO_SOURCE_DIR/boot/grub/grub.cfg"
+    handle_output "echo \"  menuentry 'Autoinstall Ubuntu Server - Virtual - KVM' {\" >> $ISO_SOURCE_DIR/boot/grub/grub.cfg"
+    handle_output "echo \"  set gfxpayload=keep\" >> $ISO_SOURCE_DIR/boot/grub/grub.cfg"
+    handle_output "echo \"  linux   /casper/vmlinuz quiet autoinstall ds=nocloud\;s=/$INSTALL_MOUNT/$INSTALL_DIRs/configs/vda/  ---\" >> $ISO_SOURCE_DIR/boot/grub/grub.cfg"
+    handle_output "echo \"  initrd  /casper/initrd\" >> $ISO_SOURCE_DIR/boot/grub/grub.cfg"
+    handle_output "echo \"}\" >> $ISO_SOURCE_DIR/boot/grub/grub.cfg"
+    handle_output "echo \"menuentry 'Try or Install Ubuntu Server' {\" >> $ISO_SOURCE_DIR/boot/grub/grub.cfg"
+    handle_output "echo \"  set gfxpayload=keep\" >> $ISO_SOURCE_DIR/boot/grub/grub.cfg"
+    handle_output "echo \"  linux /casper/vmlinuz quiet ---\" >> $ISO_SOURCE_DIR/boot/grub/grub.cfg"
+    handle_output "echo \"  initrd  /casper/initrd\" >> $ISO_SOURCE_DIR/boot/grub/grub.cfg"
+    handle_output "echo \"}\" >> $ISO_SOURCE_DIR/boot/grub/grub.cfg"
+    handle_output "echo \"menuentry 'Boot from next volume' {\" >> $ISO_SOURCE_DIR/boot/grub/grub.cfg"
+    handle_output "echo \"  exit 1\" >> $ISO_SOURCE_DIR/boot/grub/grub.cfg"
+    handle_output "echo \"}\" >> $ISO_SOURCE_DIR/boot/grub/grub.cfg"
+    handle_output "echo \"menuentry 'UEFI Firmware Settings' {\" >> $ISO_SOURCE_DIR/boot/grub/grub.cfg"
+    handle_output "echo \"  fwsetup\" >> $ISO_SOURCE_DIR/boot/grub/grub.cfg"
+    handle_output "echo \"}\" >> $ISO_SOURCE_DIR/boot/grub/grub.cfg"
+    if [ "TEST_MODE" = "0" ]; then
+      echo "set timeout=$GRUB_TIMEOUT" > $ISO_SOURCE_DIR/boot/grub/grub.cfg
+      echo "loadfont unicode" >> $ISO_SOURCE_DIR/boot/grub/grub.cfg
+      echo "menuentry 'Autoinstall Ubuntu Server - Physical' {" >> $ISO_SOURCE_DIR/boot/grub/grub.cfg
+      echo "  set gfxpayload=keep" >> $ISO_SOURCE_DIR/boot/grub/grub.cfg
+      echo "  linux   /casper/vmlinuz quiet autoinstall ds=nocloud\;s=/$INSTALL_MOUNT/$INSTALL_DIRs/configs/sda/  ---" >> $ISO_SOURCE_DIR/boot/grub/grub.cfg
+      echo "  initrd  /casper/initrd" >> $ISO_SOURCE_DIR/boot/grub/grub.cfg
+      echo "}" >> $ISO_SOURCE_DIR/boot/grub/grub.cfg
+      echo "  menuentry 'Autoinstall Ubuntu Server - Virtual - KVM' {" >> $ISO_SOURCE_DIR/boot/grub/grub.cfg
+      echo "  set gfxpayload=keep" >> $ISO_SOURCE_DIR/boot/grub/grub.cfg
+      echo "  linux   /casper/vmlinuz quiet autoinstall ds=nocloud\;s=/$INSTALL_MOUNT/$INSTALL_DIRs/configs/vda/  ---" >> $ISO_SOURCE_DIR/boot/grub/grub.cfg
+      echo "  initrd  /casper/initrd" >> $ISO_SOURCE_DIR/boot/grub/grub.cfg
+      echo "}" >> $ISO_SOURCE_DIR/boot/grub/grub.cfg
+      echo "menuentry 'Try or Install Ubuntu Server' {" >> $ISO_SOURCE_DIR/boot/grub/grub.cfg
+      echo "  set gfxpayload=keep" >> $ISO_SOURCE_DIR/boot/grub/grub.cfg
+      echo "  linux /casper/vmlinuz quiet ---" >> $ISO_SOURCE_DIR/boot/grub/grub.cfg
+      echo "  initrd  /casper/initrd" >> $ISO_SOURCE_DIR/boot/grub/grub.cfg
+      echo "}" >> $ISO_SOURCE_DIR/boot/grub/grub.cfg
+      echo "menuentry 'Boot from next volume' {" >> $ISO_SOURCE_DIR/boot/grub/grub.cfg
+      echo "  exit 1" >> $ISO_SOURCE_DIR/boot/grub/grub.cfg
+      echo "}" >> $ISO_SOURCE_DIR/boot/grub/grub.cfg
+      echo "menuentry 'UEFI Firmware Settings' {" >> $ISO_SOURCE_DIR/boot/grub/grub.cfg
+      echo "  fwsetup" >> $ISO_SOURCE_DIR/boot/grub/grub.cfg
+    fi
   fi
   for DEVICE in sda vda; do 
     if [ -f "$WORK_DIR/$DEVICE-user-data" ]; then
-      execute_command "cp $WORK_DIR/$DEVICE-user-data $CONFIG_DIR/$DEVICE/user-data"
+      handle_output "cp $WORK_DIR/$DEVICE-user-data $CONFIG_DIR/$DEVICE/user-data"
+      if [ "$TEST_MODE" = "0" ]; then
+        cp $WORK_DIR/$DEVICE-user-data $CONFIG_DIR/$DEVICE/user-data
+      fi
     else
-      execute_command "echo \"#cloud-config\" > $CONFIG_DIR/$DEVICE/user-data"
-      execute_command "echo \"autoinstall:\" >> $CONFIG_DIR/$DEVICE/user-data"
-      execute_command "echo \"  apt:\" >> $CONFIG_DIR/$DEVICE/user-data"
-      execute_command "echo \"    preferences:\" >> $CONFIG_DIR/$DEVICE/user-data"
-      execute_command "echo \"      - package: \\\"*\\\"\" >> $CONFIG_DIR/$DEVICE/user-data"
-      execute_command "echo \"        pin: \\\"release a=$RELEASE-security\\\"\" >> $CONFIG_DIR/$DEVICE/user-data"
-      execute_command "echo \"        pin-priority: 200\" >> $CONFIG_DIR/$DEVICE/user-data"
-      execute_command "echo \"    disable_components: []\" >> $CONFIG_DIR/$DEVICE/user-data"
-      execute_command "echo \"    geoip: true\" >> $CONFIG_DIR/$DEVICE/user-data"
-      execute_command "echo \"    preserve_sources_list: false\" >> $CONFIG_DIR/$DEVICE/user-data"
-      execute_command "echo \"    primary:\" >> $CONFIG_DIR/$DEVICE/user-data"
-      execute_command "echo \"    - arches:\" >> $CONFIG_DIR/$DEVICE/user-data"
-      execute_command "echo \"      - $ARCH\" >> $CONFIG_DIR/$DEVICE/user-data"
-      execute_command "echo \"      uri: http://archive.ubuntu.com/ubuntu\" >> $CONFIG_DIR/$DEVICE/user-data"
-      execute_command "echo \"    - arches:\" >> $CONFIG_DIR/$DEVICE/user-data"
-      execute_command "echo \"      - default\" >> $CONFIG_DIR/$DEVICE/user-data"
-      execute_command "echo \"      uri: http://ports.ubuntu.com/ubuntu-ports\" >> $CONFIG_DIR/$DEVICE/user-data"
-      execute_command "echo \"  package_update: false\" >> $CONFIG_DIR/$DEVICE/user-data"
-      execute_command "echo \"  package_upgrade: false\" >> $CONFIG_DIR/$DEVICE/user-data"
-      execute_command "echo \"  drivers:\" >> $CONFIG_DIR/$DEVICE/user-data"
-      execute_command "echo \"    install: false\" >> $CONFIG_DIR/$DEVICE/user-data"
-      execute_command "echo \"  user-data:\" >> $CONFIG_DIR/$DEVICE/user-data"
-      execute_command "echo \"    timezone: $TIMEZONE\" >> $CONFIG_DIR/$DEVICE/user-data"
-      execute_command "echo \"  identity:\" >> $CONFIG_DIR/$DEVICE/user-data"
-      execute_command "echo \"    hostname: $HOSTNAME\" >> $CONFIG_DIR/$DEVICE/user-data"
-      execute_command "echo \"    password: \\\"$PASSWORD_CRYPT\\\"\" >> $CONFIG_DIR/$DEVICE/user-data"
-      execute_command "echo \"    realname: $REALNAME\" >> $CONFIG_DIR/$DEVICE/user-data"
-      execute_command "echo \"    username: $USERNAME\" >> $CONFIG_DIR/$DEVICE/user-data"
-      execute_command "echo \"  kernel:\" >> $CONFIG_DIR/$DEVICE/user-data"
-      execute_command "echo \"    package: linux-generic\" >> $CONFIG_DIR/$DEVICE/user-data"
-      execute_command "echo \"  keyboard:\" >> $CONFIG_DIR/$DEVICE/user-data"
-      execute_command "echo \"    layout: us\" >> $CONFIG_DIR/$DEVICE/user-data"
-      execute_command "echo \"  locale: en_US.UTF-8\" >> $CONFIG_DIR/$DEVICE/user-data"
-      execute_command "echo \"  network:\" >> $CONFIG_DIR/$DEVICE/user-data"
-      execute_command "echo \"    ethernets:\" >> $CONFIG_DIR/$DEVICE/user-data"
-      execute_command "echo \"      ens33:\" >> $CONFIG_DIR/$DEVICE/user-data"
-      execute_command "echo \"        critical: true\" >> $CONFIG_DIR/$DEVICE/user-data"
-      execute_command "echo \"        dhcp-identifier: mac\" >> $CONFIG_DIR/$DEVICE/user-data"
-      execute_command "echo \"        dhcp4: true\" >> $CONFIG_DIR/$DEVICE/user-data"
-      execute_command "echo \"    version: 2\" >> $CONFIG_DIR/$DEVICE/user-data"
-      execute_command "echo \"  ssh:\" >> $CONFIG_DIR/$DEVICE/user-data"
-      execute_command "echo \"    allow-pw: true\" >> $CONFIG_DIR/$DEVICE/user-data"
-      execute_command "echo \"    authorized-keys: []\" >> $CONFIG_DIR/$DEVICE/user-data"
-      execute_command "echo \"    install-server: true\" >> $CONFIG_DIR/$DEVICE/user-data"
-      execute_command "echo \"  storage:\" >> $CONFIG_DIR/$DEVICE/user-data"
-      execute_command "echo \"    config:\" >> $CONFIG_DIR/$DEVICE/user-data"
-      execute_command "echo \"    - ptable: gpt\" >> $CONFIG_DIR/$DEVICE/user-data"
-      execute_command "echo \"      path: /dev/$DEVICE\" >> $CONFIG_DIR/$DEVICE/user-data"
-      execute_command "echo \"      wipe: superblock-recursive\" >> $CONFIG_DIR/$DEVICE/user-data"
-      execute_command "echo \"      preserve: false\" >> $CONFIG_DIR/$DEVICE/user-data"
-      execute_command "echo \"      name: ''\" >> $CONFIG_DIR/$DEVICE/user-data"
-      execute_command "echo \"      grub_device: true\" >> $CONFIG_DIR/$DEVICE/user-data"
-      execute_command "echo \"      type: disk\" >> $CONFIG_DIR/$DEVICE/user-data"
-      execute_command "echo \"      id: disk1\" >> $CONFIG_DIR/$DEVICE/user-data"
-      execute_command "echo \"    - device: disk1\" >> $CONFIG_DIR/$DEVICE/user-data"
-      execute_command "echo \"      size: 1127219200\" >> $CONFIG_DIR/$DEVICE/user-data"
-      execute_command "echo \"      wipe: superblock-recursive\" >> $CONFIG_DIR/$DEVICE/user-data"
-      execute_command "echo \"      flag: boot\" >> $CONFIG_DIR/$DEVICE/user-data"
-      execute_command "echo \"      number: 1\" >> $CONFIG_DIR/$DEVICE/user-data"
-      execute_command "echo \"      preserve: false\" >> $CONFIG_DIR/$DEVICE/user-data"
-      execute_command "echo \"      grub_device: true\" >> $CONFIG_DIR/$DEVICE/user-data"
-      execute_command "echo \"      type: partition\" >> $CONFIG_DIR/$DEVICE/user-data"
-      execute_command "echo \"      ptable: gpt\" >> $CONFIG_DIR/$DEVICE/user-data"
-      execute_command "echo \"      id: disk1p1\" >> $CONFIG_DIR/$DEVICE/user-data"
-      execute_command "echo \"    - fstype: fat32\" >> $CONFIG_DIR/$DEVICE/user-data"
-      execute_command "echo \"      volume: disk1p1\" >> $CONFIG_DIR/$DEVICE/user-data"
-      execute_command "echo \"      preserve: false\" >> $CONFIG_DIR/$DEVICE/user-data"
-      execute_command "echo \"      type: format\" >> $CONFIG_DIR/$DEVICE/user-data"
-      execute_command "echo \"      id: disk1p1fs1\" >> $CONFIG_DIR/$DEVICE/user-data"
-      execute_command "echo \"    - path: /boot/efi\" >> $CONFIG_DIR/$DEVICE/user-data"
-      execute_command "echo \"      device: disk1p1fs1\" >> $CONFIG_DIR/$DEVICE/user-data"
-      execute_command "echo \"      type: mount\" >> $CONFIG_DIR/$DEVICE/user-data"
-      execute_command "echo \"      id: mount-2\" >> $CONFIG_DIR/$DEVICE/user-data"
-      execute_command "echo \"    - device: disk1\" >> $CONFIG_DIR/$DEVICE/user-data"
-      execute_command "echo \"      size: -1\" >> $CONFIG_DIR/$DEVICE/user-data"
-      execute_command "echo \"      wipe: superblock-recursive\" >> $CONFIG_DIR/$DEVICE/user-data"
-      execute_command "echo \"      flag: root\" >> $CONFIG_DIR/$DEVICE/user-data"
-      execute_command "echo \"      number: 2\" >> $CONFIG_DIR/$DEVICE/user-data"
-      execute_command "echo \"      preserve: false\" >> $CONFIG_DIR/$DEVICE/user-data"
-      execute_command "echo \"      grub_device: false\" >> $CONFIG_DIR/$DEVICE/user-data"
-      execute_command "echo \"      type: partition\" >> $CONFIG_DIR/$DEVICE/user-data"
-      execute_command "echo \"      id: disk1p2\" >> $CONFIG_DIR/$DEVICE/user-data"
-      execute_command "echo \"    - id: disk1p2fs1\" >> $CONFIG_DIR/$DEVICE/user-data"
-      execute_command "echo \"      type: format\" >> $CONFIG_DIR/$DEVICE/user-data"
-      execute_command "echo \"      fstype: zfsroot\" >> $CONFIG_DIR/$DEVICE/user-data"
-      execute_command "echo \"      volume: disk1p2\" >> $CONFIG_DIR/$DEVICE/user-data"
-      execute_command "echo \"      preserve: false\" >> $CONFIG_DIR/$DEVICE/user-data"
-      execute_command "echo \"    - id: disk1p2f1_rootpool\" >> $CONFIG_DIR/$DEVICE/user-data"
-      execute_command "echo \"      mountpoint: /\" >> $CONFIG_DIR/$DEVICE/user-data"
-      execute_command "echo \"      pool: rpool\" >> $CONFIG_DIR/$DEVICE/user-data"
-      execute_command "echo \"      type: zpool\" >> $CONFIG_DIR/$DEVICE/user-data"
-      execute_command "echo \"      device: disk1p2fs1\" >> $CONFIG_DIR/$DEVICE/user-data"
-      execute_command "echo \"      preserve: false\" >> $CONFIG_DIR/$DEVICE/user-data"
-      execute_command "echo \"      vdevs:\" >> $CONFIG_DIR/$DEVICE/user-data"
-      execute_command "echo \"        - disk1p2fs1\" >> $CONFIG_DIR/$DEVICE/user-data"
-      execute_command "echo \"    - id: disk1_rootpool_container\" >> $CONFIG_DIR/$DEVICE/user-data"
-      execute_command "echo \"      pool: disk1p2f1_rootpool\" >> $CONFIG_DIR/$DEVICE/user-data"
-      execute_command "echo \"      preserve: false\" >> $CONFIG_DIR/$DEVICE/user-data"
-      execute_command "echo \"      properties:\" >> $CONFIG_DIR/$DEVICE/user-data"
-      execute_command "echo \"        canmount: \\\"off\\\"\" >> $CONFIG_DIR/$DEVICE/user-data"
-      execute_command "echo \"        mountpoint: \\\"none\\\"\" >> $CONFIG_DIR/$DEVICE/user-data"
-      execute_command "echo \"      type: zfs\" >> $CONFIG_DIR/$DEVICE/user-data"
-      execute_command "echo \"      volume: /ROOT\" >> $CONFIG_DIR/$DEVICE/user-data"
-      execute_command "echo \"    - id: disk1_rootpool_rootfs\" >> $CONFIG_DIR/$DEVICE/user-data"
-      execute_command "echo \"      pool: disk1p2f1_rootpool\" >> $CONFIG_DIR/$DEVICE/user-data"
-      execute_command "echo \"      preserve: false\" >> $CONFIG_DIR/$DEVICE/user-data"
-      execute_command "echo \"      properties:\" >> $CONFIG_DIR/$DEVICE/user-data"
-      execute_command "echo \"        canmount: noauto\" >> $CONFIG_DIR/$DEVICE/user-data"
-      execute_command "echo \"        mountpoint: /\" >> $CONFIG_DIR/$DEVICE/user-data"
-      execute_command "echo \"      type: zfs\" >> $CONFIG_DIR/$DEVICE/user-data"
-      execute_command "echo \"      volume: /ROOT/zfsroot\" >> $CONFIG_DIR/$DEVICE/user-data"
-      execute_command "echo \"    - path: /\" >> $CONFIG_DIR/$DEVICE/user-data"
-      execute_command "echo \"      device: disk1p2fs1\" >> $CONFIG_DIR/$DEVICE/user-data"
-      execute_command "echo \"      type: mount\" >> $CONFIG_DIR/$DEVICE/user-data"
-      execute_command "echo \"      id: mount-disk1p2\" >> $CONFIG_DIR/$DEVICE/user-data"
-      execute_command "echo \"    swap:\" >> $CONFIG_DIR/$DEVICE/user-data"
-      execute_command "echo \"      swap: 0\" >> $CONFIG_DIR/$DEVICE/user-data"
-      execute_command "echo \"  early-commands:\" >> $CONFIG_DIR/$DEVICE/user-data"
-      execute_command "echo \"    - \\\"sudo dpkg --auto-deconfigure --force-depends -i /$INSTALL_MOUNT/$INSTALL_DIR/packages/*.deb\\\"\" >> $CONFIG_DIR/$DEVICE/user-data"
-      execute_command "echo \"  version: 1\" >> $CONFIG_DIR/$DEVICE/user-data"
+      handle_output "echo \"#cloud-config\" > $CONFIG_DIR/$DEVICE/user-data"
+      handle_output "echo \"autoinstall:\" >> $CONFIG_DIR/$DEVICE/user-data"
+      handle_output "echo \"  apt:\" >> $CONFIG_DIR/$DEVICE/user-data"
+      handle_output "echo \"    preferences:\" >> $CONFIG_DIR/$DEVICE/user-data"
+      handle_output "echo \"      - package: \\\"*\\\"\" >> $CONFIG_DIR/$DEVICE/user-data"
+      handle_output "echo \"        pin: \\\"release a=$RELEASE-security\\\"\" >> $CONFIG_DIR/$DEVICE/user-data"
+      handle_output "echo \"        pin-priority: 200\" >> $CONFIG_DIR/$DEVICE/user-data"
+      handle_output "echo \"    disable_components: []\" >> $CONFIG_DIR/$DEVICE/user-data"
+      handle_output "echo \"    geoip: true\" >> $CONFIG_DIR/$DEVICE/user-data"
+      handle_output "echo \"    preserve_sources_list: false\" >> $CONFIG_DIR/$DEVICE/user-data"
+      handle_output "echo \"    primary:\" >> $CONFIG_DIR/$DEVICE/user-data"
+      handle_output "echo \"    - arches:\" >> $CONFIG_DIR/$DEVICE/user-data"
+      handle_output "echo \"      - $ARCH\" >> $CONFIG_DIR/$DEVICE/user-data"
+      handle_output "echo \"      uri: http://archive.ubuntu.com/ubuntu\" >> $CONFIG_DIR/$DEVICE/user-data"
+      handle_output "echo \"    - arches:\" >> $CONFIG_DIR/$DEVICE/user-data"
+      handle_output "echo \"      - default\" >> $CONFIG_DIR/$DEVICE/user-data"
+      handle_output "echo \"      uri: http://ports.ubuntu.com/ubuntu-ports\" >> $CONFIG_DIR/$DEVICE/user-data"
+      handle_output "echo \"  package_update: false\" >> $CONFIG_DIR/$DEVICE/user-data"
+      handle_output "echo \"  package_upgrade: false\" >> $CONFIG_DIR/$DEVICE/user-data"
+      handle_output "echo \"  drivers:\" >> $CONFIG_DIR/$DEVICE/user-data"
+      handle_output "echo \"    install: false\" >> $CONFIG_DIR/$DEVICE/user-data"
+      handle_output "echo \"  user-data:\" >> $CONFIG_DIR/$DEVICE/user-data"
+      handle_output "echo \"    timezone: $TIMEZONE\" >> $CONFIG_DIR/$DEVICE/user-data"
+      handle_output "echo \"  identity:\" >> $CONFIG_DIR/$DEVICE/user-data"
+      handle_output "echo \"    hostname: $HOSTNAME\" >> $CONFIG_DIR/$DEVICE/user-data"
+      handle_output "echo \"    password: \\\"$PASSWORD_CRYPT\\\"\" >> $CONFIG_DIR/$DEVICE/user-data"
+      handle_output "echo \"    realname: $REALNAME\" >> $CONFIG_DIR/$DEVICE/user-data"
+      handle_output "echo \"    username: $USERNAME\" >> $CONFIG_DIR/$DEVICE/user-data"
+      handle_output "echo \"  kernel:\" >> $CONFIG_DIR/$DEVICE/user-data"
+      handle_output "echo \"    package: linux-generic\" >> $CONFIG_DIR/$DEVICE/user-data"
+      handle_output "echo \"  keyboard:\" >> $CONFIG_DIR/$DEVICE/user-data"
+      handle_output "echo \"    layout: us\" >> $CONFIG_DIR/$DEVICE/user-data"
+      handle_output "echo \"  locale: en_US.UTF-8\" >> $CONFIG_DIR/$DEVICE/user-data"
+      handle_output "echo \"  network:\" >> $CONFIG_DIR/$DEVICE/user-data"
+      handle_output "echo \"    ethernets:\" >> $CONFIG_DIR/$DEVICE/user-data"
+      handle_output "echo \"      ens33:\" >> $CONFIG_DIR/$DEVICE/user-data"
+      handle_output "echo \"        critical: true\" >> $CONFIG_DIR/$DEVICE/user-data"
+      handle_output "echo \"        dhcp-identifier: mac\" >> $CONFIG_DIR/$DEVICE/user-data"
+      handle_output "echo \"        dhcp4: true\" >> $CONFIG_DIR/$DEVICE/user-data"
+      handle_output "echo \"    version: 2\" >> $CONFIG_DIR/$DEVICE/user-data"
+      handle_output "echo \"  ssh:\" >> $CONFIG_DIR/$DEVICE/user-data"
+      handle_output "echo \"    allow-pw: true\" >> $CONFIG_DIR/$DEVICE/user-data"
+      handle_output "echo \"    authorized-keys: []\" >> $CONFIG_DIR/$DEVICE/user-data"
+      handle_output "echo \"    install-server: true\" >> $CONFIG_DIR/$DEVICE/user-data"
+      handle_output "echo \"  storage:\" >> $CONFIG_DIR/$DEVICE/user-data"
+      handle_output "echo \"    config:\" >> $CONFIG_DIR/$DEVICE/user-data"
+      handle_output "echo \"    - ptable: gpt\" >> $CONFIG_DIR/$DEVICE/user-data"
+      handle_output "echo \"      path: /dev/$DEVICE\" >> $CONFIG_DIR/$DEVICE/user-data"
+      handle_output "echo \"      wipe: superblock-recursive\" >> $CONFIG_DIR/$DEVICE/user-data"
+      handle_output "echo \"      preserve: false\" >> $CONFIG_DIR/$DEVICE/user-data"
+      handle_output "echo \"      name: ''\" >> $CONFIG_DIR/$DEVICE/user-data"
+      handle_output "echo \"      grub_device: true\" >> $CONFIG_DIR/$DEVICE/user-data"
+      handle_output "echo \"      type: disk\" >> $CONFIG_DIR/$DEVICE/user-data"
+      handle_output "echo \"      id: disk1\" >> $CONFIG_DIR/$DEVICE/user-data"
+      handle_output "echo \"    - device: disk1\" >> $CONFIG_DIR/$DEVICE/user-data"
+      handle_output "echo \"      size: 1127219200\" >> $CONFIG_DIR/$DEVICE/user-data"
+      handle_output "echo \"      wipe: superblock-recursive\" >> $CONFIG_DIR/$DEVICE/user-data"
+      handle_output "echo \"      flag: boot\" >> $CONFIG_DIR/$DEVICE/user-data"
+      handle_output "echo \"      number: 1\" >> $CONFIG_DIR/$DEVICE/user-data"
+      handle_output "echo \"      preserve: false\" >> $CONFIG_DIR/$DEVICE/user-data"
+      handle_output "echo \"      grub_device: true\" >> $CONFIG_DIR/$DEVICE/user-data"
+      handle_output "echo \"      type: partition\" >> $CONFIG_DIR/$DEVICE/user-data"
+      handle_output "echo \"      ptable: gpt\" >> $CONFIG_DIR/$DEVICE/user-data"
+      handle_output "echo \"      id: disk1p1\" >> $CONFIG_DIR/$DEVICE/user-data"
+      handle_output "echo \"    - fstype: fat32\" >> $CONFIG_DIR/$DEVICE/user-data"
+      handle_output "echo \"      volume: disk1p1\" >> $CONFIG_DIR/$DEVICE/user-data"
+      handle_output "echo \"      preserve: false\" >> $CONFIG_DIR/$DEVICE/user-data"
+      handle_output "echo \"      type: format\" >> $CONFIG_DIR/$DEVICE/user-data"
+      handle_output "echo \"      id: disk1p1fs1\" >> $CONFIG_DIR/$DEVICE/user-data"
+      handle_output "echo \"    - path: /boot/efi\" >> $CONFIG_DIR/$DEVICE/user-data"
+      handle_output "echo \"      device: disk1p1fs1\" >> $CONFIG_DIR/$DEVICE/user-data"
+      handle_output "echo \"      type: mount\" >> $CONFIG_DIR/$DEVICE/user-data"
+      handle_output "echo \"      id: mount-2\" >> $CONFIG_DIR/$DEVICE/user-data"
+      handle_output "echo \"    - device: disk1\" >> $CONFIG_DIR/$DEVICE/user-data"
+      handle_output "echo \"      size: -1\" >> $CONFIG_DIR/$DEVICE/user-data"
+      handle_output "echo \"      wipe: superblock-recursive\" >> $CONFIG_DIR/$DEVICE/user-data"
+      handle_output "echo \"      flag: root\" >> $CONFIG_DIR/$DEVICE/user-data"
+      handle_output "echo \"      number: 2\" >> $CONFIG_DIR/$DEVICE/user-data"
+      handle_output "echo \"      preserve: false\" >> $CONFIG_DIR/$DEVICE/user-data"
+      handle_output "echo \"      grub_device: false\" >> $CONFIG_DIR/$DEVICE/user-data"
+      handle_output "echo \"      type: partition\" >> $CONFIG_DIR/$DEVICE/user-data"
+      handle_output "echo \"      id: disk1p2\" >> $CONFIG_DIR/$DEVICE/user-data"
+      handle_output "echo \"    - id: disk1p2fs1\" >> $CONFIG_DIR/$DEVICE/user-data"
+      handle_output "echo \"      type: format\" >> $CONFIG_DIR/$DEVICE/user-data"
+      handle_output "echo \"      fstype: zfsroot\" >> $CONFIG_DIR/$DEVICE/user-data"
+      handle_output "echo \"      volume: disk1p2\" >> $CONFIG_DIR/$DEVICE/user-data"
+      handle_output "echo \"      preserve: false\" >> $CONFIG_DIR/$DEVICE/user-data"
+      handle_output "echo \"    - id: disk1p2f1_rootpool\" >> $CONFIG_DIR/$DEVICE/user-data"
+      handle_output "echo \"      mountpoint: /\" >> $CONFIG_DIR/$DEVICE/user-data"
+      handle_output "echo \"      pool: rpool\" >> $CONFIG_DIR/$DEVICE/user-data"
+      handle_output "echo \"      type: zpool\" >> $CONFIG_DIR/$DEVICE/user-data"
+      handle_output "echo \"      device: disk1p2fs1\" >> $CONFIG_DIR/$DEVICE/user-data"
+      handle_output "echo \"      preserve: false\" >> $CONFIG_DIR/$DEVICE/user-data"
+      handle_output "echo \"      vdevs:\" >> $CONFIG_DIR/$DEVICE/user-data"
+      handle_output "echo \"        - disk1p2fs1\" >> $CONFIG_DIR/$DEVICE/user-data"
+      handle_output "echo \"    - id: disk1_rootpool_container\" >> $CONFIG_DIR/$DEVICE/user-data"
+      handle_output "echo \"      pool: disk1p2f1_rootpool\" >> $CONFIG_DIR/$DEVICE/user-data"
+      handle_output "echo \"      preserve: false\" >> $CONFIG_DIR/$DEVICE/user-data"
+      handle_output "echo \"      properties:\" >> $CONFIG_DIR/$DEVICE/user-data"
+      handle_output "echo \"        canmount: \\\"off\\\"\" >> $CONFIG_DIR/$DEVICE/user-data"
+      handle_output "echo \"        mountpoint: \\\"none\\\"\" >> $CONFIG_DIR/$DEVICE/user-data"
+      handle_output "echo \"      type: zfs\" >> $CONFIG_DIR/$DEVICE/user-data"
+      handle_output "echo \"      volume: /ROOT\" >> $CONFIG_DIR/$DEVICE/user-data"
+      handle_output "echo \"    - id: disk1_rootpool_rootfs\" >> $CONFIG_DIR/$DEVICE/user-data"
+      handle_output "echo \"      pool: disk1p2f1_rootpool\" >> $CONFIG_DIR/$DEVICE/user-data"
+      handle_output "echo \"      preserve: false\" >> $CONFIG_DIR/$DEVICE/user-data"
+      handle_output "echo \"      properties:\" >> $CONFIG_DIR/$DEVICE/user-data"
+      handle_output "echo \"        canmount: noauto\" >> $CONFIG_DIR/$DEVICE/user-data"
+      handle_output "echo \"        mountpoint: /\" >> $CONFIG_DIR/$DEVICE/user-data"
+      handle_output "echo \"      type: zfs\" >> $CONFIG_DIR/$DEVICE/user-data"
+      handle_output "echo \"      volume: /ROOT/zfsroot\" >> $CONFIG_DIR/$DEVICE/user-data"
+      handle_output "echo \"    - path: /\" >> $CONFIG_DIR/$DEVICE/user-data"
+      handle_output "echo \"      device: disk1p2fs1\" >> $CONFIG_DIR/$DEVICE/user-data"
+      handle_output "echo \"      type: mount\" >> $CONFIG_DIR/$DEVICE/user-data"
+      handle_output "echo \"      id: mount-disk1p2\" >> $CONFIG_DIR/$DEVICE/user-data"
+      handle_output "echo \"    swap:\" >> $CONFIG_DIR/$DEVICE/user-data"
+      handle_output "echo \"      swap: 0\" >> $CONFIG_DIR/$DEVICE/user-data"
+      handle_output "echo \"  early-commands:\" >> $CONFIG_DIR/$DEVICE/user-data"
+      handle_output "echo \"    - \\\"sudo dpkg --auto-deconfigure --force-depends -i /$INSTALL_MOUNT/$INSTALL_DIR/packages/*.deb\\\"\" >> $CONFIG_DIR/$DEVICE/user-data"
+      handle_output "echo \"  version: 1\" >> $CONFIG_DIR/$DEVICE/user-data"
+      if [ "$TEST_MODE" = "0" ]; then
+        echo "#cloud-config" > $CONFIG_DIR/$DEVICE/user-data
+        echo "autoinstall:" >> $CONFIG_DIR/$DEVICE/user-data
+        echo "  apt:" >> $CONFIG_DIR/$DEVICE/user-data
+        echo "    preferences:" >> $CONFIG_DIR/$DEVICE/user-data
+        echo "      - package: \"*\"" >> $CONFIG_DIR/$DEVICE/user-data
+        echo "        pin: \"release a=$RELEASE-security\"" >> $CONFIG_DIR/$DEVICE/user-data
+        echo "        pin-priority: 200" >> $CONFIG_DIR/$DEVICE/user-data
+        echo "    disable_components: []" >> $CONFIG_DIR/$DEVICE/user-data
+        echo "    geoip: true" >> $CONFIG_DIR/$DEVICE/user-data
+        echo "    preserve_sources_list: false" >> $CONFIG_DIR/$DEVICE/user-data
+        echo "    primary:" >> $CONFIG_DIR/$DEVICE/user-data
+        echo "    - arches:" >> $CONFIG_DIR/$DEVICE/user-data
+        echo "      - $ARCH" >> $CONFIG_DIR/$DEVICE/user-data
+        echo "      uri: http://archive.ubuntu.com/ubuntu" >> $CONFIG_DIR/$DEVICE/user-data
+        echo "    - arches:" >> $CONFIG_DIR/$DEVICE/user-data
+        echo "      - default" >> $CONFIG_DIR/$DEVICE/user-data
+        echo "      uri: http://ports.ubuntu.com/ubuntu-ports" >> $CONFIG_DIR/$DEVICE/user-data
+        echo "  package_update: false" >> $CONFIG_DIR/$DEVICE/user-data
+        echo "  package_upgrade: false" >> $CONFIG_DIR/$DEVICE/user-data
+        echo "  drivers:" >> $CONFIG_DIR/$DEVICE/user-data
+        echo "    install: false" >> $CONFIG_DIR/$DEVICE/user-data
+        echo "  user-data:" >> $CONFIG_DIR/$DEVICE/user-data
+        echo "    timezone: $TIMEZONE" >> $CONFIG_DIR/$DEVICE/user-data
+        echo "  identity:" >> $CONFIG_DIR/$DEVICE/user-data
+        echo "    hostname: $HOSTNAME" >> $CONFIG_DIR/$DEVICE/user-data
+        echo "    password: \"$PASSWORD_CRYPT\"" >> $CONFIG_DIR/$DEVICE/user-data
+        echo "    realname: $REALNAME" >> $CONFIG_DIR/$DEVICE/user-data
+        echo "    username: $USERNAME" >> $CONFIG_DIR/$DEVICE/user-data
+        echo "  kernel:" >> $CONFIG_DIR/$DEVICE/user-data
+        echo "    package: linux-generic" >> $CONFIG_DIR/$DEVICE/user-data
+        echo "  keyboard:" >> $CONFIG_DIR/$DEVICE/user-data
+        echo "    layout: us" >> $CONFIG_DIR/$DEVICE/user-data
+        echo "  locale: en_US.UTF-8" >> $CONFIG_DIR/$DEVICE/user-data
+        echo "  network:" >> $CONFIG_DIR/$DEVICE/user-data
+        echo "    ethernets:" >> $CONFIG_DIR/$DEVICE/user-data
+        echo "      ens33:" >> $CONFIG_DIR/$DEVICE/user-data
+        echo "        critical: true" >> $CONFIG_DIR/$DEVICE/user-data
+        echo "        dhcp-identifier: mac" >> $CONFIG_DIR/$DEVICE/user-data
+        echo "        dhcp4: true" >> $CONFIG_DIR/$DEVICE/user-data
+        echo "    version: 2" >> $CONFIG_DIR/$DEVICE/user-data
+        echo "  ssh:" >> $CONFIG_DIR/$DEVICE/user-data
+        echo "    allow-pw: true" >> $CONFIG_DIR/$DEVICE/user-data
+        echo "    authorized-keys: []" >> $CONFIG_DIR/$DEVICE/user-data
+        echo "    install-server: true" >> $CONFIG_DIR/$DEVICE/user-data
+        echo "  storage:" >> $CONFIG_DIR/$DEVICE/user-data
+        echo "    config:" >> $CONFIG_DIR/$DEVICE/user-data
+        echo "    - ptable: gpt" >> $CONFIG_DIR/$DEVICE/user-data
+        echo "      path: /dev/$DEVICE" >> $CONFIG_DIR/$DEVICE/user-data
+        echo "      wipe: superblock-recursive" >> $CONFIG_DIR/$DEVICE/user-data
+        echo "      preserve: false" >> $CONFIG_DIR/$DEVICE/user-data
+        echo "      name: ''" >> $CONFIG_DIR/$DEVICE/user-data
+        echo "      grub_device: true" >> $CONFIG_DIR/$DEVICE/user-data
+        echo "      type: disk" >> $CONFIG_DIR/$DEVICE/user-data
+        echo "      id: disk1" >> $CONFIG_DIR/$DEVICE/user-data
+        echo "    - device: disk1" >> $CONFIG_DIR/$DEVICE/user-data
+        echo "      size: 1127219200" >> $CONFIG_DIR/$DEVICE/user-data
+        echo "      wipe: superblock-recursive" >> $CONFIG_DIR/$DEVICE/user-data
+        echo "      flag: boot" >> $CONFIG_DIR/$DEVICE/user-data
+        echo "      number: 1" >> $CONFIG_DIR/$DEVICE/user-data
+        echo "      preserve: false" >> $CONFIG_DIR/$DEVICE/user-data
+        echo "      grub_device: true" >> $CONFIG_DIR/$DEVICE/user-data
+        echo "      type: partition" >> $CONFIG_DIR/$DEVICE/user-data
+        echo "      ptable: gpt" >> $CONFIG_DIR/$DEVICE/user-data
+        echo "      id: disk1p1" >> $CONFIG_DIR/$DEVICE/user-data
+        echo "    - fstype: fat32" >> $CONFIG_DIR/$DEVICE/user-data
+        echo "      volume: disk1p1" >> $CONFIG_DIR/$DEVICE/user-data
+        echo "      preserve: false" >> $CONFIG_DIR/$DEVICE/user-data
+        echo "      type: format" >> $CONFIG_DIR/$DEVICE/user-data
+        echo "      id: disk1p1fs1" >> $CONFIG_DIR/$DEVICE/user-data
+        echo "    - path: /boot/efi" >> $CONFIG_DIR/$DEVICE/user-data
+        echo "      device: disk1p1fs1" >> $CONFIG_DIR/$DEVICE/user-data
+        echo "      type: mount" >> $CONFIG_DIR/$DEVICE/user-data
+        echo "      id: mount-2" >> $CONFIG_DIR/$DEVICE/user-data
+        echo "    - device: disk1" >> $CONFIG_DIR/$DEVICE/user-data
+        echo "      size: -1" >> $CONFIG_DIR/$DEVICE/user-data
+        echo "      wipe: superblock-recursive" >> $CONFIG_DIR/$DEVICE/user-data
+        echo "      flag: root" >> $CONFIG_DIR/$DEVICE/user-data
+        echo "      number: 2" >> $CONFIG_DIR/$DEVICE/user-data
+        echo "      preserve: false" >> $CONFIG_DIR/$DEVICE/user-data
+        echo "      grub_device: false" >> $CONFIG_DIR/$DEVICE/user-data
+        echo "      type: partition" >> $CONFIG_DIR/$DEVICE/user-data
+        echo "      id: disk1p2" >> $CONFIG_DIR/$DEVICE/user-data
+        echo "    - id: disk1p2fs1" >> $CONFIG_DIR/$DEVICE/user-data
+        echo "      type: format" >> $CONFIG_DIR/$DEVICE/user-data
+        echo "      fstype: zfsroot" >> $CONFIG_DIR/$DEVICE/user-data
+        echo "      volume: disk1p2" >> $CONFIG_DIR/$DEVICE/user-data
+        echo "      preserve: false" >> $CONFIG_DIR/$DEVICE/user-data
+        echo "    - id: disk1p2f1_rootpool" >> $CONFIG_DIR/$DEVICE/user-data
+        echo "      mountpoint: /" >> $CONFIG_DIR/$DEVICE/user-data
+        echo "      pool: rpool" >> $CONFIG_DIR/$DEVICE/user-data
+        echo "      type: zpool" >> $CONFIG_DIR/$DEVICE/user-data
+        echo "      device: disk1p2fs1" >> $CONFIG_DIR/$DEVICE/user-data
+        echo "      preserve: false" >> $CONFIG_DIR/$DEVICE/user-data
+        echo "      vdevs:" >> $CONFIG_DIR/$DEVICE/user-data
+        echo "        - disk1p2fs1" >> $CONFIG_DIR/$DEVICE/user-data
+        echo "    - id: disk1_rootpool_container" >> $CONFIG_DIR/$DEVICE/user-data
+        echo "      pool: disk1p2f1_rootpool" >> $CONFIG_DIR/$DEVICE/user-data
+        echo "      preserve: false" >> $CONFIG_DIR/$DEVICE/user-data
+        echo "      properties:" >> $CONFIG_DIR/$DEVICE/user-data
+        echo "        canmount: \"off\"" >> $CONFIG_DIR/$DEVICE/user-data
+        echo "        mountpoint: \"none\"" >> $CONFIG_DIR/$DEVICE/user-data
+        echo "      type: zfs" >> $CONFIG_DIR/$DEVICE/user-data
+        echo "      volume: /ROOT" >> $CONFIG_DIR/$DEVICE/user-data
+        echo "    - id: disk1_rootpool_rootfs" >> $CONFIG_DIR/$DEVICE/user-data
+        echo "      pool: disk1p2f1_rootpool" >> $CONFIG_DIR/$DEVICE/user-data
+        echo "      preserve: false" >> $CONFIG_DIR/$DEVICE/user-data
+        echo "      properties:" >> $CONFIG_DIR/$DEVICE/user-data
+        echo "        canmount: noauto" >> $CONFIG_DIR/$DEVICE/user-data
+        echo "        mountpoint: /" >> $CONFIG_DIR/$DEVICE/user-data
+        echo "      type: zfs" >> $CONFIG_DIR/$DEVICE/user-data
+        echo "      volume: /ROOT/zfsroot" >> $CONFIG_DIR/$DEVICE/user-data
+        echo "    - path: /" >> $CONFIG_DIR/$DEVICE/user-data
+        echo "      device: disk1p2fs1" >> $CONFIG_DIR/$DEVICE/user-data
+        echo "      type: mount" >> $CONFIG_DIR/$DEVICE/user-data
+        echo "      id: mount-disk1p2" >> $CONFIG_DIR/$DEVICE/user-data
+        echo "    swap:" >> $CONFIG_DIR/$DEVICE/user-data
+        echo "      swap: 0" >> $CONFIG_DIR/$DEVICE/user-data
+        echo "  early-commands:" >> $CONFIG_DIR/$DEVICE/user-data
+        echo "    - \"sudo dpkg --auto-deconfigure --force-depends -i /$INSTALL_MOUNT/$INSTALL_DIR/packages/*.deb\"" >> $CONFIG_DIR/$DEVICE/user-data
+        echo "  version: 1" >> $CONFIG_DIR/$DEVICE/user-data
+      fi
     fi
   done
 }
@@ -700,7 +920,7 @@ DO_PRINT_HELP="1"
 
 # Handle command line arguments
 
-while getopts ":CcdhH:hIi:L:o:P:p:R:rT:tU:u:VvW:w" OPTS; do
+while getopts ":CcDdfhH:hIi:L:o:P:p:R:rT:tU:u:VvW:w" OPTS; do
   case $OPTS in
     C)
       DO_EXECUTE_CHROOT_SCRIPT="1"
@@ -719,6 +939,9 @@ while getopts ":CcdhH:hIi:L:o:P:p:R:rT:tU:u:VvW:w" OPTS; do
     d)
       DO_CHECK_WORK_DIR="1"
       DO_GET_BASE_ISO="1"
+      ;;
+    f)
+      FORCE_MODE="1"
       ;;
     h)
       print_help
