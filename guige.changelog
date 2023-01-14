@@ -51,3 +51,5 @@
 # Fixed bug with code that copies packages into ISO
 # 0.2.6: Sat 14 Jan 2023 15:52:52 AEDT
 # Bug fixes and documentation updates
+# 0.2.7: Sat 14 Jan 2023 18:24:39 AEDT
+# Added NIC switch

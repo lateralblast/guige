@@ -8,7 +8,7 @@ Generic Ubuntu ISO Generation Engine
 Version
 -------
 
-Current version: 0.2.6
+Current version: 0.2.7
 
 Introduction
 ------------
@@ -54,6 +54,8 @@ You can get help using the -h switch:
     -i: Input/base ISO file
     -L: LSB release
     -l  Create ISO (perform last step only - just run xoriso)
+    -N: Network device
+    -n  Do not unmount loopback filesystems (useful for troubleshooting)
     -o: Output ISO file
     -P: Password
     -p: Packages to add to ISO
@@ -67,7 +69,6 @@ You can get help using the -h switch:
     -v  Verbose output
     -W: Work directory
     -w  Check work directories
-
 ```
 
 Todo

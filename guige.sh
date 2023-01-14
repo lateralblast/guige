@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Name:         guige (Generic Ubuntu ISO Generation Engine)
-# Version:      0.2.6
+# Version:      0.2.7
 # Release:      1
 # License:      CC-BA (Creative Commons By Attribution)
 #               http://creativecommons.org/licenses/by/4.0/legalcode
@@ -22,6 +22,10 @@ DEFAULT_REALNAME="Ubuntu"
 DEFAULT_USERNAME="ubuntu"
 DEFAULT_TIMEZONE="Australia/Melbourne"
 DEFAULT_PASSWORD="P455w0rD"
+DEFAULT_NIC="eth0"
+DEFAULT_IP="192.168.1.2"
+DEFAULT_NETMASK="255.255.255.0"
+DEFAULT_GATTEWAY="192.168.1.254"
 RELEASE=""
 HOSTNAME=""
 REALNAME=""
@@ -95,6 +99,8 @@ print_help () {
     -i: Input/base ISO file
     -L: LSB release
     -l  Create ISO (perform last step only - just run xoriso)
+    -N: Network device
+    -n  Do not unmount loopback filesystems (useful for troubleshooting)
     -o: Output ISO file
     -P: Password
     -p: Packages to add to ISO
@@ -742,7 +748,7 @@ prepare_autoinstall_iso () {
       handle_output "echo \"  locale: en_US.UTF-8\" >> $CONFIG_DIR/$DEVICE/user-data"
       handle_output "echo \"  network:\" >> $CONFIG_DIR/$DEVICE/user-data"
       handle_output "echo \"    ethernets:\" >> $CONFIG_DIR/$DEVICE/user-data"
-      handle_output "echo \"      ens33:\" >> $CONFIG_DIR/$DEVICE/user-data"
+      handle_output "echo \"      $NIX:\" >> $CONFIG_DIR/$DEVICE/user-data"
       handle_output "echo \"        critical: true\" >> $CONFIG_DIR/$DEVICE/user-data"
       handle_output "echo \"        dhcp-identifier: mac\" >> $CONFIG_DIR/$DEVICE/user-data"
       handle_output "echo \"        dhcp4: true\" >> $CONFIG_DIR/$DEVICE/user-data"
@@ -863,7 +869,7 @@ prepare_autoinstall_iso () {
         echo "  locale: en_US.UTF-8" >> $CONFIG_DIR/$DEVICE/user-data
         echo "  network:" >> $CONFIG_DIR/$DEVICE/user-data
         echo "    ethernets:" >> $CONFIG_DIR/$DEVICE/user-data
-        echo "      ens33:" >> $CONFIG_DIR/$DEVICE/user-data
+        echo "      $NIC:" >> $CONFIG_DIR/$DEVICE/user-data
         echo "        critical: true" >> $CONFIG_DIR/$DEVICE/user-data
         echo "        dhcp-identifier: mac" >> $CONFIG_DIR/$DEVICE/user-data
         echo "        dhcp4: true" >> $CONFIG_DIR/$DEVICE/user-data
@@ -967,7 +973,7 @@ DO_NO_UNMOUNT_ISO="0"
 
 # Handle command line arguments
 
-while getopts ":CcDdfFhH:hIi:L:lo:P:p:R:rT:tU:uVvW:w" OPTS; do
+while getopts ":CcDdfFhH:hIi:L:lN:no:P:p:R:rT:tU:uVvW:w" OPTS; do
   case $OPTS in
     C)
       DO_EXECUTE_CHROOT_SCRIPT="1"
@@ -987,11 +993,11 @@ while getopts ":CcDdfFhH:hIi:L:lo:P:p:R:rT:tU:uVvW:w" OPTS; do
       DO_CHECK_WORK_DIR="1"
       DO_GET_BASE_ISO="1"
       ;;
-    f)
-      FORCE_MODE="1"
-      ;;
     F)
       FULL_FORCE_MODE="1"
+      ;;
+    f)
+      FORCE_MODE="1"
       ;;
     h)
       print_help
@@ -1003,13 +1009,16 @@ while getopts ":CcDdfFhH:hIi:L:lo:P:p:R:rT:tU:uVvW:w" OPTS; do
     i)
       ISO_FILE="$OPTARG"
       ;;
-    l)
-      DO_CREATE_AUTOINSTALL_ISO_ONLY="1"
-      ;;
     L)
       RELEASE="$OPTARG"
       DEFAULT_ISO_FILE="$WORK_DIR/ubuntu-$RELEASE-live-server-$ARCH.iso"
       DEFAULT_OUTPUT_FILE="$WORK_DIR/ubuntu-$RELEASE-live-server-$ARCH-autoinstall.iso"
+      ;;
+    l)
+      DO_CREATE_AUTOINSTALL_ISO_ONLY="1"
+      ;;
+    N)
+      NIC="$OPTARG"
       ;;
     n)
       DO_NO_UNMOUNT_ISO="1";
@@ -1017,11 +1026,11 @@ while getopts ":CcDdfFhH:hIi:L:lo:P:p:R:rT:tU:uVvW:w" OPTS; do
     o)
       OUTPUT_FILE="$OPTARG"
       ;;
-    p)
-      CHROOT_PACKAGES="$OPTARG"
-      ;;
     P)
       PASSWORD="$OPTARG"
+      ;;
+    p)
+      CHROOT_PACKAGES="$OPTARG"
       ;;
     R)
       REALNAME="$OPTARG"
@@ -1071,31 +1080,34 @@ if [ "$INTERACTIVE_MODE" == "1" ]; then
   read -p "Enter output ISO file:" OUTPUT_FILE
 fi
 if [ "$RELEASE" = "" ] || [ "$DEFAULTS_MODE" = "1" ]; then
-  RELEASE=$DEFAULT_RELEASE
+  RELEASE="$DEFAULT_RELEASE"
 fi
 if [ "$USERNAME" = "" ] || [ "$DEFAULTS_MODE" = "1" ]; then
-  USERNAME=$DEFAULT_USERNAME
+  USERNAME="$DEFAULT_USERNAME"
 fi
 if [ "$REALNAME" = "" ] || [ "$DEFAULTS_MODE" = "1" ]; then
-  REALNAME=$DEFAULT_REALNAME
+  REALNAME="$DEFAULT_REALNAME"
 fi
 if [ "$HOSTNAME" = "" ] || [ "$DEFAULTS_MODE" = "1" ]; then
-  HOSTNAME=$DEFAULT_HOSTNAME
+  HOSTNAME="$DEFAULT_HOSTNAME"
 fi
 if [ "$PASSWORD" = "" ] || [ "$DEFAULTS_MODE" = "1" ]; then
-  PASSWORD=$DEFAULT_PASSWORD
+  PASSWORD="$DEFAULT_PASSWORD"
 fi
 if [ "$CHROOT_PACKAGES" = "" ] || [ "$DEFAULTS_MODE" = "1" ]; then
-  CHROOT_PACKAGES=$DEFAULT_PACKAGES
+  CHROOT_PACKAGES="$DEFAULT_PACKAGES"
 fi
 if [ "$TIMEZONE" = "" ] || [ "$DEFAULTS_MODE" = "1" ]; then
-  TIMEZONE=$DEFAULT_TIMEZONE
+  TIMEZONE="$DEFAULT_TIMEZONE"
 fi
 if [ "$ISO_FILE" = "" ] || [ "$DEFAULTS_MODE" = "1" ]; then
-  ISO_FILE=$DEFAULT_ISO_FILE
+  ISO_FILE="$DEFAULT_ISO_FILE"
 fi
 if [ "$OUTPUT_FILE" = "" ] || [ "$DEFAULTS_MODE" = "1" ]; then
-  OUTPUT_FILE=$DEFAULT_OUTPUT_FILE
+  OUTPUT_FILE="$DEFAULT_OUTPUT_FILE"
+fi
+if [ "$NIC" = "" ] || [ "$DEFAULTS_MODE" = "1" ]; then
+  NIC="$DEFAULT_NIC"
 fi
 
 # Handle specific functions
