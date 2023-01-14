@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Name:         guige (Generic Ubuntu ISO Generation Engine)
-# Version:      0.2.5
+# Version:      0.2.6
 # Release:      1
 # License:      CC-BA (Creative Commons By Attribution)
 #               http://creativecommons.org/licenses/by/4.0/legalcode
@@ -219,7 +219,7 @@ unmount_iso () {
   fi
 }
 
-# Mount base ISO as loopback device so contents can be copy
+# Mount base ISO as loopback device so contents can be copied
 #
 # sudo mount -o loop ./ubuntu-22.04.1-live-server-arm64.iso ./isomount
 # sudo mount -o loop ./ubuntu-22.04.1-live-server-amd64.iso ./isomount
@@ -290,10 +290,10 @@ copy_squashfs () {
     fi
   fi
   handle_output "sudo cp /etc/resolv.conf /etc/hosts $ISO_NEW_DIR/custom/etc/"
-  handle_output "sudo cp /etc/apt/sources.list $ISO_NEW_DIR/etc/apt/"
+  handle_output "sudo cp /etc/apt/sources.list $ISO_NEW_DIR/custom/etc/apt/"
   if [ "$TEST_MODE" = "0" ]; then
     sudo cp /etc/resolv.conf /etc/hosts $ISO_NEW_DIR/custom/etc/
-    sudo cp /etc/apt/sources.list $ISO_NEW_DIR/etc/apt/
+    sudo cp /etc/apt/sources.list $ISO_NEW_DIR/custom/etc/apt/
   fi
 }
 
