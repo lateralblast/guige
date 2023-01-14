@@ -37,3 +37,15 @@
 # More bug fixes
 # 0.1.9: Wed 11 Jan 2023 16:37:08 AEDT
 # Added code to unmount loopback filesystems
+# 0.2.0: Fri 13 Jan 2023 17:46:10 AEDT
+# Added check that ISO file is a valid ISO file
+# 0.2.1: Fri 13 Jan 2023 17:53:26 AEDT
+# Fixed bug with release determination
+# 0.2.2: Fri 13 Jan 2023 21:13:46 AEDT
+# Changed release determination code and ISO URL
+# 0.2.3: Sat 14 Jan 2023 06:33:28 AEDT
+# More fixes
+# 0.2.4: Sat 14 Jan 2023 10:49:17 AEDT
+# Added no unmount option
+# 0.2.5: Sat 14 Jan 2023 12:15:25 AEDT
+# Fixed bug with code that copies packages into ISO

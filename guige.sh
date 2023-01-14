@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Name:         guige (Generic Ubuntu ISO Generation Engine)
-# Version:      0.1.9
+# Version:      0.2.5
 # Release:      1
 # License:      CC-BA (Creative Commons By Attribution)
 #               http://creativecommons.org/licenses/by/4.0/legalcode
@@ -16,7 +16,7 @@
 # Defaults
 
 ARGS=$@
-CURRENT_RELEASE="jammy"
+CURRENT_RELEASE="22.04.1"
 DEFAULT_HOSTNAME="ubuntu"
 DEFAULT_REALNAME="Ubuntu"
 DEFAULT_USERNAME="ubuntu"
@@ -44,7 +44,7 @@ REQUIRED_PACKAGES="p7zip-full wget xorriso whois"
 
 if [ -f "/usr/bin/lsb_release" ]; then
   if [ "$( lsb_release -d |awk '{print $2}' )" = "Ubuntu" ]; then
-    DEFAULT_RELEASE=$( lsb_release -cs )
+    DEFAULT_RELEASE=$( lsb_release -d |awk '{print $3}' )
   else
     DEFAULT_RELEASE="$CURRENT_RELEASE"
   fi
@@ -64,8 +64,8 @@ INSTALL_MOUNT="/cdrom"
 
 # Default file names/locations
 
-DEFAULT_ISO_FILE="$WORK_DIR/$DEFAULT_RELEASE-live-server-$ARCH.iso"
-DEFAULT_OUTPUT_FILE="$WORK_DIR/$DEFAULT_RELEASE-live-server-$ARCH-autoinstall.iso"
+DEFAULT_ISO_FILE="$WORK_DIR/ubuntu-$DEFAULT_RELEASE-live-server-$ARCH.iso"
+DEFAULT_OUTPUT_FILE="$WORK_DIR/ubuntu-$DEFAULT_RELEASE-live-server-$ARCH-autoinstall.iso"
 SQUASHFS_FILE="$ISO_MOUNT_DIR/casper/ubuntu-server-minimal.squashfs"
 GRUB_FILE="$WORK_DIR/grub.cfg"
 SDA_USER_FILE="$WORK_DIR/sda-user-data"
@@ -199,7 +199,7 @@ get_base_iso () {
       rm $WORK_DIR/$ISO_FILE
     fi
   fi
-  ISO_URL="https://cdimage.ubuntu.com/ubuntu-server/$RELEASE/daily-live/current/$BASE_ISO_FILE"
+  ISO_URL="https://releases.ubuntu.com/$RELEASE/$BASE_ISO_FILE"
   handle_output "wget $ISO_URL -O $WORK_DIR/$BASE_ISO_FILE"
   if ! [ -f "$WORK_DIR/$BASE_ISO_FILE" ]; then
     if [ "$TEST_MODE" = "0" ]; then
@@ -227,6 +227,11 @@ unmount_iso () {
 mount_iso () {
   get_base_iso
   BASE_ISO_FILE=$( basename $ISO_FILE )
+  FILE_TYPE=$( file $WORK_DIR/$BASE_ISO_FILE | awk '{print $2}' )
+  if ! [ "$FILE_TYPE" = "ISO" ]; then
+    handle_output "Warning: $WORK_DIR/$BASE_ISO_FILE is not a valid ISO file" TEXT
+    exit
+  fi
   handle_output "sudo mount -o loop $WORK_DIR/$BASE_ISO_FILE $ISO_MOUNT_DIR"
   if [ "$TEST_MODE" = "0" ]; then
     sudo mount -o loop $WORK_DIR/$BASE_ISO_FILE $ISO_MOUNT_DIR
@@ -347,8 +352,6 @@ create_chroot_script () {
       echo "mount -t devpts none /dev/pts" >> $ORIG_SCRIPT
       echo "export HOME=/root" >> $ORIG_SCRIPT
       echo "sudo apt update" >> $ORIG_SCRIPT
-      echo "sudo apt clean" >> $ORIG_SCRIPT
-      echo "rm /var/cache/apt/archives/*.deb" >> $ORIG_SCRIPT
       echo "sudo apt install -y --download-only $CHROOT_PACKAGES" >> $ORIG_SCRIPT
       echo "sudo apt install -y $CHROOT_PACKAGES" >> $ORIG_SCRIPT
       echo "umount /proc/" >> $ORIG_SCRIPT
@@ -617,7 +620,7 @@ prepare_autoinstall_iso () {
   handle_output "7z -y x $WORK_DIR/$BASE_ISO_FILE -o$ISO_SOURCE_DIR"
   handle_output "rm -rf $WORK_DIR/BOOT"
   handle_output "mkdir -p $PACKAGE_DIR"
-  handle_output "cp $ISO_CUSTOM_DIR/var/cache/apt/archives/*.deb $PACKAGE_DIR"
+  handle_output "cp $ISO_NEW_DIR/custom/var/cache/apt/archives/*.deb $PACKAGE_DIR"
   for SUB_DIR in sda vda; do
     handle_output "mkdir -p $CONFIG_DIR/$SUB_DIR"
     handle_output "touch $CONFIG_DIR/$SUB_DIR/meta-data"
@@ -629,7 +632,7 @@ prepare_autoinstall_iso () {
       mkdir -p $CONFIG_DIR/$SUB_DIR
       touch $CONFIG_DIR/$SUB_DIR/meta-data
     done
-    cp $ISO_CUSTOM_DIR/var/cache/apt/archives/*.deb $PACKAGE_DIR
+    cp $ISO_NEW_DIR/custom/var/cache/apt/archives/*.deb $PACKAGE_DIR
   fi
   if [ -d "$WORK_DIR/BOOT" ]; then
     if [ "$TEST_MODE" = "0" ]; then
@@ -960,6 +963,7 @@ DO_CREATE_AUTOINSTALL_ISO="0"
 DO_CREATE_AUTOINSTALL_ISO_ONLY="0"
 DO_EXECUTE_CHROOT_SCRIPT="0"
 DO_PRINT_HELP="1"
+DO_NO_UNMOUNT_ISO="0"
 
 # Handle command line arguments
 
@@ -1004,8 +1008,11 @@ while getopts ":CcDdfFhH:hIi:L:lo:P:p:R:rT:tU:uVvW:w" OPTS; do
       ;;
     L)
       RELEASE="$OPTARG"
-      DEFAULT_ISO_FILE="$WORK_DIR/$RELEASE-live-server-$ARCH.iso"
-      DEFAULT_OUTPUT_FILE="$WORK_DIR/$RELEASE-live-server-$ARCH-autoinstall.iso"
+      DEFAULT_ISO_FILE="$WORK_DIR/ubuntu-$RELEASE-live-server-$ARCH.iso"
+      DEFAULT_OUTPUT_FILE="$WORK_DIR/ubuntu-$RELEASE-live-server-$ARCH-autoinstall.iso"
+      ;;
+    n)
+      DO_NO_UNMOUNT_ISO="1";
       ;;
     o)
       OUTPUT_FILE="$OPTARG"
@@ -1062,6 +1069,9 @@ if [ "$INTERACTIVE_MODE" == "1" ]; then
   read -p "Enter additional packages:" CHROOT_PACKAGES
   read -p "Enter source ISO file:" ISO_FILE
   read -p "Enter output ISO file:" OUTPUT_FILE
+fi
+if [ "$RELEASE" = "" ] || [ "$DEFAULTS_MODE" = "1" ]; then
+  RELEASE=$DEFAULT_RELEASE
 fi
 if [ "$USERNAME" = "" ] || [ "$DEFAULTS_MODE" = "1" ]; then
   USERNAME=$DEFAULT_USERNAME
@@ -1123,8 +1133,10 @@ if [ "$DO_CREATE_AUTOINSTALL_ISO" = "1" ]; then
   execute_chroot_script
   prepare_autoinstall_iso
   create_autoinstall_iso
-  unmount_iso
-  unmount_squashfs
+  if ! [ "$DO_NO_UNMOUNT_ISO" = "1" ]; then
+    unmount_iso
+    unmount_squashfs
+  fi
 else
   if [ "$DO_EXECUTE_CHROOT_SCRIPT" = "1" ]; then
     DO_PRINT_HELP="0"
