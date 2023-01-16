@@ -8,7 +8,7 @@ Generic Ubuntu ISO Generation Engine
 Version
 -------
 
-Current version: 0.2.7
+Current version: 0.3.9
 
 Introduction
 ------------
@@ -43,32 +43,41 @@ You can get help using the -h switch:
 
 ```
   Usage: guige.sh [OPTIONS...]
-    -C  Run chroot script
-    -c  Create ISO (perform all steps - e.g. grub, packages, etc)
-    -D  Use defaults
-    -d  Get base ISO
-    -f  Remove previously created files
-    -H: Hostname
-    -h  Help/Usage Information
-    -I  Interactive mode (will ask for input rather than using command line options or defaults)
-    -i: Input/base ISO file
-    -L: LSB release
-    -l  Create ISO (perform last step only - just run xoriso)
-    -N: Network device
-    -n  Do not unmount loopback filesystems (useful for troubleshooting)
-    -o: Output ISO file
-    -P: Password
-    -p: Packages to add to ISO
-    -R: Realname
-    -r  Install required packages on host
-    -T: Timezone
-    -t  Test mode
-    -U: Username
-    -u  Unmount loopback filesystems
-    -V  Script Version
-    -v  Verbose output
-    -W: Work directory
-    -w  Check work directories
+    -a|--arch             Architecture (default: amd64)
+    -b|--getiso           Get base ISO
+    -C|--runchrootscript  Run chroot script
+    -c|--createiso        Create ISO (perform all steps - e.g. grub, packages, etc)
+    -D|--defaults         Use defaults
+    -d|--bootdisk         Boot Disk devices (default: sda vda)
+    -f|--delete           Remove previously created files
+    -H|--hostname:        Hostname
+    -h|--help             Help/Usage Information
+    -I|--interactive      Interactive mode (will ask for input rather than using command line options or defaults)
+    -i|--inputiso:        Input/base ISO file (default: /home/ubuntu/ubuntu-iso/ubuntu-22.04.1-live-server-amd64.iso)
+    -k|--kernelargs:      Kernel arguments (default: net.ifnames=0 biosdevname=0)
+    -K|--kernel:          Kernel package (default: linux-generic)
+    -L|--release:         LSB release (default: 22.04.1)
+    -l|--justiso          Create ISO (perform last step only - just run xoriso)
+    -m|--volumemanager:   Volume Managers (defauls: zfs lvm)
+    -N|--nic:             Network device (default: eth0)
+    -m|--grubmenu:        Set default grub menu (default: 0)
+    -n|--nounmount        Do not unmount loopback filesystems (useful for troubleshooting)
+    -o|--outputiso:       Output ISO file (default: /home/ubuntu/ubuntu-iso/ubuntu-22.04.1-live-server-amd64-autoinstall.iso)
+    -P|--password:        Password (default: ubuntu)
+    -p|--packages:        Packages to add to ISO (default: zfsutils-linux grub-efi zfs-initramfs net-tools curl wget)
+    -R|--realname:        Realname (default Ubuntu)
+    -r|--installrequired  Install required packages on host (p7zip-full wget xorriso whois)
+    -S|--swapsize:        Swap size (default 2G)
+    -s|--staticip         Static IP configuration (default DHCP)
+    -T|--timezone:        Timezone (default: Australia/Melbourne)
+    -t|--testmode         Test mode (display commands but don't run them)
+    -U|--username:        Username (default: ubuntu)
+    -u|--unmount          Unmount loopback filesystems
+    -V|--version          Display Script Version
+    -v|--verbose          Verbose output
+    -W|--workdir:         Work directory (default: /home/ubuntu/ubuntu-iso)
+    -w|--checkdirs        Check work directories exist
+    -x|--grubtimeout:     Grub timeout (default: 10)
 ```
 
 Todo
@@ -79,6 +88,7 @@ Things I plan to do:
 - While this release is focused on ZFS root, I plan to add a non ZFS option
 - Support for nightly build images etc
 - Script cleanup and more flexibility
+- Support architechtures other than x86_64
 
 
 Examples
