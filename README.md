@@ -1,4 +1,4 @@
-![alt tag](https://raw.githubusercontent.com/lateralblast/guige/master/guige.jpg)
+![Cat with shield](https://raw.githubusercontent.com/lateralblast/guige/master/guige.jpg)
 
 GUIGE
 -----
@@ -50,6 +50,10 @@ The current default install options in the grub menu are:
 - LVM on /dev/vda (e.g. KVM)
 
 These can be modified via command line arguments.
+
+An example of the grub menu when booting from the ISO:
+
+![Boot menu example](https://raw.githubusercontent.com/lateralblast/guige/master/grubmenu.jpg)
 
 The current disk layouts are default one root partition configs, i.e. no separate
 var or home partitions. This could be changed, but in my experience testing recent
