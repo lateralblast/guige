@@ -771,7 +771,7 @@ prepare_autoinstall_iso () {
         handle_output "echo \"  locale: en_US.UTF-8\" >> $CONFIG_DIR/$VOLMGR/$DEVICE/user-data"
         handle_output "echo \"  network:\" >> $CONFIG_DIR/$VOLMGR/$DEVICE/user-data"
         handle_output "echo \"    ethernets:\" >> $CONFIG_DIR/$VOLMGR/$DEVICE/user-data"
-        handle_output "echo \"      $NIX:\" >> $CONFIG_DIR/$VOLMGR/$DEVICE/user-data"
+        handle_output "echo \"      $NIC:\" >> $CONFIG_DIR/$VOLMGR/$DEVICE/user-data"
         handle_output "echo \"        critical: true\" >> $CONFIG_DIR/$VOLMGR/$DEVICE/user-data"
         handle_output "echo \"        dhcp-identifier: mac\" >> $CONFIG_DIR/$VOLMGR/$DEVICE/user-data"
         handle_output "echo \"        dhcp4: $DHCP\" >> $CONFIG_DIR/$VOLMGR/$DEVICE/user-data"
