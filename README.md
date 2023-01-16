@@ -8,7 +8,7 @@ Generic Ubuntu ISO Generation Engine
 Version
 -------
 
-Current version: 0.3.9
+Current version: 0.4.0
 
 Introduction
 ------------

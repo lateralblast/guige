@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Name:         guige (Generic Ubuntu ISO Generation Engine)
-# Version:      0.3.9
+# Version:      0.4.0
 # Release:      1
 # License:      CC-BA (Creative Commons By Attribution)
 #               http://creativecommons.org/licenses/by/4.0/legalcode
@@ -16,6 +16,7 @@
 # Defaults
 
 CURRENT_RELEASE="22.04.1"
+CURRENT_CODENAME="jammy"
 DEFAULT_HOSTNAME="ubuntu"
 DEFAULT_REALNAME="Ubuntu"
 DEFAULT_USERNAME="ubuntu"
@@ -67,6 +68,17 @@ else
   DEFAULT_RELEASE="$CURRENT_RELEASE"
 fi
 
+# Get default codename
+
+if [ -f "/usr/bin/lsb_release" ]; then
+  if [ "$( lsb_release -d |awk '{print $2}' )" = "Ubuntu" ]; then
+    DEFAULT_CODENAME=$( lsb_release -cs )
+  else
+    DEFAULT_CODENAME="$CURRENT_CODENAME"
+  fi
+else
+  DEFAULT_CODENAME="$CURRENT_CODENAME"
+fi
 
 # Default work directories
 
@@ -97,6 +109,7 @@ SCRIPT_VERSION=$( cd $START_PATH ; cat $0 | grep '^# Version' | awk '{print $3}'
 print_help () {
   cat <<-HELP
   Usage: ${0##*/} [OPTIONS...]
+    -A|--codename         Linux release codename (default: $DEFAULT_CODENAME)
     -a|--arch             Architecture (default: $ARCH)
     -b|--getiso           Get base ISO
     -C|--runchrootscript  Run chroot script
@@ -741,7 +754,7 @@ prepare_autoinstall_iso () {
         handle_output "echo \"  apt:\" >> $CONFIG_DIR/$VOLMGR/$DEVICE/user-data"
         handle_output "echo \"    preferences:\" >> $CONFIG_DIR/$VOLMGR/$DEVICE/user-data"
         handle_output "echo \"      - package: \\\"*\\\"\" >> $CONFIG_DIR/$VOLMGR/$DEVICE/user-data"
-        handle_output "echo \"        pin: \\\"release a=$RELEASE-security\\\"\" >> $CONFIG_DIR/$VOLMGR/$DEVICE/user-data"
+        handle_output "echo \"        pin: \\\"release a=$CODENAME-security\\\"\" >> $CONFIG_DIR/$VOLMGR/$DEVICE/user-data"
         handle_output "echo \"        pin-priority: 200\" >> $CONFIG_DIR/$VOLMGR/$DEVICE/user-data"
         handle_output "echo \"    disable_components: []\" >> $CONFIG_DIR/$VOLMGR/$DEVICE/user-data"
         handle_output "echo \"    geoip: true\" >> $CONFIG_DIR/$VOLMGR/$DEVICE/user-data"
@@ -868,7 +881,7 @@ prepare_autoinstall_iso () {
           echo "  apt:" >> $CONFIG_DIR/$VOLMGR/$DEVICE/user-data
           echo "    preferences:" >> $CONFIG_DIR/$VOLMGR/$DEVICE/user-data
           echo "      - package: \"*\"" >> $CONFIG_DIR/$VOLMGR/$DEVICE/user-data
-          echo "        pin: \"release a=$RELEASE-security\"" >> $CONFIG_DIR/$VOLMGR/$DEVICE/user-data
+          echo "        pin: \"release a=$CODENAME-security\"" >> $CONFIG_DIR/$VOLMGR/$DEVICE/user-data
           echo "        pin-priority: 200" >> $CONFIG_DIR/$VOLMGR/$DEVICE/user-data
           echo "    disable_components: []" >> $CONFIG_DIR/$VOLMGR/$DEVICE/user-data
           echo "    geoip: true" >> $CONFIG_DIR/$VOLMGR/$DEVICE/user-data
@@ -1009,7 +1022,7 @@ DO_NO_UNMOUNT_ISO="0"
 
 # Handle command line arguments
 
-PARAMS="$(getopt -o abCcDd:FfhIi:K:k:L:lm:N:no:P:p:R:rS:T:tsuVvW:wx: -l arch,bootdisk:,checkdirs,createiso,delete,defaults,getiso,grubmenu:,help,inputiso:,installrequired,interactive,justiso,kernel:,kernelargs:,nic:,nounmount,outputiso:,password:,packages:,realname:,release:,runchrootscript,staticip,swapsize:,testmode,timezone:,unmount,verbose,version,workdir: --name "$(basename "$0")" -- "$@")"
+PARAMS="$(getopt -o A:abCcDd:FfhIi:K:k:L:lm:N:no:P:p:R:rS:T:tsuVvW:wx: -l arch,bootdisk:,checkdirs,codename:,createiso,delete,defaults,getiso,grubmenu:,help,inputiso:,installrequired,interactive,justiso,kernel:,kernelargs:,nic:,nounmount,outputiso:,password:,packages:,realname:,release:,runchrootscript,staticip,swapsize:,testmode,timezone:,unmount,verbose,version,workdir: --name "$(basename "$0")" -- "$@")"
 
 if [ $? -ne 0 ]; then
   print_help
@@ -1022,6 +1035,10 @@ while true; do
   case $1 in
     -a|--arch)
       ARCH="$2"
+      shift 2
+      ;;
+    -A|--codename)
+      CODENAME="$2"
       shift 2
       ;;
     -b|--getiso)
@@ -1236,6 +1253,9 @@ if [ "$KERNEL_ARGS" = "" ] || [ "$DEFAULTS_MODE" = "1" ]; then
 fi
 if [ "$KERNEL" = "" ] || [ "$DEFAULTS_MODE" = "1" ]; then
   KERNEL="$DEFAULT_KERNEL"
+fi
+if [ "$CODENAME" = "" ] || [ "$DEFAULTS_MODE" = "1" ]; then
+  CODENAME="$DEFAULT_CODENAME"
 fi
 
 # Handle specific functions
