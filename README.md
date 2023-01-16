@@ -5,6 +5,9 @@ GUIGE
 
 Generic Ubuntu ISO Generation Engine
 
+A guige (/ɡiːʒ/, /ɡiːd͡ʒ/) is a long strap, typically made of leather, 
+used to hang a shield on the shoulder or neck when not in use. 
+
 Version
 -------
 
@@ -14,9 +17,11 @@ Introduction
 ------------
 
 This script provides a wrapper for the Ubuntu ISO creation process.
+I wrote this as I didn't want to have to fire up Cubic or a similar GUI tool to create an ISO.
+I wanted to be able to automate the process.
 
-A guige (/ɡiːʒ/, /ɡiːd͡ʒ/) is a long strap, typically made of leather, 
-used to hang a shield on the shoulder or neck when not in use. 
+This method doesn't support the older preseed method (i.e. Ubuntu 18.04 or earlier).
+Preseed method could be added reasonably easily I expect, but I've only need for Ubuntu 20.04 or later.
 
 Currently this is WIP and it works for ZFS root only. 
 It is being converted from a set of shell commands.
@@ -35,6 +40,21 @@ Doing it this way also ensures packages dependencies are also handled.
 Rather than being directly run, the commands are wrappered and run through
 an execute function so that the script can be used to produce another script.
 
+By default the script will create an autoinstall ISO that uses DHCP,
+and installs packages from the ISO rather than fetching them over the network.
+
+The current default install options in the grub menu are:
+- ZFS on /dev/sda
+- ZFS on /dev/vda (e.g. KVM)
+- LVM on /dev/sda
+- LVM on /dev/vda (e.g. KVM)
+
+These can be modified via command line arguments.
+
+The current disk layouts are default one root partition configs, i.e. no separate
+var or home partitions. This could be changed, but in my experience testing recent
+cloud-init autoinstall versions/configs on Ubuntu it takes quite a bit of testing
+to get more complex layouts working without issue.
 
 Usage
 -----
