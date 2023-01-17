@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Name:         guige (Generic Ubuntu ISO Generation Engine)
-# Version:      0.4.4
+# Version:      0.4.5
 # Release:      1
 # License:      CC-BA (Creative Commons By Attribution)
 #               http://creativecommons.org/licenses/by/4.0/legalcode
@@ -48,16 +48,29 @@ PASSWORD=""
 NIC=""
 DHCP="true"
 ARCH="amd64"
-ZFS_MODE="1"
-TEST_MODE="0"
-FORCE_MODE="0"
-FULL_FORCE_MODE="0"
-VERBOSE_MODE="0"
-DEFAULTS_MODE="0"
-INTERACTIVE_MODE="0"
+TEST_MODE="false"
+FORCE_MODE="false"
+FULL_FORCE_MODE="false"
+VERBOSE_MODE="false"
+DEFAULTS_MODE="false"
+INTERACTIVE_MODE="false"
 CHROOT_PACKAGES=""
 DEFAULT_PACKAGES="zfsutils-linux grub-efi zfs-initramfs net-tools curl wget"
 REQUIRED_PACKAGES="p7zip-full wget xorriso whois"
+
+# Set function variables
+
+DO_INSTALL_REQUIRED_PACKAGES="false"
+DO_GET_BASE_ISO="false"
+DO_CHECK_WORK_DIR="false"
+DO_PREPARE_AUTOINSTALL_ISO="false"
+DO_CREATE_AUTOINSTALL_ISO="false"
+DO_CREATE_AUTOINSTALL_ISO_ONLY="false"
+DO_EXECUTE_CHROOT_SCRIPT="false"
+DO_PRINT_HELP="true"
+DO_NO_UNMOUNT_ISO="false"
+DO_INSTALL_UPDATES="false"
+DO_DIST_UPGRADE="false"
 
 # Get default release
 
@@ -118,12 +131,12 @@ print_help () {
     -b|--getiso           Get base ISO
     -C|--runchrootscript  Run chroot script
     -c|--createiso        Create ISO (perform all steps - e.g. grub, packages, etc)
-    -D|--defaults         Use defaults
+    -D|--defaults         Use defaults (default: $DEFAULTS_MODE)
     -d|--bootdisk         Boot Disk devices (default: $DEFAULT_DEVICES)
     -E|--locale           LANGUAGE (default: $DEFAULT_LOCALE)
     -e|--lcall            LC_ALL (default: $DEFAULT_LC_ALL)
-    -f|--delete           Remove previously created files
-    -H|--hostname:        Hostname
+    -f|--delete           Remove previously created files (default: $FORCE_MODE)
+    -H|--hostname:        Hostname (default: $DEFAULT_HOSTNAME)
     -h|--help             Help/Usage Information
     -I|--interactive      Interactive mode (will ask for input rather than using command line options or defaults)
     -i|--inputiso:        Input/base ISO file (default: $DEFAULT_ISO_FILE)
@@ -137,7 +150,7 @@ print_help () {
     -n|--nounmount        Do not unmount loopback filesystems (useful for troubleshooting)
     -o|--outputiso:       Output ISO file (default: $DEFAULT_OUTPUT_FILE)
     -P|--password:        Password (default: $DEFAULT_USERNAME)
-    -p|--packages:        Packages to add to ISO (default: $DEFAULT_PACKAGES)
+    -p|--chrootpackages:  Packages to add to ISO (default: $DEFAULT_PACKAGES)
     -R|--realname:        Realname (default $DEFAULT_REALNAME)
     -r|--installrequired  Install required packages on host ($REQUIRED_PACKAGES)
     -S|--swapsize:        Swap size (default $DEFAULT_SWAPSIZE)
@@ -147,10 +160,13 @@ print_help () {
     -U|--username:        Username (default: $DEFAULT_USERNAME)
     -u|--unmount          Unmount loopback filesystems
     -V|--version          Display Script Version
-    -v|--verbose          Verbose output
+    -v|--verbose          Verbose output (default: $VERBOSE_MODE)
     -W|--workdir:         Work directory (default: $WORK_DIR)
     -w|--checkdirs        Check work directories exist
+    -Y|--installpackages: Packages to install after OS installation
+    -y|--installupdatex   Install updates after install (requires network)
     -x|--grubtimeout:     Grub timeout (default: $DEFAULT_GRUB_TIMEOUT)
+    -Z|--distupgrade      Perform dist-upgrade after OS installation
 HELP
 }
 
@@ -166,8 +182,8 @@ HELP
 handle_output () {
   OUTPUT_TEXT=$1
   OUTPUT_TYPE=$2
-  if [ "$VERBOSE_MODE" = "1" ]; then
-    if [ "$TEST_MODE" = "1" ]; then
+  if [ "$VERBOSE_MODE" = "true" ]; then
+    if [ "$TEST_MODE" = "true" ]; then
       echo "$OUTPUT_TEXT"
     else
       if [ "$OUTPUT_TYPE" = "TEXT" ]; then
@@ -189,12 +205,12 @@ check_work_dir () {
   for ISO_DIR in $ISO_MOUNT_DIR $ISO_NEW_DIR/squashfs $ISO_NEW_DIR/cd $ISO_NEW_DIR/custom; do
     handle_output "# Check directory $ISO_DIR exists" TEXT
     handle_output "mkdir -p $ISO_DIR"
-    if [ "$FORCE_MODE" = "1" ]; then
+    if [ "$FORCE_MODE" = "true" ]; then
       if [ -d "$ISO_DIR" ]; then
         handle_output "# Remove existing directory $ISO_DIR"
         handle_output "sudo rm -rf $ISO_DIR"
         if [[ $ISO_DIR =~ [0-9a-zA-Z] ]]; then
-          if [ "$TEST_MODE" = "0" ]; then
+          if [ "$TEST_MODE" = "false" ]; then
             sudo rm -rf $ISO_DIR
           fi
         fi
@@ -202,7 +218,7 @@ check_work_dir () {
     fi
     if ! [ -d "$ISO_DIR" ]; then
       handle_output "# Create $ISO_DIR if it doesn't exist" TEXT
-      if [ "$TEST_MODE" = "0" ]; then
+      if [ "$TEST_MODE" = "false" ]; then
         mkdir -p $ISO_DIR
       fi
     fi
@@ -220,7 +236,7 @@ install_required_packages () {
     PACKAGE_VERSION=$( apt show $PACKAGE 2>&1 |grep Version )
     if ! [ -x "$PACKAGE_VERSION" ]; then
       handle_output "sudo apt install -y $PACKAGE"
-      if [ "$TEST_MODE" = "0" ]; then
+      if [ "$TEST_MODE" = "false" ]; then
         sudo apt install -y $PACKAGE
       fi
     fi
@@ -236,16 +252,16 @@ install_required_packages () {
 get_base_iso () {
   handle_output "# Check source ISO exists and grab it if it doesn't" TEXT
   BASE_ISO_FILE=$( basename $ISO_FILE )
-  if [ "$FULL_FORCE_MODE" = "1" ]; then
+  if [ "$FULL_FORCE_MODE" = "true" ]; then
     handle_output "rm $WORK_DIR/$ISO_FILE" 
-    if [ "$TEST_MODE" = "0" ]; then
+    if [ "$TEST_MODE" = "false" ]; then
       rm $WORK_DIR/$ISO_FILE
     fi
   fi
   ISO_URL="https://releases.ubuntu.com/$RELEASE/$BASE_ISO_FILE"
   handle_output "wget $ISO_URL -O $WORK_DIR/$BASE_ISO_FILE"
   if ! [ -f "$WORK_DIR/$BASE_ISO_FILE" ]; then
-    if [ "$TEST_MODE" = "0" ]; then
+    if [ "$TEST_MODE" = "false" ]; then
       wget $ISO_URL -O $WORK_DIR/$BASE_ISO_FILE
     fi
   fi
@@ -257,7 +273,7 @@ get_base_iso () {
 
 unmount_iso () {
   handle_output "sudo umount -l $ISO_MOUNT_DIR"
-  if [ "$TEST_MODE" = "0" ]; then
+  if [ "$TEST_MODE" = "false" ]; then
     sudo umount -l $ISO_MOUNT_DIR
   fi
 }
@@ -276,14 +292,14 @@ mount_iso () {
     exit
   fi
   handle_output "sudo mount -o loop $WORK_DIR/$BASE_ISO_FILE $ISO_MOUNT_DIR"
-  if [ "$TEST_MODE" = "0" ]; then
+  if [ "$TEST_MODE" = "false" ]; then
     sudo mount -o loop $WORK_DIR/$BASE_ISO_FILE $ISO_MOUNT_DIR
   fi
 }
 
 unmount_squashfs () {
   handle_output "sudo umount $ISO_NEW_DIR/squashfs"
-  if [ "$TEST_MODE" = "0" ]; then
+  if [ "$TEST_MODE" = "false" ]; then
     sudo umount $ISO_NEW_DIR/squashfs
   fi
 }
@@ -295,14 +311,14 @@ unmount_squashfs () {
 # rsync -av ./isomount/ ./isonew/cd
 
 copy_iso () {
-  if [ "$VERBOSE_MODE" = "1" ]; then
+  if [ "$VERBOSE_MODE" = "true" ]; then
     handle_output "rsync -av $ISO_MOUNT_DIR/ $ISO_NEW_DIR/cd"
-    if [ "$TEST_MODE" = "0" ]; then
+    if [ "$TEST_MODE" = "false" ]; then
       rsync -av $ISO_MOUNT_DIR/ $ISO_NEW_DIR/cd
     fi
   else
     handle_output "rsync -a $ISO_MOUNT_DIR/ $ISO_NEW_DIR/cd"
-    if [ "$TEST_MODE" = "0" ]; then
+    if [ "$TEST_MODE" = "false" ]; then
       rsync -a $ISO_MOUNT_DIR/ $ISO_NEW_DIR/cd
     fi
   fi
@@ -318,23 +334,23 @@ copy_iso () {
 
 copy_squashfs () {
   handle_output "sudo mount -t squashfs -o loop $SQUASHFS_FILE $ISO_NEW_DIR/squashfs/"
-  if [ "$TEST_MODE" = "0" ]; then
+  if [ "$TEST_MODE" = "false" ]; then
     sudo mount -t squashfs -o loop $SQUASHFS_FILE $ISO_NEW_DIR/squashfs/
   fi
-  if [ "$VERBOSE_MODE" = "1" ]; then
+  if [ "$VERBOSE_MODE" = "true" ]; then
     handle_output "sudo rsync -av $ISO_NEW_DIR/squashfs/ $ISO_NEW_DIR/custom"
-    if [ "$TEST_MODE" = "0" ]; then
+    if [ "$TEST_MODE" = "false" ]; then
       sudo rsync -av $ISO_NEW_DIR/squashfs/ $ISO_NEW_DIR/custom
     fi
   else
     handle_output "sudo rsync -a $ISO_NEW_DIR/squashfs/ $ISO_NEW_DIR/custom"
-    if [ "$TEST_MODE" = "0" ]; then
+    if [ "$TEST_MODE" = "false" ]; then
       sudo rsync -a $ISO_NEW_DIR/squashfs/ $ISO_NEW_DIR/custom
     fi
   fi
   handle_output "sudo cp /etc/resolv.conf /etc/hosts $ISO_NEW_DIR/custom/etc/"
   handle_output "sudo cp /etc/apt/sources.list $ISO_NEW_DIR/custom/etc/apt/"
-  if [ "$TEST_MODE" = "0" ]; then
+  if [ "$TEST_MODE" = "false" ]; then
     sudo cp /etc/resolv.conf /etc/hosts $ISO_NEW_DIR/custom/etc/
     sudo cp /etc/apt/sources.list $ISO_NEW_DIR/custom/etc/apt/
   fi
@@ -347,7 +363,7 @@ copy_squashfs () {
 
 execute_chroot_script () {
   handle_output "sudo chroot $ISO_NEW_DIR/custom /tmp/modify_chroot.sh"
-  if [ "$TEST_MODE" = "0" ]; then
+  if [ "$TEST_MODE" = "false" ]; then
     sudo chroot $ISO_NEW_DIR/custom /tmp/modify_chroot.sh
   fi
 }
@@ -385,7 +401,7 @@ create_chroot_script () {
   handle_output "echo \"exit\" >> $ORIG_SCRIPT"
   handle_output "sudo cp $ORIG_SCRIPT $CHROOT_SCRIPT"
   handle_output "sudo chmod +x $CHROOT_SCRIPT"
-  if [ "$TEST_MODE" = "0" ]; then
+  if [ "$TEST_MODE" = "false" ]; then
     echo "#!/usr/bin/bash" > $ORIG_SCRIPT
     echo "mount -t proc none /proc/" >> $ORIG_SCRIPT
     echo "mount -t sysfs none /sys/" >> $ORIG_SCRIPT
@@ -410,7 +426,7 @@ create_chroot_script () {
 get_password_crypt () {
   PASSWORD=$1
   handle_output "export PASSWORD_CRYPT=\$(echo $PASSWORD |mkpasswd --method=SHA-512 --stdin)"
-  if [ "$TEST_MODE" = "0" ]; then
+  if [ "$TEST_MODE" = "false" ]; then
     PASSWORD_CRYPT=$( echo $PASSWORD |mkpasswd --method=SHA-512 --stdin )
   fi
 }
@@ -636,7 +652,7 @@ create_autoinstall_iso () {
   -iso_mbr_part_type $ISO_MBR_PART_TYPE -c /boot.catalog -b /boot/grub/i386-pc/eltorito.img \
   -no-emul-boot -boot-load-size 4 -boot-info-table --grub2-boot-info -eltorito-alt-boot \
   -e '--interval:appended_partition_2:::' -no-emul-boot ."
-  if [ "$TEST_MODE" = "0" ]; then
+  if [ "$TEST_MODE" = "false" ]; then
     APPEND_PART=$( xorriso -indev $ISO_FILE -report_el_torito as_mkisofs |grep append_partition |tail -1 |awk '{print $3}' 2>&1 )
     ISO_MBR_PART_TYPE=$( xorriso -indev $ISO_FILE -report_el_torito as_mkisofs |grep iso_mbr_part_type |tail -1 |awk '{print $2}' 2>&1 )
     cd $ISO_SOURCE_DIR ; xorriso -as mkisofs -r -V 'Ubuntu 22.04 LTS AUTO (EFIBIOS)' -o $OUTPUT_FILE \
@@ -664,7 +680,7 @@ prepare_autoinstall_iso () {
       handle_output "touch $CONFIG_DIR/$VOLMGR/$DEVICE/meta-data"
     done
   done
-  if [ "$TEST_MODE" = "0" ]; then
+  if [ "$TEST_MODE" = "false" ]; then
     7z -y x $WORK_DIR/$BASE_ISO_FILE -o$ISO_SOURCE_DIR
     mkdir -p $PACKAGE_DIR
     for DEVICE in $DEVICES; do
@@ -673,27 +689,27 @@ prepare_autoinstall_iso () {
         touch $CONFIG_DIR/$VOLMGR/$DEVICE/meta-data
       done
     done
-    if [ "$VERBOSE_MODE" = "1" ]; then
+    if [ "$VERBOSE_MODE" = "true" ]; then
       sudo cp -v $ISO_NEW_DIR/custom/var/cache/apt/archives/*.deb $PACKAGE_DIR
     else
       sudo cp -v $ISO_NEW_DIR/custom/var/cache/apt/archives/*.deb $PACKAGE_DIR
     fi
   fi
   if [ -d "$WORK_DIR/BOOT" ]; then
-    if [ "$TEST_MODE" = "0" ]; then
-      if [ "$FORCE_MODE" = "1" ]; then
+    if [ "$TEST_MODE" = "false" ]; then
+      if [ "$FORCE_MODE" = "true" ]; then
         rm -rf $WORK_DIR/BOOT
         mv $ISO_SOURCE_DIR/\[BOOT\] $WORK_DIR/BOOT
       fi
     fi
   else
-    if [ "$TEST_MODE" = "0" ]; then
+    if [ "$TEST_MODE" = "false" ]; then
       mv $ISO_SOURCE_DIR/\[BOOT\] $WORK_DIR/BOOT
     fi
   fi
   if [ -f "$WORK_DIR/grub.cfg" ]; then
     handle_output "cp $WORK_DIR/grub.cfg $ISO_SOURCE_DIR/boot/grub/grub.cfg"
-    if [ "$TEST_MODE" = "0" ]; then
+    if [ "$TEST_MODE" = "false" ]; then
       cp $WORK_DIR/grub.cfg $ISO_SOURCE_DIR/boot/grub/grub.cfg
     fi
   else
@@ -720,7 +736,7 @@ prepare_autoinstall_iso () {
     handle_output "echo \"menuentry 'UEFI Firmware Settings' {\" >> $ISO_SOURCE_DIR/boot/grub/grub.cfg"
     handle_output "echo \"  fwsetup\" >> $ISO_SOURCE_DIR/boot/grub/grub.cfg"
     handle_output "echo \"}\" >> $ISO_SOURCE_DIR/boot/grub/grub.cfg"
-    if [ "$TEST_MODE" = "0" ]; then
+    if [ "$TEST_MODE" = "false" ]; then
       echo "set timeout=$GRUB_TIMEOUT" > $ISO_SOURCE_DIR/boot/grub/grub.cfg
       echo "default=$GRUB_MENU" > $ISO_SOURCE_DIR/boot/grub/grub.cfg
       echo "loadfont unicode" >> $ISO_SOURCE_DIR/boot/grub/grub.cfg
@@ -749,7 +765,7 @@ prepare_autoinstall_iso () {
     for VOLMGR in $VOLMGRS; do
       if [ -f "$WORK_DIR/$VOLMGR/$DEVICE/user-data" ]; then
         handle_output "cp $WORK_DIR/$VOLMGR/$DEVICE/user-data $CONFIG_DIR/$VOLMGR/$DEVICE/user-data"
-        if [ "$TEST_MODE" = "0" ]; then
+        if [ "$TEST_MODE" = "false" ]; then
           cp $WORK_DIR/$VOLMGR/$DEVICE/user-data $CONFIG_DIR/$VOLMGR/$DEVICE/user-data
         fi
       else
@@ -882,7 +898,7 @@ prepare_autoinstall_iso () {
         handle_output "echo \"    - \\\"echo 'GRUB_CMDLINE_LINUX=\\\\\\\"$KERNEL_ARGS\\\\\\\"' >> /target/etc/default/grub\\\"\" >> $CONFIG_DIR/$VOLMGR/$DEVICE/user-data"
         handle_output "echo \"    - \\\"curtin in-target --target=/target -- /usr/sbin/update-grub\\\"\" >> $CONFIG_DIR/$VOLMGR/$DEVICE/user-data"
         handle_output "echo \"  version: 1\" >> $CONFIG_DIR/$VOLMGR/$DEVICE/user-data"
-        if [ "$TEST_MODE" = "0" ]; then
+        if [ "$TEST_MODE" = "false" ]; then
           echo "#cloud-config" > $CONFIG_DIR/$VOLMGR/$DEVICE/user-data
           echo "autoinstall:" >> $CONFIG_DIR/$VOLMGR/$DEVICE/user-data
           echo "  apt:" >> $CONFIG_DIR/$VOLMGR/$DEVICE/user-data
@@ -1011,6 +1027,11 @@ prepare_autoinstall_iso () {
           echo "  late-commands:" >> $CONFIG_DIR/$VOLMGR/$DEVICE/user-data
           echo "    - \"echo 'GRUB_CMDLINE_LINUX=\\\"$KERNEL_ARGS\\\"' >> /target/etc/default/grub\"" >> $CONFIG_DIR/$VOLMGR/$DEVICE/user-data
           echo "    - \"curtin in-target --target=/target -- /usr/sbin/update-grub\"" >> $CONFIG_DIR/$VOLMGR/$DEVICE/user-data
+          if [ "DO_INSTALL_UPDATES" = "true" ]; then
+            echo "    - \"curtin in-target --target=/target /usr/bin/apt update\"" >> $CONFIG_DIR/$VOLMGR/$DEVICE/user-data
+            echo "    - \"curtin in-target --target=/target /usr/bin/apt upgrade\"" >> $CONFIG_DIR/$VOLMGR/$DEVICE/user-data
+            echo "    - \"curtin in-target --target=/target /usr/bin/apt install -y $INSTALL_PACKAGES\"" >> $CONFIG_DIR/$VOLMGR/$DEVICE/user-data
+          fi
           echo "  version: 1" >> $CONFIG_DIR/$VOLMGR/$DEVICE/user-data
         fi
       fi
@@ -1018,21 +1039,9 @@ prepare_autoinstall_iso () {
   done
 }
 
-# Set function variables
-
-DO_INSTALL_REQUIRED_PACKAGES="0"
-DO_GET_BASE_ISO="0"
-DO_CHECK_WORK_DIR="0"
-DO_PREPARE_AUTOINSTALL_ISO="0"
-DO_CREATE_AUTOINSTALL_ISO="0"
-DO_CREATE_AUTOINSTALL_ISO_ONLY="0"
-DO_EXECUTE_CHROOT_SCRIPT="0"
-DO_PRINT_HELP="1"
-DO_NO_UNMOUNT_ISO="0"
-
 # Handle command line arguments
 
-PARAMS="$(getopt -o A:aB:bCcDd:E:e:FfhIi:K:k:L:lm:N:no:P:p:R:rS:T:tsuVvW:wx: -l arch,bootdisk:,checkdirs,codename:,createiso,delete,defaults,getiso,grubmenu:,help,inputiso:,installrequired,interactive,justiso,kernel:,kernelargs:,land:layout:lcall:nic:,nounmount,outputiso:,password:,packages:,realname:,release:,runchrootscript,staticip,swapsize:,testmode,timezone:,unmount,verbose,version,workdir: --name "$(basename "$0")" -- "$@")"
+PARAMS="$(getopt -o A:aB:bCcDd:E:e:FfhIi:K:k:L:lm:N:no:P:p:R:rS:T:tsuVvW:wx: -l arch,bootdisk:,checkdirs,chrootpackages:,codename:,createiso,delete,defaults,getiso,grubmenu:,help,inputiso:,installpackages:,installrequired,installupdates,interactive,justiso,kernel:,kernelargs:,land:layout:lcall:nic:,nounmount,outputiso:,password:,realname:,release:,runchrootscript,staticip,swapsize:,testmode,timezone:,unmount,verbose,version,workdir: --name "$(basename "$0")" -- "$@")"
 
 if [ $? -ne 0 ]; then
   print_help
@@ -1056,23 +1065,23 @@ while true; do
       shift 2
       ;;
     -b|--getiso)
-      DO_CHECK_WORK_DIR="1"
-      DO_GET_BASE_ISO="1"
+      DO_CHECK_WORK_DIR="true"
+      DO_GET_BASE_ISO="true"
       ;;
     -C|--runchrootscript)
-      DO_EXECUTE_CHROOT_SCRIPT="1"
+      DO_EXECUTE_CHROOT_SCRIPT="true"
       ;;
     -c|--createiso)
-      DO_CHECK_WORK_DIR="1"
-      DO_INSTALL_REQUIRED_PACKAGES="1"
-      DO_GET_BASE_PACKAGES="1"
-      DO_PREPARE_AUTOINSTALL_ISO="1"
-      DO_EXECUTE_CHROOT_SCRIPT="1"
-      DO_CREATE_AUTOINSTALL_ISO="1"
+      DO_CHECK_WORK_DIR="true"
+      DO_INSTALL_REQUIRED_PACKAGES="true"
+      DO_GET_BASE_PACKAGES="true"
+      DO_PREPARE_AUTOINSTALL_ISO="true"
+      DO_EXECUTE_CHROOT_SCRIPT="true"
+      DO_CREATE_AUTOINSTALL_ISO="true"
       shift
       ;;
     -D|--defaults)
-      DEFAULTS_MODE="1"
+      DEFAULTS_MODE="true"
       shift
       ;;
     -d|--bootdisk)
@@ -1088,11 +1097,11 @@ while true; do
       shift 2
       ;;
     -F|--delete)
-      FULL_FORCE_MODE="1"
+      FULL_FORCE_MODE="true"
       shift
       ;;
     -f|--delete)
-      FORCE_MODE="1"
+      FORCE_MODE="true"
       shift
       ;;
     -h|--help)
@@ -1100,7 +1109,7 @@ while true; do
       exit
       ;;
     -I|--interactive)
-      INTERACTIVE_MODE="1"
+      INTERACTIVE_MODE="true"
       shift
       ;;
     --i|--inputiso)
@@ -1123,7 +1132,7 @@ while true; do
       shift
       ;;
     -l|--justiso)
-      DO_CREATE_AUTOINSTALL_ISO_ONLY="1"
+      DO_CREATE_AUTOINSTALL_ISO_ONLY="true"
       shift
       ;;
     -m|--grubmenu)
@@ -1135,7 +1144,7 @@ while true; do
       shift 2
       ;;
     -n|--nounmount)
-      DO_NO_UNMOUNT_ISO="1";
+      DO_NO_UNMOUNT_ISO="true";
       shift
       ;;
     -o|--outputiso)
@@ -1155,7 +1164,7 @@ while true; do
       shift 2
       ;;
     -r|--installrequired)
-      DO_INSTALL_REQUIRED_PACKAGES="1"
+      DO_INSTALL_REQUIRED_PACKAGES="true"
       shift
       ;;
     -S|--swapsize)
@@ -1171,7 +1180,7 @@ while true; do
       shift 2
       ;;
     -t|--testmode)
-      TEST_MODE="1"
+      TEST_MODE="true"
       shift
       ;;
     -U|--username)
@@ -1179,7 +1188,7 @@ while true; do
       shift 2
       ;;
     -u|--unmount)
-      DO_UMOUNT_ISO="1"
+      DO_UMOUNT_ISO="true"
       shift
       ;;
     -V|--version)
@@ -1187,7 +1196,7 @@ while true; do
       exit
       ;;
     -v|--verbose)
-      VERBOSE_MODE="1"
+      VERBOSE_MODE="true"
       shift
       ;;
     -W|--workdir)
@@ -1195,12 +1204,24 @@ while true; do
       shift 2
       ;;
     -w|--checkdirs)
-      DO_CHECK_WORK_DIR="1"
+      DO_CHECK_WORK_DIR="true"
       shift
       ;;
     -x|--grubtimeout)
       GRUB_TIMEOUT="$2"
       shift 2
+      ;;
+    -y|--installupdates)
+      DO_INSTALL_UPDATES="true"
+      shift
+      ;;
+    -Y|--installpackages)
+      INSTALL_PACKAGES="$2"
+      shift 2
+      ;;
+    -Z|--distupgrade)
+      DO_DIST_UPGRADE="true"
+      shift
       ;;
     --)
       shift
@@ -1216,7 +1237,7 @@ done
 # If run in interactive mode ask for values for required parameters
 # Set any unset values to defaults
 
-if [ "$INTERACTIVE_MODE" == "1" ]; then
+if [ "$INTERACTIVE_MODE" == "true" ]; then
   read -p "Enter hostname:" HOSTNAME
   read -p "Enter TIMEZONE" TIMEZONE
   read -p "Enter username:" USERNAME
@@ -1226,67 +1247,70 @@ if [ "$INTERACTIVE_MODE" == "1" ]; then
   read -p "Enter source ISO file:" ISO_FILE
   read -p "Enter output ISO file:" OUTPUT_FILE
 fi
-if [ "$RELEASE" = "" ] || [ "$DEFAULTS_MODE" = "1" ]; then
+if [ "$RELEASE" = "" ] || [ "$DEFAULTS_MODE" = "true" ]; then
   RELEASE="$DEFAULT_RELEASE"
 fi
-if [ "$USERNAME" = "" ] || [ "$DEFAULTS_MODE" = "1" ]; then
+if [ "$USERNAME" = "" ] || [ "$DEFAULTS_MODE" = "true" ]; then
   USERNAME="$DEFAULT_USERNAME"
 fi
-if [ "$REALNAME" = "" ] || [ "$DEFAULTS_MODE" = "1" ]; then
+if [ "$REALNAME" = "" ] || [ "$DEFAULTS_MODE" = "true" ]; then
   REALNAME="$DEFAULT_REALNAME"
 fi
-if [ "$HOSTNAME" = "" ] || [ "$DEFAULTS_MODE" = "1" ]; then
+if [ "$HOSTNAME" = "" ] || [ "$DEFAULTS_MODE" = "true" ]; then
   HOSTNAME="$DEFAULT_HOSTNAME"
 fi
-if [ "$PASSWORD" = "" ] || [ "$DEFAULTS_MODE" = "1" ]; then
+if [ "$PASSWORD" = "" ] || [ "$DEFAULTS_MODE" = "true" ]; then
   PASSWORD="$DEFAULT_PASSWORD"
 fi
-if [ "$CHROOT_PACKAGES" = "" ] || [ "$DEFAULTS_MODE" = "1" ]; then
+if [ "$CHROOT_PACKAGES" = "" ] || [ "$DEFAULTS_MODE" = "true" ]; then
   CHROOT_PACKAGES="$DEFAULT_PACKAGES"
 fi
-if [ "$TIMEZONE" = "" ] || [ "$DEFAULTS_MODE" = "1" ]; then
+if [ "$INSTALL_PACKAGES" = "" ] || [ "$DEFAULTS_MODE" = "true" ]; then
+  INSTALL_PACKAGES="$DEFAULT_PACKAGES"
+fi
+if [ "$TIMEZONE" = "" ] || [ "$DEFAULTS_MODE" = "true" ]; then
   TIMEZONE="$DEFAULT_TIMEZONE"
 fi
-if [ "$ISO_FILE" = "" ] || [ "$DEFAULTS_MODE" = "1" ]; then
+if [ "$ISO_FILE" = "" ] || [ "$DEFAULTS_MODE" = "true" ]; then
   ISO_FILE="$DEFAULT_ISO_FILE"
 fi
-if [ "$OUTPUT_FILE" = "" ] || [ "$DEFAULTS_MODE" = "1" ]; then
+if [ "$OUTPUT_FILE" = "" ] || [ "$DEFAULTS_MODE" = "true" ]; then
   OUTPUT_FILE="$DEFAULT_OUTPUT_FILE"
 fi
-if [ "$NIC" = "" ] || [ "$DEFAULTS_MODE" = "1" ]; then
+if [ "$NIC" = "" ] || [ "$DEFAULTS_MODE" = "true" ]; then
   NIC="$DEFAULT_NIC"
 fi
-if [ "$SWAPSIZE" = "" ] || [ "$DEFAULTS_MODE" = "1" ]; then
+if [ "$SWAPSIZE" = "" ] || [ "$DEFAULTS_MODE" = "true" ]; then
   SWAPSIZE="$DEFAULT_SWAPSIZE"
 fi
-if [ "$DEVICES" = "" ] || [ "$DEFAULTS_MODE" = "1" ]; then
+if [ "$DEVICES" = "" ] || [ "$DEFAULTS_MODE" = "true" ]; then
   DEVICES="$DEFAULT_DEVICES"
 fi
-if [ "$VOLMGRS" = "" ] || [ "$DEFAULTS_MODE" = "1" ]; then
+if [ "$VOLMGRS" = "" ] || [ "$DEFAULTS_MODE" = "true" ]; then
   VOLMGRS="$DEFAULT_VOLMGRS"
 fi
-if [ "$GRUB_MENU" = "" ] || [ "$DEFAULTS_MODE" = "1" ]; then
+if [ "$GRUB_MENU" = "" ] || [ "$DEFAULTS_MODE" = "true" ]; then
   GRUB_MENU="$DEFAULT_GRUB_MENU"
 fi
-if [ "$GRUB_TIMEOUT" = "" ] || [ "$DEFAULTS_MODE" = "1" ]; then
+if [ "$GRUB_TIMEOUT" = "" ] || [ "$DEFAULTS_MODE" = "true" ]; then
   GRUB_TIMEOUT="$DEFAULT_GRUB_TIMEOUT"
 fi
-if [ "$KERNEL_ARGS" = "" ] || [ "$DEFAULTS_MODE" = "1" ]; then
+if [ "$KERNEL_ARGS" = "" ] || [ "$DEFAULTS_MODE" = "true" ]; then
   KERNEL_ARGS="$DEFAULT_KERNEL_ARGS"
 fi
-if [ "$KERNEL" = "" ] || [ "$DEFAULTS_MODE" = "1" ]; then
+if [ "$KERNEL" = "" ] || [ "$DEFAULTS_MODE" = "true" ]; then
   KERNEL="$DEFAULT_KERNEL"
 fi
-if [ "$CODENAME" = "" ] || [ "$DEFAULTS_MODE" = "1" ]; then
+if [ "$CODENAME" = "" ] || [ "$DEFAULTS_MODE" = "true" ]; then
   CODENAME="$DEFAULT_CODENAME"
 fi
-if [ "$ISO_LOCALE" = "" ] || [ "$DEFAULTS_MODE" = "1" ]; then
+if [ "$ISO_LOCALE" = "" ] || [ "$DEFAULTS_MODE" = "true" ]; then
   ISO_LOCALE="$DEFAULT_LOCALE"
 fi
-if [ "$ISO_LC_ALL" = "" ] || [ "$DEFAULTS_MODE" = "1" ]; then
+if [ "$ISO_LC_ALL" = "" ] || [ "$DEFAULTS_MODE" = "true" ]; then
   ISO_LC_ALL="$DEFAULT_LC_ALL"
 fi
-if [ "$ISO_LAYOUT" = "" ] || [ "$DEFAULTS_MODE" = "1" ]; then
+if [ "$ISO_LAYOUT" = "" ] || [ "$DEFAULTS_MODE" = "true" ]; then
   ISO_LAYOUT="$DEFAULT_LAYOUT"
 fi
 
@@ -1302,20 +1326,20 @@ fi
 # Prepare ISO
 # Create ISO
 
-if [ "$DO_CHECK_WORK_DIR" = "1" ]; then
-  DO_PRINT_HELP="0"
+if [ "$DO_CHECK_WORK_DIR" = "true" ]; then
+  DO_PRINT_HELP="false"
   check_work_dir
 fi
-if [ "$DO_INSTALL_REQUIRED_PACKAGES" = "1" ]; then
-  DO_PRINT_HELP="0"
+if [ "$DO_INSTALL_REQUIRED_PACKAGES" = "true" ]; then
+  DO_PRINT_HELP="false"
   install_required_packages
 fi
-if [ "$DO_GET_BASE_ISO" = "1" ]; then
-  DO_PRINT_HELP="0"
+if [ "$DO_GET_BASE_ISO" = "true" ]; then
+  DO_PRINT_HELP="false"
   get_base_iso
 fi
-if [ "$DO_CREATE_AUTOINSTALL_ISO" = "1" ]; then
-  DO_PRINT_HELP="0"
+if [ "$DO_CREATE_AUTOINSTALL_ISO" = "true" ]; then
+  DO_PRINT_HELP="false"
   unmount_iso
   unmount_squashfs
   mount_iso
@@ -1325,31 +1349,32 @@ if [ "$DO_CREATE_AUTOINSTALL_ISO" = "1" ]; then
   execute_chroot_script
   prepare_autoinstall_iso
   create_autoinstall_iso
-  if ! [ "$DO_NO_UNMOUNT_ISO" = "1" ]; then
+  if ! [ "$DO_NO_UNMOUNT_ISO" = "true" ]; then
     unmount_iso
     unmount_squashfs
   fi
 else
-  if [ "$DO_EXECUTE_CHROOT_SCRIPT" = "1" ]; then
-    DO_PRINT_HELP="0"
+  if [ "$DO_EXECUTE_CHROOT_SCRIPT" = "true" ]; then
+    DO_PRINT_HELP="false"
     mount_iso
     execute_chroot_script 
   fi
-  if [ "$DO_PREPARE_AUTOINSTALL_ISO" = "1" ]; then
-    DO_PRINT_HELP="0"
+  if [ "$DO_PREPARE_AUTOINSTALL_ISO" = "true" ]; then
+    DO_PRINT_HELP="false"
     prepare_autoinstall_iso
   fi
-  if [ "$DO_CREATE_AUTOINSTALL_ISO_ONLY" = "1" ]; then
-    DO_PRINT_HELP="0"
+  if [ "$DO_CREATE_AUTOINSTALL_ISO_ONLY" = "true" ]; then
+    DO_PRINT_HELP="false"
     prepare_autoinstall_iso
     create_autoinstall_iso
   fi
-  if [ "$DO_UMOUNT_ISO" = "1" ]; then
+  if [ "$DO_UMOUNT_ISO" = "true" ]; then
+    DO_PRINT_HELP="false"
     unmount_iso
     unmount_squashfs
   fi
 fi
 
-if [ "$DO_PRINT_HELP" = "1" ]; then
+if [ "$DO_PRINT_HELP" = "true" ]; then
   print_help
 fi

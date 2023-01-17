@@ -87,3 +87,5 @@
 # Fixed copy of packages into source directory for ISO creation
 # 0.4.4: Tue 17 Jan 2023 15:14:39 AEDT
 # Fixed grub update in late-commands
+# 0.4.5: Tue 17 Jan 2023 20:24:54 AEDT
+# Added update and package install options

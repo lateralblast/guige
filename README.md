@@ -11,7 +11,7 @@ used to hang a shield on the shoulder or neck when not in use.
 Version
 -------
 
-Current version: 0.4.4
+Current version: 0.4.5
 
 Introduction
 ------------
@@ -73,12 +73,12 @@ You can get help using the -h switch:
     -b|--getiso           Get base ISO
     -C|--runchrootscript  Run chroot script
     -c|--createiso        Create ISO (perform all steps - e.g. grub, packages, etc)
-    -D|--defaults         Use defaults
+    -D|--defaults         Use defaults (default: false)
     -d|--bootdisk         Boot Disk devices (default: sda vda)
     -E|--locale           LANGUAGE (default: en_US.UTF-8)
     -e|--lcall            LC_ALL (default: en_US)
-    -f|--delete           Remove previously created files
-    -H|--hostname:        Hostname
+    -f|--delete           Remove previously created files (default: false)
+    -H|--hostname:        Hostname (default: ubuntu)
     -h|--help             Help/Usage Information
     -I|--interactive      Interactive mode (will ask for input rather than using command line options or defaults)
     -i|--inputiso:        Input/base ISO file (default: /home/sysadmin/ubuntu-iso/ubuntu-22.04.1-live-server-amd64.iso)
@@ -92,7 +92,7 @@ You can get help using the -h switch:
     -n|--nounmount        Do not unmount loopback filesystems (useful for troubleshooting)
     -o|--outputiso:       Output ISO file (default: /home/sysadmin/ubuntu-iso/ubuntu-22.04.1-live-server-amd64-autoinstall.iso)
     -P|--password:        Password (default: ubuntu)
-    -p|--packages:        Packages to add to ISO (default: zfsutils-linux grub-efi zfs-initramfs net-tools curl wget)
+    -p|--chrootpackages:  Packages to add to ISO (default: zfsutils-linux grub-efi zfs-initramfs net-tools curl wget)
     -R|--realname:        Realname (default Ubuntu)
     -r|--installrequired  Install required packages on host (p7zip-full wget xorriso whois)
     -S|--swapsize:        Swap size (default 2G)
@@ -102,10 +102,13 @@ You can get help using the -h switch:
     -U|--username:        Username (default: ubuntu)
     -u|--unmount          Unmount loopback filesystems
     -V|--version          Display Script Version
-    -v|--verbose          Verbose output
+    -v|--verbose          Verbose output (default: false)
     -W|--workdir:         Work directory (default: /home/sysadmin/ubuntu-iso)
     -w|--checkdirs        Check work directories exist
+    -Y|--installpackages: Packages to install after OS installation
+    -y|--installupdatex   Install updates after install (requires network)
     -x|--grubtimeout:     Grub timeout (default: 10)
+    -Z|--distupgrade      Perform dist-upgrade after OS installation
 ```
 
 Todo
