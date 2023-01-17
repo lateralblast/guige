@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Name:         guige (Generic Ubuntu ISO Generation Engine)
-# Version:      0.4.5
+# Version:      0.4.6
 # Release:      1
 # License:      CC-BA (Creative Commons By Attribution)
 #               http://creativecommons.org/licenses/by/4.0/legalcode
@@ -61,6 +61,7 @@ REQUIRED_PACKAGES="p7zip-full wget xorriso whois"
 # Set function variables
 
 DO_INSTALL_REQUIRED_PACKAGES="false"
+DO_INSTALL_PACKAGES="false"
 DO_GET_BASE_ISO="false"
 DO_CHECK_WORK_DIR="false"
 DO_PREPARE_AUTOINSTALL_ISO="false"
@@ -148,9 +149,10 @@ print_help () {
     -N|--nic:             Network device (default: $DEFAULT_NIC)
     -m|--grubmenu:        Set default grub menu (default: $DEFAULT_GRUB_MENU)
     -n|--nounmount        Do not unmount loopback filesystems (useful for troubleshooting)
+    -O|--ospackages:      List of packages to install after OS installation via network (default: $DEFAULT_PACKAGES)
     -o|--outputiso:       Output ISO file (default: $DEFAULT_OUTPUT_FILE)
     -P|--password:        Password (default: $DEFAULT_USERNAME)
-    -p|--chrootpackages:  Packages to add to ISO (default: $DEFAULT_PACKAGES)
+    -p|--chrootpackages:  List of packages to add to ISO (default: $DEFAULT_PACKAGES)
     -R|--realname:        Realname (default $DEFAULT_REALNAME)
     -r|--installrequired  Install required packages on host ($REQUIRED_PACKAGES)
     -S|--swapsize:        Swap size (default $DEFAULT_SWAPSIZE)
@@ -163,8 +165,8 @@ print_help () {
     -v|--verbose          Verbose output (default: $VERBOSE_MODE)
     -W|--workdir:         Work directory (default: $WORK_DIR)
     -w|--checkdirs        Check work directories exist
-    -Y|--installpackages: Packages to install after OS installation
-    -y|--installupdatex   Install updates after install (requires network)
+    -Y|--installpackages  Install packages after OS installation via network (default: $DO_INSTALL_PACKAGES)
+    -y|--installupdates   Install updates after install (requires network)
     -x|--grubtimeout:     Grub timeout (default: $DEFAULT_GRUB_TIMEOUT)
     -Z|--distupgrade      Perform dist-upgrade after OS installation
 HELP
@@ -897,6 +899,18 @@ prepare_autoinstall_iso () {
         handle_output "echo \"  late-commands:\" >> $CONFIG_DIR/$VOLMGR/$DEVICE/user-data"
         handle_output "echo \"    - \\\"echo 'GRUB_CMDLINE_LINUX=\\\\\\\"$KERNEL_ARGS\\\\\\\"' >> /target/etc/default/grub\\\"\" >> $CONFIG_DIR/$VOLMGR/$DEVICE/user-data"
         handle_output "echo \"    - \\\"curtin in-target --target=/target -- /usr/sbin/update-grub\\\"\" >> $CONFIG_DIR/$VOLMGR/$DEVICE/user-data"
+        if [ "$DO_INSTALL_UPDATES" = "true" ] || [ "$DO_INSTALL_PACKAGES" = "true" ] || [ "$DO_DIST_UPGRADE" = "true" ]; then
+          handle_output "echo \"    - \\\"curtin in-target --target=/target -- apt update\\\"\" >> $CONFIG_DIR/$VOLMGR/$DEVICE/user-data"
+        fi
+        if [ "$DO_INSTALL_UPDATES" = "true" ]; then
+          handle_output "echo \"    - \\\"curtin in-target --target=/target -- apt upgrade -y\\\"\" >> $CONFIG_DIR/$VOLMGR/$DEVICE/user-data"
+        fi
+        if [ "$DO_DIST_UPGRADE" = "true" ]; then
+          handle_output "echo \"    - \\\"curtin in-target --target=/target -- apt dist-upgrade -y\\\"\" >> $CONFIG_DIR/$VOLMGR/$DEVICE/user-data"
+        fi
+        if [ "$DO_INSTALL_PACKAGES" = "true" ]; then
+          handle_output "echo \"    - \\\"curtin in-target --target=/target -- apt install -y $INSTALL_PACKAGES\\\"\" >> $CONFIG_DIR/$VOLMGR/$DEVICE/user-data"
+        fi
         handle_output "echo \"  version: 1\" >> $CONFIG_DIR/$VOLMGR/$DEVICE/user-data"
         if [ "$TEST_MODE" = "false" ]; then
           echo "#cloud-config" > $CONFIG_DIR/$VOLMGR/$DEVICE/user-data
@@ -1026,11 +1040,18 @@ prepare_autoinstall_iso () {
           echo "    - \"dpkg --auto-deconfigure --force-depends -i $INSTALL_MOUNT/$INSTALL_DIR/packages/*.deb\"" >> $CONFIG_DIR/$VOLMGR/$DEVICE/user-data
           echo "  late-commands:" >> $CONFIG_DIR/$VOLMGR/$DEVICE/user-data
           echo "    - \"echo 'GRUB_CMDLINE_LINUX=\\\"$KERNEL_ARGS\\\"' >> /target/etc/default/grub\"" >> $CONFIG_DIR/$VOLMGR/$DEVICE/user-data
-          echo "    - \"curtin in-target --target=/target -- /usr/sbin/update-grub\"" >> $CONFIG_DIR/$VOLMGR/$DEVICE/user-data
-          if [ "DO_INSTALL_UPDATES" = "true" ]; then
-            echo "    - \"curtin in-target --target=/target /usr/bin/apt update\"" >> $CONFIG_DIR/$VOLMGR/$DEVICE/user-data
-            echo "    - \"curtin in-target --target=/target /usr/bin/apt upgrade\"" >> $CONFIG_DIR/$VOLMGR/$DEVICE/user-data
-            echo "    - \"curtin in-target --target=/target /usr/bin/apt install -y $INSTALL_PACKAGES\"" >> $CONFIG_DIR/$VOLMGR/$DEVICE/user-data
+          echo "    - \"curtin in-target --target=/target -- update-grub\"" >> $CONFIG_DIR/$VOLMGR/$DEVICE/user-data
+          if [ "$DO_INSTALL_UPDATES" = "true" ] || [ "$DO_INSTALL_PACKAGES" = "true" ] || [ "$DO_DIST_UPGRADE" = "true" ]; then
+            echo "    - \"curtin in-target --target=/target -- apt update\"" >> $CONFIG_DIR/$VOLMGR/$DEVICE/user-data
+          fi
+          if [ "$DO_INSTALL_UPDATES" = "true" ]; then
+            echo "    - \"curtin in-target --target=/target -- apt upgrade -y\"" >> $CONFIG_DIR/$VOLMGR/$DEVICE/user-data
+          fi
+          if [ "$DO_DIST_UPGRADE" = "true" ]; then
+            echo "    - \"curtin in-target --target=/target -- apt dist-upgrade -y\"" >> $CONFIG_DIR/$VOLMGR/$DEVICE/user-data
+          fi
+          if [ "$DO_INSTALL_PACKAGES" = "true" ]; then
+            echo "    - \"curtin in-target --target=/target -- apt install -y $INSTALL_PACKAGES\"" >> $CONFIG_DIR/$VOLMGR/$DEVICE/user-data
           fi
           echo "  version: 1" >> $CONFIG_DIR/$VOLMGR/$DEVICE/user-data
         fi
@@ -1041,7 +1062,7 @@ prepare_autoinstall_iso () {
 
 # Handle command line arguments
 
-PARAMS="$(getopt -o A:aB:bCcDd:E:e:FfhIi:K:k:L:lm:N:no:P:p:R:rS:T:tsuVvW:wx: -l arch,bootdisk:,checkdirs,chrootpackages:,codename:,createiso,delete,defaults,getiso,grubmenu:,help,inputiso:,installpackages:,installrequired,installupdates,interactive,justiso,kernel:,kernelargs:,land:layout:lcall:nic:,nounmount,outputiso:,password:,realname:,release:,runchrootscript,staticip,swapsize:,testmode,timezone:,unmount,verbose,version,workdir: --name "$(basename "$0")" -- "$@")"
+PARAMS="$(getopt -o A:aB:bCcDd:E:e:FfhIi:K:k:L:lm:N:nO:o:P:p:R:rS:T:tsuVvW:wx:YyZ -l arch,bootdisk:,checkdirs,chrootpackages:,codename:,createiso,delete,defaults,distupgrade,getiso,grubmenu:,help,inputiso:,installpackages,installrequired,installupdates,interactive,justiso,kernel:,kernelargs:,lang:layout:lcall:nic:,nounmount,ospackages:,outputiso:,password:,realname:,release:,runchrootscript,staticip,swapsize:,testmode,timezone:,unmount,verbose,version,workdir: --name "$(basename "$0")" -- "$@")"
 
 if [ $? -ne 0 ]; then
   print_help
@@ -1147,6 +1168,10 @@ while true; do
       DO_NO_UNMOUNT_ISO="true";
       shift
       ;;
+    -O:--ospackages)
+      INSTALL_PACKAGES="$2"
+      shift 2
+      ;;
     -o|--outputiso)
       OUTPUT_FILE="$2"
       shift 2
@@ -1216,8 +1241,8 @@ while true; do
       shift
       ;;
     -Y|--installpackages)
-      INSTALL_PACKAGES="$2"
-      shift 2
+      DO_INSTALL_PACKAGES="true"
+      shift
       ;;
     -Z|--distupgrade)
       DO_DIST_UPGRADE="true"

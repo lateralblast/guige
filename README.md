@@ -11,7 +11,7 @@ used to hang a shield on the shoulder or neck when not in use.
 Version
 -------
 
-Current version: 0.4.5
+Current version: 0.4.6
 
 Introduction
 ------------
@@ -129,29 +129,41 @@ Thanks to Mark Lane for testing, suggestions, etc.
 Examples
 --------
 
+Get usage/help information:
+
+```
+./guige.sh --help
+```
+
 Install required packages:
 
 ```
-./guide.sh -r
+./guide.sh --install required
 ```
 
 Download base ISO (jammy)
 
 ```
-./guide.sh -d -L jammy
+./guide.sh --getiso 
 ```
 
 Create ISO (performs all steps):
 
 ```
-./guide.sh -c -L 22.04.1
+./guide.sh --createiso
 ```
 
 Run the previous command but in test mode (don't execute commands) to produce output suitable for creating a script:
 
 
 ```
-./guide.sh -c -t -L 22.04.1
+./guide.sh --createiso --testmode
+```
+
+Just do autoinstall config and create ISO (assumes an ISO has been previously create and we are just updating the autoinstall config), enabling updates and installing additional packages (requires networkduring OS install)
+
+```
+./guige.sh --justiso --verbose --installupdates --installpackages --distupgrade
 ```
 
 Process
