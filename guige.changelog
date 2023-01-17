@@ -91,3 +91,5 @@
 # Added update and package install options
 # 0.4.6: Tue 17 Jan 2023 21:25:44 AEDT
 # Fixed update and package install code/documentation
+# 0.4.7: Wed 18 Jan 2023 06:54:12 AEDT
+# Bug fixes

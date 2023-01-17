@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Name:         guige (Generic Ubuntu ISO Generation Engine)
-# Version:      0.4.6
+# Version:      0.4.7
 # Release:      1
 # License:      CC-BA (Creative Commons By Attribution)
 #               http://creativecommons.org/licenses/by/4.0/legalcode
@@ -56,7 +56,7 @@ DEFAULTS_MODE="false"
 INTERACTIVE_MODE="false"
 CHROOT_PACKAGES=""
 DEFAULT_PACKAGES="zfsutils-linux grub-efi zfs-initramfs net-tools curl wget"
-REQUIRED_PACKAGES="p7zip-full wget xorriso whois"
+REQUIRED_PACKAGES="p7zip-full wget xorriso whois squashfs-tools"
 
 # Set function variables
 
@@ -648,7 +648,7 @@ create_autoinstall_iso () {
   handle_output "# Create ISO"
   handle_output "cd $WORK_DIR ; export APPEND_PART=\$( xorriso -indev $ISO_FILE -report_el_torito as_mkisofs |grep append_partition |tail -1 |awk '{print \$3}' 2>&1 )"
   handle_output "cd $WORK_DIR ; export ISO_MBR_PART_TYPE=\$( xorriso -indev $ISO_FILE -report_el_torito as_mkisofs |grep iso_mbr_part_type |tail -1 |awk '{print \$2}' 2>&1 )"
-  handle_output "cd $ISO_SOURCE_DIR ; xorriso -as mkisofs -r -V 'Ubuntu 22.04 LTS AUTO (EFIBIOS)' -o ../$OUTPUT_FILE \
+  handle_output "cd $ISO_SOURCE_DIR ; xorriso -as mkisofs -r -V \"Ubuntu $RELEASE LTS AUTO (EFIBIOS)\" -o ../$OUTPUT_FILE \
   --grub2-mbr ../BOOT/1-Boot-NoEmul.img -partition_offset 16 --mbr-force-bootable \
   -append_partition 2 $APPEND_PART ../BOOT/2-Boot-NoEmul.img -appended_part_as_gpt \
   -iso_mbr_part_type $ISO_MBR_PART_TYPE -c /boot.catalog -b /boot/grub/i386-pc/eltorito.img \
@@ -657,7 +657,7 @@ create_autoinstall_iso () {
   if [ "$TEST_MODE" = "false" ]; then
     APPEND_PART=$( xorriso -indev $ISO_FILE -report_el_torito as_mkisofs |grep append_partition |tail -1 |awk '{print $3}' 2>&1 )
     ISO_MBR_PART_TYPE=$( xorriso -indev $ISO_FILE -report_el_torito as_mkisofs |grep iso_mbr_part_type |tail -1 |awk '{print $2}' 2>&1 )
-    cd $ISO_SOURCE_DIR ; xorriso -as mkisofs -r -V 'Ubuntu 22.04 LTS AUTO (EFIBIOS)' -o $OUTPUT_FILE \
+    cd $ISO_SOURCE_DIR ; xorriso -as mkisofs -r -V "Ubuntu $RELEASE LTS AUTO (EFIBIOS)" -o $OUTPUT_FILE \
     --grub2-mbr ../BOOT/1-Boot-NoEmul.img -partition_offset 16 --mbr-force-bootable \
     -append_partition 2 $APPEND_PART ../BOOT/2-Boot-NoEmul.img -appended_part_as_gpt \
     -iso_mbr_part_type $ISO_MBR_PART_TYPE -c /boot.catalog -b /boot/grub/i386-pc/eltorito.img \
@@ -1088,9 +1088,11 @@ while true; do
     -b|--getiso)
       DO_CHECK_WORK_DIR="true"
       DO_GET_BASE_ISO="true"
+      shift
       ;;
     -C|--runchrootscript)
       DO_EXECUTE_CHROOT_SCRIPT="true"
+      shift
       ;;
     -c|--createiso)
       DO_CHECK_WORK_DIR="true"
