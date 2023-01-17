@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Name:         guige (Generic Ubuntu ISO Generation Engine)
-# Version:      0.4.0
+# Version:      0.4.4
 # Release:      1
 # License:      CC-BA (Creative Commons By Attribution)
 #               http://creativecommons.org/licenses/by/4.0/legalcode
@@ -34,6 +34,9 @@ DEFAULT_DEVICES="sda vda"
 DEFAULT_VOLMGRS="zfs lvm"
 DEFAULT_GRUB_MENU="0"
 DEFAULT_GRUB_TIMEOUT="10"
+DEFAULT_LOCALE="en_US.UTF-8"
+DEFAULT_LC_ALL="en_US"
+DEFAULT_LAYOUT="us"
 DEVICES=""
 VOLMGRS=""
 RELEASE=""
@@ -111,11 +114,14 @@ print_help () {
   Usage: ${0##*/} [OPTIONS...]
     -A|--codename         Linux release codename (default: $DEFAULT_CODENAME)
     -a|--arch             Architecture (default: $ARCH)
+    -B|--layout           Layout (default: $DEFAULT_LAYOUT)
     -b|--getiso           Get base ISO
     -C|--runchrootscript  Run chroot script
     -c|--createiso        Create ISO (perform all steps - e.g. grub, packages, etc)
     -D|--defaults         Use defaults
     -d|--bootdisk         Boot Disk devices (default: $DEFAULT_DEVICES)
+    -E|--locale           LANGUAGE (default: $DEFAULT_LOCALE)
+    -e|--lcall            LC_ALL (default: $DEFAULT_LC_ALL)
     -f|--delete           Remove previously created files
     -H|--hostname:        Hostname
     -h|--help             Help/Usage Information
@@ -265,7 +271,7 @@ mount_iso () {
   get_base_iso
   BASE_ISO_FILE=$( basename $ISO_FILE )
   FILE_TYPE=$( file $WORK_DIR/$BASE_ISO_FILE | awk '{print $2}' )
-  if ! [ "$FILE_TYPE" = "ISO" ]; then
+  if ! [ "$FILE_TYPE" = "ISO" ] || [ "$FILE_TYPE" = "DOS/MBR" ]; then
     handle_output "Warning: $WORK_DIR/$BASE_ISO_FILE is not a valid ISO file" TEXT
     exit
   fi
@@ -370,11 +376,9 @@ create_chroot_script () {
   handle_output "echo \"mount -t sysfs none /sys/\" >> $ORIG_SCRIPT"
   handle_output "echo \"mount -t devpts none /dev/pts\" >> $ORIG_SCRIPT"
   handle_output "echo \"export HOME=/root\" >> $ORIG_SCRIPT"
-  handle_output "echo \"sudo apt update\" >> $ORIG_SCRIPT"
-  handle_output "echo \"sudo apt clean\" >> $ORIG_SCRIPT"
-  handle_output "echo \"rm /var/cache/apt/archives/*.deb\" >> $ORIG_SCRIPT"
-  handle_output "echo \"sudo apt install -y --download-only $CHROOT_PACKAGES\" >> $ORIG_SCRIPT"
-  handle_output "echo \"sudo apt install -y $CHROOT_PACKAGES\" >> $ORIG_SCRIPT"
+  handle_output "echo \"apt update\" >> $ORIG_SCRIPT"
+  handle_output "echo \"export LC_ALL=C ; apt install -y --download-only $CHROOT_PACKAGES\" >> $ORIG_SCRIPT"
+  handle_output "echo \"export LC_ALL=C ; apt install -y $CHROOT_PACKAGES\" >> $ORIG_SCRIPT"
   handle_output "echo \"umount /proc/\" >> $ORIG_SCRIPT"
   handle_output "echo \"umount /sys/\" >> $ORIG_SCRIPT"
   handle_output "echo \"umount /dev/pts/\" >> $ORIG_SCRIPT"
@@ -382,24 +386,20 @@ create_chroot_script () {
   handle_output "sudo cp $ORIG_SCRIPT $CHROOT_SCRIPT"
   handle_output "sudo chmod +x $CHROOT_SCRIPT"
   if [ "$TEST_MODE" = "0" ]; then
-    if ! [ -f "$ORIG_SCRIPT" ]; then
-      echo "#!/usr/bin/bash" > $ORIG_SCRIPT
-      echo "mount -t proc none /proc/" >> $ORIG_SCRIPT
-      echo "mount -t sysfs none /sys/" >> $ORIG_SCRIPT
-      echo "mount -t devpts none /dev/pts" >> $ORIG_SCRIPT
-      echo "export HOME=/root" >> $ORIG_SCRIPT
-      echo "sudo apt update" >> $ORIG_SCRIPT
-      echo "sudo apt install -y --download-only $CHROOT_PACKAGES" >> $ORIG_SCRIPT
-      echo "sudo apt install -y $CHROOT_PACKAGES" >> $ORIG_SCRIPT
-      echo "umount /proc/" >> $ORIG_SCRIPT
-      echo "umount /sys/" >> $ORIG_SCRIPT
-      echo "umount /dev/pts/" >> $ORIG_SCRIPT
-      echo "exit" >> $ORIG_SCRIPT
-    fi
-    if ! [ -f "$CHROOT_SCRIPT" ]; then
-      sudo cp $ORIG_SCRIPT $CHROOT_SCRIPT
-      sudo chmod +x $CHROOT_SCRIPT
-    fi
+    echo "#!/usr/bin/bash" > $ORIG_SCRIPT
+    echo "mount -t proc none /proc/" >> $ORIG_SCRIPT
+    echo "mount -t sysfs none /sys/" >> $ORIG_SCRIPT
+    echo "mount -t devpts none /dev/pts" >> $ORIG_SCRIPT
+    echo "export HOME=/root" >> $ORIG_SCRIPT
+    echo "apt update" >> $ORIG_SCRIPT
+    echo "export LC_ALL=C ; apt install -y --download-only $CHROOT_PACKAGES" >> $ORIG_SCRIPT
+    echo "export LC_ALL=C ; apt install -y $CHROOT_PACKAGES" >> $ORIG_SCRIPT
+    echo "umount /proc/" >> $ORIG_SCRIPT
+    echo "umount /sys/" >> $ORIG_SCRIPT
+    echo "umount /dev/pts/" >> $ORIG_SCRIPT
+    echo "exit" >> $ORIG_SCRIPT
+    sudo cp $ORIG_SCRIPT $CHROOT_SCRIPT
+    sudo chmod +x $CHROOT_SCRIPT
   fi
 }
 
@@ -673,7 +673,11 @@ prepare_autoinstall_iso () {
         touch $CONFIG_DIR/$VOLMGR/$DEVICE/meta-data
       done
     done
-    cp $ISO_NEW_DIR/custom/var/cache/apt/archives/*.deb $PACKAGE_DIR
+    if [ "$VERBOSE_MODE" = "1" ]; then
+      sudo cp -v $ISO_NEW_DIR/custom/var/cache/apt/archives/*.deb $PACKAGE_DIR
+    else
+      sudo cp -v $ISO_NEW_DIR/custom/var/cache/apt/archives/*.deb $PACKAGE_DIR
+    fi
   fi
   if [ -d "$WORK_DIR/BOOT" ]; then
     if [ "$TEST_MODE" = "0" ]; then
@@ -698,7 +702,7 @@ prepare_autoinstall_iso () {
     handle_output "echo \"loadfont unicode\" >> $ISO_SOURCE_DIR/boot/grub/grub.cfg"
     for DEVICE in $DEVICES; do
       for VOLMGR in $VOLMGRS; do
-        handle_output "echo \"menuentry 'Autoinstall Ubuntu $RELEASE Server - $VOLMGR - $DEVICE' {\" >> $ISO_SOURCE_DIR/boot/grub/grub.cfg"
+        handle_output "echo \"menuentry 'Ubuntu $RELEASE Server - $VOLMGR/$DEVICE - $KERNEL_ARGS' {\" >> $ISO_SOURCE_DIR/boot/grub/grub.cfg"
         handle_output "echo \"  set gfxpayload=keep\" >> $ISO_SOURCE_DIR/boot/grub/grub.cfg"
         handle_output "echo \"  linux   /casper/vmlinuz $KERNEL_ARGS quiet autoinstall ds=nocloud\;s=/$INSTALL_MOUNT/$INSTALL_DIRs/configs/$VOLMGR/$DEVICE/  ---\" >> $ISO_SOURCE_DIR/boot/grub/grub.cfg"
         handle_output "echo \"  initrd  /casper/initrd\" >> $ISO_SOURCE_DIR/boot/grub/grub.cfg"
@@ -722,7 +726,7 @@ prepare_autoinstall_iso () {
       echo "loadfont unicode" >> $ISO_SOURCE_DIR/boot/grub/grub.cfg
       for DEVICE in $DEVICES; do
         for VOLMGR in $VOLMGRS; do
-          echo "menuentry 'Autoinstall Ubuntu $RELEASE Server - $VOLMGR - $DEVICE' {" >> $ISO_SOURCE_DIR/boot/grub/grub.cfg
+          echo "menuentry 'Ubuntu $RELEASE Server - $VOLMGR/$DEVICE - $KERNEL_ARGS' {" >> $ISO_SOURCE_DIR/boot/grub/grub.cfg
           echo "  set gfxpayload=keep" >> $ISO_SOURCE_DIR/boot/grub/grub.cfg
           echo "  linux   /casper/vmlinuz $KERNEL_ARGS quiet autoinstall ds=nocloud\;s=$INSTALL_MOUNT/$INSTALL_DIR/configs/$VOLMGR/$DEVICE/  ---" >> $ISO_SOURCE_DIR/boot/grub/grub.cfg
           echo "  initrd  /casper/initrd" >> $ISO_SOURCE_DIR/boot/grub/grub.cfg
@@ -780,8 +784,8 @@ prepare_autoinstall_iso () {
         handle_output "echo \"  kernel:\" >> $CONFIG_DIR/$VOLMGR/$DEVICE/user-data"
         handle_output "echo \"    package: $KERNEL\" >> $CONFIG_DIR/$VOLMGR/$DEVICE/user-data"
         handle_output "echo \"  keyboard:\" >> $CONFIG_DIR/$VOLMGR/$DEVICE/user-data"
-        handle_output "echo \"    layout: us\" >> $CONFIG_DIR/$VOLMGR/$DEVICE/user-data"
-        handle_output "echo \"  locale: en_US.UTF-8\" >> $CONFIG_DIR/$VOLMGR/$DEVICE/user-data"
+        handle_output "echo \"    layout: $ISO_LAYOUT\" >> $CONFIG_DIR/$VOLMGR/$DEVICE/user-data"
+        handle_output "echo \"  locale: $ISO_LOCALE\" >> $CONFIG_DIR/$VOLMGR/$DEVICE/user-data"
         handle_output "echo \"  network:\" >> $CONFIG_DIR/$VOLMGR/$DEVICE/user-data"
         handle_output "echo \"    ethernets:\" >> $CONFIG_DIR/$VOLMGR/$DEVICE/user-data"
         handle_output "echo \"      $NIC:\" >> $CONFIG_DIR/$VOLMGR/$DEVICE/user-data"
@@ -874,6 +878,9 @@ prepare_autoinstall_iso () {
         fi
         handle_output "echo \"  early-commands:\" >> $CONFIG_DIR/$VOLMGR/$DEVICE/user-data"
         handle_output "echo \"    - \\\"sudo dpkg --auto-deconfigure --force-depends -i /$INSTALL_MOUNT/$INSTALL_DIR/packages/*.deb\\\"\" >> $CONFIG_DIR/$VOLMGR/$DEVICE/user-data"
+        handle_output "echo \"  late-commands:\" >> $CONFIG_DIR/$VOLMGR/$DEVICE/user-data"
+        handle_output "echo \"    - \\\"echo 'GRUB_CMDLINE_LINUX=\\\\\\\"$KERNEL_ARGS\\\\\\\"' >> /target/etc/default/grub\\\"\" >> $CONFIG_DIR/$VOLMGR/$DEVICE/user-data"
+        handle_output "echo \"    - \\\"curtin in-target --target=/target -- /usr/sbin/update-grub\\\"\" >> $CONFIG_DIR/$VOLMGR/$DEVICE/user-data"
         handle_output "echo \"  version: 1\" >> $CONFIG_DIR/$VOLMGR/$DEVICE/user-data"
         if [ "$TEST_MODE" = "0" ]; then
           echo "#cloud-config" > $CONFIG_DIR/$VOLMGR/$DEVICE/user-data
@@ -907,8 +914,8 @@ prepare_autoinstall_iso () {
           echo "  kernel:" >> $CONFIG_DIR/$VOLMGR/$DEVICE/user-data
           echo "    package: $KERNEL" >> $CONFIG_DIR/$VOLMGR/$DEVICE/user-data
           echo "  keyboard:" >> $CONFIG_DIR/$VOLMGR/$DEVICE/user-data
-          echo "    layout: us" >> $CONFIG_DIR/$VOLMGR/$DEVICE/user-data
-          echo "  locale: en_US.UTF-8" >> $CONFIG_DIR/$VOLMGR/$DEVICE/user-data
+          echo "    layout: $ISO_LAYOUT" >> $CONFIG_DIR/$VOLMGR/$DEVICE/user-data
+          echo "  locale: $ISO_LOCALE" >> $CONFIG_DIR/$VOLMGR/$DEVICE/user-data
           echo "  network:" >> $CONFIG_DIR/$VOLMGR/$DEVICE/user-data
           echo "    ethernets:" >> $CONFIG_DIR/$VOLMGR/$DEVICE/user-data
           echo "      $NIC:" >> $CONFIG_DIR/$VOLMGR/$DEVICE/user-data
@@ -1000,7 +1007,10 @@ prepare_autoinstall_iso () {
             echo "      name: lvm" >> $CONFIG_DIR/$VOLMGR/$DEVICE/user-data
           fi
           echo "  early-commands:" >> $CONFIG_DIR/$VOLMGR/$DEVICE/user-data
-          echo "    - \"sudo dpkg --auto-deconfigure --force-depends -i /$INSTALL_MOUNT/$INSTALL_DIR/packages/*.deb\"" >> $CONFIG_DIR/$VOLMGR/$DEVICE/user-data
+          echo "    - \"dpkg --auto-deconfigure --force-depends -i $INSTALL_MOUNT/$INSTALL_DIR/packages/*.deb\"" >> $CONFIG_DIR/$VOLMGR/$DEVICE/user-data
+          echo "  late-commands:" >> $CONFIG_DIR/$VOLMGR/$DEVICE/user-data
+          echo "    - \"echo 'GRUB_CMDLINE_LINUX=\\\"$KERNEL_ARGS\\\"' >> /target/etc/default/grub\"" >> $CONFIG_DIR/$VOLMGR/$DEVICE/user-data
+          echo "    - \"curtin in-target --target=/target -- /usr/sbin/update-grub\"" >> $CONFIG_DIR/$VOLMGR/$DEVICE/user-data
           echo "  version: 1" >> $CONFIG_DIR/$VOLMGR/$DEVICE/user-data
         fi
       fi
@@ -1022,7 +1032,7 @@ DO_NO_UNMOUNT_ISO="0"
 
 # Handle command line arguments
 
-PARAMS="$(getopt -o A:abCcDd:FfhIi:K:k:L:lm:N:no:P:p:R:rS:T:tsuVvW:wx: -l arch,bootdisk:,checkdirs,codename:,createiso,delete,defaults,getiso,grubmenu:,help,inputiso:,installrequired,interactive,justiso,kernel:,kernelargs:,nic:,nounmount,outputiso:,password:,packages:,realname:,release:,runchrootscript,staticip,swapsize:,testmode,timezone:,unmount,verbose,version,workdir: --name "$(basename "$0")" -- "$@")"
+PARAMS="$(getopt -o A:aB:bCcDd:E:e:FfhIi:K:k:L:lm:N:no:P:p:R:rS:T:tsuVvW:wx: -l arch,bootdisk:,checkdirs,codename:,createiso,delete,defaults,getiso,grubmenu:,help,inputiso:,installrequired,interactive,justiso,kernel:,kernelargs:,land:layout:lcall:nic:,nounmount,outputiso:,password:,packages:,realname:,release:,runchrootscript,staticip,swapsize:,testmode,timezone:,unmount,verbose,version,workdir: --name "$(basename "$0")" -- "$@")"
 
 if [ $? -ne 0 ]; then
   print_help
@@ -1041,6 +1051,10 @@ while true; do
       CODENAME="$2"
       shift 2
       ;;
+    -B|--layout)
+      ISO_LAYOUT="$2"
+      shift 2
+      ;;
     -b|--getiso)
       DO_CHECK_WORK_DIR="1"
       DO_GET_BASE_ISO="1"
@@ -1055,6 +1069,7 @@ while true; do
       DO_PREPARE_AUTOINSTALL_ISO="1"
       DO_EXECUTE_CHROOT_SCRIPT="1"
       DO_CREATE_AUTOINSTALL_ISO="1"
+      shift
       ;;
     -D|--defaults)
       DEFAULTS_MODE="1"
@@ -1062,6 +1077,14 @@ while true; do
       ;;
     -d|--bootdisk)
       DEVICES+="$2"
+      shift 2
+      ;;
+    -E|--locale)
+      ISO_LOCALE="$2"
+      shift 2
+      ;;
+    -e|--lcall)
+      ISO_LC_ALL="$2"
       shift 2
       ;;
     -F|--delete)
@@ -1085,7 +1108,7 @@ while true; do
       shift 2
       ;;
     -K|--kernel)
-      KERNEL="$OPTARG"
+      KERNEL="$2"
       shift 2
       ;;
     -k|--kernelargs)
@@ -1256,6 +1279,15 @@ if [ "$KERNEL" = "" ] || [ "$DEFAULTS_MODE" = "1" ]; then
 fi
 if [ "$CODENAME" = "" ] || [ "$DEFAULTS_MODE" = "1" ]; then
   CODENAME="$DEFAULT_CODENAME"
+fi
+if [ "$ISO_LOCALE" = "" ] || [ "$DEFAULTS_MODE" = "1" ]; then
+  ISO_LOCALE="$DEFAULT_LOCALE"
+fi
+if [ "$ISO_LC_ALL" = "" ] || [ "$DEFAULTS_MODE" = "1" ]; then
+  ISO_LC_ALL="$DEFAULT_LC_ALL"
+fi
+if [ "$ISO_LAYOUT" = "" ] || [ "$DEFAULTS_MODE" = "1" ]; then
+  ISO_LAYOUT="$DEFAULT_LAYOUT"
 fi
 
 # Handle specific functions

@@ -79,3 +79,11 @@
 # Finished migrating command line argument handling to new method
 # 0.4.0: Mon 16 Jan 2023 17:28:06 AEDT
 # Fixed Ubuntu Release/Codename usage
+# 0.4.1: Tue 17 Jan 2023 10:31:45 AEDT
+# Added language/locale switch and fixed bugs
+# 0.4.2: Tue 17 Jan 2023 13:22:49 AEDT
+# Added LC_ALL=C to chroot apt install commands to reduce locale complaints
+# 0.4.3: Tue 17 Jan 2023 14:43:06 AEDT
+# Fixed copy of packages into source directory for ISO creation
+# 0.4.4: Tue 17 Jan 2023 15:14:39 AEDT
+# Fixed grub update in late-commands

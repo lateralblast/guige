@@ -11,7 +11,7 @@ used to hang a shield on the shoulder or neck when not in use.
 Version
 -------
 
-Current version: 0.4.0
+Current version: 0.4.4
 
 Introduction
 ------------
@@ -67,17 +67,21 @@ You can get help using the -h switch:
 
 ```
   Usage: guige.sh [OPTIONS...]
+    -A|--codename         Linux release codename (default: jammy)
     -a|--arch             Architecture (default: amd64)
+    -B|--layout           Layout (default: us)
     -b|--getiso           Get base ISO
     -C|--runchrootscript  Run chroot script
     -c|--createiso        Create ISO (perform all steps - e.g. grub, packages, etc)
     -D|--defaults         Use defaults
     -d|--bootdisk         Boot Disk devices (default: sda vda)
+    -E|--locale           LANGUAGE (default: en_US.UTF-8)
+    -e|--lcall            LC_ALL (default: en_US)
     -f|--delete           Remove previously created files
     -H|--hostname:        Hostname
     -h|--help             Help/Usage Information
     -I|--interactive      Interactive mode (will ask for input rather than using command line options or defaults)
-    -i|--inputiso:        Input/base ISO file (default: /home/ubuntu/ubuntu-iso/ubuntu-22.04.1-live-server-amd64.iso)
+    -i|--inputiso:        Input/base ISO file (default: /home/sysadmin/ubuntu-iso/ubuntu-22.04.1-live-server-amd64.iso)
     -k|--kernelargs:      Kernel arguments (default: net.ifnames=0 biosdevname=0)
     -K|--kernel:          Kernel package (default: linux-generic)
     -L|--release:         LSB release (default: 22.04.1)
@@ -86,7 +90,7 @@ You can get help using the -h switch:
     -N|--nic:             Network device (default: eth0)
     -m|--grubmenu:        Set default grub menu (default: 0)
     -n|--nounmount        Do not unmount loopback filesystems (useful for troubleshooting)
-    -o|--outputiso:       Output ISO file (default: /home/ubuntu/ubuntu-iso/ubuntu-22.04.1-live-server-amd64-autoinstall.iso)
+    -o|--outputiso:       Output ISO file (default: /home/sysadmin/ubuntu-iso/ubuntu-22.04.1-live-server-amd64-autoinstall.iso)
     -P|--password:        Password (default: ubuntu)
     -p|--packages:        Packages to add to ISO (default: zfsutils-linux grub-efi zfs-initramfs net-tools curl wget)
     -R|--realname:        Realname (default Ubuntu)
@@ -99,7 +103,7 @@ You can get help using the -h switch:
     -u|--unmount          Unmount loopback filesystems
     -V|--version          Display Script Version
     -v|--verbose          Verbose output
-    -W|--workdir:         Work directory (default: /home/ubuntu/ubuntu-iso)
+    -W|--workdir:         Work directory (default: /home/sysadmin/ubuntu-iso)
     -w|--checkdirs        Check work directories exist
     -x|--grubtimeout:     Grub timeout (default: 10)
 ```
@@ -114,6 +118,10 @@ Things I plan to do:
 - Script cleanup and more flexibility
 - Support architechtures other than x86_64
 
+Thanks
+------
+
+Thanks to Mark Lane for testing, suggestions, etc.
 
 Examples
 --------
