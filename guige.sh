@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Name:         guige (Generic Ubuntu ISO Generation Engine)
-# Version:      0.4.7
+# Version:      0.5.0
 # Release:      1
 # License:      CC-BA (Creative Commons By Attribution)
 #               http://creativecommons.org/licenses/by/4.0/legalcode
@@ -13,10 +13,11 @@
 # Packager:     Richard Spindler <richard@lateralblast.com.au>
 # Description:  Shell script designed to simplify creation of custom Ubuntu
 
-# Defaults
+# Default variables
 
 CURRENT_RELEASE="22.04.1"
 CURRENT_CODENAME="jammy"
+CURRENT_OSNAME="Ubuntu"
 DEFAULT_HOSTNAME="ubuntu"
 DEFAULT_REALNAME="Ubuntu"
 DEFAULT_USERNAME="ubuntu"
@@ -37,26 +38,19 @@ DEFAULT_GRUB_TIMEOUT="10"
 DEFAULT_LOCALE="en_US.UTF-8"
 DEFAULT_LC_ALL="en_US"
 DEFAULT_LAYOUT="us"
-DEVICES=""
-VOLMGRS=""
-RELEASE=""
-HOSTNAME=""
-REALNAME=""
-USERNAME=""
-TIMEZONE=""
-PASSWORD=""
-NIC=""
+DEFAULT_ARCH="amd64"
+DEFAULT_PACKAGES="zfsutils-linux grub-efi zfs-initramfs net-tools curl wget"
+REQUIRED_PACKAGES="p7zip-full wget xorriso whois squashfs-tools"
+
+# Default flags
+
 DHCP="true"
-ARCH="amd64"
 TEST_MODE="false"
 FORCE_MODE="false"
 FULL_FORCE_MODE="false"
 VERBOSE_MODE="false"
 DEFAULTS_MODE="false"
 INTERACTIVE_MODE="false"
-CHROOT_PACKAGES=""
-DEFAULT_PACKAGES="zfsutils-linux grub-efi zfs-initramfs net-tools curl wget"
-REQUIRED_PACKAGES="p7zip-full wget xorriso whois squashfs-tools"
 
 # Set function variables
 
@@ -73,10 +67,18 @@ DO_NO_UNMOUNT_ISO="false"
 DO_INSTALL_UPDATES="false"
 DO_DIST_UPGRADE="false"
 
+# Get OS name
+
+if [ -f "/usr/bin/lsb_release" ]; then
+  DEFAULT_OSNAME=$( lsb_release -d |awk '{print $2}' )
+else
+  DEFAULT_OSNAME="$CURRENT_OSNAME"
+fi
+
 # Get default release
 
 if [ -f "/usr/bin/lsb_release" ]; then
-  if [ "$( lsb_release -d |awk '{print $2}' )" = "Ubuntu" ]; then
+  if [ "$DEFAULT_OSNAME" = "Ubuntu" ]; then
     DEFAULT_RELEASE=$( lsb_release -d |awk '{print $3}' )
   else
     DEFAULT_RELEASE="$CURRENT_RELEASE"
@@ -88,7 +90,7 @@ fi
 # Get default codename
 
 if [ -f "/usr/bin/lsb_release" ]; then
-  if [ "$( lsb_release -d |awk '{print $2}' )" = "Ubuntu" ]; then
+  if [ "$DEFAULT_OSNAME" = "Ubuntu" ]; then
     DEFAULT_CODENAME=$( lsb_release -cs )
   else
     DEFAULT_CODENAME="$CURRENT_CODENAME"
@@ -99,19 +101,26 @@ fi
 
 # Default work directories
 
-WORK_DIR=$HOME/ubuntu-iso
-ISO_MOUNT_DIR="$WORK_DIR/isomount"
-ISO_NEW_DIR="$WORK_DIR/isonew"
-ISO_SOURCE_DIR="$WORK_DIR/source-files"
+DEFAULT_WORK_DIR=$HOME/ubuntu-iso/$DEFAULT_RELEASE
+DEFAULT_ISO_MOUNT_DIR="$DEFAULT_WORK_DIR/isomount"
+DEFAULT_ISO_NEW_DIR="$DEFAULT_WORK_DIR/isonew"
+DEFAULT_ISO_SOURCE_DIR="$DEFAULT_WORK_DIR/source-files"
+
 INSTALL_DIR="autoinstall"
 INSTALL_MOUNT="/cdrom"
 
 # Default file names/locations
 
-DEFAULT_ISO_FILE="$WORK_DIR/ubuntu-$DEFAULT_RELEASE-live-server-$ARCH.iso"
-DEFAULT_OUTPUT_FILE="$WORK_DIR/ubuntu-$DEFAULT_RELEASE-live-server-$ARCH-autoinstall.iso"
-SQUASHFS_FILE="$ISO_MOUNT_DIR/casper/ubuntu-server-minimal.squashfs"
-GRUB_FILE="$WORK_DIR/grub.cfg"
+DEFAULT_ISO_FILE="$DEFAULT_WORK_DIR/ubuntu-$DEFAULT_RELEASE-live-server-$DEFAULT_ARCH.iso"
+DEFAULT_OUTPUT_FILE="$DEFAULT_WORK_DIR/ubuntu-$DEFAULT_RELEASE-live-server-$DEFAULT_ARCH-autoinstall.iso"
+DEFAULT_SQUASHFS_FILE="$DEFAULT_ISO_MOUNT_DIR/casper/ubuntu-server-minimal.squashfs"
+DEFAULT_GRUB_FILE="$DEFAULT_WORK_DIR/grub.cfg"
+DEFAULT_ISO_VOLID="$DEFAULT_OSNAME $DEFAULT_RELEASE Server"
+
+# Basename of files
+
+DEFAULT_ISO_FILE_BASE=$( basename $DEFAULT_ISO_FILE )
+DEFAULT_OUTPUT_FILE_BASE=$( basename $DEFAULT_OUTPUT_FILE )
 
 # Get the path the script starts from
 
@@ -137,10 +146,11 @@ print_help () {
     -E|--locale           LANGUAGE (default: $DEFAULT_LOCALE)
     -e|--lcall            LC_ALL (default: $DEFAULT_LC_ALL)
     -f|--delete           Remove previously created files (default: $FORCE_MODE)
+    -G|--isovolid         ISO Volume ID (default: $DEFAULT_ISO_VOLID)
     -H|--hostname:        Hostname (default: $DEFAULT_HOSTNAME)
     -h|--help             Help/Usage Information
     -I|--interactive      Interactive mode (will ask for input rather than using command line options or defaults)
-    -i|--inputiso:        Input/base ISO file (default: $DEFAULT_ISO_FILE)
+    -i|--inputiso:        Input/base ISO file (default: $DEFAULT_ISO_FILE_BASE)
     -k|--kernelargs:      Kernel arguments (default: $DEFAULT_KERNEL_ARGS)
     -K|--kernel:          Kernel package (default: $DEFAULT_KERNEL)
     -L|--release:         LSB release (default: $DEFAULT_RELEASE)
@@ -149,8 +159,8 @@ print_help () {
     -N|--nic:             Network device (default: $DEFAULT_NIC)
     -m|--grubmenu:        Set default grub menu (default: $DEFAULT_GRUB_MENU)
     -n|--nounmount        Do not unmount loopback filesystems (useful for troubleshooting)
-    -O|--ospackages:      List of packages to install after OS installation via network (default: $DEFAULT_PACKAGES)
-    -o|--outputiso:       Output ISO file (default: $DEFAULT_OUTPUT_FILE)
+    -O|--ospackages:      List of packages to install (default: $DEFAULT_PACKAGES)
+    -o|--outputiso:       Output ISO file (default: $DEFAULT_OUTPUT_FILE_BASE)
     -P|--password:        Password (default: $DEFAULT_USERNAME)
     -p|--chrootpackages:  List of packages to add to ISO (default: $DEFAULT_PACKAGES)
     -R|--realname:        Realname (default $DEFAULT_REALNAME)
@@ -163,7 +173,7 @@ print_help () {
     -u|--unmount          Unmount loopback filesystems
     -V|--version          Display Script Version
     -v|--verbose          Verbose output (default: $VERBOSE_MODE)
-    -W|--workdir:         Work directory (default: $WORK_DIR)
+    -W|--workdir:         Work directory (default: $DEFAULT_WORK_DIR)
     -w|--checkdirs        Check work directories exist
     -Y|--installpackages  Install packages after OS installation via network (default: $DO_INSTALL_PACKAGES)
     -y|--installupdates   Install updates after install (requires network)
@@ -204,7 +214,7 @@ handle_output () {
 
 check_work_dir () {
   handle_output "# Check work directories" TEXT
-  for ISO_DIR in $ISO_MOUNT_DIR $ISO_NEW_DIR/squashfs $ISO_NEW_DIR/cd $ISO_NEW_DIR/custom; do
+  for ISO_DIR in $ISO_MOUNT_DIR $ISO_NEW_DIR/squashfs $ISO_NEW_DIR/mksquash $ISO_NEW_DIR/cd $ISO_NEW_DIR/custom; do
     handle_output "# Check directory $ISO_DIR exists" TEXT
     handle_output "mkdir -p $ISO_DIR"
     if [ "$FORCE_MODE" = "true" ]; then
@@ -335,26 +345,49 @@ copy_iso () {
 # sudo cp /etc/apt/sources.list ./isonew/custom/etc/apt/
 
 copy_squashfs () {
-  handle_output "sudo mount -t squashfs -o loop $SQUASHFS_FILE $ISO_NEW_DIR/squashfs/"
-  if [ "$TEST_MODE" = "false" ]; then
-    sudo mount -t squashfs -o loop $SQUASHFS_FILE $ISO_NEW_DIR/squashfs/
-  fi
-  if [ "$VERBOSE_MODE" = "true" ]; then
-    handle_output "sudo rsync -av $ISO_NEW_DIR/squashfs/ $ISO_NEW_DIR/custom"
+  if [ "$MAJOR_REL" = "22" ]; then
+    handle_output "sudo mount -t squashfs -o loop $SQUASHFS_FILE $ISO_NEW_DIR/squashfs/"
     if [ "$TEST_MODE" = "false" ]; then
-      sudo rsync -av $ISO_NEW_DIR/squashfs/ $ISO_NEW_DIR/custom
+      sudo mount -t squashfs -o loop $SQUASHFS_FILE $ISO_NEW_DIR/squashfs/
+    fi
+    if [ "$VERBOSE_MODE" = "true" ]; then
+      handle_output "sudo rsync -av $ISO_NEW_DIR/squashfs/ $ISO_NEW_DIR/custom"
+      if [ "$TEST_MODE" = "false" ]; then
+        sudo rsync -av $ISO_NEW_DIR/squashfs/ $ISO_NEW_DIR/custom
+      fi
+    else
+      handle_output "sudo rsync -a $ISO_NEW_DIR/squashfs/ $ISO_NEW_DIR/custom"
+      if [ "$TEST_MODE" = "false" ]; then
+        sudo rsync -a $ISO_NEW_DIR/squashfs/ $ISO_NEW_DIR/custom
+      fi
+    fi
+    handle_output "sudo cp /etc/resolv.conf /etc/hosts $ISO_NEW_DIR/custom/etc/"
+    handle_output "sudo cp /etc/apt/sources.list $ISO_NEW_DIR/custom/etc/apt/"
+    if [ "$TEST_MODE" = "false" ]; then
+      sudo cp /etc/resolv.conf /etc/hosts $ISO_NEW_DIR/custom/etc/
+      sudo cp /etc/apt/sources.list $ISO_NEW_DIR/custom/etc/apt/
     fi
   else
-    handle_output "sudo rsync -a $ISO_NEW_DIR/squashfs/ $ISO_NEW_DIR/custom"
+    handle_output "# Making squashfs (this will take a while)"
+    handle_output "cd $ISO_NEW_DIR ; sudo mksquashfs $ISO_NEW_DIR/custom $ISO_NEW_DIR/mksquash/filesystem.squashfs -noappend"
+    handle_output "cd $ISO_NEW_DIR ; sudo cp $ISO_NEW_DIR/mksquash/filesystem.squashfs $ISO_NEW_DIR/cd/casper/filesystem.squashfs"
+    handle_output "cd $ISO_NEW_DIR ; sudo chmod 0444 $ISO_NEW_DIR/cd/casper/filesystem.squashfs"
+    handle_output "# Making filesystem.size"
+    handle_output "cd $ISO_NEW_DIR ; sudo echo -n \$( sudo du -s --block-size=1 $ISO_NEW_DIR/custom | tail -1 | awk '{print \$1}') | sudo tee $ISO_NEW_DIR/mksquash/filesystem.size"
+    handle_output "cd $ISO_NEW_DIR ; sudo cp $ISO_NEW_DIR/mksquash/filesystem.size $ISO_NEW_DIR/cd/casper/filesystem.size"
+    handle_output "cd $ISO_NEW_DIR ; sudo chmod 0444 $ISO_NEW_DIR/cd/casper/filesystem.size"
+    handle_output "# Making md5sum"
+    handle_output "cd $ISO_NEW_DIR ; sudo find . -type f -print0 | xargs -0 md5sum | sed \"s@$ISO_NEW_DIR@.@\" | grep -v md5sum.txt | sudo tee $ISO_NEW_DIR/cd/md5sum.txt"
     if [ "$TEST_MODE" = "false" ]; then
-      sudo rsync -a $ISO_NEW_DIR/squashfs/ $ISO_NEW_DIR/custom
+      cd "${ISO_NEW_DIR}"
+      sudo mksquashfs "${ISO_NEW_DIR}/custom" "${ISO_NEW_DIR}/mksquash/filesystem.squashfs" -noappend
+      sudo cp "${ISO_NEW_DIR}/mksquash/filesystem.squashfs" "${ISO_NEW_DIR}/cd/casper/filesystem.squashfs"
+      sudo chmod 0444 "${ISO_NEW_DIR}/cd/casper/filesystem.squashfs"
+      sudo echo -n $( sudo du -s --block-size=1 "${ISO_NEW_DIR}/custom" | tail -1 | awk '{print $1}') | sudo tee "${ISO_NEW_DIR}/mksquash"/filesystem.size
+      sudo cp "${ISO_NEW_DIR}/mksquash/filesystem.size" "${ISO_NEW_DIR}/cd/casper/filesystem.size"
+      sudo chmod 0444 "${ISO_NEW_DIR}/cd/casper/filesystem.size"
+      sudo find . -type f -print0 | xargs -0 md5sum | sed "s@${ISO_NEW_DIR}@.@" | grep -v md5sum.txt | sudo tee "${ISO_NEW_DIR}/cd/md5sum.txt"
     fi
-  fi
-  handle_output "sudo cp /etc/resolv.conf /etc/hosts $ISO_NEW_DIR/custom/etc/"
-  handle_output "sudo cp /etc/apt/sources.list $ISO_NEW_DIR/custom/etc/apt/"
-  if [ "$TEST_MODE" = "false" ]; then
-    sudo cp /etc/resolv.conf /etc/hosts $ISO_NEW_DIR/custom/etc/
-    sudo cp /etc/apt/sources.list $ISO_NEW_DIR/custom/etc/apt/
   fi
 }
 
@@ -646,23 +679,36 @@ get_password_crypt () {
 
 create_autoinstall_iso () {
   handle_output "# Create ISO"
-  handle_output "cd $WORK_DIR ; export APPEND_PART=\$( xorriso -indev $ISO_FILE -report_el_torito as_mkisofs |grep append_partition |tail -1 |awk '{print \$3}' 2>&1 )"
   handle_output "cd $WORK_DIR ; export ISO_MBR_PART_TYPE=\$( xorriso -indev $ISO_FILE -report_el_torito as_mkisofs |grep iso_mbr_part_type |tail -1 |awk '{print \$2}' 2>&1 )"
-  handle_output "cd $ISO_SOURCE_DIR ; xorriso -as mkisofs -r -V \"Ubuntu $RELEASE LTS AUTO (EFIBIOS)\" -o ../$OUTPUT_FILE \
+  handle_output "cd $WORK_DIR ; export BOOT_CATALOG=\$( xorriso -indev $ISO_FILE -report_el_torito as_mkisofs |grep '^-c '|tail -1 |awk '{print \$2}' |cut -f2 -d\"'\" 2>&1 )"
+  handle_output "cd $WORK_DIR ; export BOOT_IMAGE=\$( xorriso -indev $ISO_FILE -report_el_torito as_mkisofs |grep '^-b ' |tail -1 |awk '{print \$2}' |cut -f2 -d\"'\" 2>&1 )"
+  ISO_MBR_PART_TYPE=$( xorriso -indev $ISO_FILE -report_el_torito as_mkisofs |grep iso_mbr_part_type |tail -1 |awk '{print $2}' 2>&1 )
+  BOOT_CATALOG=$( xorriso -indev $ISO_FILE -report_el_torito as_mkisofs |grep "^-c " |tail -1 |awk '{print $2}' |cut -f2 -d"'" 2>&1 )
+  BOOT_IMAGE=$( xorriso -indev $ISO_FILE -report_el_torito as_mkisofs |grep "^-b " |tail -1 |awk '{print $2}' |cut -f2 -d"'" 2>&1 )
+  if [ "$MAJOR_REL" = "22" ]; then
+    handle_output "cd $WORK_DIR ; export APPEND_PART=\$( xorriso -indev $ISO_FILE -report_el_torito as_mkisofs |grep append_partition |tail -1 |awk '{print \$3}' 2>&1 )"
+    handle_output "export EFI_IMAGE=\"--interval:appended_partition_2:::\""
+    APPEND_PART=$( xorriso -indev $ISO_FILE -report_el_torito as_mkisofs |grep append_partition |tail -1 |awk '{print $3}' 2>&1 )
+    EFI_IMAGE="--interval:appended_partition_2:::"
+  else
+    handle_output "export APPEND_PART=\"0exf\""
+    handle_output "cd $WORK_DIR ; export EFI_IMAGE=\$( xorriso -indev $ISO_FILE -report_el_torito as_mkisofs |grep '^-e ' |tail -1 |awk '{print \$2}' |cut -f2 -d\"'\" 2>&1 )"
+    APPEND_PART="0xef"
+    EFI_IMAGE=$( xorriso -indev $ISO_FILE -report_el_torito as_mkisofs |grep "^-e " |tail -1 |awk '{print $2}' |cut -f2 -d"'" 2>&1 )
+  fi
+  handle_output "cd $ISO_SOURCE_DIR ; xorriso -as mkisofs -r -V \"$ISO_VOLID\" -o $OUTPUT_FILE \
   --grub2-mbr ../BOOT/1-Boot-NoEmul.img -partition_offset 16 --mbr-force-bootable \
   -append_partition 2 $APPEND_PART ../BOOT/2-Boot-NoEmul.img -appended_part_as_gpt \
-  -iso_mbr_part_type $ISO_MBR_PART_TYPE -c /boot.catalog -b /boot/grub/i386-pc/eltorito.img \
+  -iso_mbr_part_type $ISO_MBR_PART_TYPE -c $BOOT_CATALOG -b $BOOT_IMAGE \
   -no-emul-boot -boot-load-size 4 -boot-info-table --grub2-boot-info -eltorito-alt-boot \
-  -e '--interval:appended_partition_2:::' -no-emul-boot ."
+  -e $EFI_IMAGE -no-emul-boot ."
   if [ "$TEST_MODE" = "false" ]; then
-    APPEND_PART=$( xorriso -indev $ISO_FILE -report_el_torito as_mkisofs |grep append_partition |tail -1 |awk '{print $3}' 2>&1 )
-    ISO_MBR_PART_TYPE=$( xorriso -indev $ISO_FILE -report_el_torito as_mkisofs |grep iso_mbr_part_type |tail -1 |awk '{print $2}' 2>&1 )
-    cd $ISO_SOURCE_DIR ; xorriso -as mkisofs -r -V "Ubuntu $RELEASE LTS AUTO (EFIBIOS)" -o $OUTPUT_FILE \
+    cd $ISO_SOURCE_DIR ; xorriso -as mkisofs -r -V "$ISO_VOLID" -o $OUTPUT_FILE \
     --grub2-mbr ../BOOT/1-Boot-NoEmul.img -partition_offset 16 --mbr-force-bootable \
     -append_partition 2 $APPEND_PART ../BOOT/2-Boot-NoEmul.img -appended_part_as_gpt \
-    -iso_mbr_part_type $ISO_MBR_PART_TYPE -c /boot.catalog -b /boot/grub/i386-pc/eltorito.img \
+    -iso_mbr_part_type $ISO_MBR_PART_TYPE -c $BOOT_CATALOG -b $BOOT_IMAGE \
     -no-emul-boot -boot-load-size 4 -boot-info-table --grub2-boot-info -eltorito-alt-boot \
-    -e '--interval:appended_partition_2:::' -no-emul-boot .
+    -e "$EFI_IMAGE" -no-emul-boot .
   fi
 }
 
@@ -720,14 +766,14 @@ prepare_autoinstall_iso () {
     handle_output "echo \"loadfont unicode\" >> $ISO_SOURCE_DIR/boot/grub/grub.cfg"
     for DEVICE in $DEVICES; do
       for VOLMGR in $VOLMGRS; do
-        handle_output "echo \"menuentry 'Ubuntu $RELEASE Server - $VOLMGR/$DEVICE - $KERNEL_ARGS' {\" >> $ISO_SOURCE_DIR/boot/grub/grub.cfg"
+        handle_output "echo \"menuentry '$ISO_VOLID - $VOLMGR/$DEVICE - $KERNEL_ARGS' {\" >> $ISO_SOURCE_DIR/boot/grub/grub.cfg"
         handle_output "echo \"  set gfxpayload=keep\" >> $ISO_SOURCE_DIR/boot/grub/grub.cfg"
         handle_output "echo \"  linux   /casper/vmlinuz $KERNEL_ARGS quiet autoinstall ds=nocloud\;s=/$INSTALL_MOUNT/$INSTALL_DIRs/configs/$VOLMGR/$DEVICE/  ---\" >> $ISO_SOURCE_DIR/boot/grub/grub.cfg"
         handle_output "echo \"  initrd  /casper/initrd\" >> $ISO_SOURCE_DIR/boot/grub/grub.cfg"
         handle_output "echo \"}\" >> $ISO_SOURCE_DIR/boot/grub/grub.cfg"
       done
     done
-    handle_output "echo \"menuentry 'Try or Install Ubuntu $RELEASE Server' {\" >> $ISO_SOURCE_DIR/boot/grub/grub.cfg"
+    handle_output "echo \"menuentry 'Try or Install $ISO_VOLID' {\" >> $ISO_SOURCE_DIR/boot/grub/grub.cfg"
     handle_output "echo \"  set gfxpayload=keep\" >> $ISO_SOURCE_DIR/boot/grub/grub.cfg"
     handle_output "echo \"  linux /casper/vmlinuz quiet ---\" >> $ISO_SOURCE_DIR/boot/grub/grub.cfg"
     handle_output "echo \"  initrd  /casper/initrd\" >> $ISO_SOURCE_DIR/boot/grub/grub.cfg"
@@ -744,14 +790,14 @@ prepare_autoinstall_iso () {
       echo "loadfont unicode" >> $ISO_SOURCE_DIR/boot/grub/grub.cfg
       for DEVICE in $DEVICES; do
         for VOLMGR in $VOLMGRS; do
-          echo "menuentry 'Ubuntu $RELEASE Server - $VOLMGR/$DEVICE - $KERNEL_ARGS' {" >> $ISO_SOURCE_DIR/boot/grub/grub.cfg
+          echo "menuentry '$ISO_VOLID - $VOLMGR/$DEVICE - $KERNEL_ARGS' {" >> $ISO_SOURCE_DIR/boot/grub/grub.cfg
           echo "  set gfxpayload=keep" >> $ISO_SOURCE_DIR/boot/grub/grub.cfg
           echo "  linux   /casper/vmlinuz $KERNEL_ARGS quiet autoinstall ds=nocloud\;s=$INSTALL_MOUNT/$INSTALL_DIR/configs/$VOLMGR/$DEVICE/  ---" >> $ISO_SOURCE_DIR/boot/grub/grub.cfg
           echo "  initrd  /casper/initrd" >> $ISO_SOURCE_DIR/boot/grub/grub.cfg
           echo "}" >> $ISO_SOURCE_DIR/boot/grub/grub.cfg
         done
       done
-      echo "menuentry 'Try or Install Ubuntu $RELEASE Server' {" >> $ISO_SOURCE_DIR/boot/grub/grub.cfg
+      echo "menuentry 'Try or Install $ISO_VOLID' {" >> $ISO_SOURCE_DIR/boot/grub/grub.cfg
       echo "  set gfxpayload=keep" >> $ISO_SOURCE_DIR/boot/grub/grub.cfg
       echo "  linux /casper/vmlinuz quiet ---" >> $ISO_SOURCE_DIR/boot/grub/grub.cfg
       echo "  initrd  /casper/initrd" >> $ISO_SOURCE_DIR/boot/grub/grub.cfg
@@ -1062,7 +1108,7 @@ prepare_autoinstall_iso () {
 
 # Handle command line arguments
 
-PARAMS="$(getopt -o A:aB:bCcDd:E:e:FfhIi:K:k:L:lm:N:nO:o:P:p:R:rS:T:tsuVvW:wx:YyZ -l arch,bootdisk:,checkdirs,chrootpackages:,codename:,createiso,delete,defaults,distupgrade,getiso,grubmenu:,help,inputiso:,installpackages,installrequired,installupdates,interactive,justiso,kernel:,kernelargs:,lang:layout:lcall:nic:,nounmount,ospackages:,outputiso:,password:,realname:,release:,runchrootscript,staticip,swapsize:,testmode,timezone:,unmount,verbose,version,workdir: --name "$(basename "$0")" -- "$@")"
+PARAMS="$(getopt -o A:aB:bCcDd:E:e:FG:fhIi:K:k:L:lm:N:nO:o:P:p:R:rS:T:tsuVvW:wx:YyZ -l arch,bootdisk:,checkdirs,chrootpackages:,codename:,createiso,delete,defaults,distupgrade,getiso,grubmenu:,help,inputiso:,installpackages,installrequired,installupdates,interactive,isovolid:,justiso,kernel:,kernelargs:,lang:layout:lcall:nic:,nounmount,ospackages:,outputiso:,password:,realname:,release:,runchrootscript,staticip,swapsize:,testmode,timezone:,unmount,verbose,version,workdir: --name "$(basename "$0")" -- "$@")"
 
 if [ $? -ne 0 ]; then
   print_help
@@ -1127,6 +1173,10 @@ while true; do
       FORCE_MODE="true"
       shift
       ;;
+    -G|--isovolid)
+      ISO_VOLID="$2"
+      shift 2
+      ;;
     -h|--help)
       print_help 
       exit
@@ -1150,9 +1200,6 @@ while true; do
     -L|--release)
       RELEASE="$2"
       shift 2
-      DEFAULT_ISO_FILE="$WORK_DIR/ubuntu-$RELEASE-live-server-$ARCH.iso"
-      DEFAULT_OUTPUT_FILE="$WORK_DIR/ubuntu-$RELEASE-live-server-$ARCH-autoinstall.iso"
-      shift
       ;;
     -l|--justiso)
       DO_CREATE_AUTOINSTALL_ISO_ONLY="true"
@@ -1274,9 +1321,14 @@ if [ "$INTERACTIVE_MODE" == "true" ]; then
   read -p "Enter source ISO file:" ISO_FILE
   read -p "Enter output ISO file:" OUTPUT_FILE
 fi
+
+if [ "$ARCH" = "" ] || [ "$DEFAULTS_MODE" = "true" ]; then
+  ARCH="$DEFAULT_ARCH"
+fi
 if [ "$RELEASE" = "" ] || [ "$DEFAULTS_MODE" = "true" ]; then
   RELEASE="$DEFAULT_RELEASE"
 fi
+MAJOR_REL=$(echo $RELEASE |cut -f1 -d.)
 if [ "$USERNAME" = "" ] || [ "$DEFAULTS_MODE" = "true" ]; then
   USERNAME="$DEFAULT_USERNAME"
 fi
@@ -1340,6 +1392,23 @@ fi
 if [ "$ISO_LAYOUT" = "" ] || [ "$DEFAULTS_MODE" = "true" ]; then
   ISO_LAYOUT="$DEFAULT_LAYOUT"
 fi
+if [ "$ISO_VOLID" = "" ] || [ "$DEFAULTS_MODE" = "true" ]; then
+  ISO_VOLID="$DEFAULT_ISO_VOLID"
+fi
+
+# Update Default work directories
+
+WORK_DIR=$HOME/ubuntu-iso/$RELEASE
+ISO_MOUNT_DIR="$WORK_DIR/isomount"
+ISO_NEW_DIR="$WORK_DIR/isonew"
+ISO_SOURCE_DIR="$WORK_DIR/source-files"
+
+# Default file names/locations
+
+ISO_FILE="$WORK_DIR/ubuntu-$RELEASE-live-server-$ARCH.iso"
+OUTPUT_FILE="$WORK_DIR/ubuntu-$RELEASE-live-server-$ARCH-autoinstall.iso"
+SQUASHFS_FILE="$ISO_MOUNT_DIR/casper/ubuntu-server-minimal.squashfs"
+GRUB_FILE="$WORK_DIR/grub.cfg"
 
 # Handle specific functions
 #

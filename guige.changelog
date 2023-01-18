@@ -93,3 +93,9 @@
 # Fixed update and package install code/documentation
 # 0.4.7: Wed 18 Jan 2023 06:54:12 AEDT
 # Bug fixes
+# 0.4.8: Wed 18 Jan 2023 15:43:05 AEDT
+# Fixed ISO volid length issue
+# 0.4.9: Wed 18 Jan 2023 16:18:35 AEDT
+# Fixes for xorriso command creation
+# 0.5.0: Wed 18 Jan 2023 19:29:14 AEDT
+# Updates to begin adding support for 20.04
