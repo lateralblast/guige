@@ -11,7 +11,7 @@ used to hang a shield on the shoulder or neck when not in use.
 Version
 -------
 
-Current version: 0.5.0
+Current version: 0.5.2
 
 Introduction
 ------------
@@ -118,10 +118,11 @@ Todo
 
 Things I plan to do:
 
-- While this release is focused on ZFS root, I plan to add a non ZFS option
 - Support for nightly build images etc
 - Script cleanup and more flexibility
 - Support architechtures other than x86_64
+- Support for 20.04 (at the moment LVM based installs are working ZFS is not)
+- Support for modified squashfs being copied to install ISO
 
 Thanks
 ------
