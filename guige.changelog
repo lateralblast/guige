@@ -103,3 +103,7 @@
 # Cleaned up variable names to stop clash with local names variables
 # 0.5.2: Thu 19 Jan 2023 14:33:27 AEDT
 # More variable and commandline option cleanup
+# 0.5.3: Thu 19 Jan 2023 16:56:00 AEDT
+# Added more support for Ubuntu 20.04
+# 0.5.4: Thu 19 Jan 2023 20:58:10 AEDT
+# Added support for HWE kernel

@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Name:         guige (Generic Ubuntu ISO Generation Engine)
-# Version:      0.5.2
+# Version:      0.5.4
 # Release:      1
 # License:      CC-BA (Creative Commons By Attribution)
 #               http://creativecommons.org/licenses/by/4.0/legalcode
@@ -51,6 +51,7 @@ FULL_FORCE_MODE="false"
 VERBOSE_MODE="false"
 DEFAULTS_MODE="false"
 INTERACTIVE_MODE="false"
+ISO_HWE_KERNEL="false"
 
 # Set function variables
 
@@ -154,6 +155,7 @@ print_help () {
     -I|--interactive      Interactive mode (will ask for input rather than using command line options or defaults)
     -i|--inputiso:        Input/base ISO file (default: $DEFAULT_INPUT_FILE_BASE)
     -k|--kernelargs:      Kernel arguments (default: $DEFAULT_ISO_KERNEL_ARGS)
+    -J|--hwe              Use HWE kernel (defaults: $ISO_HWE_KERNEL)
     -j|--autoinstalldir   Directory where autoinstall config files are stored on ISO (default: $DEFAULT_ISO_AUTOINSTALL_DIR)
     -K|--kernel:          Kernel package (default: $DEFAULT_ISO_KERNEL)
     -L|--release:         LSB release (default: $DEFAULT_ISO_RELEASE)
@@ -768,19 +770,40 @@ prepare_autoinstall_iso () {
     handle_output "echo \"set timeout=$ISO_GRUB_TIMEOUT\" > $ISO_SOURCE_DIR/boot/grub/grub.cfg"
     handle_output "echo \"default=$ISO_GRUB_MENU\" >> $ISO_SOURCE_DIR/boot/grub/grub.cfg"
     handle_output "echo \"loadfont unicode\" >> $ISO_SOURCE_DIR/boot/grub/grub.cfg"
+    handle_output "echo \"timeout $GRUB_TIMEOUT\" > $ISO_SOURCE_DIR/boot/grub/grub.cfg"
+    handle_output "echo \"default $GRUB_MENU\" >> $ISO_SOURCE_DIR/boot/grub/grub.cfg"
+    handle_output "echo \"if loadfont /boot/grub/font.pf2 ; then\" >> $ISO_SOURCE_DIR/boot/grub/grub.cfg"
+    handle_output "echo \"  set gfxmode=auto\" >> $ISO_SOURCE_DIR/boot/grub/grub.cfg"
+    handle_output "echo \"  insmod efi_gop\" >> $ISO_SOURCE_DIR/boot/grub/grub.cfg"
+    handle_output "echo \"  insmod efi_uga\" >> $ISO_SOURCE_DIR/boot/grub/grub.cfg"
+    handle_output "echo \"  insmod gfxterm\" >> $ISO_SOURCE_DIR/boot/grub/grub.cfg"
+    handle_output "echo \"  terminal_output gfxterm\" >> $ISO_SOURCE_DIR/boot/grub/grub.cfg"
+    handle_output "echo \"fi\" >> $ISO_SOURCE_DIR/boot/grub/grub.cfg"
+    handle_output "echo \"set menu_color_normal=white/black\" >> $ISO_SOURCE_DIR/boot/grub/grub.cfg"
+    handle_output "echo \"set menu_color_highlight=black/light-gray\" >> $ISO_SOURCE_DIR/boot/grub/grub.cfg"
     for ISO_DEVICE in $ISO_DEVICES; do
       for ISO_VOLMGR in $ISO_VOLMGRS; do
         handle_output "echo \"menuentry '$ISO_VOLID - $ISO_VOLMGR/$ISO_DEVICE - $ISO_KERNEL_ARGS' {\" >> $ISO_SOURCE_DIR/boot/grub/grub.cfg"
         handle_output "echo \"  set gfxpayload=keep\" >> $ISO_SOURCE_DIR/boot/grub/grub.cfg"
-        handle_output "echo \"  linux   /casper/vmlinuz $ISO_KERNEL_ARGS quiet autoinstall ds=nocloud\;s=/$ISO_INSTALL_MOUNT/$INSTALL_DIRs/configs/$ISO_VOLMGR/$ISO_DEVICE/  ---\" >> $ISO_SOURCE_DIR/boot/grub/grub.cfg"
-        handle_output "echo \"  initrd  /casper/initrd\" >> $ISO_SOURCE_DIR/boot/grub/grub.cfg"
+        if [ "$ISO_HWE_KERNEL" = "true" ]; then
+          handle_output "echo \"  linux   /casper/hwe-vmlinuz $ISO_KERNEL_ARGS quiet autoinstall ds=nocloud\;s=/$ISO_INSTALL_MOUNT/$ISO_AUTOINSTALL_DIR/configs/$ISO_VOLMGR/$ISO_DEVICE/  ---\" >> $ISO_SOURCE_DIR/boot/grub/grub.cfg"
+          handle_output "echo \"  initrd  /casper/hwe-initrd\" >> $ISO_SOURCE_DIR/boot/grub/grub.cfg"
+        else
+          handle_output "echo \"  linux   /casper/vmlinuz $ISO_KERNEL_ARGS quiet autoinstall ds=nocloud\;s=/$ISO_INSTALL_MOUNT/$ISO_AUTOINSTALL_DIR/configs/$ISO_VOLMGR/$ISO_DEVICE/  ---\" >> $ISO_SOURCE_DIR/boot/grub/grub.cfg"
+          handle_output "echo \"  initrd  /casper/initrd\" >> $ISO_SOURCE_DIR/boot/grub/grub.cfg"
+        fi
         handle_output "echo \"}\" >> $ISO_SOURCE_DIR/boot/grub/grub.cfg"
       done
     done
     handle_output "echo \"menuentry 'Try or Install $ISO_VOLID' {\" >> $ISO_SOURCE_DIR/boot/grub/grub.cfg"
     handle_output "echo \"  set gfxpayload=keep\" >> $ISO_SOURCE_DIR/boot/grub/grub.cfg"
-    handle_output "echo \"  linux /casper/vmlinuz quiet ---\" >> $ISO_SOURCE_DIR/boot/grub/grub.cfg"
-    handle_output "echo \"  initrd  /casper/initrd\" >> $ISO_SOURCE_DIR/boot/grub/grub.cfg"
+    if [ "$ISO_HWE_KERNEL" = "true" ]; then
+      handle_output "echo \"  linux /casper/hwe-vmlinuz quiet ---\" >> $ISO_SOURCE_DIR/boot/grub/grub.cfg"
+      handle_output "echo \"  initrd  /casper/hwe-initrd\" >> $ISO_SOURCE_DIR/boot/grub/grub.cfg"
+    else
+      handle_output "echo \"  linux /casper/vmlinuz quiet ---\" >> $ISO_SOURCE_DIR/boot/grub/grub.cfg"
+      handle_output "echo \"  initrd  /casper/initrd\" >> $ISO_SOURCE_DIR/boot/grub/grub.cfg"
+    fi
     handle_output "echo \"}\" >> $ISO_SOURCE_DIR/boot/grub/grub.cfg"
     handle_output "echo \"menuentry 'Boot from next volume' {\" >> $ISO_SOURCE_DIR/boot/grub/grub.cfg"
     handle_output "echo \"  exit 1\" >> $ISO_SOURCE_DIR/boot/grub/grub.cfg"
@@ -789,17 +812,42 @@ prepare_autoinstall_iso () {
     handle_output "echo \"  fwsetup\" >> $ISO_SOURCE_DIR/boot/grub/grub.cfg"
     handle_output "echo \"}\" >> $ISO_SOURCE_DIR/boot/grub/grub.cfg"
     if ! [ "$ISO_MAJOR_REL" = "22" ]; then
-
+      handle_output "echo \"default $ISO_GRUB_MENU\" > $ISO_SOURCE_DIR/isolinux/txt.cfg"
+      COUNTER=0
+      for ISO_DEVICE in $ISO_DEVICES; do
+        for ISO_VOLMGR in $ISO_VOLMGRS; do
+          handle_output "echo \"label $COUNTER\" >> $ISO_SOURCE_DIR/isolinux/txt.cfg"
+          handle_output "echo \"  menu label ^$ISO_VOLID - $ISO_VOLMGR/$ISO_DEVICE - $ISO_KERNEL_ARGS\" >> $ISO_SOURCE_DIR/isolinux/txt.cfg"
+          if [ "$ISO_HWE_KERNEL" = "true" ]; then
+            handle_output "echo \"  kernel /casper/hwe-vmlinuz" >> $ISO_SOURCE_DIR/isolinux/txt.cfg\"
+            handle_output "echo \"  append  initrd=/casper/hwe-initrd $ISO_KERNEL_ARGS quiet autoinstall fsck.mode=skip ds=nocloud;s=$ISO_INSTALL_MOUNT/$ISO_AUTOINSTALL_DIR/configs/$ISO_VOLMGR/$ISO_DEVICE/  ---\" >> $ISO_SOURCE_DIR/isolinux/txt.cfg"
+          else
+            handle_output "echo \"  kernel /casper/vmlinuz" >> $ISO_SOURCE_DIR/isolinux/txt.cfg\"
+            handle_output "echo \"  append  initrd=/casper/initrd $ISO_KERNEL_ARGS quiet autoinstall fsck.mode=skip ds=nocloud;s=$ISO_INSTALL_MOUNT/$ISO_AUTOINSTALL_DIR/configs/$ISO_VOLMGR/$ISO_DEVICE/  ---\" >> $ISO_SOURCE_DIR/isolinux/txt.cfg"
+          fi
+          COUNTER=$( expr $COUNTER + 1 )
+        done
+        handle_output "echo \"label memtest\" >> $ISO_SOURCE_DIR/isolinux/txt.cfg"
+        handle_output "echo \"  menu label Test ^Memory\" >> $ISO_SOURCE_DIR/isolinux/txt.cfg"
+        handle_output "echo \"  kernel /install/mt86plus\" >> $ISO_SOURCE_DIR/isolinux/txt.cfg"
+        handle_output "echo \"label hd\" >> $ISO_SOURCE_DIR/isolinux/txt.cfg"
+        handle_output "echo \"  menu label ^Boot from first hard drive\" >> $ISO_SOURCE_DIR/isolinux/txt.cfg"
+        handle_output "echo \"  localboot 0x80\" >> $ISO_SOURCE_DIR/isolinux/txt.cfg"
+      done
       if [ "$TEST_MODE" = "false" ]; then
-        echo "timeout $GRUB_TIMEOUT" > $ISO_SOURCE_DIR/isolinux/txt.cfg
-        # echo "default $GRUB_MENU" >> $ISO_SOURCE_DIR/isolinux/txt.cfg
+        echo "default $ISO_GRUB_MENU" > $ISO_SOURCE_DIR/isolinux/txt.cfg
         COUNTER=0
         for ISO_DEVICE in $ISO_DEVICES; do
           for ISO_VOLMGR in $ISO_VOLMGRS; do
             echo "label $COUNTER" >> $ISO_SOURCE_DIR/isolinux/txt.cfg
             echo "  menu label ^$ISO_VOLID - $ISO_VOLMGR/$ISO_DEVICE - $ISO_KERNEL_ARGS" >> $ISO_SOURCE_DIR/isolinux/txt.cfg
-            echo "  kernel /casper/vmlinuz" >> $ISO_SOURCE_DIR/isolinux/txt.cfg
-            echo "  append  initrd=/casper/initrd $ISO_KERNEL_ARGS quiet autoinstall fsck.mode=skip ds=nocloud;s=$ISO_INSTALL_MOUNT/$INSTALL_DIR/configs/$ISO_VOLMGR/$ISO_DEVICE/  ---" >> $ISO_SOURCE_DIR/isolinux/txt.cfg
+            if [ "$ISO_HWE_KERNEL" = "true" ]; then
+              echo "  kernel /casper/hwe-vmlinuz" >> $ISO_SOURCE_DIR/isolinux/txt.cfg
+              echo "  append  initrd=/casper/hwe-initrd $ISO_KERNEL_ARGS quiet autoinstall fsck.mode=skip ds=nocloud;s=$ISO_INSTALL_MOUNT/$ISO_AUTOINSTALL_DIR/configs/$ISO_VOLMGR/$ISO_DEVICE/  ---" >> $ISO_SOURCE_DIR/isolinux/txt.cfg
+            else 
+              echo "  kernel /casper/vmlinuz" >> $ISO_SOURCE_DIR/isolinux/txt.cfg
+              echo "  append  initrd=/casper/initrd $ISO_KERNEL_ARGS quiet autoinstall fsck.mode=skip ds=nocloud;s=$ISO_INSTALL_MOUNT/$ISO_AUTOINSTALL_DIR/configs/$ISO_VOLMGR/$ISO_DEVICE/  ---" >> $ISO_SOURCE_DIR/isolinux/txt.cfg
+            fi
             COUNTER=$( expr $COUNTER + 1 )
           done
         done
@@ -819,15 +867,25 @@ prepare_autoinstall_iso () {
         for ISO_VOLMGR in $ISO_VOLMGRS; do
           echo "menuentry '$ISO_VOLID - $ISO_VOLMGR/$ISO_DEVICE - $ISO_KERNEL_ARGS' {" >> $ISO_SOURCE_DIR/boot/grub/grub.cfg
           echo "  set gfxpayload=keep" >> $ISO_SOURCE_DIR/boot/grub/grub.cfg
-          echo "  linux   /casper/vmlinuz $ISO_KERNEL_ARGS quiet autoinstall ds=nocloud\;s=$ISO_INSTALL_MOUNT/$INSTALL_DIR/configs/$ISO_VOLMGR/$ISO_DEVICE/  ---" >> $ISO_SOURCE_DIR/boot/grub/grub.cfg
-          echo "  initrd  /casper/initrd" >> $ISO_SOURCE_DIR/boot/grub/grub.cfg
+          if [ "$ISO_HWE_KERNEL" = "true" ]; then
+            echo "  linux   /casper/hwe-vmlinuz $ISO_KERNEL_ARGS quiet autoinstall ds=nocloud\;s=$ISO_INSTALL_MOUNT/$ISO_AUTOINSTALL_DIR/configs/$ISO_VOLMGR/$ISO_DEVICE/  ---" >> $ISO_SOURCE_DIR/boot/grub/grub.cfg
+            echo "  initrd  /casper/hwe-initrd" >> $ISO_SOURCE_DIR/boot/grub/grub.cfg
+          else
+            echo "  linux   /casper/vmlinuz $ISO_KERNEL_ARGS quiet autoinstall ds=nocloud\;s=$ISO_INSTALL_MOUNT/$ISO_AUTOINSTALL_DIR/configs/$ISO_VOLMGR/$ISO_DEVICE/  ---" >> $ISO_SOURCE_DIR/boot/grub/grub.cfg
+            echo "  initrd  /casper/initrd" >> $ISO_SOURCE_DIR/boot/grub/grub.cfg
+          fi
           echo "}" >> $ISO_SOURCE_DIR/boot/grub/grub.cfg
         done
       done
       echo "menuentry 'Try or Install $ISO_VOLID' {" >> $ISO_SOURCE_DIR/boot/grub/grub.cfg
       echo "  set gfxpayload=keep" >> $ISO_SOURCE_DIR/boot/grub/grub.cfg
-      echo "  linux /casper/vmlinuz quiet ---" >> $ISO_SOURCE_DIR/boot/grub/grub.cfg
-      echo "  initrd  /casper/initrd" >> $ISO_SOURCE_DIR/boot/grub/grub.cfg
+      if [ "$ISO_HWE_KERNEL" = "true" ]; then
+        echo "  linux /casper/hwe-vmlinuz quiet ---" >> $ISO_SOURCE_DIR/boot/grub/grub.cfg
+        echo "  initrd  /casper/hwe-initrd" >> $ISO_SOURCE_DIR/boot/grub/grub.cfg
+      else
+        echo "  linux /casper/vmlinuz quiet ---" >> $ISO_SOURCE_DIR/boot/grub/grub.cfg
+        echo "  initrd  /casper/initrd" >> $ISO_SOURCE_DIR/boot/grub/grub.cfg
+      fi
       echo "}" >> $ISO_SOURCE_DIR/boot/grub/grub.cfg
       echo "menuentry 'Boot from next volume' {" >> $ISO_SOURCE_DIR/boot/grub/grub.cfg
       echo "  exit 1" >> $ISO_SOURCE_DIR/boot/grub/grub.cfg
@@ -969,7 +1027,7 @@ prepare_autoinstall_iso () {
             handle_output "echo \"      name: lvm\" >> $CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
         fi
         handle_output "echo \"  early-commands:\" >> $CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
-        handle_output "echo \"    - \\\"sudo dpkg --auto-deconfigure --force-depends -i $ISO_INSTALL_MOUNT/$INSTALL_DIR/packages/*.deb\\\"\" >> $CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
+        handle_output "echo \"    - \\\"sudo dpkg --auto-deconfigure --force-depends -i $ISO_INSTALL_MOUNT/$ISO_AUTOINSTALL_DIR/packages/*.deb\\\"\" >> $CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
         handle_output "echo \"  late-commands:\" >> $CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
         handle_output "echo \"    - \\\"echo 'GRUB_CMDLINE_LINUX=\\\\\\\"$ISO_KERNEL_ARGS\\\\\\\"' >> $ISO_TARGET_MOUNT/etc/default/grub\\\"\" >> $CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
         handle_output "echo \"    - \\\"curtin in-target --target=$ISO_TARGET_MOUNT -- /usr/sbin/update-grub\\\"\" >> $CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
@@ -1112,7 +1170,7 @@ prepare_autoinstall_iso () {
           fi
           if [ "$ISO_VOLMGR" = "zfs" ]; then
             echo "  early-commands:" >> $CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data
-            echo "    - \"dpkg --auto-deconfigure --force-depends -i $ISO_INSTALL_MOUNT/$INSTALL_DIR/packages/*.deb\"" >> $CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data
+            echo "    - \"dpkg --auto-deconfigure --force-depends -i $ISO_INSTALL_MOUNT/$ISO_AUTOINSTALL_DIR/packages/*.deb\"" >> $CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data
           fi
           echo "  late-commands:" >> $CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data
           echo "    - \"echo 'GRUB_CMDLINE_LINUX=\\\"$ISO_KERNEL_ARGS\\\"' >> $ISO_TARGET_MOUNT/etc/default/grub\"" >> $CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data
@@ -1138,7 +1196,7 @@ prepare_autoinstall_iso () {
 
 # Handle command line arguments
 
-PARAMS="$(getopt -o A:aB:bCcDd:E:e:FG:f:fhIi:j:K:k:L:lM:m:N:nO:o:P:p:R:rS:T:tsuVvW:wx:YyZz: -l arch:,bootdisk:,checkdirs,chrootpackages:,codename:,createiso,delete,defaults,distupgrade,getiso,grubmenu:,help,inputiso:,installmount:installpackages,installrequired,installtarget:,installupdates,interactive,isovolid:,justiso,kernel:,kernelargs:,lang:,layout:,lcall:,nic:,nounmount,ospackages:,outputiso:,password:,realname:,release:,runchrootscript,staticip,swapsize:,testmode,timezone:,unmount,verbose,version,workdir: --name "$(basename "$0")" -- "$@")"
+PARAMS="$(getopt -o A:aB:bCcDd:E:e:FG:f:fhIi:Jj:K:k:L:lM:m:N:nO:o:P:p:R:rS:T:tsuVvW:wx:YyZz: -l arch:,bootdisk:,checkdirs,chrootpackages:,codename:,createiso,delete,defaults,distupgrade,getiso,grubmenu:,help,hwe,inputiso:,installmount:installpackages,installrequired,installtarget:,installupdates,interactive,isovolid:,justiso,kernel:,kernelargs:,lang:,layout:,lcall:,nic:,nounmount,ospackages:,outputiso:,password:,realname:,release:,runchrootscript,staticip,swapsize:,testmode,timezone:,unmount,verbose,version,workdir: --name "$(basename "$0")" -- "$@")"
 
 if [ $? -ne 0 ]; then
   print_help
@@ -1223,16 +1281,21 @@ while true; do
       INPUT_FILE="$2"
       shift 2
       ;;
+    -J|--hwe)
+      ISO_HWE_KERNEL="true"
+      ISO_KERNEL="linux-generic-hwe"
+      shift
+      ;;
+    -j|--autoinstalldir)
+      ISO_AUTOINSTALL_DIR="$2"
+      shift 2
+      ;;
     -K|--kernel)
       ISO_KERNEL="$2"
       shift 2
       ;;
     -k|--kernelargs)
       ISO_KERNEL_ARGS="$2"
-      shift 2
-      ;;
-    -j|--autoinstalldir)
-      ISO_AUTOINSTALL_DIR="$2"
       shift 2
       ;;
     -L|--release)
