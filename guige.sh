@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Name:         guige (Generic Ubuntu ISO Generation Engine)
-# Version:      0.5.4
+# Version:      0.5.5
 # Release:      1
 # License:      CC-BA (Creative Commons By Attribution)
 #               http://creativecommons.org/licenses/by/4.0/legalcode
@@ -67,6 +67,7 @@ DO_PRINT_HELP="true"
 DO_NO_UNMOUNT_ISO="false"
 DO_INSTALL_ISO_UPDATES="false"
 DO_ISO_DIST_UPGRADE="false"
+DO_ISO_SQUASHFS_UPDATE="false"
 
 # Get OS name
 
@@ -147,6 +148,7 @@ print_help () {
     -d|--bootdisk         Boot Disk devices (default: $DEFAULT_ISO_DEVICES)
     -E|--locale           LANGUAGE (default: $DEFAULT_ISO_LOCALE)
     -e|--lcall            LC_ALL (default: $DEFAULT_ISO_LC_ALL)
+    -F|--updatesquashfs   Copy updated squashfs to ISO
     -f|--delete           Remove previously created files (default: $FORCE_MODE)
     -G|--isovolid         ISO Volume ID (default: $DEFAULT_ISO_VOLID)
     -g|--grubmenu:        Set default grub menu (default: $DEFAULT_ISO_GRUB_MENU)
@@ -348,53 +350,27 @@ copy_iso () {
 # sudo mount -t squashfs -o loop ./isomount/casper/ubuntu-server-minimal.squashfs ./isonew/squashfs/
 # sudo rsync -av ./isonew/squashfs/ ./isonew/custom
 # sudo cp /etc/resolv.conf /etc/hosts ./isonew/custom/etc/
-# sudo cp /etc/apt/sources.list ./isonew/custom/etc/apt/
 
 copy_squashfs () {
-#  if [ "$MAJOR_REL" = "22" ]; then
-    handle_output "sudo mount -t squashfs -o loop $ISO_SQUASHFS_FILE $ISO_NEW_DIR/squashfs/"
+  handle_output "sudo mount -t squashfs -o loop $ISO_SQUASHFS_FILE $ISO_NEW_DIR/squashfs/"
+  if [ "$TEST_MODE" = "false" ]; then
+    sudo mount -t squashfs -o loop $ISO_SQUASHFS_FILE $ISO_NEW_DIR/squashfs/
+  fi
+  if [ "$VERBOSE_MODE" = "true" ]; then
+    handle_output "sudo rsync -av $ISO_NEW_DIR/squashfs/ $ISO_NEW_DIR/custom"
     if [ "$TEST_MODE" = "false" ]; then
-      sudo mount -t squashfs -o loop $ISO_SQUASHFS_FILE $ISO_NEW_DIR/squashfs/
+      sudo rsync -av $ISO_NEW_DIR/squashfs/ $ISO_NEW_DIR/custom
     fi
-    if [ "$VERBOSE_MODE" = "true" ]; then
-      handle_output "sudo rsync -av $ISO_NEW_DIR/squashfs/ $ISO_NEW_DIR/custom"
-      if [ "$TEST_MODE" = "false" ]; then
-        sudo rsync -av $ISO_NEW_DIR/squashfs/ $ISO_NEW_DIR/custom
-      fi
-    else
-      handle_output "sudo rsync -a $ISO_NEW_DIR/squashfs/ $ISO_NEW_DIR/custom"
-      if [ "$TEST_MODE" = "false" ]; then
-        sudo rsync -a $ISO_NEW_DIR/squashfs/ $ISO_NEW_DIR/custom
-      fi
-    fi
-    handle_output "sudo cp /etc/resolv.conf /etc/hosts $ISO_NEW_DIR/custom/etc/"
-    handle_output "sudo cp /etc/apt/sources.list $ISO_NEW_DIR/custom/etc/apt/"
+  else
+    handle_output "sudo rsync -a $ISO_NEW_DIR/squashfs/ $ISO_NEW_DIR/custom"
     if [ "$TEST_MODE" = "false" ]; then
-      sudo cp /etc/resolv.conf /etc/hosts $ISO_NEW_DIR/custom/etc/
-      sudo cp /etc/apt/sources.list $ISO_NEW_DIR/custom/etc/apt/
+      sudo rsync -a $ISO_NEW_DIR/squashfs/ $ISO_NEW_DIR/custom
     fi
-#  else
-#    handle_output "# Making squashfs (this will take a while)"
-#    handle_output "cd $ISO_NEW_DIR ; sudo mksquashfs $ISO_NEW_DIR/custom $ISO_NEW_DIR/mksquash/filesystem.squashfs -noappend"
-#    handle_output "cd $ISO_NEW_DIR ; sudo cp $ISO_NEW_DIR/mksquash/filesystem.squashfs $ISO_NEW_DIR/cd/casper/filesystem.squashfs"
-#    handle_output "cd $ISO_NEW_DIR ; sudo chmod 0444 $ISO_NEW_DIR/cd/casper/filesystem.squashfs"
-#    handle_output "# Making filesystem.size"
-#    handle_output "cd $ISO_NEW_DIR ; sudo echo -n \$( sudo du -s --block-size=1 $ISO_NEW_DIR/custom | tail -1 | awk '{print \$1}') | sudo tee $ISO_NEW_DIR/mksquash/filesystem.size"
-#    handle_output "cd $ISO_NEW_DIR ; sudo cp $ISO_NEW_DIR/mksquash/filesystem.size $ISO_NEW_DIR/cd/casper/filesystem.size"
-#    handle_output "cd $ISO_NEW_DIR ; sudo chmod 0444 $ISO_NEW_DIR/cd/casper/filesystem.size"
-#    handle_output "# Making md5sum"
-#    handle_output "cd $ISO_NEW_DIR ; sudo find . -type f -print0 | xargs -0 md5sum | sed \"s@$ISO_NEW_DIR@.@\" | grep -v md5sum.txt | sudo tee $ISO_NEW_DIR/cd/md5sum.txt"
-#    if [ "$TEST_MODE" = "false" ]; then
-#      cd "${ISO_NEW_DIR}"
-#      sudo mksquashfs "${ISO_NEW_DIR}/custom" "${ISO_NEW_DIR}/mksquash/filesystem.squashfs" -noappend
-#      sudo cp "${ISO_NEW_DIR}/mksquash/filesystem.squashfs" "${ISO_NEW_DIR}/cd/casper/filesystem.squashfs"
-#      sudo chmod 0444 "${ISO_NEW_DIR}/cd/casper/filesystem.squashfs"
-#      sudo echo -n $( sudo du -s --block-size=1 "${ISO_NEW_DIR}/custom" | tail -1 | awk '{print $1}') | sudo tee "${ISO_NEW_DIR}/mksquash"/filesystem.size
-#      sudo cp "${ISO_NEW_DIR}/mksquash/filesystem.size" "${ISO_NEW_DIR}/cd/casper/filesystem.size"
-#      sudo chmod 0444 "${ISO_NEW_DIR}/cd/casper/filesystem.size"
-#      sudo find . -type f -print0 | xargs -0 md5sum | sed "s@${ISO_NEW_DIR}@.@" | grep -v md5sum.txt | sudo tee "${ISO_NEW_DIR}/cd/md5sum.txt"
-#    fi
-#  fi
+  fi
+  handle_output "sudo cp /etc/resolv.conf /etc/hosts $ISO_NEW_DIR/custom/etc/"
+  if [ "$TEST_MODE" = "false" ]; then
+    sudo cp /etc/resolv.conf /etc/hosts $ISO_NEW_DIR/custom/etc/
+  fi
 }
 
 # Function: Chroot into environment and run script on chrooted environmnet
@@ -406,6 +382,30 @@ execute_chroot_script () {
   handle_output "sudo chroot $ISO_NEW_DIR/custom /tmp/modify_chroot.sh"
   if [ "$TEST_MODE" = "false" ]; then
     sudo chroot $ISO_NEW_DIR/custom /tmp/modify_chroot.sh
+  fi
+}
+
+# Function: Update ISO squashfs 
+
+update_iso_squashfs () {
+  handle_output "# Making squashfs (this will take a while)"
+  handle_output "cd $ISO_NEW_DIR ; sudo mksquashfs $ISO_NEW_DIR/custom $ISO_NEW_DIR/mksquash/filesystem.squashfs -noappend"
+  handle_output "cd $ISO_NEW_DIR ; sudo cp $ISO_NEW_DIR/mksquash/filesystem.squashfs $ISO_NEW_DIR/cd/casper/filesystem.squashfs"
+  handle_output "cd $ISO_NEW_DIR ; sudo chmod 0444 $ISO_NEW_DIR/cd/casper/filesystem.squashfs"
+  handle_output "# Making filesystem.size"
+  handle_output "cd $ISO_NEW_DIR ; sudo echo -n \$( sudo du -s --block-size=1 $ISO_NEW_DIR/custom | tail -1 | awk '{print \$1}') | sudo tee $ISO_NEW_DIR/mksquash/filesystem.size"
+  handle_output "cd $ISO_NEW_DIR ; sudo cp $ISO_NEW_DIR/mksquash/filesystem.size $ISO_NEW_DIR/cd/casper/filesystem.size"
+  handle_output "cd $ISO_NEW_DIR ; sudo chmod 0444 $ISO_NEW_DIR/cd/casper/filesystem.size"
+  handle_output "# Making md5sum"
+  handle_output "cd $ISO_NEW_DIR ; sudo find . -type f -print0 | xargs -0 md5sum | sed \"s@$ISO_NEW_DIR@.@\" | grep -v md5sum.txt | sudo tee $ISO_NEW_DIR/cd/md5sum.txt"
+  if [ "$TEST_MODE" = "false" ]; then
+    sudo mksquashfs $ISO_NEW_DIR/custom $ISO_NEW_DIR/mksquash/filesystem.squashfs -noappend
+    sudo cp $ISO_NEW_DIR/mksquash/filesystem.squashfs $NEW_SQUASHFS_FILE
+    sudo chmod 0444 $NEW_SQUASHFS_FILE
+    sudo echo -n $( sudo du -s --block-size=1 $ISO_NEW_DIR/custom | tail -1 | awk '{print $1}') | sudo tee $ISO_NEW_DIR/mksquash/filesystem.size
+    sudo cp $ISO_NEW_DIR/mksquash/filesystem.size $ISO_SOURCE_DIR/casper/filesystem.size
+    sudo chmod 0444 $ISO_SOURCE_DIR/casper/filesystem.size
+    cd $ISO_SOURCE_DIR ; sudo find . -type f -print0 | xargs -0 md5sum | sed "s@${ISO_NEW_DIR}@.@" | grep -v md5sum.txt | sudo tee $ISO_SOURCE_DIR/md5sum.txt
   fi
 }
 
@@ -1196,7 +1196,7 @@ prepare_autoinstall_iso () {
 
 # Handle command line arguments
 
-PARAMS="$(getopt -o A:aB:bCcDd:E:e:FG:f:fhIi:Jj:K:k:L:lM:m:N:nO:o:P:p:R:rS:T:tsuVvW:wx:YyZz: -l arch:,bootdisk:,checkdirs,chrootpackages:,codename:,createiso,delete,defaults,distupgrade,getiso,grubmenu:,help,hwe,inputiso:,installmount:installpackages,installrequired,installtarget:,installupdates,interactive,isovolid:,justiso,kernel:,kernelargs:,lang:,layout:,lcall:,nic:,nounmount,ospackages:,outputiso:,password:,realname:,release:,runchrootscript,staticip,swapsize:,testmode,timezone:,unmount,verbose,version,workdir: --name "$(basename "$0")" -- "$@")"
+PARAMS="$(getopt -o A:aB:bCcDd:E:e:FfG:hIi:Jj:K:k:L:lM:m:N:nO:o:P:p:R:rS:T:tsuVvW:wXx:YyZz: -l arch:,bootdisk:,checkdirs,chrootpackages:,codename:,createiso,delete,deleteall,defaults,distupgrade,getiso,grubmenu:,help,hwe,inputiso:,installmount:installpackages,installrequired,installtarget:,installupdates,interactive,isovolid:,justiso,kernel:,kernelargs:,lang:,layout:,lcall:,nic:,nounmount,ospackages:,outputiso:,password:,realname:,release:,runchrootscript,staticip,swapsize:,testmode,timezone:,unmount,updatesquashfs,verbose,version,workdir: --name "$(basename "$0")" -- "$@")"
 
 if [ $? -ne 0 ]; then
   print_help
@@ -1253,12 +1253,12 @@ while true; do
       ISO_LC_ALL="$2"
       shift 2
       ;;
-    -F|--delete)
-      FULL_FORCE_MODE="true"
-      shift
-      ;;
     -f|--delete)
       FORCE_MODE="true"
+      shift
+      ;;
+    -F|--updatesquashfs)
+      DO_ISO_SQUASHFS_UPDATE="true"
       shift
       ;;
     -G|--isovolid)
@@ -1384,6 +1384,10 @@ while true; do
       ;;
     -w|--checkdirs)
       DO_CHECK_WORK_DIR="true"
+      shift
+      ;;
+    -X|--deleteall)
+      FULL_FORCE_MODE="true"
       shift
       ;;
     -x|--grubtimeout)
@@ -1525,8 +1529,10 @@ ISO_GRUB_FILE="$WORK_DIR/grub.cfg"
 
 if [ "$ISO_MAJOR_REL" = "22" ]; then
   ISO_SQUASHFS_FILE="$ISO_MOUNT_DIR/casper/ubuntu-server-minimal.squashfs"
+  NEW_SQUASHFS_FILE="$ISO_SOURCE_DIR/casper/ubuntu-server-minimal.squashfs"
 else
   ISO_SQUASHFS_FILE="$ISO_MOUNT_DIR/casper/filesystem.squashfs"
+  NEW_SQUASHFS_FILE="$ISO_SOURCE_DIR/casper/filesystem.squashfs"
 fi
 
 # Handle specific functions
@@ -1562,6 +1568,9 @@ if [ "$DO_CREATE_AUTOINSTALL_ISO_FULL" = "true" ]; then
   copy_squashfs
   create_chroot_script
   execute_chroot_script
+  if [ "$DO_ISO_SQUASHFS_UPDATE" = "true" ]; then
+    update_iso_squashfs
+  fi
   prepare_autoinstall_iso
   create_autoinstall_iso
   if ! [ "$DO_NO_UNMOUNT_ISO" = "true" ]; then

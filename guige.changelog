@@ -107,3 +107,5 @@
 # Added more support for Ubuntu 20.04
 # 0.5.4: Thu 19 Jan 2023 20:58:10 AEDT
 # Added support for HWE kernel
+# 0.5.5: Fri Jan 20 13:05:31 AEDT 2023
+# Initial code for creating squashfs
