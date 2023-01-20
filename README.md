@@ -77,6 +77,7 @@ You can get help using the -h or --help switch:
     -d|--bootdisk         Boot Disk devices (default: sda vda)
     -E|--locale           LANGUAGE (default: en_US.UTF-8)
     -e|--lcall            LC_ALL (default: en_US)
+    -F|--updatesquashfs   Copy updated squashfs to ISO
     -f|--delete           Remove previously created files (default: false)
     -G|--isovolid         ISO Volume ID (default: Ubuntu 22.04.1 Server)
     -g|--grubmenu:        Set default grub menu (default: 0)
@@ -85,6 +86,7 @@ You can get help using the -h or --help switch:
     -I|--interactive      Interactive mode (will ask for input rather than using command line options or defaults)
     -i|--inputiso:        Input/base ISO file (default: ubuntu-22.04.1-live-server-amd64.iso)
     -k|--kernelargs:      Kernel arguments (default: net.ifnames=0 biosdevname=0)
+    -J|--hwe              Use HWE kernel (defaults: false)
     -j|--autoinstalldir   Directory where autoinstall config files are stored on ISO (default: autoinstall)
     -K|--kernel:          Kernel package (default: linux-generic)
     -L|--release:         LSB release (default: 22.04.1)
@@ -107,7 +109,7 @@ You can get help using the -h or --help switch:
     -u|--unmount          Unmount loopback filesystems
     -V|--version          Display Script Version
     -v|--verbose          Verbose output (default: false)
-    -W|--workdir:         Work directory (default: /home/sysadmin/ubuntu-iso/22.04.1)
+    -W|--workdir:         Work directory (default: /home/ubuntu/ubuntu-iso/22.04.1)
     -w|--checkdirs        Check work directories exist
     -Y|--installpackages  Install packages after OS installation via network (default: )
     -y|--installupdates   Install updates after install (requires network)
