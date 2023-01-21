@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Name:         guige (Generic Ubuntu ISO Generation Engine)
-# Version:      0.5.5
+# Version:      0.5.6
 # Release:      1
 # License:      CC-BA (Creative Commons By Attribution)
 #               http://creativecommons.org/licenses/by/4.0/legalcode
@@ -17,6 +17,7 @@
 
 CURRENT_ISO_RELEASE="22.04.1"
 CURRENT_ISO_CODENAME="jammy"
+CURRENT_ISO_ARCH="amd64"
 CURRENT_ISO_OSNAME="Ubuntu"
 DEFAULT_ISO_HOSTNAME="ubuntu"
 DEFAULT_ISO_REALNAME="Ubuntu"
@@ -38,7 +39,6 @@ DEFAULT_ISO_GRUB_TIMEOUT="10"
 DEFAULT_ISO_LOCALE="en_US.UTF-8"
 DEFAULT_ISO_LC_ALL="en_US"
 DEFAULT_ISO_LAYOUT="us"
-DEFAULT_ISO_ARCH="amd64"
 DEFAULT_ISO_PACKAGES="zfsutils-linux grub-efi zfs-initramfs net-tools curl wget"
 REQUIRED_PACKAGES="p7zip-full wget xorriso whois squashfs-tools"
 
@@ -49,6 +49,7 @@ TEST_MODE="false"
 FORCE_MODE="false"
 FULL_FORCE_MODE="false"
 VERBOSE_MODE="false"
+TEMP_VERBOSE_MODE="false"
 DEFAULTS_MODE="false"
 INTERACTIVE_MODE="false"
 ISO_HWE_KERNEL="false"
@@ -68,6 +69,7 @@ DO_NO_UNMOUNT_ISO="false"
 DO_INSTALL_ISO_UPDATES="false"
 DO_ISO_DIST_UPGRADE="false"
 DO_ISO_SQUASHFS_UPDATE="false"
+DO_ISO_QUERY="false"
 
 # Get OS name
 
@@ -75,6 +77,22 @@ if [ -f "/usr/bin/lsb_release" ]; then
   DEFAULT_ISO_OSNAME=$( lsb_release -d |awk '{print $2}' )
 else
   DEFAULT_ISO_OSNAME="$CURRENT_ISO_OSNAME"
+fi
+
+# Get Architecture
+
+if [ -f "/usr/bin/uname" ]; then
+  DEFAULT_ISO_ARCH=$( uname -m )
+  if [ "$DEFAULT_ISO_OSNAME" = "Ubuntu" ]; then
+    if [ "$DEFAULT_ISO_ARCH" = "x86_64" ]; then
+      DEFAULT_ISO_ARCH="amd64"
+    fi
+    if [ "$DEFAULT_ISO_ARCH" = "aarch64" ]; then
+      DEFAULT_ISO_ARCH="arm64"
+    fi
+  fi
+else
+  DEFAULT_ISO_ARCH="$CURRENT_ISO_ARCH"
 fi
 
 # Get default release
@@ -156,10 +174,10 @@ print_help () {
     -h|--help             Help/Usage Information
     -I|--interactive      Interactive mode (will ask for input rather than using command line options or defaults)
     -i|--inputiso:        Input/base ISO file (default: $DEFAULT_INPUT_FILE_BASE)
-    -k|--kernelargs:      Kernel arguments (default: $DEFAULT_ISO_KERNEL_ARGS)
     -J|--hwe              Use HWE kernel (defaults: $ISO_HWE_KERNEL)
     -j|--autoinstalldir   Directory where autoinstall config files are stored on ISO (default: $DEFAULT_ISO_AUTOINSTALL_DIR)
     -K|--kernel:          Kernel package (default: $DEFAULT_ISO_KERNEL)
+    -k|--kernelargs:      Kernel arguments (default: $DEFAULT_ISO_KERNEL_ARGS)
     -L|--release:         LSB release (default: $DEFAULT_ISO_RELEASE)
     -l|--justiso          Create ISO (perform last step only - just run xoriso)
     -M|--installtarget    Where the install mounts the target filesystem (default: $DEFAULT_ISO_TARGET_DIR)
@@ -170,6 +188,7 @@ print_help () {
     -o|--outputiso:       Output ISO file (default: $DEFAULT_OUTPUT_FILE_BASE)
     -P|--password:        Password (default: $DEFAULT_ISO_USERNAME)
     -p|--chrootpackages:  List of packages to add to ISO (default: $DEFAULT_PACKAGES)
+    -q|--queryiso         Set information by querying input ISO
     -R|--realname:        Realname (default $DEFAULT_ISO_REALNAME)
     -r|--installrequired  Install required packages on host ($REQUIRED_PACKAGES)
     -S|--swapsize:        Swap size (default $DEFAULT_ISO_SWAPSIZE)
@@ -188,21 +207,15 @@ print_help () {
     -z|--volumemanager:   Volume Managers (defauls: $DEFAULT_ISO_VOLMGRS)
     -Z|--distupgrade      Perform dist-upgrade after OS installation
 HELP
+  exit
 }
-
-# If given no command line arguments print usage information
-
-#if [ $( expr "$ARGS" : "\-" ) != 1 ]; then
-#  print_help
-#  exit
-#fi
 
 # Function: Handle output
 
 handle_output () {
   OUTPUT_TEXT=$1
   OUTPUT_TYPE=$2
-  if [ "$VERBOSE_MODE" = "true" ]; then
+  if [ "$VERBOSE_MODE" = "true" ] || [ "$TEMP_VERBOSE_MODE" = "true" ]; then
     if [ "$TEST_MODE" = "true" ]; then
       echo "$OUTPUT_TEXT"
     else
@@ -213,6 +226,56 @@ handle_output () {
       fi
     fi
   fi
+}
+
+# Function: Get info from iso
+
+get_info_from_iso () {
+  handle_output "# Analysing $INPUT_FILE"
+  TEST_FILE=$( basename $INPUT_FILE )
+  TEST_NAME=$( echo $TEST_FILE | cut -f1 -d- )
+  TEST_TYPE=$( echo $TEST_FILE | cut -f2 -d- )
+  case $TEST_NAME in
+    "jammy")
+      ISO_RELEASE="22.04"
+      ISO_DISTRO="Ubuntu"
+      ;;
+    "focal")
+      ISO_RELEASE="20.04"
+      ISO_DISTRO="Ubuntu"
+      ;;
+    "ubuntu")
+      ISO_RELEASE=$(echo $TEST_FILE |cut -f2 -d- )
+      ISO_DISTRO="Ubuntu"
+      ;;
+    *)
+      ISO_RELEASE="$DEFAULT_ISO_RELEASE"
+      ;;
+  esac
+  if [ "$TEST_NAME" = "ubuntu" ]; then
+    if [ "$TEST_TYPE" = "desktop" ]; then
+      ISO_ARCH=$( echo $TEST_FILE |cut -f4 -d- |cut -f1 -d. )
+    else
+      ISO_ARCH=$( echo $TEST_FILE |cut -f5 -d- |cut -f1 -d. )
+      TEST_TYPE="live-server"
+    fi
+  else
+    if [ "$TEST_TYPE" = "desktop" ]; then
+      ISO_ARCH=$( echo $TEST_FILE |cut -f3 -d- |cut -f1 -d. )
+    else
+      ISO_ARCH=$( echo $TEST_FILE |cut -f4 -d- |cut -f1 -d. )
+      TEST_TYPE="live-server"
+    fi
+  fi
+  OUTPUT_FILE="$WORK_DIR/$TEST_NAME-$ISO_RELEASE-$TEST_TYPE-$ISO_ARCH.iso"
+  TEMP_VERBOSE_MODE="true"
+  handle_output "# Input ISO:     $INPUT_FILE" TEXT
+  handle_output "# Distribution:  $ISO_DISTRO" TEXT
+  handle_output "# Release:       $ISO_RELEASE" TEXT
+  handle_output "# Codename:      $ISO_CODENAME" TEXT
+  handle_output "# Architecture:  $ISO_ARCH" TEXT
+  handle_output "# Output ISO:    $OUTPUT_FILE" TEXT
+  TEMP_VERBOSE_MODE="false"
 }
 
 # Function: Check work directories exist
@@ -691,7 +754,9 @@ create_autoinstall_iso () {
   ISO_MBR_PART_TYPE=$( xorriso -indev $INPUT_FILE -report_el_torito as_mkisofs |grep iso_mbr_part_type |tail -1 |awk '{print $2}' 2>&1 )
   BOOT_CATALOG=$( xorriso -indev $INPUT_FILE -report_el_torito as_mkisofs |grep "^-c " |tail -1 |awk '{print $2}' |cut -f2 -d"'" 2>&1 )
   BOOT_IMAGE=$( xorriso -indev $INPUT_FILE -report_el_torito as_mkisofs |grep "^-b " |tail -1 |awk '{print $2}' |cut -f2 -d"'" 2>&1 )
-  if [ "$MAJOR_REL" = "22" ]; then
+  EFI_BOOT_SIZE=$( xorriso -indev $INPUT_FILE -report_el_torito as_mkisofs |grep "^-boot-load-size" |tail -1 |awk '{print $2}' |cut -f2 -d"'" 2>&1 )
+  DOS_BOOT_SIZE=$( xorriso -indev $INPUT_FILE -report_el_torito as_mkisofs |grep "^-boot-load-size" |head -1 |awk '{print $2}' |cut -f2 -d"'" 2>&1 )
+  if [ "$ISO_MAJOR_REL" = "22" ]; then
     handle_output "cd $WORK_DIR ; export APPEND_PART=\$( xorriso -indev $INPUT_FILE -report_el_torito as_mkisofs |grep append_partition |tail -1 |awk '{print \$3}' 2>&1 )"
     handle_output "export EFI_IMAGE=\"--interval:appended_partition_2:::\""
     APPEND_PART=$( xorriso -indev $INPUT_FILE -report_el_torito as_mkisofs |grep append_partition |tail -1 |awk '{print $3}' 2>&1 )
@@ -702,19 +767,34 @@ create_autoinstall_iso () {
     APPEND_PART="0xef"
     EFI_IMAGE=$( xorriso -indev $INPUT_FILE -report_el_torito as_mkisofs |grep "^-e " |tail -1 |awk '{print $2}' |cut -f2 -d"'" 2>&1 )
   fi
-  handle_output "cd $ISO_SOURCE_DIR ; xorriso -as mkisofs -r -V \"$ISO_VOLID\" -o $OUTPUT_FILE \
-  --grub2-mbr ../BOOT/1-Boot-NoEmul.img -partition_offset 16 --mbr-force-bootable \
-  -append_partition 2 $APPEND_PART ../BOOT/2-Boot-NoEmul.img -appended_part_as_gpt \
-  -iso_mbr_part_type $ISO_MBR_PART_TYPE -c $BOOT_CATALOG -b $BOOT_IMAGE \
-  -no-emul-boot -boot-load-size 4 -boot-info-table --grub2-boot-info -eltorito-alt-boot \
-  -e $EFI_IMAGE -no-emul-boot ."
   if [ "$TEST_MODE" = "false" ]; then
-    cd $ISO_SOURCE_DIR ; xorriso -as mkisofs -r -V "$ISO_VOLID" -o $OUTPUT_FILE \
-    --grub2-mbr ../BOOT/1-Boot-NoEmul.img -partition_offset 16 --mbr-force-bootable \
-    -append_partition 2 $APPEND_PART ../BOOT/2-Boot-NoEmul.img -appended_part_as_gpt \
-    -iso_mbr_part_type $ISO_MBR_PART_TYPE -c $BOOT_CATALOG -b $BOOT_IMAGE \
-    -no-emul-boot -boot-load-size 4 -boot-info-table --grub2-boot-info -eltorito-alt-boot \
-    -e "$EFI_IMAGE" -no-emul-boot .
+    if [ "$ISO_ARCH" = "amd64" ]; then
+      handle_output "cd $ISO_SOURCE_DIR ; xorriso -as mkisofs -r -V \"$ISO_VOLID\" -o $OUTPUT_FILE \
+      --grub2-mbr ../BOOT/1-Boot-NoEmul.img --protective-msdos-label \
+      -partition_cyl_align off -partition_offset 16 --mbr-force-bootable \
+      -append_partition 2 $APPEND_PART ../BOOT/2-Boot-NoEmul.img -appended_part_as_gpt \
+      -iso_mbr_part_type $ISO_MBR_PART_TYPE -c $BOOT_CATALOG -b $BOOT_IMAGE \
+      -no-emul-boot -boot-load-size $DOS_BOOT_SIZE -boot-info-table --grub2-boot-info -eltorito-alt-boot \
+      -e $EFI_IMAGE -no-emul-boot -boot-load-size $EFI_BOOT_SIZE ."
+      cd $ISO_SOURCE_DIR ; xorriso -as mkisofs -r -V "$ISO_VOLID" -o $OUTPUT_FILE \
+      --grub2-mbr ../BOOT/1-Boot-NoEmul.img --protective-msdos-label \ 
+      -partition_cyl_align off -partition_offset 16 --mbr-force-bootable \
+      -append_partition 2 $APPEND_PART ../BOOT/2-Boot-NoEmul.img -appended_part_as_gpt \
+      -iso_mbr_part_type $ISO_MBR_PART_TYPE -c $BOOT_CATALOG -b $BOOT_IMAGE \
+      -no-emul-boot -boot-load-size $DOS_BOOT_SIZE -boot-info-table --grub2-boot-info -eltorito-alt-boot \
+      -e "$EFI_IMAGE" -no-emul-boot -boot-load-size $EFI_BOOT_SIZE .
+    else
+      handle_output "cd $ISO_SOURCE_DIR ; xorriso -as mkisofs -r -V \"$ISO_VOLID\" -o $OUTPUT_FILE \
+      -partition_cyl_align all -partition_offset 16 -partition_hd_cyl 86 -partition_sec_hd 32 \
+      -append_partition 2 $APPEND_PART ../BOOT/Boot-NoEmul.img -G ../BOOT/Boot-NoEmul.img \
+      -iso_mbr_part_type $ISO_MBR_PART_TYPE -c $BOOT_CATALOG \
+      -e "$EFI_IMAGE" -no-emul-boot -boot-load-size $EFI_BOOT_SIZE ."
+      cd $ISO_SOURCE_DIR ; xorriso -as mkisofs -r -V "$ISO_VOLID" -o $OUTPUT_FILE \
+      -partition_cyl_align all -partition_offset 16 -partition_hd_cyl 86 -partition_sec_hd 32 \
+      -append_partition 2 $APPEND_PART ../BOOT/Boot-NoEmul.img -G ../BOOT/Boot-NoEmul.img \
+      -iso_mbr_part_type $ISO_MBR_PART_TYPE -c $BOOT_CATALOG \
+      -e "$EFI_IMAGE" -no-emul-boot -boot-load-size $EFI_BOOT_SIZE .
+    fi
   fi
 }
 
@@ -1196,7 +1276,7 @@ prepare_autoinstall_iso () {
 
 # Handle command line arguments
 
-PARAMS="$(getopt -o A:aB:bCcDd:E:e:FfG:hIi:Jj:K:k:L:lM:m:N:nO:o:P:p:R:rS:T:tsuVvW:wXx:YyZz: -l arch:,bootdisk:,checkdirs,chrootpackages:,codename:,createiso,delete,deleteall,defaults,distupgrade,getiso,grubmenu:,help,hwe,inputiso:,installmount:installpackages,installrequired,installtarget:,installupdates,interactive,isovolid:,justiso,kernel:,kernelargs:,lang:,layout:,lcall:,nic:,nounmount,ospackages:,outputiso:,password:,realname:,release:,runchrootscript,staticip,swapsize:,testmode,timezone:,unmount,updatesquashfs,verbose,version,workdir: --name "$(basename "$0")" -- "$@")"
+PARAMS="$(getopt -o A:aB:bCcDd:E:e:FfG:hIi:Jj:K:k:L:lM:m:N:nO:o:P:p:qR:rS:T:tsuVvW:wXx:YyZz: -l arch:,bootdisk:,checkdirs,chrootpackages:,codename:,createiso,delete,deleteall,defaults,distupgrade,getiso,grubmenu:,help,hwe,inputiso:,installmount:installpackages,installrequired,installtarget:,installupdates,interactive,isovolid:,justiso,kernel:,kernelargs:,lang:,layout:,lcall:,nic:,nounmount,ospackages:,outputiso:,password:,queryiso,realname:,release:,runchrootscript,staticip,swapsize:,testmode,timezone:,unmount,updatesquashfs,verbose,version,workdir: --name "$(basename "$0")" -- "$@")"
 
 if [ $? -ne 0 ]; then
   print_help
@@ -1307,11 +1387,11 @@ while true; do
       shift
       ;;
     -M|--installtarget)
-      $ISO_TARGET_MOUNT="$2"
+      ISO_TARGET_MOUNT="$2"
       shift 2 
       ;;
     -m|--installmount)
-      $ISO_INSTALL_MOUNT="$2"
+      ISO_INSTALL_MOUNT="$2"
       shift 2 
       ;;
     -N|--nic)
@@ -1322,7 +1402,7 @@ while true; do
       DO_NO_UNMOUNT_ISO="true";
       shift
       ;;
-    -O:--ospackages)
+    -O|--ospackages)
       ISO_INSTALL_PACKAGES="$2"
       shift 2
       ;;
@@ -1337,6 +1417,10 @@ while true; do
     -p|--packages)
       ISO_CHROOT_PACKAGES="$2"
       shift 2
+      ;;
+    -q|--queryiso)
+      DO_ISO_QUERY="true"
+      shift
       ;;
     -R|--realname)
       ISO_REALNAME="$2"
@@ -1459,9 +1543,6 @@ fi
 if [ "$TIMEZONE" = "" ] || [ "$DEFAULTS_MODE" = "true" ]; then
   ISO_IMEZONE="$DEFAULT_ISO_TIMEZONE"
 fi
-if [ "$INPUT_FILE" = "" ] || [ "$DEFAULTS_MODE" = "true" ]; then
-  INPUT_FILE="$DEFAULT_INPUT_FILE"
-fi
 if [ "$OUTPUT_FILE" = "" ] || [ "$DEFAULTS_MODE" = "true" ]; then
   OUTPUT_FILE="$DEFAULT_OUTPUT_FILE"
 fi
@@ -1513,6 +1594,19 @@ fi
 if [ "$ISO_AUTOINSTALL_DIR" = "" ] || [ "$DEFAULTS_MODE" = "true" ]; then
   ISO_AUTOINSTALL_DIR="$DEFAULT_ISO_AUTOINSTALL_DIR"
 fi
+if [ "$WORK_DIR" = "" ] || [ "$DEFAULTS_MODE" = "true" ]; then 
+  WORK_DIR="$DEFAULT_WORK_DIR"
+fi
+if [ "$INPUT_FILE" = "" ] || [ "$DEFAULTS_MODE" = "true" ]; then
+  INPUT_FILE="$DEFAULT_INPUT_FILE"
+else
+  if [ "$DO_ISO_QUERY" = "true" ]; then
+    DO_PRINT_HELP="false"
+    get_info_from_iso
+  else
+    INPUT_FILE="$WORK_DIR/ubuntu-$ISO_RELEASE-live-server-$ISO_ARCH.iso"
+  fi
+fi
 
 # Update Default work directories
 
@@ -1523,7 +1617,6 @@ ISO_SOURCE_DIR="$WORK_DIR/source-files"
 
 # Default file names/locations
 
-INPUT_FILE="$WORK_DIR/ubuntu-$ISO_RELEASE-live-server-$ISO_ARCH.iso"
 OUTPUT_FILE="$WORK_DIR/ubuntu-$ISO_RELEASE-live-server-$ISO_ARCH-autoinstall.iso"
 ISO_GRUB_FILE="$WORK_DIR/grub.cfg"
 

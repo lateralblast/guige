@@ -11,7 +11,7 @@ used to hang a shield on the shoulder or neck when not in use.
 Version
 -------
 
-Current version: 0.5.5
+Current version: 0.5.6
 
 Introduction
 ------------
@@ -85,10 +85,10 @@ You can get help using the -h or --help switch:
     -h|--help             Help/Usage Information
     -I|--interactive      Interactive mode (will ask for input rather than using command line options or defaults)
     -i|--inputiso:        Input/base ISO file (default: ubuntu-22.04.1-live-server-amd64.iso)
-    -k|--kernelargs:      Kernel arguments (default: net.ifnames=0 biosdevname=0)
     -J|--hwe              Use HWE kernel (defaults: false)
     -j|--autoinstalldir   Directory where autoinstall config files are stored on ISO (default: autoinstall)
     -K|--kernel:          Kernel package (default: linux-generic)
+    -k|--kernelargs:      Kernel arguments (default: net.ifnames=0 biosdevname=0)
     -L|--release:         LSB release (default: 22.04.1)
     -l|--justiso          Create ISO (perform last step only - just run xoriso)
     -M|--installtarget    Where the install mounts the target filesystem (default: )
@@ -99,6 +99,7 @@ You can get help using the -h or --help switch:
     -o|--outputiso:       Output ISO file (default: ubuntu-22.04.1-live-server-amd64-autoinstall.iso)
     -P|--password:        Password (default: ubuntu)
     -p|--chrootpackages:  List of packages to add to ISO (default: )
+    -q|--queryiso         Set information by querying input ISO
     -R|--realname:        Realname (default Ubuntu)
     -r|--installrequired  Install required packages on host (p7zip-full wget xorriso whois squashfs-tools)
     -S|--swapsize:        Swap size (default 2G)
@@ -109,7 +110,7 @@ You can get help using the -h or --help switch:
     -u|--unmount          Unmount loopback filesystems
     -V|--version          Display Script Version
     -v|--verbose          Verbose output (default: false)
-    -W|--workdir:         Work directory (default: /home/ubuntu/ubuntu-iso/22.04.1)
+    -W|--workdir:         Work directory (default: /home/sysadmin/ubuntu-iso/22.04.1)
     -w|--checkdirs        Check work directories exist
     -Y|--installpackages  Install packages after OS installation via network (default: )
     -y|--installupdates   Install updates after install (requires network)
