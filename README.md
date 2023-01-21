@@ -44,10 +44,12 @@ By default the script will create an autoinstall ISO that uses DHCP,
 and installs packages from the ISO rather than fetching them over the network.
 
 The current default install options in the grub menu are:
-- ZFS on /dev/sda
+- ZFS on /dev/sda (e.g. Physical Machine or early versions of VMware)
 - ZFS on /dev/vda (e.g. KVM)
-- LVM on /dev/sda
+- ZFS on /dev/nvme0n1 (e,g. M2 SSDs or later versions of VMware)
+- LVM on /dev/sda (e.g. Physical Machine or early versions of VMware)
 - LVM on /dev/vda (e.g. KVM)
+- LVM on /dev/nvme0n1 (e,g. M2 SSDs or later versions of VMware)
 
 These can be modified via command line arguments.
 
@@ -127,8 +129,7 @@ Things I plan to do:
 
 - Support for nightly build images etc
 - Script cleanup and more flexibility
-- Support architechtures other than x86_64
-- Support for 20.04 (at the moment LVM based installs are working ZFS is not)
+- Full support for 20.04 (at the moment LVM based installs are working ZFS is not)
 - Support for modified squashfs being copied to install ISO
 
 Thanks
@@ -174,6 +175,12 @@ Just do autoinstall config and create ISO (assumes an ISO has been previously cr
 
 ```
 ./guige.sh --justiso --verbose --installupdates --installpackages --distupgrade
+```
+
+Build ISO using daily build (this is useful for ARM where daily builds tend to have more hardware support, e.g. being virtualised on Apple Silicon)
+
+```
+./guige.sh --createiso --build daily-live
 ```
 
 Process
