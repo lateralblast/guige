@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Name:         guige (Generic Ubuntu ISO Generation Engine)
-# Version:      0.5.6
+# Version:      0.6.0
 # Release:      1
 # License:      CC-BA (Creative Commons By Attribution)
 #               http://creativecommons.org/licenses/by/4.0/legalcode
@@ -32,13 +32,14 @@ DEFAULT_ISO_NETMASK="255.255.255.0"
 DEFAULT_ISO_GATEWAY="192.168.1.254"
 DEFAULT_ISO_SWAPSIZE="2G"
 DEFAULT_ISO_MENU="0"
-DEFAULT_ISO_DEVICES="sda vda"
+DEFAULT_ISO_DEVICES="sda vda nvme0n1"
 DEFAULT_ISO_VOLMGRS="zfs lvm"
 DEFAULT_ISO_GRUB_MENU="0"
 DEFAULT_ISO_GRUB_TIMEOUT="10"
 DEFAULT_ISO_LOCALE="en_US.UTF-8"
 DEFAULT_ISO_LC_ALL="en_US"
 DEFAULT_ISO_LAYOUT="us"
+DEFAULT_ISO_BUILD_TYPE="live-server"
 DEFAULT_ISO_PACKAGES="zfsutils-linux grub-efi zfs-initramfs net-tools curl wget"
 REQUIRED_PACKAGES="p7zip-full wget xorriso whois squashfs-tools"
 
@@ -53,6 +54,7 @@ TEMP_VERBOSE_MODE="false"
 DEFAULTS_MODE="false"
 INTERACTIVE_MODE="false"
 ISO_HWE_KERNEL="false"
+DO_DAILY_ISO="false"
 
 # Set function variables
 
@@ -188,6 +190,7 @@ print_help () {
     -o|--outputiso:       Output ISO file (default: $DEFAULT_OUTPUT_FILE_BASE)
     -P|--password:        Password (default: $DEFAULT_ISO_USERNAME)
     -p|--chrootpackages:  List of packages to add to ISO (default: $DEFAULT_PACKAGES)
+    -Q|--build:           Type of ISO to build (default: $DEFAULT_ISO_BUILD_TYPE)
     -q|--queryiso         Set information by querying input ISO
     -R|--realname:        Realname (default $DEFAULT_ISO_REALNAME)
     -r|--installrequired  Install required packages on host ($REQUIRED_PACKAGES)
@@ -204,8 +207,8 @@ print_help () {
     -Y|--installpackages  Install packages after OS installation via network (default: $DO_INSTALL_PACKAGES)
     -y|--installupdates   Install updates after install (requires network)
     -x|--grubtimeout:     Grub timeout (default: $DEFAULT_ISO_GRUB_TIMEOUT)
-    -z|--volumemanager:   Volume Managers (defauls: $DEFAULT_ISO_VOLMGRS)
     -Z|--distupgrade      Perform dist-upgrade after OS installation
+    -z|--volumemanager:   Volume Managers (defauls: $DEFAULT_ISO_VOLMGRS)
 HELP
   exit
 }
@@ -222,7 +225,7 @@ handle_output () {
       if [ "$OUTPUT_TYPE" = "TEXT" ]; then
         echo "$OUTPUT_TEXT"
       else
-        echo "Executing: $OUTPUT_TEXT"
+        echo "# Executing: $OUTPUT_TEXT"
       fi
     fi
   fi
@@ -326,11 +329,41 @@ install_required_packages () {
   done
 }
 
+# Function: Check base ISO file
+
+check_base_iso_file () {
+  if [ -f "$INPUT_FILE" ]; then
+    BASE_INPUT_FILE=$( basename $INPUT_FILE )
+    FILE_TYPE=$( file $WORK_DIR/$BASE_INPUT_FILE | awk '{print $2}' )
+    if ! [ "$FILE_TYPE" = "ISO" ] || [ "$FILE_TYPE" = "DOS/MBR" ]; then
+      TEMP_VERBOSE_MODE="true"
+      handle_output "# Warning: $WORK_DIR/$BASE_INPUT_FILE is not a valid ISO file" TEXT
+      exit
+    fi
+  fi
+}
+
 # Function: Grab ISO from Ubuntu
 # 
 # Examples:
+#
+# Live Server
+#
 # https://cdimage.ubuntu.com/ubuntu-server/jammy/daily-live/current/jammy-live-server-amd64.iso
-# wget https://cdimage.ubuntu.com/releases/22.04/RELEASE/ubuntu-22.04.1-live-server-amd64.iso
+# wget https://cdimage.ubuntu.com/releases/22.04/release/ubuntu-22.04.1-live-server-amd64.iso
+#
+# Daily Live Server
+#
+# https://cdimage.ubuntu.com/ubuntu-server/jammy/daily-live/current/
+#
+# Desktop
+#
+# https://releases.ubuntu.com/22.04/
+#
+# Daily desktop
+#
+# https://cdimage.ubuntu.com/jammy/daily-live/current/
+#
 
 get_base_iso () {
   handle_output "# Check source ISO exists and grab it if it doesn't" TEXT
@@ -341,7 +374,7 @@ get_base_iso () {
       rm $WORK_DIR/$INPUT_FILE
     fi
   fi
-  ISO_URL="https://releases.ubuntu.com/$ISO_RELEASE/$BASE_INPUT_FILE"
+  check_base_iso_file
   handle_output "wget $ISO_URL -O $WORK_DIR/$BASE_INPUT_FILE"
   if ! [ -f "$WORK_DIR/$BASE_INPUT_FILE" ]; then
     if [ "$TEST_MODE" = "false" ]; then
@@ -368,12 +401,7 @@ unmount_iso () {
 
 mount_iso () {
   get_base_iso
-  BASE_INPUT_FILE=$( basename $INPUT_FILE )
-  FILE_TYPE=$( file $WORK_DIR/$BASE_INPUT_FILE | awk '{print $2}' )
-  if ! [ "$FILE_TYPE" = "ISO" ] || [ "$FILE_TYPE" = "DOS/MBR" ]; then
-    handle_output "Warning: $WORK_DIR/$BASE_INPUT_FILE is not a valid ISO file" TEXT
-    exit
-  fi
+  check_base_iso_file
   handle_output "sudo mount -o loop $WORK_DIR/$BASE_INPUT_FILE $ISO_MOUNT_DIR"
   if [ "$TEST_MODE" = "false" ]; then
     sudo mount -o loop $WORK_DIR/$BASE_INPUT_FILE $ISO_MOUNT_DIR
@@ -777,10 +805,9 @@ create_autoinstall_iso () {
       -no-emul-boot -boot-load-size $DOS_BOOT_SIZE -boot-info-table --grub2-boot-info -eltorito-alt-boot \
       -e $EFI_IMAGE -no-emul-boot -boot-load-size $EFI_BOOT_SIZE ."
       cd $ISO_SOURCE_DIR ; xorriso -as mkisofs -r -V "$ISO_VOLID" -o $OUTPUT_FILE \
-      --grub2-mbr ../BOOT/1-Boot-NoEmul.img --protective-msdos-label \ 
-      -partition_cyl_align off -partition_offset 16 --mbr-force-bootable \
-      -append_partition 2 $APPEND_PART ../BOOT/2-Boot-NoEmul.img -appended_part_as_gpt \
-      -iso_mbr_part_type $ISO_MBR_PART_TYPE -c $BOOT_CATALOG -b $BOOT_IMAGE \
+      --grub2-mbr ../BOOT/1-Boot-NoEmul.img --protective-msdos-label -partition_cyl_align off \
+      -partition_offset 16 --mbr-force-bootable -append_partition 2 $APPEND_PART ../BOOT/2-Boot-NoEmul.img \
+      -appended_part_as_gpt -iso_mbr_part_type $ISO_MBR_PART_TYPE -c $BOOT_CATALOG -b $BOOT_IMAGE \
       -no-emul-boot -boot-load-size $DOS_BOOT_SIZE -boot-info-table --grub2-boot-info -eltorito-alt-boot \
       -e "$EFI_IMAGE" -no-emul-boot -boot-load-size $EFI_BOOT_SIZE .
     else
@@ -1276,7 +1303,7 @@ prepare_autoinstall_iso () {
 
 # Handle command line arguments
 
-PARAMS="$(getopt -o A:aB:bCcDd:E:e:FfG:hIi:Jj:K:k:L:lM:m:N:nO:o:P:p:qR:rS:T:tsuVvW:wXx:YyZz: -l arch:,bootdisk:,checkdirs,chrootpackages:,codename:,createiso,delete,deleteall,defaults,distupgrade,getiso,grubmenu:,help,hwe,inputiso:,installmount:installpackages,installrequired,installtarget:,installupdates,interactive,isovolid:,justiso,kernel:,kernelargs:,lang:,layout:,lcall:,nic:,nounmount,ospackages:,outputiso:,password:,queryiso,realname:,release:,runchrootscript,staticip,swapsize:,testmode,timezone:,unmount,updatesquashfs,verbose,version,workdir: --name "$(basename "$0")" -- "$@")"
+PARAMS="$(getopt -o A:aB:bCcDd:E:e:FfG:hIi:Jj:K:k:L:lM:m:N:nO:o:P:p:Q:qR:rS:T:tsuVvW:wXx:YyZz: -l arch:,bootdisk:,build:,checkdirs,chrootpackages:,codename:,createiso,delete,deleteall,defaults,distupgrade,getiso,grubmenu:,help,hwe,inputiso:,installmount:,installpackages,installrequired,installtarget:,installupdates,interactive,isovolid:,justiso,kernel:,kernelargs:,lang:,layout:,lcall:,nic:,nounmount,ospackages:,outputiso:,password:,queryiso,realname:,release:,runchrootscript,staticip,swapsize:,testmode,timezone:,unmount,updatesquashfs,verbose,version,workdir: --name "$(basename "$0")" -- "$@")"
 
 if [ $? -ne 0 ]; then
   print_help
@@ -1287,12 +1314,12 @@ unset PARAMS
 
 while true; do
   case $1 in
-    -a|--arch)
-      ISO_ARCH="$2"
-      shift 2
-      ;;
     -A|--codename)
       ISO_CODENAME="$2"
+      shift 2
+      ;;
+    -a|--arch)
+      ISO_ARCH="$2"
       shift 2
       ;;
     -B|--layout)
@@ -1333,12 +1360,12 @@ while true; do
       ISO_LC_ALL="$2"
       shift 2
       ;;
-    -f|--delete)
-      FORCE_MODE="true"
-      shift
-      ;;
     -F|--updatesquashfs)
       DO_ISO_SQUASHFS_UPDATE="true"
+      shift
+      ;;
+    -f|--delete)
+      FORCE_MODE="true"
       shift
       ;;
     -G|--isovolid)
@@ -1349,6 +1376,10 @@ while true; do
       ISO_GRUB_MENU="$2"
       shift
       ;;
+    -H|--hostname)
+      ISO_HOSTNAME="$2"
+      shift 2
+      ;;
     -h|--help)
       print_help 
       exit
@@ -1357,7 +1388,7 @@ while true; do
       INTERACTIVE_MODE="true"
       shift
       ;;
-    --i|--inputiso)
+    -i|--inputiso)
       INPUT_FILE="$2"
       shift 2
       ;;
@@ -1416,6 +1447,11 @@ while true; do
       ;;
     -p|--packages)
       ISO_CHROOT_PACKAGES="$2"
+      shift 2
+      ;;
+    -Q|--build)
+      DO_DAILY_ISO="true"
+      ISO_BUILD_TYPE="$2"
       shift 2
       ;;
     -q|--queryiso)
@@ -1478,17 +1514,21 @@ while true; do
       ISO_GRUB_TIMEOUT="$2"
       shift 2
       ;;
-    -y|--installupdates)
-      DO_INSTALL_ISO_UPDATES="true"
-      shift
-      ;;
     -Y|--installpackages)
       DO_INSTALL_ISO_PACKAGES="true"
+      shift
+      ;;
+    -y|--installupdates)
+      DO_INSTALL_ISO_UPDATES="true"
       shift
       ;;
     -Z|--distupgrade)
       DO_ISO_DIST_UPGRADE="true"
       shift
+      ;;
+    -z|--volumemanager)
+      ISO_VOLMGR="$2"
+      shift 2
       ;;
     --)
       shift
@@ -1595,29 +1635,53 @@ if [ "$ISO_AUTOINSTALL_DIR" = "" ] || [ "$DEFAULTS_MODE" = "true" ]; then
   ISO_AUTOINSTALL_DIR="$DEFAULT_ISO_AUTOINSTALL_DIR"
 fi
 if [ "$WORK_DIR" = "" ] || [ "$DEFAULTS_MODE" = "true" ]; then 
-  WORK_DIR="$DEFAULT_WORK_DIR"
+  if [ "$DO_DAILY_ISO" = "true" ]; then
+    WORK_DIR="$HOME/ubuntu-iso/$ISO_CODENAME"
+  else
+    WORK_DIR="$DEFAULT_WORK_DIR"
+  fi
+else
+  if [ "$DO_DAILY_ISO" = "true" ]; then
+    WORK_DIR="$HOME/ubuntu-iso/$ISO_CODENAME"
+  fi
+fi
+if [ "$ISO_BUILD_TYPE" = "" ] || [ "$DEFAULTS_MODE" = "true" ]; then
+  ISO_BUILD_TYPE="$DEFAULT_ISO_BUILD_TYPE"
 fi
 if [ "$INPUT_FILE" = "" ] || [ "$DEFAULTS_MODE" = "true" ]; then
   INPUT_FILE="$DEFAULT_INPUT_FILE"
+fi
+if [ "$DO_ISO_QUERY" = "true" ]; then
+  get_info_from_iso
 else
-  if [ "$DO_ISO_QUERY" = "true" ]; then
-    DO_PRINT_HELP="false"
-    get_info_from_iso
-  else
-    INPUT_FILE="$WORK_DIR/ubuntu-$ISO_RELEASE-live-server-$ISO_ARCH.iso"
-  fi
+  case $ISO_BUILD_TYPE in
+    "daily-live"|"daily-live-server")
+      INPUT_FILE="$WORK_DIR/$ISO_CODENAME-live-server-$ISO_ARCH.iso"
+      OUTPUT_FILE="$WORK_DIR/$ISO_CODENAME-live-server-$ISO_ARCH-autoinstall.iso"
+      ;;
+    "daily-desktop")
+      INPUT_FILE="$WORK_DIR/$ISO_CODENAME-desktop-$ISO_ARCH.iso"
+      OUTPUT_FILE="$WORK_DIR/$ISO_CODENAME-desktop-$ISO_ARCH-autoinstall.iso"
+      ;;
+    "desktop")
+      INPUT_FILE="$WORK_DIR/ubuntu-$ISO_RELEASE-desktop-$ISO_ARCH.iso"
+      OUTPUT_FILE="$WORK_DIR/ubuntu-$ISO_RELEASE-desktop-$ISO_ARCH-autoinstall.iso"
+      ;;
+    *)
+      INPUT_FILE="$WORK_DIR/ubuntu-$ISO_RELEASE-live-server-$ISO_ARCH.iso"
+      OUTPUT_FILE="$WORK_DIR/ubuntu-$ISO_RELEASE-live-server-$ISO_ARCH-autoinstall.iso"
+      ;;
+  esac 
 fi
 
 # Update Default work directories
 
-WORK_DIR=$HOME/ubuntu-iso/$ISO_RELEASE
 ISO_MOUNT_DIR="$WORK_DIR/isomount"
 ISO_NEW_DIR="$WORK_DIR/isonew"
 ISO_SOURCE_DIR="$WORK_DIR/source-files"
 
 # Default file names/locations
 
-OUTPUT_FILE="$WORK_DIR/ubuntu-$ISO_RELEASE-live-server-$ISO_ARCH-autoinstall.iso"
 ISO_GRUB_FILE="$WORK_DIR/grub.cfg"
 
 if [ "$ISO_MAJOR_REL" = "22" ]; then
@@ -1627,6 +1691,22 @@ else
   ISO_SQUASHFS_FILE="$ISO_MOUNT_DIR/casper/filesystem.squashfs"
   NEW_SQUASHFS_FILE="$ISO_SOURCE_DIR/casper/filesystem.squashfs"
 fi
+
+BASE_INPUT_FILE=$( basename $INPUT_FILE )
+case $ISO_BUILD_TYPE in 
+  "daily-live"|"daily-live-server")
+    ISO_URL="https://cdimage.ubuntu.com/ubuntu-server/$ISO_CODENAME/daily-live/current/$BASE_INPUT_FILE"
+   ;;
+  "daily-desktop") 
+    ISO_URL="https://cdimage.ubuntu.com/$ISO_CODENAME/daily-live/current/$BASE_INPUT_FILE"
+    ;;
+  "desktop")
+    ISO_URL="https://releases.ubuntu.com/$ISO_RELEASE/$BASE_INPUT_FILE"
+    ;;
+  *)
+    ISO_URL=" https://cdimage.ubuntu.com/releases/$ISO_RELEASE/release//$BASE_INPUT_FILE"
+    ;;
+esac
 
 # Handle specific functions
 #

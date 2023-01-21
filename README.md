@@ -11,7 +11,7 @@ used to hang a shield on the shoulder or neck when not in use.
 Version
 -------
 
-Current version: 0.5.6
+Current version: 0.6.0
 
 Introduction
 ------------
@@ -68,13 +68,13 @@ You can get help using the -h or --help switch:
 ```
   Usage: guige.sh [OPTIONS...]
     -A|--codename         Linux release codename (default: jammy)
-    -a|--arch             Architecture (default: amd64)
+    -a|--arch             Architecture (default: arm64)
     -B|--layout           Layout (default: us)
     -b|--getiso           Get base ISO
     -C|--runchrootscript  Run chroot script
     -c|--createiso        Create ISO (perform all steps - e.g. grub, packages, etc)
     -D|--defaults         Use defaults (default: false)
-    -d|--bootdisk         Boot Disk devices (default: sda vda)
+    -d|--bootdisk         Boot Disk devices (default: sda vda nvme0n1)
     -E|--locale           LANGUAGE (default: en_US.UTF-8)
     -e|--lcall            LC_ALL (default: en_US)
     -F|--updatesquashfs   Copy updated squashfs to ISO
@@ -84,7 +84,7 @@ You can get help using the -h or --help switch:
     -H|--hostname:        Hostname (default: ubuntu)
     -h|--help             Help/Usage Information
     -I|--interactive      Interactive mode (will ask for input rather than using command line options or defaults)
-    -i|--inputiso:        Input/base ISO file (default: ubuntu-22.04.1-live-server-amd64.iso)
+    -i|--inputiso:        Input/base ISO file (default: ubuntu-22.04.1-live-server-arm64.iso)
     -J|--hwe              Use HWE kernel (defaults: false)
     -j|--autoinstalldir   Directory where autoinstall config files are stored on ISO (default: autoinstall)
     -K|--kernel:          Kernel package (default: linux-generic)
@@ -96,9 +96,10 @@ You can get help using the -h or --help switch:
     -N|--nic:             Network device (default: eth0)
     -n|--nounmount        Do not unmount loopback filesystems (useful for troubleshooting)
     -O|--ospackages:      List of packages to install (default: zfsutils-linux grub-efi zfs-initramfs net-tools curl wget)
-    -o|--outputiso:       Output ISO file (default: ubuntu-22.04.1-live-server-amd64-autoinstall.iso)
+    -o|--outputiso:       Output ISO file (default: ubuntu-22.04.1-live-server-arm64-autoinstall.iso)
     -P|--password:        Password (default: ubuntu)
     -p|--chrootpackages:  List of packages to add to ISO (default: )
+    -Q|--build:           Type of ISO to build (default: live-server)
     -q|--queryiso         Set information by querying input ISO
     -R|--realname:        Realname (default Ubuntu)
     -r|--installrequired  Install required packages on host (p7zip-full wget xorriso whois squashfs-tools)
@@ -110,13 +111,13 @@ You can get help using the -h or --help switch:
     -u|--unmount          Unmount loopback filesystems
     -V|--version          Display Script Version
     -v|--verbose          Verbose output (default: false)
-    -W|--workdir:         Work directory (default: /home/sysadmin/ubuntu-iso/22.04.1)
+    -W|--workdir:         Work directory (default: /home/ubuntu/ubuntu-iso/22.04.1)
     -w|--checkdirs        Check work directories exist
     -Y|--installpackages  Install packages after OS installation via network (default: )
     -y|--installupdates   Install updates after install (requires network)
     -x|--grubtimeout:     Grub timeout (default: 10)
-    -z|--volumemanager:   Volume Managers (defauls: zfs lvm)
     -Z|--distupgrade      Perform dist-upgrade after OS installation
+    -z|--volumemanager:   Volume Managers (defauls: zfs lvm)
 ```
 
 Todo
