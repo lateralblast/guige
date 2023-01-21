@@ -131,6 +131,7 @@ Things I plan to do:
 - Script cleanup and more flexibility
 - Full support for 20.04 (at the moment LVM based installs are working ZFS is not)
 - Support for modified squashfs being copied to install ISO
+- Run via docker/multipass to enable building VMs easier on non Linux platforms
 
 Thanks
 ------
