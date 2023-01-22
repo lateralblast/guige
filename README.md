@@ -23,22 +23,19 @@ I wanted to be able to automate the process.
 This method doesn't support the older preseed method (i.e. Ubuntu 18.04 or earlier).
 Preseed method could be added reasonably easily I expect, but I've only need for Ubuntu 20.04 or later.
 
-Currently this is WIP and it works for ZFS root only. 
+Currently this is WIP and it works for ZFS (and LVM encapsulated EXT4) root only. 
 It is being converted from a set of shell commands.
 See the Todo section for some future plans/ideas.
 
 In particular this script provides support for creating autoinstall ISO with:
 
-- ZFS root 
+- ZFS (or LVM encapsulated ETX4) root 
 - Adding packages to installation
 
 So that the additional packages added to the install do not require network access,
 the squashfs filesystem is mounted and the packages are installed into it with the download option,
 then the packages are copied to the ISO image that is created.
 Doing it this way also ensures packages dependencies are also handled.
-
-Rather than being directly run, the commands are wrappered and run through
-an execute function so that the script can be used to produce another script.
 
 By default the script will create an autoinstall ISO that uses DHCP,
 and installs packages from the ISO rather than fetching them over the network.
