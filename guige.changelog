@@ -121,3 +121,5 @@
 # Added NVMe drive to device list
 # 0.6.1: Sun 22 Jan 2023 15:45:16 AEDT
 # Added code to install ZFS on first available disk
+# 0.6.2: Mon 23 Jan 2023 09:49:14 AEDT
+# Reverted back to handling commandlne arguments in the shell due to issues with getopt(s)

@@ -1,7 +1,7 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # Name:         guige (Generic Ubuntu ISO Generation Engine)
-# Version:      0.6.1
+# Version:      0.6.2
 # Release:      1
 # License:      CC-BA (Creative Commons By Attribution)
 #               http://creativecommons.org/licenses/by/4.0/legalcode
@@ -15,6 +15,7 @@
 
 # Default variables
 
+SCRIPT_NAME="guige"
 CURRENT_ISO_RELEASE="22.04.1"
 CURRENT_ISO_CODENAME="jammy"
 CURRENT_ISO_ARCH="amd64"
@@ -72,6 +73,7 @@ DO_INSTALL_ISO_UPDATES="false"
 DO_ISO_DIST_UPGRADE="false"
 DO_ISO_SQUASHFS_UPDATE="false"
 DO_ISO_QUERY="false"
+DO_DOCKER="false"
 
 # Get OS name
 
@@ -158,6 +160,7 @@ SCRIPT_VERSION=$( cd $START_PATH ; cat $0 | grep '^# Version' | awk '{print $3}'
 print_help () {
   cat <<-HELP
   Usage: ${0##*/} [OPTIONS...]
+    -1|--docker           Use docker to build ISO
     -A|--codename         Linux release codename (default: $DEFAULT_ISO_CODENAME)
     -a|--arch             Architecture (default: $DEFAULT_ISO_ARCH)
     -B|--layout           Layout (default: $DEFAULT_ISO_LAYOUT)
@@ -229,6 +232,53 @@ handle_output () {
       fi
     fi
   fi
+}
+
+# Function: Create docker config
+#
+# Create a docker config so we can run this from a non Linux platform
+#
+# docker-compose.yml
+#
+# version: "3"
+#
+# services:
+#  ostrich:
+#    build:
+#      context: .
+#      dockerfile: Dockerfile
+#    image: guige-ubuntu-amd64
+#    container_name: ostrich
+#    entrypoint: /bin/bash
+#    working_dir: /root
+#
+# Dockerfile
+#
+# FROM ubuntu:22.04
+# RUN apt-get update && apt-get install -y p7zip-full wget xorriso whois squashfs-tools
+
+create_docker_config () {
+  DOCKER_FILE="$WORK_DIR/Dockerfile"
+  COMPOSE_FILE="$WORK_DIR/docker-compose.yml"
+  for DOCKER_ARCH in amd64 arm64; do
+    if ! [ -d "$WORK_DIR/$DOCKER_ARCH" ]; then
+      mkdir $WORK_DIR/$DOCKER_ARCH
+    fi
+    echo "version: \"3\"" > $WORK_DIR/$DOCKER_ARCH/docker-compose.yml
+    echo "" >> $WORK_DIR/$DOCKER_ARCH/docker-compose.yml
+    echo "services:" >> $WORK_DIR/$DOCKER_ARCH/docker-compose.yml
+    echo "  $SCRIPT_NAME\-$DOCKER_ARCH" >> $WORK_DIR/$DOCKER_ARCH/docker-compose.yml
+    echo "    build:" >> $WORK_DIR/$DOCKER_ARCH/docker-compose.yml
+    echo "      context: ." >> $WORK_DIR/$DOCKER_ARCH/docker-compose.yml
+    echo "      dockerfile: Dockerfile" >> $WORK_DIR/$DOCKER_ARCH/docker-compose.yml
+    echo "    image: $SCRIPT_NAME\-$DOCKER_ARCH" >> $WORK_DIR/$DOCKER_ARCH/docker-compose.yml
+    echo "    container_name: $SCRIPT_NAME\-$DOCKER_ARCH" >> $WORK_DIR/$DOCKER_ARCH/docker-compose.yml
+    echo "    entrypoint: /bin/bash" >> $WORK_DIR/$DOCKER_ARCH/docker-compose.yml
+    echo "    working_dir: /root" >> $WORK_DIR/$DOCKER_ARCH/docker-compose.yml
+    echo "    platform: linux/$DOCKER_ARCH" >> $WORK_DIR/$DOCKER_ARCH/docker-compose.yml
+    echo "FROM ubuntu:22.04" > $WORK_DIR/$DOCKER_ARCH/Dockerfile
+    echo "RUN apt-get update && apt-get install -y $REQUIRED_PACKAGES" >> $WORK_DIR/$DOCKER_ARCH/Dockerfile
+  done
 }
 
 # Function: Get info from iso
@@ -1326,22 +1376,22 @@ prepare_autoinstall_iso () {
 
 # Handle command line arguments
 
-PARAMS="$(getopt -o A:aB:bCcDd:E:e:FfG:hIi:Jj:K:k:L:lM:m:N:nO:o:P:p:Q:qR:rS:T:tsuVvW:wXx:YyZz: -l arch:,bootdisk:,build:,checkdirs,chrootpackages:,codename:,createiso,delete,deleteall,defaults,distupgrade,getiso,grubmenu:,help,hwe,inputiso:,installmount:,installpackages,installrequired,installtarget:,installupdates,interactive,isovolid:,justiso,kernel:,kernelargs:,lang:,layout:,lcall:,nic:,nounmount,ospackages:,outputiso:,password:,queryiso,realname:,release:,runchrootscript,staticip,swapsize:,testmode,timezone:,unmount,updatesquashfs,verbose,version,workdir: --name "$(basename "$0")" -- "$@")"
-
 if [ $? -ne 0 ]; then
   print_help
 fi
 
-eval set -- "$PARAMS"
-unset PARAMS 
-
-while true; do
+while test $# -gt 0
+do
   case $1 in
+    -1|--docker)
+      DO_DOCKER="true"
+      shift
+      ;;
     -A|--codename)
       ISO_CODENAME="$2"
       shift 2
       ;;
-    -a|--arch)
+    a|--arch)
       ISO_ARCH="$2"
       shift 2
       ;;
@@ -1403,7 +1453,7 @@ while true; do
       ISO_HOSTNAME="$2"
       shift 2
       ;;
-    -h|--help)
+    h|--help)
       print_help 
       exit
       ;;
@@ -1411,7 +1461,7 @@ while true; do
       INTERACTIVE_MODE="true"
       shift
       ;;
-    -i|--inputiso)
+    i|--inputiso)
       INPUT_FILE="$2"
       shift 2
       ;;
@@ -1515,6 +1565,7 @@ while true; do
       ;;
     -V|--version)
       echo "$SCRIPT_VERSION"
+      shift
       exit
       ;;
     -v|--verbose)
@@ -1545,7 +1596,7 @@ while true; do
       DO_INSTALL_ISO_UPDATES="true"
       shift
       ;;
-    -Z|--distupgrade)
+    -z|--distupgrade)
       DO_ISO_DIST_UPGRADE="true"
       shift
       ;;
@@ -1731,6 +1782,12 @@ case $ISO_BUILD_TYPE in
     ISO_URL=" https://cdimage.ubuntu.com/releases/$ISO_RELEASE/release/$BASE_INPUT_FILE"
     ;;
 esac
+
+if [ "$DO_DOCKER" = "true" ]; then
+  create_docker_config
+  DO_PRINT_HELP="false"
+  exit
+fi
 
 # Handle specific functions
 #
