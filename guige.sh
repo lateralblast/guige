@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Name:         guige (Generic Ubuntu ISO Generation Engine)
-# Version:      0.6.0
+# Version:      0.6.1
 # Release:      1
 # License:      CC-BA (Creative Commons By Attribution)
 #               http://creativecommons.org/licenses/by/4.0/legalcode
@@ -32,7 +32,7 @@ DEFAULT_ISO_NETMASK="255.255.255.0"
 DEFAULT_ISO_GATEWAY="192.168.1.254"
 DEFAULT_ISO_SWAPSIZE="2G"
 DEFAULT_ISO_MENU="0"
-DEFAULT_ISO_DEVICES="sda vda nvme0n1"
+DEFAULT_ISO_DEVICES="ROOT_DEV"
 DEFAULT_ISO_VOLMGRS="zfs lvm"
 DEFAULT_ISO_GRUB_MENU="0"
 DEFAULT_ISO_GRUB_TIMEOUT="10"
@@ -829,11 +829,13 @@ prepare_autoinstall_iso () {
   handle_output "# Create autoinstall files"
   get_password_crypt $ISO_PASSWORD
   PACKAGE_DIR="$ISO_SOURCE_DIR/$ISO_AUTOINSTALL_DIR/packages"
+  SCRIPT_DIR="$ISO_SOURCE_DIR/$ISO_AUTOINSTALL_DIR/scripts"
   CONFIG_DIR="$ISO_SOURCE_DIR/$ISO_AUTOINSTALL_DIR/configs"
   BASE_INPUT_FILE=$( basename $INPUT_FILE )
   handle_output "7z -y x $WORK_DIR/$BASE_INPUT_FILE -o$ISO_SOURCE_DIR"
   handle_output "rm -rf $WORK_DIR/BOOT"
   handle_output "mkdir -p $PACKAGE_DIR"
+  handle_output "mkdir -p $SCRIPT_DIR"
   handle_output "cp $ISO_NEW_DIR/custom/var/cache/apt/archives/*.deb $PACKAGE_DIR"
   for ISO_DEVICE in $ISO_DEVICES; do
     for ISO_VOLMGR in $ISO_VOLMGRS; do
@@ -844,6 +846,7 @@ prepare_autoinstall_iso () {
   if [ "$TEST_MODE" = "false" ]; then
     7z -y x $WORK_DIR/$BASE_INPUT_FILE -o$ISO_SOURCE_DIR
     mkdir -p $PACKAGE_DIR
+    mkdir -p $SCRIPT_DIR
     for ISO_DEVICE in $ISO_DEVICES; do
       for ISO_VOLMGR in $ISO_VOLMGRS; do
         mkdir -p $CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE
@@ -890,7 +893,11 @@ prepare_autoinstall_iso () {
     handle_output "echo \"set menu_color_highlight=black/light-gray\" >> $ISO_SOURCE_DIR/boot/grub/grub.cfg"
     for ISO_DEVICE in $ISO_DEVICES; do
       for ISO_VOLMGR in $ISO_VOLMGRS; do
-        handle_output "echo \"menuentry '$ISO_VOLID - $ISO_VOLMGR/$ISO_DEVICE - $ISO_KERNEL_ARGS' {\" >> $ISO_SOURCE_DIR/boot/grub/grub.cfg"
+        if [ "$ISO_DEVICE" = "ROOT_DEV" ]; then
+          handle_output "echo \"menuentry '$ISO_VOLID - $ISO_VOLMGR on first disk - $ISO_KERNEL_ARGS' {\" >> $ISO_SOURCE_DIR/boot/grub/grub.cfg"
+        else
+          handle_output "echo \"menuentry '$ISO_VOLID - $ISO_VOLMGR on $ISO_DEVICE - $ISO_KERNEL_ARGS' {\" >> $ISO_SOURCE_DIR/boot/grub/grub.cfg"
+        fi
         handle_output "echo \"  set gfxpayload=keep\" >> $ISO_SOURCE_DIR/boot/grub/grub.cfg"
         if [ "$ISO_HWE_KERNEL" = "true" ]; then
           handle_output "echo \"  linux   /casper/hwe-vmlinuz $ISO_KERNEL_ARGS quiet autoinstall ds=nocloud\;s=/$ISO_INSTALL_MOUNT/$ISO_AUTOINSTALL_DIR/configs/$ISO_VOLMGR/$ISO_DEVICE/  ---\" >> $ISO_SOURCE_DIR/boot/grub/grub.cfg"
@@ -924,7 +931,11 @@ prepare_autoinstall_iso () {
       for ISO_DEVICE in $ISO_DEVICES; do
         for ISO_VOLMGR in $ISO_VOLMGRS; do
           handle_output "echo \"label $COUNTER\" >> $ISO_SOURCE_DIR/isolinux/txt.cfg"
-          handle_output "echo \"  menu label ^$ISO_VOLID - $ISO_VOLMGR/$ISO_DEVICE - $ISO_KERNEL_ARGS\" >> $ISO_SOURCE_DIR/isolinux/txt.cfg"
+          if [ "$ISO_DEVICE" = "ROOT_DEV" ]; then
+            handle_output "echo \"  menu label ^$ISO_VOLID - $ISO_VOLMGR on first disk - $ISO_KERNEL_ARGS\" >> $ISO_SOURCE_DIR/isolinux/txt.cfg"
+          else
+            handle_output "echo \"  menu label ^$ISO_VOLID - $ISO_VOLMGR on $ISO_DEVICE - $ISO_KERNEL_ARGS\" >> $ISO_SOURCE_DIR/isolinux/txt.cfg"
+          fi
           if [ "$ISO_HWE_KERNEL" = "true" ]; then
             handle_output "echo \"  kernel /casper/hwe-vmlinuz" >> $ISO_SOURCE_DIR/isolinux/txt.cfg\"
             handle_output "echo \"  append  initrd=/casper/hwe-initrd $ISO_KERNEL_ARGS quiet autoinstall fsck.mode=skip ds=nocloud;s=$ISO_INSTALL_MOUNT/$ISO_AUTOINSTALL_DIR/configs/$ISO_VOLMGR/$ISO_DEVICE/  ---\" >> $ISO_SOURCE_DIR/isolinux/txt.cfg"
@@ -947,7 +958,11 @@ prepare_autoinstall_iso () {
         for ISO_DEVICE in $ISO_DEVICES; do
           for ISO_VOLMGR in $ISO_VOLMGRS; do
             echo "label $COUNTER" >> $ISO_SOURCE_DIR/isolinux/txt.cfg
-            echo "  menu label ^$ISO_VOLID - $ISO_VOLMGR/$ISO_DEVICE - $ISO_KERNEL_ARGS" >> $ISO_SOURCE_DIR/isolinux/txt.cfg
+            if [ "$ISO_DEVICE" = "ROOT_DEV" ]; then
+              echo "  menu label ^$ISO_VOLID - $ISO_VOLMGR on first disk - $ISO_KERNEL_ARGS" >> $ISO_SOURCE_DIR/isolinux/txt.cfg
+            else
+              echo "  menu label ^$ISO_VOLID - $ISO_VOLMGR on $ISO_DEVICE - $ISO_KERNEL_ARGS" >> $ISO_SOURCE_DIR/isolinux/txt.cfg
+            fi
             if [ "$ISO_HWE_KERNEL" = "true" ]; then
               echo "  kernel /casper/hwe-vmlinuz" >> $ISO_SOURCE_DIR/isolinux/txt.cfg
               echo "  append  initrd=/casper/hwe-initrd $ISO_KERNEL_ARGS quiet autoinstall fsck.mode=skip ds=nocloud;s=$ISO_INSTALL_MOUNT/$ISO_AUTOINSTALL_DIR/configs/$ISO_VOLMGR/$ISO_DEVICE/  ---" >> $ISO_SOURCE_DIR/isolinux/txt.cfg
@@ -972,7 +987,11 @@ prepare_autoinstall_iso () {
       echo "loadfont unicode" >> $ISO_SOURCE_DIR/boot/grub/grub.cfg
       for ISO_DEVICE in $ISO_DEVICES; do
         for ISO_VOLMGR in $ISO_VOLMGRS; do
-          echo "menuentry '$ISO_VOLID - $ISO_VOLMGR/$ISO_DEVICE - $ISO_KERNEL_ARGS' {" >> $ISO_SOURCE_DIR/boot/grub/grub.cfg
+          if [ "$ISO_DEVICE" = "ROOT_DEV" ]; then
+            echo "menuentry '$ISO_VOLID - $ISO_VOLMGR on first disk - $ISO_KERNEL_ARGS' {" >> $ISO_SOURCE_DIR/boot/grub/grub.cfg
+          else
+            echo "menuentry '$ISO_VOLID - $ISO_VOLMGR on $ISO_DEVICE - $ISO_KERNEL_ARGS' {" >> $ISO_SOURCE_DIR/boot/grub/grub.cfg
+          fi
           echo "  set gfxpayload=keep" >> $ISO_SOURCE_DIR/boot/grub/grub.cfg
           if [ "$ISO_HWE_KERNEL" = "true" ]; then
             echo "  linux   /casper/hwe-vmlinuz $ISO_KERNEL_ARGS quiet autoinstall ds=nocloud\;s=$ISO_INSTALL_MOUNT/$ISO_AUTOINSTALL_DIR/configs/$ISO_VOLMGR/$ISO_DEVICE/  ---" >> $ISO_SOURCE_DIR/boot/grub/grub.cfg
@@ -1135,6 +1154,9 @@ prepare_autoinstall_iso () {
         fi
         handle_output "echo \"  early-commands:\" >> $CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
         handle_output "echo \"    - \\\"sudo dpkg --auto-deconfigure --force-depends -i $ISO_INSTALL_MOUNT/$ISO_AUTOINSTALL_DIR/packages/*.deb\\\"\" >> $CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
+        if [ "$ISO_VOLMGR" = "zfs" ]; then
+          handle_output "echo \"    - \\\"sed -i \\\\\"s/ROOT_DEV/\$(lsblk -x TYPE|grep disk |head -1 |awk '{print \$1}')/g\\\\\" /autoinstall.yaml\\\"\" >> $CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
+        fi
         handle_output "echo \"  late-commands:\" >> $CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
         handle_output "echo \"    - \\\"echo 'GRUB_CMDLINE_LINUX=\\\\\\\"$ISO_KERNEL_ARGS\\\\\\\"' >> $ISO_TARGET_MOUNT/etc/default/grub\\\"\" >> $CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
         handle_output "echo \"    - \\\"curtin in-target --target=$ISO_TARGET_MOUNT -- /usr/sbin/update-grub\\\"\" >> $CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
@@ -1275,10 +1297,11 @@ prepare_autoinstall_iso () {
             echo "    layout:" >> $CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data
             echo "      name: lvm" >> $CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data
           fi
+          echo "  early-commands:" >> $CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data
           if [ "$ISO_VOLMGR" = "zfs" ]; then
-            echo "  early-commands:" >> $CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data
-            echo "    - \"dpkg --auto-deconfigure --force-depends -i $ISO_INSTALL_MOUNT/$ISO_AUTOINSTALL_DIR/packages/*.deb\"" >> $CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data
+            echo "    - \"sed -i \\\"s/ROOT_DEV/\$(lsblk -x TYPE|grep disk |head -1 |awk '{print \$1}')/g\\\" /autoinstall.yaml\"" >> $CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data
           fi
+          echo "    - \"dpkg --auto-deconfigure --force-depends -i $ISO_INSTALL_MOUNT/$ISO_AUTOINSTALL_DIR/packages/*.deb\"" >> $CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data
           echo "  late-commands:" >> $CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data
           echo "    - \"echo 'GRUB_CMDLINE_LINUX=\\\"$ISO_KERNEL_ARGS\\\"' >> $ISO_TARGET_MOUNT/etc/default/grub\"" >> $CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data
           echo "    - \"curtin in-target --target=$ISO_TARGET_MOUNT -- update-grub\"" >> $CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data
@@ -1651,6 +1674,7 @@ fi
 if [ "$INPUT_FILE" = "" ] || [ "$DEFAULTS_MODE" = "true" ]; then
   INPUT_FILE="$DEFAULT_INPUT_FILE"
 fi
+
 if [ "$DO_ISO_QUERY" = "true" ]; then
   get_info_from_iso
 else
@@ -1704,7 +1728,7 @@ case $ISO_BUILD_TYPE in
     ISO_URL="https://releases.ubuntu.com/$ISO_RELEASE/$BASE_INPUT_FILE"
     ;;
   *)
-    ISO_URL=" https://cdimage.ubuntu.com/releases/$ISO_RELEASE/release//$BASE_INPUT_FILE"
+    ISO_URL=" https://cdimage.ubuntu.com/releases/$ISO_RELEASE/release/$BASE_INPUT_FILE"
     ;;
 esac
 

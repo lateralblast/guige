@@ -11,7 +11,7 @@ used to hang a shield on the shoulder or neck when not in use.
 Version
 -------
 
-Current version: 0.6.0
+Current version: 0.6.1
 
 Introduction
 ------------
@@ -44,12 +44,8 @@ By default the script will create an autoinstall ISO that uses DHCP,
 and installs packages from the ISO rather than fetching them over the network.
 
 The current default install options in the grub menu are:
-- ZFS on /dev/sda (e.g. Physical Machine or early versions of VMware)
-- ZFS on /dev/vda (e.g. KVM)
-- ZFS on /dev/nvme0n1 (e,g. M2 SSDs or later versions of VMware)
-- LVM on /dev/sda (e.g. Physical Machine or early versions of VMware)
-- LVM on /dev/vda (e.g. KVM)
-- LVM on /dev/nvme0n1 (e,g. M2 SSDs or later versions of VMware)
+- ZFS on first available disk
+- LVM on first available disk
 
 These can be modified via command line arguments.
 
