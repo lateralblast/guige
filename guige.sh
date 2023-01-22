@@ -1391,7 +1391,7 @@ do
       ISO_CODENAME="$2"
       shift 2
       ;;
-    a|--arch)
+    -a|--arch)
       ISO_ARCH="$2"
       shift 2
       ;;
@@ -1453,7 +1453,7 @@ do
       ISO_HOSTNAME="$2"
       shift 2
       ;;
-    h|--help)
+    -h|--help)
       print_help 
       exit
       ;;
