@@ -1461,7 +1461,7 @@ do
       INTERACTIVE_MODE="true"
       shift
       ;;
-    i|--inputiso)
+    -i|--inputiso)
       INPUT_FILE="$2"
       shift 2
       ;;
