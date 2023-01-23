@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Name:         guige (Generic Ubuntu ISO Generation Engine)
-# Version:      0.6.2
+# Version:      0.6.3
 # Release:      1
 # License:      CC-BA (Creative Commons By Attribution)
 #               http://creativecommons.org/licenses/by/4.0/legalcode
@@ -17,6 +17,7 @@
 
 SCRIPT_NAME="guige"
 CURRENT_ISO_RELEASE="22.04.1"
+CURRENT_DOCKER_UBUNTU_RELEASE="22.04"
 CURRENT_ISO_CODENAME="jammy"
 CURRENT_ISO_ARCH="amd64"
 CURRENT_ISO_OSNAME="Ubuntu"
@@ -43,6 +44,7 @@ DEFAULT_ISO_LAYOUT="us"
 DEFAULT_ISO_BUILD_TYPE="live-server"
 DEFAULT_ISO_PACKAGES="zfsutils-linux grub-efi zfs-initramfs net-tools curl wget"
 REQUIRED_PACKAGES="p7zip-full wget xorriso whois squashfs-tools"
+DEFAULT_DOCKER_ARCH="amd64 arm64"
 
 # Default flags
 
@@ -121,6 +123,18 @@ if [ -f "/usr/bin/lsb_release" ]; then
   fi
 else
   DEFAULT_ISO_CODENAME="$CURRENT_ISO_CODENAME"
+fi
+
+# Check default arches for Docker
+
+if [ "$( uname -o )" = "Darwin" ]; then
+  if [ "$( uname -m )" = "arm64" ]; then
+    DEFAULT_DOCKER_ARCH="amd64 arm64"
+  else
+    DEFAULT_DOCKER_ARCH="amd64"
+  fi
+else
+  DEFAULT_DOCKER_ARCH="amd64"
 fi
 
 # Default work directories
@@ -258,27 +272,51 @@ handle_output () {
 # RUN apt-get update && apt-get install -y p7zip-full wget xorriso whois squashfs-tools
 
 create_docker_config () {
-  DOCKER_FILE="$WORK_DIR/Dockerfile"
-  COMPOSE_FILE="$WORK_DIR/docker-compose.yml"
-  for DOCKER_ARCH in amd64 arm64; do
-    if ! [ -d "$WORK_DIR/$DOCKER_ARCH" ]; then
-      mkdir $WORK_DIR/$DOCKER_ARCH
+  handle_output "# Create Docker configs" TEXT
+  for DIR_ARCH in $DOCKER_ARCH; do
+    if ! [ -d "$WORK_DIR/$DIR_ARCH" ]; then
+      handle_output "mkdir $WORK_DIR/$DIR_ARCH"
+      mkdir $WORK_DIR/$DIR_ARCH
     fi
-    echo "version: \"3\"" > $WORK_DIR/$DOCKER_ARCH/docker-compose.yml
-    echo "" >> $WORK_DIR/$DOCKER_ARCH/docker-compose.yml
-    echo "services:" >> $WORK_DIR/$DOCKER_ARCH/docker-compose.yml
-    echo "  $SCRIPT_NAME\-$DOCKER_ARCH" >> $WORK_DIR/$DOCKER_ARCH/docker-compose.yml
-    echo "    build:" >> $WORK_DIR/$DOCKER_ARCH/docker-compose.yml
-    echo "      context: ." >> $WORK_DIR/$DOCKER_ARCH/docker-compose.yml
-    echo "      dockerfile: Dockerfile" >> $WORK_DIR/$DOCKER_ARCH/docker-compose.yml
-    echo "    image: $SCRIPT_NAME\-$DOCKER_ARCH" >> $WORK_DIR/$DOCKER_ARCH/docker-compose.yml
-    echo "    container_name: $SCRIPT_NAME\-$DOCKER_ARCH" >> $WORK_DIR/$DOCKER_ARCH/docker-compose.yml
-    echo "    entrypoint: /bin/bash" >> $WORK_DIR/$DOCKER_ARCH/docker-compose.yml
-    echo "    working_dir: /root" >> $WORK_DIR/$DOCKER_ARCH/docker-compose.yml
-    echo "    platform: linux/$DOCKER_ARCH" >> $WORK_DIR/$DOCKER_ARCH/docker-compose.yml
-    echo "FROM ubuntu:22.04" > $WORK_DIR/$DOCKER_ARCH/Dockerfile
-    echo "RUN apt-get update && apt-get install -y $REQUIRED_PACKAGES" >> $WORK_DIR/$DOCKER_ARCH/Dockerfile
+    handle_output "# Create Docker config $WORK_DIR/$DIR_ARCH/docker-compose.yml" TEXT
+    handle_output "echo \"version: \\\"3\\\"\" > $WORK_DIR/$DIR_ARCH/docker-compose.yml"
+    handle_output "echo \"\" >> $WORK_DIR/$DIR_ARCH/docker-compose.yml"
+    handle_output "echo \"services:\" >> $WORK_DIR/$DIR_ARCH/docker-compose.yml"
+    handle_output "echo \"  $SCRIPT_NAME-$DIR_ARCH:\" >> $WORK_DIR/$DOCKER_ARCH/docker-compose.yml"
+    handle_output "echo \"    build:\" >> $WORK_DIR/$DIR_ARCH/docker-compose.yml"
+    handle_output "echo \"      context: .\" >> $WORK_DIR/$DOCKER_ARCH/docker-compose.yml"
+    handle_output "echo \"      dockerfile: Dockerfile\" >> $WORK_DIR/$DIR_ARCH/docker-compose.yml"
+    handle_output "echo \"    image: $SCRIPT_NAME-$DIR_ARCH\" >> $WORK_DIR/$DIR_ARCH/docker-compose.yml"
+    handle_output "echo \"    container_name: $SCRIPT_NAME-$DIR_ARCH\" >> $WORK_DIR/$DIR_ARCH/docker-compose.yml"
+    handle_output "echo \"    entrypoint: /bin/bash\" >> $WORK_DIR/$DIR_ARCH/docker-compose.yml"
+    handle_output "echo \"    working_dir: /root\" >> $WORK_DIR/$DIR_ARCH/docker-compose.yml"
+    handle_output "echo \"    platform: linux/$DIR_ARCH\" >> $WORK_DIR/$DIR_ARCH/docker-compose.yml"
+    handle_output "# Create Docker config $WORK_DIR/$DIR_ARCH/Dockerfile" TEXT
+    handle_output "echo \"FROM ubuntu:$CURRENT_DOCKER_UBUNTU_RELEASE\" > $WORK_DIR/$DIR_ARCH/Dockerfile"
+    handle_output "echo \"RUN apt-get update && apt-get install -y $REQUIRED_PACKAGES\" >> $WORK_DIR/$DIR_ARCH/Dockerfile"
+    if [ "$TEST_MODE" = "false" ]; then
+      echo "version: \"3\"" > $WORK_DIR/$DIR_ARCH/docker-compose.yml
+      echo "" >> $WORK_DIR/$DIR_ARCH/docker-compose.yml
+      echo "services:" >> $WORK_DIR/$DIR_ARCH/docker-compose.yml
+      echo "  $SCRIPT_NAME-$DIR_ARCH:" >> $WORK_DIR/$DIR_ARCH/docker-compose.yml
+      echo "    build:" >> $WORK_DIR/$DIR_ARCH/docker-compose.yml
+      echo "      context: ." >> $WORK_DIR/$DIR_ARCH/docker-compose.yml
+      echo "      dockerfile: Dockerfile" >> $WORK_DIR/$DIR_ARCH/docker-compose.yml
+      echo "    image: $SCRIPT_NAME-$DIR_ARCH" >> $WORK_DIR/$DIR_ARCH/docker-compose.yml
+      echo "    container_name: $SCRIPT_NAME-$DIR_ARCH" >> $WORK_DIR/$DIR_ARCH/docker-compose.yml
+      echo "    entrypoint: /bin/bash" >> $WORK_DIR/$DIR_ARCH/docker-compose.yml
+      echo "    working_dir: /root" >> $WORK_DIR/$DIR_ARCH/docker-compose.yml
+      echo "    platform: linux/$DIR_ARCH" >> $WORK_DIR/$DIR_ARCH/docker-compose.yml
+      echo "FROM ubuntu:$CURRENT_DOCKER_UBUNTU_RELEASE" > $WORK_DIR/$DIR_ARCH/Dockerfile
+      echo "RUN apt-get update && apt-get install -y $REQUIRED_PACKAGES" >> $WORK_DIR/$DIR_ARCH/Dockerfile
+    fi
   done
+}
+
+# Function: Build docker config
+
+build_docker_config () {
+  handle_output "Build Docker config(s)"
 }
 
 # Function: Get info from iso
@@ -1631,6 +1669,9 @@ fi
 
 if [ "$ISO_ARCH" = "" ] || [ "$DEFAULTS_MODE" = "true" ]; then
   ISO_ARCH="$DEFAULT_ISO_ARCH"
+  DOCKER_ARCH="$DEFAULT_DOCKER_ARCH"
+else
+  DOCKER_ARCH="$ISO_ARCH"
 fi
 if [ "$ISO_RELEASE" = "" ] || [ "$DEFAULTS_MODE" = "true" ]; then
   ISO_RELEASE="$DEFAULT_ISO_RELEASE"
@@ -1784,6 +1825,7 @@ case $ISO_BUILD_TYPE in
 esac
 
 if [ "$DO_DOCKER" = "true" ]; then
+  check_work_dir
   create_docker_config
   DO_PRINT_HELP="false"
   exit
