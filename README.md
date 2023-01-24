@@ -65,6 +65,9 @@ You can get help using the -h or --help switch:
 
 ```
   Usage: guige.sh [OPTIONS...]
+    -1|--docker           Use docker to build ISO
+    -2|--checkdocker      Check docker (default: false)
+    -3|--oldworkdir       Used to pass external work directory to docker
     -A|--codename         Linux release codename (default: jammy)
     -a|--arch             Architecture (default: arm64)
     -B|--layout           Layout (default: us)
@@ -72,7 +75,7 @@ You can get help using the -h or --help switch:
     -C|--runchrootscript  Run chroot script
     -c|--createiso        Create ISO (perform all steps - e.g. grub, packages, etc)
     -D|--defaults         Use defaults (default: false)
-    -d|--bootdisk         Boot Disk devices (default: sda vda nvme0n1)
+    -d|--bootdisk         Boot Disk devices (default: ROOT_DEV)
     -E|--locale           LANGUAGE (default: en_US.UTF-8)
     -e|--lcall            LC_ALL (default: en_US)
     -F|--updatesquashfs   Copy updated squashfs to ISO
@@ -93,14 +96,14 @@ You can get help using the -h or --help switch:
     -m|--installmount     Where the install mounts the CD during install (default: /cdrom)
     -N|--nic:             Network device (default: eth0)
     -n|--nounmount        Do not unmount loopback filesystems (useful for troubleshooting)
-    -O|--ospackages:      List of packages to install (default: zfsutils-linux grub-efi zfs-initramfs net-tools curl wget)
+    -O|--ospackages:      List of packages to install (default: zfsutils-linux grub-efi zfs-initramfs net-tools curl wget sudo file rsync)
     -o|--outputiso:       Output ISO file (default: ubuntu-22.04.1-live-server-arm64-autoinstall.iso)
     -P|--password:        Password (default: ubuntu)
     -p|--chrootpackages:  List of packages to add to ISO (default: )
     -Q|--build:           Type of ISO to build (default: live-server)
     -q|--queryiso         Set information by querying input ISO
     -R|--realname:        Realname (default Ubuntu)
-    -r|--installrequired  Install required packages on host (p7zip-full wget xorriso whois squashfs-tools)
+    -r|--installrequired  Install required packages on host (p7zip-full wget xorriso whois squashfs-tools sudo file rsync)
     -S|--swapsize:        Swap size (default 2G)
     -s|--staticip         Static IP configuration (default DHCP)
     -T|--timezone:        Timezone (default: Australia/Melbourne)
@@ -109,13 +112,12 @@ You can get help using the -h or --help switch:
     -u|--unmount          Unmount loopback filesystems
     -V|--version          Display Script Version
     -v|--verbose          Verbose output (default: false)
-    -W|--workdir:         Work directory (default: /home/ubuntu/ubuntu-iso/22.04.1)
+    -W|--workdir:         Work directory (default: /Users/spindler/ubuntu-iso/22.04.1)
     -w|--checkdirs        Check work directories exist
     -Y|--installpackages  Install packages after OS installation via network (default: )
     -y|--installupdates   Install updates after install (requires network)
     -x|--grubtimeout:     Grub timeout (default: 10)
-    -Z|--distupgrade      Perform dist-upgrade after OS installation
-    -z|--volumemanager:   Volume Managers (defauls: zfs lvm)
+    -Z|--distupgrade      Perform dist-upgrade after OS installatio
 ```
 
 Todo

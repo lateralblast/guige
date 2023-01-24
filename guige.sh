@@ -180,6 +180,7 @@ print_help () {
   Usage: ${0##*/} [OPTIONS...]
     -1|--docker           Use docker to build ISO
     -2|--checkdocker      Check docker (default: $DO_CHECK_DOCKER)
+    -3|--oldworkdir       Used to pass external work directory to docker
     -A|--codename         Linux release codename (default: $DEFAULT_ISO_CODENAME)
     -a|--arch             Architecture (default: $DEFAULT_ISO_ARCH)
     -B|--layout           Layout (default: $DEFAULT_ISO_LAYOUT)
