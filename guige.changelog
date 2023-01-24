@@ -125,3 +125,5 @@
 # Reverted back to handling commandlne arguments in the shell due to issues with getopt(s)
 # 0.6.3: Mon 23 Jan 2023 18:08:58 AEDT
 # Added code to create docker config files
+# 0.6.4: Tue 24 Jan 2023 12:05:32 AEDT
+# More initial docker support
