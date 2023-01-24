@@ -20,6 +20,9 @@ This script provides a wrapper for the Ubuntu ISO creation process.
 I wrote this as I didn't want to have to fire up Cubic or a similar GUI tool to create an ISO.
 I wanted to be able to automate the process.
 
+This script also supports creating ISOs via docker for non Linux platforms.
+On Apple Silicon support for creating arm64 and amd64 is available by using the platform flag of docker.
+
 This method doesn't support the older preseed method (i.e. Ubuntu 18.04 or earlier).
 Preseed method could be added reasonably easily I expect, but I've only need for Ubuntu 20.04 or later.
 
@@ -120,11 +123,9 @@ Todo
 
 Things I plan to do:
 
-- Support for nightly build images etc
-- Script cleanup and more flexibility
 - Full support for 20.04 (at the moment LVM based installs are working ZFS is not)
 - Support for modified squashfs being copied to install ISO
-- Run via docker/multipass to enable building VMs easier on non Linux platforms
+- Run via multipass to enable building VMs easier on non Linux platforms
 
 Thanks
 ------
@@ -163,6 +164,12 @@ Run the previous command but in test mode (don't execute commands) to produce ou
 
 ```
 ./guide.sh --createiso --testmode
+```
+
+Use docker to create amd64 ISOs on Apple Silicon:
+
+```
+./guige.sh --docker --createiso --arch amd64
 ```
 
 Just do autoinstall config and create ISO (assumes an ISO has been previously create and we are just updating the autoinstall config), enabling updates and installing additional packages (requires networkduring OS install)
