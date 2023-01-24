@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Name:         guige (Generic Ubuntu ISO Generation Engine)
-# Version:      0.6.4
+# Version:      0.6.6
 # Release:      1
 # License:      CC-BA (Creative Commons By Attribution)
 #               http://creativecommons.org/licenses/by/4.0/legalcode
@@ -15,7 +15,9 @@
 
 SCRIPT_ARGS="$@"
 SCRIPT_FILE="$0"
+START_PATH=$( pwd )
 SCRIPT_BIN=$( basename $0 |sed "s/^\.\///g")
+SCRIPT_FILE="$START_PATH/$SCRIPT_BIN"
 
 # Default variables
 
@@ -46,8 +48,8 @@ DEFAULT_ISO_LOCALE="en_US.UTF-8"
 DEFAULT_ISO_LC_ALL="en_US"
 DEFAULT_ISO_LAYOUT="us"
 DEFAULT_ISO_BUILD_TYPE="live-server"
-DEFAULT_ISO_PACKAGES="zfsutils-linux grub-efi zfs-initramfs net-tools curl wget"
-REQUIRED_PACKAGES="p7zip-full wget xorriso whois squashfs-tools"
+DEFAULT_ISO_PACKAGES="zfsutils-linux grub-efi zfs-initramfs net-tools curl wget sudo file rsync"
+REQUIRED_PACKAGES="p7zip-full wget xorriso whois squashfs-tools sudo file rsync"
 DEFAULT_DOCKER_ARCH="amd64 arm64"
 
 # Default flags
@@ -62,6 +64,7 @@ DEFAULTS_MODE="false"
 INTERACTIVE_MODE="false"
 ISO_HWE_KERNEL="false"
 DO_DAILY_ISO="false"
+DO_CHECK_DOCKER="false"
 
 # Set function variables
 
@@ -155,8 +158,8 @@ DEFAULT_ISO_INSTALL_MOUNT="/cdrom"
 
 # Default file names/locations
 
-DEFAULT_INPUT_FILE="$DEFAULT_WORK_DIR/ubuntu-$DEFAULT_ISO_RELEASE-live-server-$DEFAULT_ISO_ARCH.iso"
-DEFAULT_OUTPUT_FILE="$DEFAULT_WORK_DIR/ubuntu-$DEFAULT_ISO_RELEASE-live-server-$DEFAULT_ISO_ARCH-autoinstall.iso"
+DEFAULT_INPUT_FILE="$DEFAULT_WORK_DIR/files/ubuntu-$DEFAULT_ISO_RELEASE-live-server-$DEFAULT_ISO_ARCH.iso"
+DEFAULT_OUTPUT_FILE="$DEFAULT_WORK_DIR/files/ubuntu-$DEFAULT_ISO_RELEASE-live-server-$DEFAULT_ISO_ARCH-autoinstall.iso"
 DEFAULT_ISO_SQUASHFS_FILE="$DEFAULT_ISO_MOUNT_DIR/casper/ubuntu-server-minimal.squashfs"
 DEFAULT_GRUB_FILE="$DEFAULT_WORK_DIR/grub.cfg"
 DEFAULT_ISO_VOLID="$DEFAULT_ISO_OSNAME $DEFAULT_ISO_RELEASE Server"
@@ -165,10 +168,6 @@ DEFAULT_ISO_VOLID="$DEFAULT_ISO_OSNAME $DEFAULT_ISO_RELEASE Server"
 
 DEFAULT_INPUT_FILE_BASE=$( basename $DEFAULT_INPUT_FILE )
 DEFAULT_OUTPUT_FILE_BASE=$( basename $DEFAULT_OUTPUT_FILE )
-
-# Get the path the script starts from
-
-START_PATH=$( pwd )
 
 # Get the version of the script from the script itself
 
@@ -180,6 +179,7 @@ print_help () {
   cat <<-HELP
   Usage: ${0##*/} [OPTIONS...]
     -1|--docker           Use docker to build ISO
+    -2|--checkdocker      Check docker (default: $DO_CHECK_DOCKER)
     -A|--codename         Linux release codename (default: $DEFAULT_ISO_CODENAME)
     -a|--arch             Architecture (default: $DEFAULT_ISO_ARCH)
     -B|--layout           Layout (default: $DEFAULT_ISO_LAYOUT)
@@ -277,51 +277,67 @@ handle_output () {
 # RUN apt-get update && apt-get install -y p7zip-full wget xorriso whois squashfs-tools
 
 check_docker_config () {
-  handle_output "# Create Docker configs" TEXT
-  for DIR_ARCH in $DOCKER_ARCH; do
-    if ! [ -d "$WORK_DIR/$DIR_ARCH" ]; then
-      handle_output "mkdir $WORK_DIR/$DIR_ARCH"
-      mkdir $WORK_DIR/$DIR_ARCH
-    fi
-    handle_output "# Check docker images" TEXT
-    handle_output "docker images |grep \"^$SCRIPT_NAME-$DIR_ARCH\" |awk '{print \$1}'"
-    handle_output "# Create Docker config $WORK_DIR/$DIR_ARCH/docker-compose.yml" TEXT
-    handle_output "echo \"version: \\\"3\\\"\" > $WORK_DIR/$DIR_ARCH/docker-compose.yml"
-    handle_output "echo \"\" >> $WORK_DIR/$DIR_ARCH/docker-compose.yml"
-    handle_output "echo \"services:\" >> $WORK_DIR/$DIR_ARCH/docker-compose.yml"
-    handle_output "echo \"  $SCRIPT_NAME-$DIR_ARCH:\" >> $WORK_DIR/$DOCKER_ARCH/docker-compose.yml"
-    handle_output "echo \"    build:\" >> $WORK_DIR/$DIR_ARCH/docker-compose.yml"
-    handle_output "echo \"      context: .\" >> $WORK_DIR/$DOCKER_ARCH/docker-compose.yml"
-    handle_output "echo \"      dockerfile: Dockerfile\" >> $WORK_DIR/$DIR_ARCH/docker-compose.yml"
-    handle_output "echo \"    image: $SCRIPT_NAME-$DIR_ARCH\" >> $WORK_DIR/$DIR_ARCH/docker-compose.yml"
-    handle_output "echo \"    container_name: $SCRIPT_NAME-$DIR_ARCH\" >> $WORK_DIR/$DIR_ARCH/docker-compose.yml"
-    handle_output "echo \"    entrypoint: /bin/bash\" >> $WORK_DIR/$DIR_ARCH/docker-compose.yml"
-    handle_output "echo \"    working_dir: /root\" >> $WORK_DIR/$DIR_ARCH/docker-compose.yml"
-    handle_output "echo \"    platform: linux/$DIR_ARCH\" >> $WORK_DIR/$DIR_ARCH/docker-compose.yml"
-    handle_output "# Create Docker config $WORK_DIR/$DIR_ARCH/Dockerfile" TEXT
-    handle_output "echo \"FROM ubuntu:$CURRENT_DOCKER_UBUNTU_RELEASE\" > $WORK_DIR/$DIR_ARCH/Dockerfile"
-    handle_output "echo \"RUN apt-get update && apt-get install -y $REQUIRED_PACKAGES\" >> $WORK_DIR/$DIR_ARCH/Dockerfile"
-    DOCKER_CHECK=$( docker images |grep "^$SCRIPT_NAME-$DIR_ARCH" |awk '{print $1}' )
-    if ! [ "$DOCKER_CHECK" = "$SCRIPT_NAME-$DIR_ARCH" ]; then
-      if [ "$TEST_MODE" = "false" ]; then
-        echo "version: \"3\"" > $WORK_DIR/$DIR_ARCH/docker-compose.yml
-        echo "" >> $WORK_DIR/$DIR_ARCH/docker-compose.yml
-        echo "services:" >> $WORK_DIR/$DIR_ARCH/docker-compose.yml
-        echo "  $SCRIPT_NAME-$DIR_ARCH:" >> $WORK_DIR/$DIR_ARCH/docker-compose.yml
-        echo "    build:" >> $WORK_DIR/$DIR_ARCH/docker-compose.yml
-        echo "      context: ." >> $WORK_DIR/$DIR_ARCH/docker-compose.yml
-        echo "      dockerfile: Dockerfile" >> $WORK_DIR/$DIR_ARCH/docker-compose.yml
-        echo "    image: $SCRIPT_NAME-$DIR_ARCH" >> $WORK_DIR/$DIR_ARCH/docker-compose.yml
-        echo "    container_name: $SCRIPT_NAME-$DIR_ARCH" >> $WORK_DIR/$DIR_ARCH/docker-compose.yml
-        echo "    entrypoint: /bin/bash" >> $WORK_DIR/$DIR_ARCH/docker-compose.yml
-        echo "    working_dir: /root" >> $WORK_DIR/$DIR_ARCH/docker-compose.yml
-        echo "    platform: linux/$DIR_ARCH" >> $WORK_DIR/$DIR_ARCH/docker-compose.yml
-        echo "FROM ubuntu:$CURRENT_DOCKER_UBUNTU_RELEASE" > $WORK_DIR/$DIR_ARCH/Dockerfile
-        echo "RUN apt-get update && apt-get install -y $REQUIRED_PACKAGES" >> $WORK_DIR/$DIR_ARCH/Dockerfile
-        cd $WORK_DIR/$DIR_ARCH ; docker build . --tag $SCRIPT_NAME-$DIR_ARCH
+  if ! [ -f "/.dockerenv" ]; then
+    handle_output "# Create Docker configs" TEXT
+    for DIR_ARCH in $DOCKER_ARCH; do
+      if ! [ -d "$WORK_DIR/$DIR_ARCH" ]; then
+        handle_output "mkdir $WORK_DIR/$DIR_ARCH"
+        mkdir $WORK_DIR/$DIR_ARCH
       fi
-    fi
-  done
+      handle_output "# Check docker images" TEXT
+      handle_output "docker images |grep \"^$SCRIPT_NAME-$DIR_ARCH\" |awk '{print \$1}'"
+      handle_output "# Check volume images" TEXT
+      handle_output "docker volume list |grep \"^$SCRIPT_NAME-$DIR_ARCH\" |awk '{print \$1}'"
+      handle_output "# Create Docker config $WORK_DIR/$DIR_ARCH/docker-compose.yml" TEXT
+      handle_output "echo \"version: \\\"3\\\"\" > $WORK_DIR/$DIR_ARCH/docker-compose.yml"
+      handle_output "echo \"\" >> $WORK_DIR/$DIR_ARCH/docker-compose.yml"
+      handle_output "echo \"services:\" >> $WORK_DIR/$DIR_ARCH/docker-compose.yml"
+      handle_output "echo \"  $SCRIPT_NAME-$DIR_ARCH:\" >> $WORK_DIR/$DOCKER_ARCH/docker-compose.yml"
+      handle_output "echo \"    build:\" >> $WORK_DIR/$DIR_ARCH/docker-compose.yml"
+      handle_output "echo \"      context: .\" >> $WORK_DIR/$DOCKER_ARCH/docker-compose.yml"
+      handle_output "echo \"      dockerfile: Dockerfile\" >> $WORK_DIR/$DIR_ARCH/docker-compose.yml"
+      handle_output "echo \"    image: $SCRIPT_NAME-$DIR_ARCH\" >> $WORK_DIR/$DIR_ARCH/docker-compose.yml"
+      handle_output "echo \"    container_name: $SCRIPT_NAME-$DIR_ARCH\" >> $WORK_DIR/$DIR_ARCH/docker-compose.yml"
+      handle_output "echo \"    entrypoint: /bin/bash\" >> $WORK_DIR/$DIR_ARCH/docker-compose.yml"
+      handle_output "echo \"    working_dir: /root\" >> $WORK_DIR/$DIR_ARCH/docker-compose.yml"
+      handle_output "echo \"    platform: linux/$DIR_ARCH\" >> $WORK_DIR/$DIR_ARCH/docker-compose.yml"
+      handle_output "echo \"    volumes:\" >> $WORK_DIR/$DIR_ARCH/docker-compose.yml"
+      handle_output "echo \"      - /docker/$SCRIPT_NAME-$DIR_ARCH/:/root/ubuntu-iso/\" >> $WORK_DIR/$DIR_ARCH/docker-compose.yml"
+      handle_output "# Create Docker config $WORK_DIR/$DIR_ARCH/Dockerfile" TEXT
+      handle_output "echo \"FROM ubuntu:$CURRENT_DOCKER_UBUNTU_RELEASE\" > $WORK_DIR/$DIR_ARCH/Dockerfile"
+      handle_output "echo \"RUN apt-get update && apt-get install -y $REQUIRED_PACKAGES\" >> $WORK_DIR/$DIR_ARCH/Dockerfile"
+      handle_output "# Build docker"
+      handle_output "cd $WORK_DIR/$DIR_ARCH ; docker build . --tag $SCRIPT_NAME-$DIR_ARCH --platform linux/$DIR_ARCH"
+      DOCKER_IMAGE_CHECK=$( docker images |grep "^$SCRIPT_NAME-$DIR_ARCH" |awk '{print $1}' )
+      DOCKER_VOLUME_CHECK=$( docker volume list |grep "^$SCRIPT_NAME-$DIR_ARCH" |awk '{print $1}' )
+      if ! [ "$DOCKER_VOLUME_CHECK" = "$SCRIPT_NAME-$DIR_ARCH" ]; then
+        if [ "$TEST_MODE" = "false" ]; then
+          docker volume create $SCRIPT_NAME-$DIR_ARCH
+        fi
+      fi
+      if ! [ "$DOCKER_IMAGE_CHECK" = "$SCRIPT_NAME-$DIR_ARCH" ]; then
+        if [ "$TEST_MODE" = "false" ]; then
+          echo "version: \"3\"" > $WORK_DIR/$DIR_ARCH/docker-compose.yml
+          echo "" >> $WORK_DIR/$DIR_ARCH/docker-compose.yml
+          echo "services:" >> $WORK_DIR/$DIR_ARCH/docker-compose.yml
+          echo "  $SCRIPT_NAME-$DIR_ARCH:" >> $WORK_DIR/$DIR_ARCH/docker-compose.yml
+          echo "    build:" >> $WORK_DIR/$DIR_ARCH/docker-compose.yml
+          echo "      context: ." >> $WORK_DIR/$DIR_ARCH/docker-compose.yml
+          echo "      dockerfile: Dockerfile" >> $WORK_DIR/$DIR_ARCH/docker-compose.yml
+          echo "    image: $SCRIPT_NAME-$DIR_ARCH" >> $WORK_DIR/$DIR_ARCH/docker-compose.yml
+          echo "    container_name: $SCRIPT_NAME-$DIR_ARCH" >> $WORK_DIR/$DIR_ARCH/docker-compose.yml
+          echo "    entrypoint: /bin/bash" >> $WORK_DIR/$DIR_ARCH/docker-compose.yml
+          echo "    working_dir: /root" >> $WORK_DIR/$DIR_ARCH/docker-compose.yml
+          echo "    platform: linux/$DIR_ARCH" >> $WORK_DIR/$DIR_ARCH/docker-compose.yml
+          echo "    volumes:" >> $WORK_DIR/$DIR_ARCH/docker-compose.yml
+          echo "      - /docker/$SCRIPT_NAME-$DIR_ARCH/:/root/ubuntu-iso/" >> $WORK_DIR/$DIR_ARCH/docker-compose.yml
+          echo "FROM ubuntu:$CURRENT_DOCKER_UBUNTU_RELEASE" > $WORK_DIR/$DIR_ARCH/Dockerfile
+          echo "RUN apt-get update && apt-get install -y $REQUIRED_PACKAGES" >> $WORK_DIR/$DIR_ARCH/Dockerfile
+          cd $WORK_DIR/$DIR_ARCH ; docker build . --tag $SCRIPT_NAME-$DIR_ARCH --platform linux/$DIR_ARCH
+        fi
+      fi
+    done
+  fi
 }
 
 # Function: Get info from iso
@@ -363,7 +379,7 @@ get_info_from_iso () {
       TEST_TYPE="live-server"
     fi
   fi
-  OUTPUT_FILE="$WORK_DIR/$TEST_NAME-$ISO_RELEASE-$TEST_TYPE-$ISO_ARCH.iso"
+  OUTPUT_FILE="$WORK_DIR/files/$TEST_NAME-$ISO_RELEASE-$TEST_TYPE-$ISO_ARCH.iso"
   TEMP_VERBOSE_MODE="true"
   handle_output "# Input ISO:     $INPUT_FILE" TEXT
   handle_output "# Distribution:  $ISO_DISTRO" TEXT
@@ -381,7 +397,7 @@ get_info_from_iso () {
 
 check_work_dir () {
   handle_output "# Check work directories" TEXT
-  for ISO_DIR in $ISO_MOUNT_DIR $ISO_NEW_DIR/squashfs $ISO_NEW_DIR/mksquash $ISO_NEW_DIR/cd $ISO_NEW_DIR/custom $WORK_DIR/bin; do
+  for ISO_DIR in $ISO_MOUNT_DIR $ISO_NEW_DIR/squashfs $ISO_NEW_DIR/mksquash $ISO_NEW_DIR/cd $ISO_NEW_DIR/custom $WORK_DIR/bin $WORK_DIR/files; do
     handle_output "# Check directory $ISO_DIR exists" TEXT
     handle_output "mkdir -p $ISO_DIR"
     if [ "$FORCE_MODE" = "true" ]; then
@@ -427,10 +443,10 @@ install_required_packages () {
 check_base_iso_file () {
   if [ -f "$INPUT_FILE" ]; then
     BASE_INPUT_FILE=$( basename $INPUT_FILE )
-    FILE_TYPE=$( file $WORK_DIR/$BASE_INPUT_FILE | awk '{print $2}' )
+    FILE_TYPE=$( file $WORK_DIR/files/$BASE_INPUT_FILE | awk '{print $2}' )
     if ! [ "$FILE_TYPE" = "ISO" ] || [ "$FILE_TYPE" = "DOS/MBR" ]; then
       TEMP_VERBOSE_MODE="true"
-      handle_output "# Warning: $WORK_DIR/$BASE_INPUT_FILE is not a valid ISO file" TEXT
+      handle_output "# Warning: $WORK_DIR/files/$BASE_INPUT_FILE is not a valid ISO file" TEXT
       exit
     fi
   fi
@@ -462,16 +478,16 @@ get_base_iso () {
   handle_output "# Check source ISO exists and grab it if it doesn't" TEXT
   BASE_INPUT_FILE=$( basename $INPUT_FILE )
   if [ "$FULL_FORCE_MODE" = "true" ]; then
-    handle_output "rm $WORK_DIR/$INPUT_FILE" 
+    handle_output "rm $WORK_DIR/files/$BASE_INPUT_FILE" 
     if [ "$TEST_MODE" = "false" ]; then
-      rm $WORK_DIR/$INPUT_FILE
+      rm $WORK_DIR/files/$BASE_INPUT_FILE
     fi
   fi
   check_base_iso_file
-  handle_output "wget $ISO_URL -O $WORK_DIR/$BASE_INPUT_FILE"
-  if ! [ -f "$WORK_DIR/$BASE_INPUT_FILE" ]; then
+  handle_output "wget $ISO_URL -O $WORK_DIR/files/$BASE_INPUT_FILE"
+  if ! [ -f "$WORK_DIR/files/$BASE_INPUT_FILE" ]; then
     if [ "$TEST_MODE" = "false" ]; then
-      wget $ISO_URL -O $WORK_DIR/$BASE_INPUT_FILE
+      wget $ISO_URL -O $WORK_DIR/files/$BASE_INPUT_FILE
     fi
   fi
 }
@@ -495,9 +511,9 @@ unmount_iso () {
 mount_iso () {
   get_base_iso
   check_base_iso_file
-  handle_output "sudo mount -o loop $WORK_DIR/$BASE_INPUT_FILE $ISO_MOUNT_DIR"
+  handle_output "sudo mount -o loop $WORK_DIR/files/$BASE_INPUT_FILE $ISO_MOUNT_DIR"
   if [ "$TEST_MODE" = "false" ]; then
-    sudo mount -o loop $WORK_DIR/$BASE_INPUT_FILE $ISO_MOUNT_DIR
+    sudo mount -o loop $WORK_DIR/files/$BASE_INPUT_FILE $ISO_MOUNT_DIR
   fi
 }
 
@@ -915,6 +931,10 @@ create_autoinstall_iso () {
       -iso_mbr_part_type $ISO_MBR_PART_TYPE -c $BOOT_CATALOG \
       -e "$EFI_IMAGE" -no-emul-boot -boot-load-size $EFI_BOOT_SIZE .
     fi
+    if [ "$DO_DOCKER" = "true" ]; then
+      BASE_DOCKER_OUTPUT_FILE=$( basename $OUTPUT_FILE )
+      echo "# Output file will be at $OLD_WORK_DIR/files/$BASE_DOCKER_OUTPUT_FILE" 
+    fi
   fi
 }
 
@@ -925,7 +945,7 @@ prepare_autoinstall_iso () {
   SCRIPT_DIR="$ISO_SOURCE_DIR/$ISO_AUTOINSTALL_DIR/scripts"
   CONFIG_DIR="$ISO_SOURCE_DIR/$ISO_AUTOINSTALL_DIR/configs"
   BASE_INPUT_FILE=$( basename $INPUT_FILE )
-  handle_output "7z -y x $WORK_DIR/$BASE_INPUT_FILE -o$ISO_SOURCE_DIR"
+  handle_output "7z -y x $WORK_DIR/files/$BASE_INPUT_FILE -o$ISO_SOURCE_DIR"
   handle_output "rm -rf $WORK_DIR/BOOT"
   handle_output "mkdir -p $PACKAGE_DIR"
   handle_output "mkdir -p $SCRIPT_DIR"
@@ -937,7 +957,7 @@ prepare_autoinstall_iso () {
     done
   done
   if [ "$TEST_MODE" = "false" ]; then
-    7z -y x $WORK_DIR/$BASE_INPUT_FILE -o$ISO_SOURCE_DIR
+    7z -y x $WORK_DIR/files/$BASE_INPUT_FILE -o$ISO_SOURCE_DIR
     mkdir -p $PACKAGE_DIR
     mkdir -p $SCRIPT_DIR
     for ISO_DEVICE in $ISO_DEVICES; do
@@ -1428,8 +1448,19 @@ do
   case $1 in
     -1|--docker)
       DO_DOCKER="true"
+      DO_CHECK_DOCKER="true"
       DO_CHECK_WORK_DIR="true"
       shift
+      ;;
+    -2|--checkdocker)
+      DO_DOCKER="false"
+      DO_CHECK_DOCKER="true"
+      DO_CHECK_WORK_DIR="true"
+      shift
+      ;;
+    -3|--oldworkdir)
+      OLD_WORK_DIR="$2"
+      shift 2
       ;;
     -A|--codename)
       ISO_CODENAME="$2"
@@ -1781,20 +1812,20 @@ if [ "$DO_ISO_QUERY" = "true" ]; then
 else
   case $ISO_BUILD_TYPE in
     "daily-live"|"daily-live-server")
-      INPUT_FILE="$WORK_DIR/$ISO_CODENAME-live-server-$ISO_ARCH.iso"
-      OUTPUT_FILE="$WORK_DIR/$ISO_CODENAME-live-server-$ISO_ARCH-autoinstall.iso"
+      INPUT_FILE="$WORK_DIR/files/$ISO_CODENAME-live-server-$ISO_ARCH.iso"
+      OUTPUT_FILE="$WORK_DIR/files/$ISO_CODENAME-live-server-$ISO_ARCH-autoinstall.iso"
       ;;
     "daily-desktop")
-      INPUT_FILE="$WORK_DIR/$ISO_CODENAME-desktop-$ISO_ARCH.iso"
-      OUTPUT_FILE="$WORK_DIR/$ISO_CODENAME-desktop-$ISO_ARCH-autoinstall.iso"
+      INPUT_FILE="$WORK_DIR/files/$ISO_CODENAME-desktop-$ISO_ARCH.iso"
+      OUTPUT_FILE="$WORK_DIR/files/$ISO_CODENAME-desktop-$ISO_ARCH-autoinstall.iso"
       ;;
     "desktop")
-      INPUT_FILE="$WORK_DIR/ubuntu-$ISO_RELEASE-desktop-$ISO_ARCH.iso"
-      OUTPUT_FILE="$WORK_DIR/ubuntu-$ISO_RELEASE-desktop-$ISO_ARCH-autoinstall.iso"
+      INPUT_FILE="$WORK_DIR/files/ubuntu-$ISO_RELEASE-desktop-$ISO_ARCH.iso"
+      OUTPUT_FILE="$WORK_DIR/files/ubuntu-$ISO_RELEASE-desktop-$ISO_ARCH-autoinstall.iso"
       ;;
     *)
-      INPUT_FILE="$WORK_DIR/ubuntu-$ISO_RELEASE-live-server-$ISO_ARCH.iso"
-      OUTPUT_FILE="$WORK_DIR/ubuntu-$ISO_RELEASE-live-server-$ISO_ARCH-autoinstall.iso"
+      INPUT_FILE="$WORK_DIR/files/ubuntu-$ISO_RELEASE-live-server-$ISO_ARCH.iso"
+      OUTPUT_FILE="$WORK_DIR/files/ubuntu-$ISO_RELEASE-live-server-$ISO_ARCH-autoinstall.iso"
       ;;
   esac 
 fi
@@ -1829,25 +1860,45 @@ case $ISO_BUILD_TYPE in
     ISO_URL="https://releases.ubuntu.com/$ISO_RELEASE/$BASE_INPUT_FILE"
     ;;
   *)
-    ISO_URL=" https://cdimage.ubuntu.com/releases/$ISO_RELEASE/release/$BASE_INPUT_FILE"
+    if [ "$ISO_ARCH" = "amd64" ]; then
+      URL_RELEASE=$( echo "$ISO_RELEASE" |awk -F. '{print $1"."$2}' )
+      ISO_URL=" https://releases.ubuntu.com/$URL_RELEASE/$BASE_INPUT_FILE"
+    else
+      ISO_URL=" https://cdimage.ubuntu.com/releases/$ISO_RELEASE/release/$BASE_INPUT_FILE"
+    fi
     ;;
 esac
 
-if [ "$DO_DOCKER" = "true" ]; then
-  if ! -f [ "/.dockenv" ]; then
-    DOCKER_BIN="$WORK_DIR/bin/$SCRIPT_BIN"
+if [ "$DO_DOCKER" = "true" ] || [ "$DO_CHECK_DOCKER" = "true" ]; then
+  if ! [ -f "/.dockerenv" ]; then
+    DOCKER_BIN="$WORK_DIR/files/$SCRIPT_BIN"
+    LOCAL_SCRIPT="$WORK_DIR/files/guige_docker_script.sh"
+    DOCKER_DIR=$( dirname $DOCKER_BIN )
+    DOCKER_SCRIPT="$DOCKER_WORK_DIR/files/guige_docker_script.sh"
+    if ! [ "$DOCKER_BIN" = "$SCRIPT_FILE" ]; then
+      cp $SCRIPT_FILE $DOCKER_BIN
+      chmod +x $DOCKER_BIN
+    fi
     check_work_dir
     check_docker_config
-    if ! -f "$DOCKER_BIN" ]; then
-      cp $SCRIPT_FILE $DOCKER_BIN
+    handle_output
+    if [ "$DO_DOCKER" = "false" ]; then
+      exit
     fi
-    handle_output "docker run --platform linux/$ISO_ARCH --mount type=bind,soure=$WORK_DIR,target=$DOCKER_WORK_DIR $DOCKER_WORK_DIR/bin/SCRIPT_BIN $SCRIPT_ARGS"
-#    if [ "$TEST_MODE" = "true" ]; then
-#      docker run --platform linux/$ISO_ARCH --mount type=bind,soure=$WORK_DIR,target=$DOCKER_WORK_DIR $DOCKER_WORK_DIR/bin/SCRIPT_BIN $SCRIPT_ARGS
-#    fi
+    handle_output "echo \"#!/bin/bash\" > $LOCAL_SCRIPT"
+    handle_output "echo \"$DOCKER_WORK_DIR/files/$SCRIPT_BIN $SCRIPT_ARGS --workdir $DOCKER_WORK_DIR --oldworkdir $WORK_DIR\" >> $LOCAL_SCRIPT"
+    handle_output "docker run --privileged=true --cap-add=CAP_MKNOD --device-cgroup-rule=\"b 7:* rmw\" --platform linux/$ISO_ARCH --mount source=$SCRIPT_NAME-$ISO_ARCH,target=/root/ubuntu-iso --mount type=bind,source=$WORK_DIR/files,target=/root/ubuntu-iso/$ISO_RELEASE/files  $SCRIPT_NAME-$ISO_ARCH /bin/bash $DOCKER_SCRIPT"
+    if ! [ "$TEST_MODE" = "true" ]; then
+      echo "#!/bin/bash" > $LOCAL_SCRIPT
+      echo "$DOCKER_WORK_DIR/files/$SCRIPT_BIN $SCRIPT_ARGS --workdir $DOCKER_WORK_DIR --oldworkdir $WORK_DIR" >> $LOCAL_SCRIPT
+      if [ "$DO_DOCKER" = "true" ]; then
+        BASE_DOCKER_OUTPUT_FILE=$( basename $OUTPUT_FILE )
+        echo "# Output file will be at $WORK_DIR/files/$BASE_DOCKER_OUTPUT_FILE" 
+      fi
+      exec docker run --privileged=true --cap-add=CAP_MKNOD --device-cgroup-rule="b 7:* rmw" --platform linux/$ISO_ARCH --mount source=$SCRIPT_NAME-$ISO_ARCH,target=/root/ubuntu-iso --mount type=bind,source=$WORK_DIR/files,target=/root/ubuntu-iso/$ISO_RELEASE/files  $SCRIPT_NAME-$ISO_ARCH /bin/bash $DOCKER_SCRIPT
+    fi
   fi
   DO_PRINT_HELP="false"
-  exit
 fi
 
 # Handle specific functions

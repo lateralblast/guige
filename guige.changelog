@@ -127,3 +127,7 @@
 # Added code to create docker config files
 # 0.6.4: Tue 24 Jan 2023 12:05:32 AEDT
 # More initial docker support
+# 0.6.5: Tue Jan 24 13:53:01 AEDT 2023
+# Added more support for docker
+# 0.6.6: Tue 24 Jan 2023 21:35:00 AEDT
+# Bug fixes for docker support
