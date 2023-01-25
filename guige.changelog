@@ -131,3 +131,5 @@
 # Added more support for docker
 # 0.6.6: Tue 24 Jan 2023 21:35:00 AEDT
 # Bug fixes for docker support
+# 0.6.7: Wed 25 Jan 2023 21:54:18 AEDT
+# Collapsed some commandline options

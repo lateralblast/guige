@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Name:         guige (Generic Ubuntu ISO Generation Engine)
-# Version:      0.6.6
+# Version:      0.6.7
 # Release:      1
 # License:      CC-BA (Creative Commons By Attribution)
 #               http://creativecommons.org/licenses/by/4.0/legalcode
@@ -60,7 +60,8 @@ FORCE_MODE="false"
 FULL_FORCE_MODE="false"
 VERBOSE_MODE="false"
 TEMP_VERBOSE_MODE="false"
-DEFAULTS_MODE="false"
+DEFAULT_MODE="defaults"
+DEFAULT_ACTION="none"
 INTERACTIVE_MODE="false"
 ISO_HWE_KERNEL="false"
 DO_DAILY_ISO="false"
@@ -78,8 +79,9 @@ DO_CREATE_AUTOINSTALL_ISO_ONLY="false"
 DO_EXECUTE_ISO_CHROOT_SCRIPT="false"
 DO_PRINT_HELP="true"
 DO_NO_UNMOUNT_ISO="false"
-DO_INSTALL_ISO_UPDATES="false"
-DO_ISO_DIST_UPGRADE="false"
+DO_INSTALL_ISO_UPDATE="false"
+DO_INSTALL_ISO_UPGRADE="false"
+DO_INSTALL_ISO_DIST_UPGRADE="false"
 DO_ISO_SQUASHFS_UPDATE="false"
 DO_ISO_QUERY="false"
 DO_DOCKER="false"
@@ -178,16 +180,10 @@ SCRIPT_VERSION=$( cd $START_PATH ; cat $0 | grep '^# Version' | awk '{print $3}'
 print_help () {
   cat <<-HELP
   Usage: ${0##*/} [OPTIONS...]
-    -1|--docker           Use docker to build ISO
-    -2|--checkdocker      Check docker (default: $DO_CHECK_DOCKER)
-    -3|--oldworkdir       Used to pass external work directory to docker
     -A|--codename         Linux release codename (default: $DEFAULT_ISO_CODENAME)
-    -a|--arch             Architecture (default: $DEFAULT_ISO_ARCH)
+    -a|--action           Action to perform (e.g. createiso, justiso, runchrootscript, checkdocker, installrequired)
     -B|--layout           Layout (default: $DEFAULT_ISO_LAYOUT)
-    -b|--getiso           Get base ISO
-    -C|--runchrootscript  Run chroot script
-    -c|--createiso        Create ISO (perform all steps - e.g. grub, packages, etc)
-    -D|--defaults         Use defaults (default: $DEFAULTS_MODE)
+    -D|--mode             Mode (default: $DEFAULT_MODE)
     -d|--bootdisk         Boot Disk devices (default: $DEFAULT_ISO_DEVICES)
     -E|--locale           LANGUAGE (default: $DEFAULT_ISO_LOCALE)
     -e|--lcall            LC_ALL (default: $DEFAULT_ISO_LC_ALL)
@@ -197,14 +193,12 @@ print_help () {
     -g|--grubmenu:        Set default grub menu (default: $DEFAULT_ISO_GRUB_MENU)
     -H|--hostname:        Hostname (default: $DEFAULT_ISO_HOSTNAME)
     -h|--help             Help/Usage Information
-    -I|--interactive      Interactive mode (will ask for input rather than using command line options or defaults)
     -i|--inputiso:        Input/base ISO file (default: $DEFAULT_INPUT_FILE_BASE)
     -J|--hwe              Use HWE kernel (defaults: $ISO_HWE_KERNEL)
     -j|--autoinstalldir   Directory where autoinstall config files are stored on ISO (default: $DEFAULT_ISO_AUTOINSTALL_DIR)
     -K|--kernel:          Kernel package (default: $DEFAULT_ISO_KERNEL)
     -k|--kernelargs:      Kernel arguments (default: $DEFAULT_ISO_KERNEL_ARGS)
     -L|--release:         LSB release (default: $DEFAULT_ISO_RELEASE)
-    -l|--justiso          Create ISO (perform last step only - just run xoriso)
     -M|--installtarget    Where the install mounts the target filesystem (default: $DEFAULT_ISO_TARGET_DIR)
     -m|--installmount     Where the install mounts the CD during install (default: $DEFAULT_ISO_INSTALL_MOUNT)
     -N|--nic:             Network device (default: $DEFAULT_ISO_NIC)
@@ -214,23 +208,19 @@ print_help () {
     -P|--password:        Password (default: $DEFAULT_ISO_USERNAME)
     -p|--chrootpackages:  List of packages to add to ISO (default: $DEFAULT_PACKAGES)
     -Q|--build:           Type of ISO to build (default: $DEFAULT_ISO_BUILD_TYPE)
-    -q|--queryiso         Set information by querying input ISO
+    -q|--arch             Architecture (default: $DEFAULT_ISO_ARCH)
     -R|--realname:        Realname (default $DEFAULT_ISO_REALNAME)
-    -r|--installrequired  Install required packages on host ($REQUIRED_PACKAGES)
     -S|--swapsize:        Swap size (default $DEFAULT_ISO_SWAPSIZE)
     -s|--staticip         Static IP configuration (default DHCP)
     -T|--timezone:        Timezone (default: $DEFAULT_ISO_TIMEZONE)
     -t|--testmode         Test mode (display commands but don't run them)
     -U|--username:        Username (default: $DEFAULT_ISO_USERNAME)
-    -u|--unmount          Unmount loopback filesystems
+    -u|--postinstall      Postinstall action (e.g. installpackages, upgrade, distupgrade)
     -V|--version          Display Script Version
     -v|--verbose          Verbose output (default: $VERBOSE_MODE)
     -W|--workdir:         Work directory (default: $DEFAULT_WORK_DIR)
     -w|--checkdirs        Check work directories exist
-    -Y|--installpackages  Install packages after OS installation via network (default: $DO_INSTALL_PACKAGES)
-    -y|--installupdates   Install updates after install (requires network)
     -x|--grubtimeout:     Grub timeout (default: $DEFAULT_ISO_GRUB_TIMEOUT)
-    -Z|--distupgrade      Perform dist-upgrade after OS installation
     -z|--volumemanager:   Volume Managers (defauls: $DEFAULT_ISO_VOLMGRS)
 HELP
   exit
@@ -1274,16 +1264,16 @@ prepare_autoinstall_iso () {
         handle_output "echo \"  late-commands:\" >> $CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
         handle_output "echo \"    - \\\"echo 'GRUB_CMDLINE_LINUX=\\\\\\\"$ISO_KERNEL_ARGS\\\\\\\"' >> $ISO_TARGET_MOUNT/etc/default/grub\\\"\" >> $CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
         handle_output "echo \"    - \\\"curtin in-target --target=$ISO_TARGET_MOUNT -- /usr/sbin/update-grub\\\"\" >> $CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
-        if [ "$DO_INSTALL_UPDATES" = "true" ] || [ "$DO_INSTALL_PACKAGES" = "true" ] || [ "$DO_DIST_UPGRADE" = "true" ]; then
+        if [ "$DO_INSTALL_ISO_UPDATE" = "true" ] || [ "$DO_INSTALL_PACKAGES" = "true" ] || [ "$DO_DIST_UPGRADE" = "true" ]; then
           handle_output "echo \"    - \\\"curtin in-target --target=$ISO_TARGET_MOUNT -- apt update\\\"\" >> $CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
         fi
-        if [ "$DO_INSTALL_UPDATES" = "true" ]; then
+        if [ "$DO_INSTALL_ISO_UPGRADE" = "true" ]; then
           handle_output "echo \"    - \\\"curtin in-target --target=$ISO_TARGET_MOUNT -- apt upgrade -y\\\"\" >> $CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
         fi
-        if [ "$DO_DIST_UPGRADE" = "true" ]; then
+        if [ "$DO_INSTALL_ISO_DIST_UPGRADE" = "true" ]; then
           handle_output "echo \"    - \\\"curtin in-target --target=$ISO_TARGET_MOUNT -- apt dist-upgrade -y\\\"\" >> $CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
         fi
-        if [ "$DO_INSTALL_PACKAGES" = "true" ]; then
+        if [ "$DO_INSTALL_ISO_PACKAGES" = "true" ]; then
           handle_output "echo \"    - \\\"curtin in-target --target=$ISO_TARGET_MOUNT -- apt install -y $ISO_INSTALL_PACKAGES\\\"\" >> $CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
         fi
         handle_output "echo \"  version: 1\" >> $CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
@@ -1419,16 +1409,16 @@ prepare_autoinstall_iso () {
           echo "  late-commands:" >> $CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data
           echo "    - \"echo 'GRUB_CMDLINE_LINUX=\\\"$ISO_KERNEL_ARGS\\\"' >> $ISO_TARGET_MOUNT/etc/default/grub\"" >> $CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data
           echo "    - \"curtin in-target --target=$ISO_TARGET_MOUNT -- update-grub\"" >> $CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data
-          if [ "$DO_INSTALL_UPDATES" = "true" ] || [ "$DO_INSTALL_PACKAGES" = "true" ] || [ "$DO_DIST_UPGRADE" = "true" ]; then
+          if [ "$DO_ISO_INSTALL_UPDATE" = "true" ] || [ "$DO_INSTALL_PACKAGES" = "true" ] || [ "$DO_DIST_UPGRADE" = "true" ]; then
             echo "    - \"curtin in-target --target=$ISO_TARGET_MOUNT -- apt update\"" >> $CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data
           fi
-          if [ "$DO_INSTALL_UPDATES" = "true" ]; then
+          if [ "$DO_ISO_INSTALL_UPGRADE" = "true" ]; then
             echo "    - \"curtin in-target --target=$ISO_TARGET_MOUNT -- apt upgrade -y\"" >> $CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data
           fi
-          if [ "$DO_DIST_UPGRADE" = "true" ]; then
+          if [ "$DO_ISO_DIST_UPGRADE" = "true" ]; then
             echo "    - \"curtin in-target --target=$ISO_TARGET_MOUNT -- apt dist-upgrade -y\"" >> $CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data
           fi
-          if [ "$DO_INSTALL_PACKAGES" = "true" ]; then
+          if [ "$DO_ISO_INSTALL_PACKAGES" = "true" ]; then
             echo "    - \"curtin in-target --target=$ISO_TARGET_MOUNT -- apt install -y $ISO_INSTALL_PACKAGES\"" >> $CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data
           fi
           echo "  version: 1" >> $CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data
@@ -1447,55 +1437,21 @@ fi
 while test $# -gt 0
 do
   case $1 in
-    -1|--docker)
-      DO_DOCKER="true"
-      DO_CHECK_DOCKER="true"
-      DO_CHECK_WORK_DIR="true"
-      shift
-      ;;
-    -2|--checkdocker)
-      DO_DOCKER="false"
-      DO_CHECK_DOCKER="true"
-      DO_CHECK_WORK_DIR="true"
-      shift
-      ;;
-    -3|--oldworkdir)
-      OLD_WORK_DIR="$2"
-      shift 2
-      ;;
     -A|--codename)
       ISO_CODENAME="$2"
       shift 2
       ;;
-    -a|--arch)
-      ISO_ARCH="$2"
+    -a|--action)
+      ACTION=="$2"
       shift 2
       ;;
     -B|--layout)
       ISO_LAYOUT="$2"
       shift 2
       ;;
-    -b|--getiso)
-      DO_CHECK_WORK_DIR="true"
-      DO_GET_BASE_ISO="true"
-      shift
-      ;;
-    -C|--runchrootscript)
-      DO_EXECUTE_ISO_CHROOT_SCRIPT="true"
-      shift
-      ;;
-    -c|--createiso)
-      DO_CHECK_WORK_DIR="true"
-      DO_INSTALL_REQUIRED_PACKAGES="true"
-      DO_GET_BASE_PACKAGES="true"
-      DO_PREPARE_ISO_AUTOINSTALL="true"
-      DO_EXECUTE_ISO_CHROOT_SCRIPT="true"
-      DO_CREATE_AUTOINSTALL_ISO_FULL="true"
-      shift
-      ;;
-    -D|--defaults)
-      DEFAULTS_MODE="true"
-      shift
+    -D|--mode)
+      MODE="$2"
+      shift 2
       ;;
     -d|--bootdisk)
       ISO_DEVICES+="$2"
@@ -1533,10 +1489,6 @@ do
       print_help 
       exit
       ;;
-    -I|--interactive)
-      INTERACTIVE_MODE="true"
-      shift
-      ;;
     -i|--inputiso)
       INPUT_FILE="$2"
       shift 2
@@ -1561,10 +1513,6 @@ do
     -L|--release)
       ISO_RELEASE="$2"
       shift 2
-      ;;
-    -l|--justiso)
-      DO_CREATE_AUTOINSTALL_ISO_ONLY="true"
-      shift
       ;;
     -M|--installtarget)
       ISO_TARGET_MOUNT="$2"
@@ -1603,17 +1551,13 @@ do
       ISO_BUILD_TYPE="$2"
       shift 2
       ;;
-    -q|--queryiso)
-      DO_ISO_QUERY="true"
-      shift
+    -q|--arch)
+      ISO_ARCH="$2"
+      shift 2
       ;;
     -R|--realname)
       ISO_REALNAME="$2"
       shift 2
-      ;;
-    -r|--installrequired)
-      DO_INSTALL_REQUIRED_PACKAGES="true"
-      shift
       ;;
     -S|--swapsize)
       ISO_SWAPSIZE="$2"
@@ -1635,9 +1579,9 @@ do
       ISO_USERNAME="$2"
       shift 2
       ;;
-    -u|--unmount)
-      DO_UMOUNT_ISO="true"
-      shift
+    -u|--postinstall)
+      POSTINSTALL="$2"
+      shift 2
       ;;
     -V|--version)
       echo "$SCRIPT_VERSION"
@@ -1652,9 +1596,9 @@ do
       WORK_DIR="$2"
       shift 2
       ;;
-    -w|--checkdirs)
-      DO_CHECK_WORK_DIR="true"
-      shift
+    -w|--oldworkdir)
+      OLD_WORK_DIR="$2"
+      shift 2
       ;;
     -X|--deleteall)
       FULL_FORCE_MODE="true"
@@ -1663,18 +1607,6 @@ do
     -x|--grubtimeout)
       ISO_GRUB_TIMEOUT="$2"
       shift 2
-      ;;
-    -Y|--installpackages)
-      DO_INSTALL_ISO_PACKAGES="true"
-      shift
-      ;;
-    -y|--installupdates)
-      DO_INSTALL_ISO_UPDATES="true"
-      shift
-      ;;
-    -z|--distupgrade)
-      DO_ISO_DIST_UPGRADE="true"
-      shift
       ;;
     -z|--volumemanager)
       ISO_VOLMGR="$2"
@@ -1704,6 +1636,92 @@ if [ "$INTERACTIVE_MODE" == "true" ]; then
   read -p "Enter source ISO file:" INPUT_FILE
   read -p "Enter output ISO file:" OUTPUT_FILE
 fi
+
+# Process action switch
+
+case $ACTION in
+  "=checkdocker")
+    DO_DOCKER="false"
+    DO_CHECK_DOCKER="true"
+    DO_CHECK_WORK_DIR="true"
+    ;;
+  "=getiso")
+    DO_CHECK_WORK_DIR="true"
+    DO_GET_BASE_ISO="true"
+    ;;
+  "=installrequired")
+    DO_INSTALL_REQUIRED_PACKAGES="true"
+    ;;
+  "=checkdirs")
+    DO_CHECK_WORK_DIR="true"
+    ;;
+  "=justiso")
+    DO_CREATE_AUTOINSTALL_ISO_ONLY="true"
+    ;;
+  "=runchrootscript")
+    DO_EXECUTE_ISO_CHROOT_SCRIPT="true"
+    ;;
+  "=createiso")
+    DO_CHECK_WORK_DIR="true"
+    DO_INSTALL_REQUIRED_PACKAGES="true"
+    DO_GET_BASE_PACKAGES="true"
+    DO_PREPARE_ISO_AUTOINSTALL="true"
+    DO_EXECUTE_ISO_CHROOT_SCRIPT="true"
+    DO_CREATE_AUTOINSTALL_ISO_FULL="true"
+    ;;
+  "=createdockeriso")
+    DO_DOCKER="true"
+    DO_CHECK_DOCKER="true"
+    DO_CHECK_WORK_DIR="true"
+    DO_INSTALL_REQUIRED_PACKAGES="true"
+    DO_GET_BASE_PACKAGES="true"
+    DO_PREPARE_ISO_AUTOINSTALL="true"
+    DO_EXECUTE_ISO_CHROOT_SCRIPT="true"
+    DO_CREATE_AUTOINSTALL_ISO_FULL="true"
+    ;;
+  "=queryiso")
+    DO_ISO_QUERY="true"
+    ;;
+  "=unmount")
+    DO_UMOUNT_ISO="true"
+    ;;
+  *)
+    handle_output "Action: $ACTION is not a valid action"
+    exit
+    ;;
+esac
+
+# Process postinstall switch
+
+case $POSTINSTALL in
+  "=distupgrade"|="dist-upgrade")
+    DO_INSTALL_ISO_DIST_UPGRADE="true"
+    ;;
+  "=packages")
+    DO_INSTALL_ISO_PACKAGES="true"
+    ;;
+  "=updates"|"=upgrades")
+    DO_INSTALL_ISO_UPDATE="true"
+    DO_INSTALL_ISO_UPGRADE="true"
+    ;;
+  *)
+    DO_INSTALL_ISO_PACKAGES="true"
+    ;;
+esac
+
+# Mode: interactive or defaults
+
+case $MODE in 
+  "=defaults")
+    DEFAULTS_MODE="true"
+    ;;
+  "=interactive")
+    INTERACTIVE_MODE="true"
+    ;;
+  *)
+    DEFAULTS_MODE="true"
+    ;;
+esac
 
 if [ "$ISO_ARCH" = "" ] || [ "$DEFAULTS_MODE" = "true" ]; then
   ISO_ARCH="$DEFAULT_ISO_ARCH"

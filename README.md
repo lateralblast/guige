@@ -11,7 +11,7 @@ used to hang a shield on the shoulder or neck when not in use.
 Version
 -------
 
-Current version: 0.6.6
+Current version: 0.6.7
 
 Introduction
 ------------
@@ -65,16 +65,10 @@ You can get help using the -h or --help switch:
 
 ```
   Usage: guige.sh [OPTIONS...]
-    -1|--docker           Use docker to build ISO
-    -2|--checkdocker      Check docker (default: false)
-    -3|--oldworkdir       Used to pass external work directory to docker
     -A|--codename         Linux release codename (default: jammy)
-    -a|--arch             Architecture (default: arm64)
+    -a|--action           Action to perform (e.g. createiso, justiso, runchrootscript, checkdocker, installrequired)
     -B|--layout           Layout (default: us)
-    -b|--getiso           Get base ISO
-    -C|--runchrootscript  Run chroot script
-    -c|--createiso        Create ISO (perform all steps - e.g. grub, packages, etc)
-    -D|--defaults         Use defaults (default: false)
+    -D|--mode             Mode (default: defaults)
     -d|--bootdisk         Boot Disk devices (default: ROOT_DEV)
     -E|--locale           LANGUAGE (default: en_US.UTF-8)
     -e|--lcall            LC_ALL (default: en_US)
@@ -84,14 +78,12 @@ You can get help using the -h or --help switch:
     -g|--grubmenu:        Set default grub menu (default: 0)
     -H|--hostname:        Hostname (default: ubuntu)
     -h|--help             Help/Usage Information
-    -I|--interactive      Interactive mode (will ask for input rather than using command line options or defaults)
     -i|--inputiso:        Input/base ISO file (default: ubuntu-22.04.1-live-server-arm64.iso)
     -J|--hwe              Use HWE kernel (defaults: false)
     -j|--autoinstalldir   Directory where autoinstall config files are stored on ISO (default: autoinstall)
     -K|--kernel:          Kernel package (default: linux-generic)
     -k|--kernelargs:      Kernel arguments (default: net.ifnames=0 biosdevname=0)
     -L|--release:         LSB release (default: 22.04.1)
-    -l|--justiso          Create ISO (perform last step only - just run xoriso)
     -M|--installtarget    Where the install mounts the target filesystem (default: )
     -m|--installmount     Where the install mounts the CD during install (default: /cdrom)
     -N|--nic:             Network device (default: eth0)
@@ -101,23 +93,20 @@ You can get help using the -h or --help switch:
     -P|--password:        Password (default: ubuntu)
     -p|--chrootpackages:  List of packages to add to ISO (default: )
     -Q|--build:           Type of ISO to build (default: live-server)
-    -q|--queryiso         Set information by querying input ISO
+    -q|--arch             Architecture (default: arm64)
     -R|--realname:        Realname (default Ubuntu)
-    -r|--installrequired  Install required packages on host (p7zip-full wget xorriso whois squashfs-tools sudo file rsync)
     -S|--swapsize:        Swap size (default 2G)
     -s|--staticip         Static IP configuration (default DHCP)
     -T|--timezone:        Timezone (default: Australia/Melbourne)
     -t|--testmode         Test mode (display commands but don't run them)
     -U|--username:        Username (default: ubuntu)
-    -u|--unmount          Unmount loopback filesystems
+    -u|--postinstall      Postinstall action (e.g. installpackages, upgrade, distupgrade)
     -V|--version          Display Script Version
     -v|--verbose          Verbose output (default: false)
     -W|--workdir:         Work directory (default: /Users/spindler/ubuntu-iso/22.04.1)
     -w|--checkdirs        Check work directories exist
-    -Y|--installpackages  Install packages after OS installation via network (default: )
-    -y|--installupdates   Install updates after install (requires network)
     -x|--grubtimeout:     Grub timeout (default: 10)
-    -Z|--distupgrade      Perform dist-upgrade after OS installatio
+    -z|--volumemanager:   Volume Managers (defauls: zfs lvm)
 ```
 
 Todo
@@ -146,44 +135,44 @@ Get usage/help information:
 Install required packages:
 
 ```
-./guide.sh --install required
+./guide.sh --action installrequired
 ```
 
 Download base ISO (jammy)
 
 ```
-./guide.sh --getiso 
+./guide.sh --action getiso 
 ```
 
 Create ISO (performs all steps):
 
 ```
-./guide.sh --createiso
+./guide.sh --action createiso
 ```
 
 Run the previous command but in test mode (don't execute commands) to produce output suitable for creating a script:
 
 
 ```
-./guide.sh --createiso --testmode
+./guide.sh --action createiso --testmode
 ```
 
 Use docker to create amd64 ISOs on Apple Silicon:
 
 ```
-./guige.sh --docker --createiso --arch amd64
+./guige.sh --action createdockeriso --arch amd64
 ```
 
 Just do autoinstall config and create ISO (assumes an ISO has been previously create and we are just updating the autoinstall config), enabling updates and installing additional packages (requires networkduring OS install)
 
 ```
-./guige.sh --justiso --verbose --installupdates --installpackages --distupgrade
+./guige.sh --action justiso --verbose --postinstall distupgrade
 ```
 
 Build ISO using daily build (this is useful for ARM where daily builds tend to have more hardware support, e.g. being virtualised on Apple Silicon)
 
 ```
-./guige.sh --createiso --build daily-live
+./guige.sh --action createiso --build daily-live
 ```
 
 Process
