@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Name:         guige (Generic Ubuntu ISO Generation Engine)
-# Version:      0.6.7
+# Version:      0.6.8
 # Release:      1
 # License:      CC-BA (Creative Commons By Attribution)
 #               http://creativecommons.org/licenses/by/4.0/legalcode
@@ -181,14 +181,13 @@ print_help () {
   cat <<-HELP
   Usage: ${0##*/} [OPTIONS...]
     -A|--codename         Linux release codename (default: $DEFAULT_ISO_CODENAME)
-    -a|--action           Action to perform (e.g. createiso, justiso, runchrootscript, checkdocker, installrequired)
+    -a|--action:          Action to perform (e.g. createiso, justiso, runchrootscript, checkdocker, installrequired)
     -B|--layout           Layout (default: $DEFAULT_ISO_LAYOUT)
-    -D|--mode             Mode (default: $DEFAULT_MODE)
+    -D|--mode:            Mode (default: $DEFAULT_MODE)
     -d|--bootdisk         Boot Disk devices (default: $DEFAULT_ISO_DEVICES)
     -E|--locale           LANGUAGE (default: $DEFAULT_ISO_LOCALE)
     -e|--lcall            LC_ALL (default: $DEFAULT_ISO_LC_ALL)
-    -F|--updatesquashfs   Copy updated squashfs to ISO
-    -f|--delete           Remove previously created files (default: $FORCE_MODE)
+    -f|--delete:          Remove previously created files (default: $FORCE_MODE)
     -G|--isovolid         ISO Volume ID (default: $DEFAULT_ISO_VOLID)
     -g|--grubmenu:        Set default grub menu (default: $DEFAULT_ISO_GRUB_MENU)
     -H|--hostname:        Hostname (default: $DEFAULT_ISO_HOSTNAME)
@@ -199,16 +198,16 @@ print_help () {
     -K|--kernel:          Kernel package (default: $DEFAULT_ISO_KERNEL)
     -k|--kernelargs:      Kernel arguments (default: $DEFAULT_ISO_KERNEL_ARGS)
     -L|--release:         LSB release (default: $DEFAULT_ISO_RELEASE)
-    -M|--installtarget    Where the install mounts the target filesystem (default: $DEFAULT_ISO_TARGET_DIR)
-    -m|--installmount     Where the install mounts the CD during install (default: $DEFAULT_ISO_INSTALL_MOUNT)
+    -M|--installtarget:   Where the install mounts the target filesystem (default: $DEFAULT_ISO_TARGET_DIR)
+    -m|--installmount:    Where the install mounts the CD during install (default: $DEFAULT_ISO_INSTALL_MOUNT)
     -N|--nic:             Network device (default: $DEFAULT_ISO_NIC)
     -n|--nounmount        Do not unmount loopback filesystems (useful for troubleshooting)
-    -O|--ospackages:      List of packages to install (default: $DEFAULT_ISO_PACKAGES)
+    -O|--isopackages:     List of packages to install (default: $DEFAULT_ISO_PACKAGES)
     -o|--outputiso:       Output ISO file (default: $DEFAULT_OUTPUT_FILE_BASE)
     -P|--password:        Password (default: $DEFAULT_ISO_USERNAME)
     -p|--chrootpackages:  List of packages to add to ISO (default: $DEFAULT_PACKAGES)
     -Q|--build:           Type of ISO to build (default: $DEFAULT_ISO_BUILD_TYPE)
-    -q|--arch             Architecture (default: $DEFAULT_ISO_ARCH)
+    -q|--arch:            Architecture (default: $DEFAULT_ISO_ARCH)
     -R|--realname:        Realname (default $DEFAULT_ISO_REALNAME)
     -S|--swapsize:        Swap size (default $DEFAULT_ISO_SWAPSIZE)
     -s|--staticip         Static IP configuration (default DHCP)
@@ -1465,13 +1464,9 @@ do
       ISO_LC_ALL="$2"
       shift 2
       ;;
-    -F|--updatesquashfs)
-      DO_ISO_SQUASHFS_UPDATE="true"
-      shift
-      ;;
     -f|--delete)
-      FORCE_MODE="true"
-      shift
+      DELETE="$2"
+      shift 2
       ;;
     -G|--isovolid)
       ISO_VOLID="$2"
@@ -1497,10 +1492,6 @@ do
       ISO_HWE_KERNEL="true"
       ISO_KERNEL="linux-generic-hwe"
       shift
-      ;;
-    -j|--autoinstalldir)
-      ISO_AUTOINSTALL_DIR="$2"
-      shift 2
       ;;
     -K|--kernel)
       ISO_KERNEL="$2"
@@ -1530,7 +1521,7 @@ do
       DO_NO_UNMOUNT_ISO="true";
       shift
       ;;
-    -O|--ospackages)
+    -O|--isopackages)
       ISO_INSTALL_PACKAGES="$2"
       shift 2
       ;;
@@ -1542,7 +1533,7 @@ do
       ISO_PASSWORD="$2"
       shift 2
       ;;
-    -p|--packages)
+    -p|--chrootpackages)
       ISO_CHROOT_PACKAGES="$2"
       shift 2
       ;;
@@ -1599,10 +1590,6 @@ do
     -w|--oldworkdir)
       OLD_WORK_DIR="$2"
       shift 2
-      ;;
-    -X|--deleteall)
-      FULL_FORCE_MODE="true"
-      shift
       ;;
     -x|--grubtimeout)
       ISO_GRUB_TIMEOUT="$2"
@@ -1669,7 +1656,27 @@ case $ACTION in
     DO_EXECUTE_ISO_CHROOT_SCRIPT="true"
     DO_CREATE_AUTOINSTALL_ISO_FULL="true"
     ;;
+  "=createisoandsquashfs")
+    DO_ISO_SQUASHFS_UPDATE="true"
+    DO_CHECK_WORK_DIR="true"
+    DO_INSTALL_REQUIRED_PACKAGES="true"
+    DO_GET_BASE_PACKAGES="true"
+    DO_PREPARE_ISO_AUTOINSTALL="true"
+    DO_EXECUTE_ISO_CHROOT_SCRIPT="true"
+    DO_CREATE_AUTOINSTALL_ISO_FULL="true"
+   ;; 
   "=createdockeriso")
+    DO_DOCKER="true"
+    DO_CHECK_DOCKER="true"
+    DO_CHECK_WORK_DIR="true"
+    DO_INSTALL_REQUIRED_PACKAGES="true"
+    DO_GET_BASE_PACKAGES="true"
+    DO_PREPARE_ISO_AUTOINSTALL="true"
+    DO_EXECUTE_ISO_CHROOT_SCRIPT="true"
+    DO_CREATE_AUTOINSTALL_ISO_FULL="true"
+    ;;
+  "=createdockerisoandsquashfs")
+    DO_ISO_SQUASHFS_UPDATE="true"
     DO_DOCKER="true"
     DO_CHECK_DOCKER="true"
     DO_CHECK_WORK_DIR="true"
@@ -1721,6 +1728,20 @@ case $MODE in
   *)
     DEFAULTS_MODE="true"
     ;;
+esac
+
+# Delete files
+
+case $DELETE in
+  "=files")
+    FORCE_MODE="true"
+    ;;
+  "=all")
+    FULL_FORCE_MODE="true"
+    ;;
+  *)
+    FORCE_MODE="false"
+    FULL_FORCE_MODE="false"
 esac
 
 if [ "$ISO_ARCH" = "" ] || [ "$DEFAULTS_MODE" = "true" ]; then

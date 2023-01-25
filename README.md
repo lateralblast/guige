@@ -11,7 +11,7 @@ used to hang a shield on the shoulder or neck when not in use.
 Version
 -------
 
-Current version: 0.6.7
+Current version: 0.6.8
 
 Introduction
 ------------
@@ -66,14 +66,13 @@ You can get help using the -h or --help switch:
 ```
   Usage: guige.sh [OPTIONS...]
     -A|--codename         Linux release codename (default: jammy)
-    -a|--action           Action to perform (e.g. createiso, justiso, runchrootscript, checkdocker, installrequired)
+    -a|--action:          Action to perform (e.g. createiso, justiso, runchrootscript, checkdocker, installrequired)
     -B|--layout           Layout (default: us)
-    -D|--mode             Mode (default: defaults)
+    -D|--mode:            Mode (default: defaults)
     -d|--bootdisk         Boot Disk devices (default: ROOT_DEV)
     -E|--locale           LANGUAGE (default: en_US.UTF-8)
     -e|--lcall            LC_ALL (default: en_US)
-    -F|--updatesquashfs   Copy updated squashfs to ISO
-    -f|--delete           Remove previously created files (default: false)
+    -f|--delete:          Remove previously created files (default: false)
     -G|--isovolid         ISO Volume ID (default: Ubuntu 22.04.1 Server)
     -g|--grubmenu:        Set default grub menu (default: 0)
     -H|--hostname:        Hostname (default: ubuntu)
@@ -84,16 +83,16 @@ You can get help using the -h or --help switch:
     -K|--kernel:          Kernel package (default: linux-generic)
     -k|--kernelargs:      Kernel arguments (default: net.ifnames=0 biosdevname=0)
     -L|--release:         LSB release (default: 22.04.1)
-    -M|--installtarget    Where the install mounts the target filesystem (default: )
-    -m|--installmount     Where the install mounts the CD during install (default: /cdrom)
+    -M|--installtarget:   Where the install mounts the target filesystem (default: )
+    -m|--installmount:    Where the install mounts the CD during install (default: /cdrom)
     -N|--nic:             Network device (default: eth0)
     -n|--nounmount        Do not unmount loopback filesystems (useful for troubleshooting)
-    -O|--ospackages:      List of packages to install (default: zfsutils-linux grub-efi zfs-initramfs net-tools curl wget sudo file rsync)
+    -O|--isopackages:     List of packages to install (default: zfsutils-linux grub-efi zfs-initramfs net-tools curl wget sudo file rsync)
     -o|--outputiso:       Output ISO file (default: ubuntu-22.04.1-live-server-arm64-autoinstall.iso)
     -P|--password:        Password (default: ubuntu)
     -p|--chrootpackages:  List of packages to add to ISO (default: )
     -Q|--build:           Type of ISO to build (default: live-server)
-    -q|--arch             Architecture (default: arm64)
+    -q|--arch:            Architecture (default: arm64)
     -R|--realname:        Realname (default Ubuntu)
     -S|--swapsize:        Swap size (default 2G)
     -s|--staticip         Static IP configuration (default DHCP)

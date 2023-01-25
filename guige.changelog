@@ -133,3 +133,5 @@
 # Bug fixes for docker support
 # 0.6.7: Wed 25 Jan 2023 21:54:18 AEDT
 # Collapsed some commandline options
+# 0.6.8: Wed 25 Jan 2023 23:29:55 AEDT
+# Collapsed more commandline options
