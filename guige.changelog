@@ -137,4 +137,7 @@
 # Collapsed more commandline options
 # 0.6.9: Thu 26 Jan 2023 08:59:00 AEDT
 # Added initial support for static IP config
-# 0.7.0: Bug fixes for static IP config
+# 0.7.0:
+# Bug fixes for static IP config
+# 0.7.1: Thu 26 Jan 2023 20:25:05 AEDT
+# Improved interactive questions code

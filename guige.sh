@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Name:         guige (Generic Ubuntu ISO Generation Engine)
-# Version:      0.7.0
+# Version:      0.7.1
 # Release:      1
 # License:      CC-BA (Creative Commons By Attribution)
 #               http://creativecommons.org/licenses/by/4.0/legalcode
@@ -85,6 +85,7 @@ DO_INSTALL_ISO_DIST_UPGRADE="false"
 DO_ISO_SQUASHFS_UPDATE="false"
 DO_ISO_QUERY="false"
 DO_DOCKER="false"
+DO_PRINT_ENV="false"
 
 # Get OS name
 
@@ -1463,7 +1464,7 @@ do
       shift 2
       ;;
     -a|--action)
-      ACTION=="$2"
+      ACTION="$2"
       shift 2
       ;;
     -B|--layout)
@@ -1605,7 +1606,7 @@ do
       shift 2
       ;;
     -u|--postinstall)
-      POSTINSTALL="$2"
+      ISO_POSTINSTALL="$2"
       shift 2
       ;;
     -V|--version)
@@ -1652,45 +1653,34 @@ do
   esac
 done
 
-# If run in interactive mode ask for values for required parameters
-# Set any unset values to defaults
-
-if [ "$INTERACTIVE_MODE" == "true" ]; then
-  read -p "Enter hostname:" ISO_HOSTNAME
-  read -p "Enter TIMEZONE" ISO_TIMEZONE
-  read -p "Enter username:" ISO_USERNAME
-  read -p "Enter user real name" ISO_REALNAME
-  read -s -p "Enter password:" ISO_PASSWORD
-  read -p "Enter additional packages:" ISO_CHROOT_PACKAGES
-  read -p "Enter source ISO file:" INPUT_FILE
-  read -p "Enter output ISO file:" OUTPUT_FILE
-fi
-
 # Process action switch
 
 case $ACTION in
-  "=checkdocker")
+  "printenv")
+    DO_PRINT_ENV="true"
+    ;;
+  "checkdocker")
     DO_DOCKER="false"
     DO_CHECK_DOCKER="true"
     DO_CHECK_WORK_DIR="true"
     ;;
-  "=getiso")
+  "getiso")
     DO_CHECK_WORK_DIR="true"
     DO_GET_BASE_ISO="true"
     ;;
-  "=installrequired")
+  "installrequired")
     DO_INSTALL_REQUIRED_PACKAGES="true"
     ;;
-  "=checkdirs")
+  "checkdirs")
     DO_CHECK_WORK_DIR="true"
     ;;
-  "=justiso")
+  "justiso")
     DO_CREATE_AUTOINSTALL_ISO_ONLY="true"
     ;;
-  "=runchrootscript")
+  "runchrootscript")
     DO_EXECUTE_ISO_CHROOT_SCRIPT="true"
     ;;
-  "=createiso")
+  "createiso")
     DO_CHECK_WORK_DIR="true"
     DO_INSTALL_REQUIRED_PACKAGES="true"
     DO_GET_BASE_PACKAGES="true"
@@ -1698,7 +1688,7 @@ case $ACTION in
     DO_EXECUTE_ISO_CHROOT_SCRIPT="true"
     DO_CREATE_AUTOINSTALL_ISO_FULL="true"
     ;;
-  "=createisoandsquashfs")
+  "createisoandsquashfs")
     DO_ISO_SQUASHFS_UPDATE="true"
     DO_CHECK_WORK_DIR="true"
     DO_INSTALL_REQUIRED_PACKAGES="true"
@@ -1707,7 +1697,7 @@ case $ACTION in
     DO_EXECUTE_ISO_CHROOT_SCRIPT="true"
     DO_CREATE_AUTOINSTALL_ISO_FULL="true"
    ;; 
-  "=createdockeriso")
+  "createdockeriso")
     DO_DOCKER="true"
     DO_CHECK_DOCKER="true"
     DO_CHECK_WORK_DIR="true"
@@ -1717,7 +1707,7 @@ case $ACTION in
     DO_EXECUTE_ISO_CHROOT_SCRIPT="true"
     DO_CREATE_AUTOINSTALL_ISO_FULL="true"
     ;;
-  "=createdockerisoandsquashfs")
+  "createdockerisoandsquashfs")
     DO_ISO_SQUASHFS_UPDATE="true"
     DO_DOCKER="true"
     DO_CHECK_DOCKER="true"
@@ -1728,10 +1718,10 @@ case $ACTION in
     DO_EXECUTE_ISO_CHROOT_SCRIPT="true"
     DO_CREATE_AUTOINSTALL_ISO_FULL="true"
     ;;
-  "=queryiso")
+  "queryiso")
     DO_ISO_QUERY="true"
     ;;
-  "=unmount")
+  "unmount")
     DO_UMOUNT_ISO="true"
     ;;
   *)
@@ -1742,14 +1732,14 @@ esac
 
 # Process postinstall switch
 
-case $POSTINSTALL in
-  "=distupgrade"|="dist-upgrade")
+case $ISO_POSTINSTALL in
+  "distupgrade"|"dist-upgrade")
     DO_INSTALL_ISO_DIST_UPGRADE="true"
     ;;
-  "=packages")
+  "packages")
     DO_INSTALL_ISO_PACKAGES="true"
     ;;
-  "=updates"|"=upgrades")
+  "updates"|"upgrades")
     DO_INSTALL_ISO_UPDATE="true"
     DO_INSTALL_ISO_UPGRADE="true"
     ;;
@@ -1761,10 +1751,10 @@ esac
 # Mode: interactive or defaults
 
 case $MODE in 
-  "=defaults")
+  "defaults")
     DEFAULTS_MODE="true"
     ;;
-  "=interactive")
+  "interactive")
     INTERACTIVE_MODE="true"
     ;;
   *)
@@ -1775,10 +1765,10 @@ esac
 # Delete files
 
 case $DELETE in
-  "=files")
+  "files")
     FORCE_MODE="true"
     ;;
-  "=all")
+  "all")
     FULL_FORCE_MODE="true"
     ;;
   *)
@@ -1786,89 +1776,98 @@ case $DELETE in
     FULL_FORCE_MODE="false"
 esac
 
-if [ "$ISO_ARCH" = "" ] || [ "$DEFAULTS_MODE" = "true" ]; then
+if [ "$ISO_ARCH" = "" ]; then
   ISO_ARCH="$DEFAULT_ISO_ARCH"
   DOCKER_ARCH="$DEFAULT_DOCKER_ARCH"
 else
   DOCKER_ARCH="$ISO_ARCH"
 fi
-if [ "$ISO_RELEASE" = "" ] || [ "$DEFAULTS_MODE" = "true" ]; then
+if [ "$ISO_RELEASE" = "" ]; then
   ISO_RELEASE="$DEFAULT_ISO_RELEASE"
 fi
 ISO_MAJOR_REL=$(echo $ISO_RELEASE |cut -f1 -d.)
-if [ "$ISO_USERNAME" = "" ] || [ "$DEFAULTS_MODE" = "true" ]; then
+if [ "$ISO_USERNAME" = "" ]; then
   ISO_USERNAME="$DEFAULT_ISO_USERNAME"
 fi
-if [ "$ISO_REALNAME" = "" ] || [ "$DEFAULTS_MODE" = "true" ]; then
+if [ "$ISO_REALNAME" = "" ]; then
   ISO_REALNAME="$DEFAULT_ISO_REALNAME"
 fi
-if [ "$ISO_HOSTNAME" = "" ] || [ "$DEFAULTS_MODE" = "true" ]; then
+if [ "$ISO_HOSTNAME" = "" ]; then
   ISO_HOSTNAME="$DEFAULT_ISO_HOSTNAME"
 fi
-if [ "$ISO_PASSWORD" = "" ] || [ "$DEFAULTS_MODE" = "true" ]; then
+if [ "$ISO_GATEWAY" = "" ]; then
+  ISO_GATEWAY="$DEFAULT_ISO_GATEWAY"
+fi
+if [ "$ISO_DNS" = "" ]; then
+  ISO_DNS="$DEFAULT_ISO_DNS"
+fi
+if [ "$ISO_IP" = "" ]; then
+  ISO_IP="$DEFAULT_ISO_IP"
+fi
+if [ "$ISO_PASSWORD" = "" ]; then
   ISO_PASSWORD="$DEFAULT_ISO_PASSWORD"
 fi
-if [ "$ISO_CHROOT_PACKAGES" = "" ] || [ "$DEFAULTS_MODE" = "true" ]; then
+if [ "$ISO_CHROOT_PACKAGES" = "" ]; then
   ISO_CHROOT_PACKAGES="$DEFAULT_ISO_PACKAGES"
 fi
-if [ "$ISO_INSTALL_PACKAGES" = "" ] || [ "$DEFAULTS_MODE" = "true" ]; then
+if [ "$ISO_INSTALL_PACKAGES" = "" ]; then
   ISO_INSTALL_PACKAGES="$DEFAULT_ISO_PACKAGES"
 fi
-if [ "$TIMEZONE" = "" ] || [ "$DEFAULTS_MODE" = "true" ]; then
-  ISO_IMEZONE="$DEFAULT_ISO_TIMEZONE"
+if [ "$ISO_TIMEZONE" = "" ]; then
+  ISO_TIMEZONE="$DEFAULT_ISO_TIMEZONE"
 fi
-if [ "$OUTPUT_FILE" = "" ] || [ "$DEFAULTS_MODE" = "true" ]; then
+if [ "$OUTPUT_FILE" = "" ]; then
   OUTPUT_FILE="$DEFAULT_OUTPUT_FILE"
 fi
-if [ "$ISO_NIC" = "" ] || [ "$DEFAULTS_MODE" = "true" ]; then
+if [ "$ISO_NIC" = "" ]; then
   ISO_NIC="$DEFAULT_ISO_NIC"
 fi
-if [ "$SWAPSIZE" = "" ] || [ "$DEFAULTS_MODE" = "true" ]; then
+if [ "$SWAPSIZE" = "" ]; then
   ISO_SWAPSIZE="$DEFAULT_ISO_SWAPSIZE"
 fi
-if [ "$ISO_DEVICES" = "" ] || [ "$DEFAULTS_MODE" = "true" ]; then
+if [ "$ISO_DEVICES" = "" ]; then
   ISO_DEVICES="$DEFAULT_ISO_DEVICES"
 fi
-if [ "$ISO_VOLMGRS" = "" ] || [ "$DEFAULTS_MODE" = "true" ]; then
+if [ "$ISO_VOLMGRS" = "" ]; then
   ISO_VOLMGRS="$DEFAULT_ISO_VOLMGRS"
 fi
-if [ "$GRUB_MENU" = "" ] || [ "$DEFAULTS_MODE" = "true" ]; then
+if [ "$GRUB_MENU" = "" ]; then
   ISO_GRUB_MENU="$DEFAULT_ISO_GRUB_MENU"
 fi
-if [ "$GRUB_TIMEOUT" = "" ] || [ "$DEFAULTS_MODE" = "true" ]; then
+if [ "$GRUB_TIMEOUT" = "" ]; then
   ISO_GRUB_TIMEOUT="$DEFAULT_ISO_GRUB_TIMEOUT"
 fi
-if [ "$ISO_KERNEL_ARGS" = "" ] || [ "$DEFAULTS_MODE" = "true" ]; then
+if [ "$ISO_KERNEL_ARGS" = "" ]; then
   ISO_KERNEL_ARGS="$DEFAULT_ISO_KERNEL_ARGS"
 fi
-if [ "$ISO_KERNEL" = "" ] || [ "$DEFAULTS_MODE" = "true" ]; then
+if [ "$ISO_KERNEL" = "" ]; then
   ISO_KERNEL="$DEFAULT_ISO_KERNEL"
 fi
-if [ "$CODENAME" = "" ] || [ "$DEFAULTS_MODE" = "true" ]; then
+if [ "$CODENAME" = "" ]; then
   ISO_CODENAME="$DEFAULT_ISO_CODENAME"
 fi
-if [ "$ISO_LOCALE" = "" ] || [ "$DEFAULTS_MODE" = "true" ]; then
+if [ "$ISO_LOCALE" = "" ]; then
   ISO_LOCALE="$DEFAULT_ISO_LOCALE"
 fi
-if [ "$ISO_LC_ALL" = "" ] || [ "$DEFAULTS_MODE" = "true" ]; then
-  ISO_LC_ALL="$DEFAULT_LC_ALL"
+if [ "$ISO_LC_ALL" = "" ]; then
+  ISO_LC_ALL="$DEFAULT_ISO_LC_ALL"
 fi
-if [ "$ISO_LAYOUT" = "" ] || [ "$DEFAULTS_MODE" = "true" ]; then
+if [ "$ISO_LAYOUT" = "" ]; then
   ISO_LAYOUT="$DEFAULT_ISO_LAYOUT"
 fi
-if [ "$ISO_VOLID" = "" ] || [ "$DEFAULTS_MODE" = "true" ]; then
+if [ "$ISO_VOLID" = "" ]; then
   ISO_VOLID="$DEFAULT_ISO_VOLID"
 fi
-if [ "$ISO_INSTALL_MOUNT" = "" ] || [ "$DEFAULTS_MODE" = "true" ]; then
+if [ "$ISO_INSTALL_MOUNT" = "" ]; then
   ISO_INSTALL_MOUNT="$DEFAULT_ISO_INSTALL_MOUNT"
 fi
-if [ "$ISO_TARGET_MOUNT" = "" ] || [ "$DEFAULTS_MODE" = "true" ]; then
+if [ "$ISO_TARGET_MOUNT" = "" ]; then
   ISO_TARGET_MOUNT="$DEFAULT_ISO_TARGET_MOUNT"
 fi
-if [ "$ISO_AUTOINSTALL_DIR" = "" ] || [ "$DEFAULTS_MODE" = "true" ]; then
+if [ "$ISO_AUTOINSTALL_DIR" = "" ]; then
   ISO_AUTOINSTALL_DIR="$DEFAULT_ISO_AUTOINSTALL_DIR"
 fi
-if [ "$WORK_DIR" = "" ] || [ "$DEFAULTS_MODE" = "true" ]; then 
+if [ "$WORK_DIR" = "" ]; then 
   if [ "$DO_DAILY_ISO" = "true" ]; then
     WORK_DIR="$HOME/ubuntu-iso/$ISO_CODENAME"
     DOCKER_WORK_DIR="/root/ubuntu-iso/$ISO_CODENAME"
@@ -1882,10 +1881,10 @@ else
     DOCKER_WORK_DIR="/root/ubuntu-iso/$ISO_CODENAME"
   fi
 fi
-if [ "$ISO_BUILD_TYPE" = "" ] || [ "$DEFAULTS_MODE" = "true" ]; then
+if [ "$ISO_BUILD_TYPE" = "" ]; then
   ISO_BUILD_TYPE="$DEFAULT_ISO_BUILD_TYPE"
 fi
-if [ "$INPUT_FILE" = "" ] || [ "$DEFAULTS_MODE" = "true" ]; then
+if [ "$INPUT_FILE" = "" ]; then
   INPUT_FILE="$DEFAULT_INPUT_FILE"
 fi
 
@@ -1944,12 +1943,205 @@ case $ISO_BUILD_TYPE in
   *)
     if [ "$ISO_ARCH" = "amd64" ]; then
       URL_RELEASE=$( echo "$ISO_RELEASE" |awk -F. '{print $1"."$2}' )
-      ISO_URL=" https://releases.ubuntu.com/$URL_RELEASE/$BASE_INPUT_FILE"
+      ISO_URL="https://releases.ubuntu.com/$URL_RELEASE/$BASE_INPUT_FILE"
     else
-      ISO_URL=" https://cdimage.ubuntu.com/releases/$ISO_RELEASE/release/$BASE_INPUT_FILE"
+      ISO_URL="https://cdimage.ubuntu.com/releases/$ISO_RELEASE/release/$BASE_INPUT_FILE"
     fi
     ;;
 esac
+
+# Output variables
+
+if [ "$DO_PRINT_ENV" ] || [ "$INTERACTIVE_MODE" = "true" ]; then
+  TEMP_VERBOSE_MODE="true"
+fi
+
+handle_output "# Setting Variables" TEXT
+handle_output "# Release:              $ISO_RELEASE" TEXT
+handle_output "# Codename:             $ISO_CODENAME" TEXT
+handle_output "# Architecture:         $ISO_ARCH" TEXT
+handle_output "# Work directory:       $WORK_DIR" TEXT
+handle_output "# Required packages:    $REQUIRED_PACKAGES" TEXT
+handle_output "# ISO input file:       $INPUT_FILE" TEXT
+handle_output "# ISO output file:      $OUTPUT_FILE" TEXT
+handle_output "# ISO URL:              $ISO_URL" TEXT
+handle_output "# ISO Volume ID:        $ISO_VOLID" TEXT
+handle_output "# Hostname:             $ISO_HOSTNAME" TEXT
+handle_output "# Username:             $ISO_USERNAME" TEXT
+handle_output "# Realname:             $ISO_REALNAME" TEXT
+handle_output "# Timezone:             $ISO_TIMEZONE" TEXT
+handle_output "# NIC:                  $ISO_NIC" TEXT
+handle_output "# DHCP:                 $ISO_DHCP" TEXT
+if [ "$ISO_DHCP" = "false" ]; then
+  handle_output "# IP:                   $ISO_IP/$ISO_CIDR" TEXT
+  handle_output "# Gateway:              $ISO_GATEWAY" TEXT
+  handle_output "# Nameservers:          $ISO_DNS" TEXT
+fi
+handle_output "# Kernel:               $ISO_KERNEL" TEXT
+handle_output "# Kernel arguments:     $ISO_KERNEL_ARGS" TEXT
+handle_output "# Keyboard Layout:      $ISO_LAYOUT" TEXT
+handle_output "# Locale:               $ISO_LOCALE" TEXT
+handle_output "# LC_ALL:               $ISO_LC_ALL" TEXT
+handle_output "# Root disk(s):         $ISO_DEVICES" TEXT
+handle_output "# Volme Manager(s):     $ISO_VOLMGRS" TEXT
+handle_output "# GRUB Menu:            $ISO_GRUB_MENU" TEXT
+handle_output "# GRUB Timeout:         $ISO_GRUB_TIMEOUT" TEXT
+handle_output "# AI Directory:         $ISO_AUTOINSTALL_DIR" TEXT
+handle_output "# Install mount:        $ISO_INSTALL_MOUNT" TEXT
+handle_output "# Install target:       $ISO_TARGET_MOUNT" TEXT
+handle_output "# Recreate squashfs:    $DO_ISO_SQUASHFS_UPDATE" TEXT
+handle_output "# Squashfs packages:    $ISO_CHROOT_PACKAGES" TEXT
+handle_output "# Additional packages:  $ISO_INSTALL_PACKAGES" TEXT
+handle_output "# Install packages:     $DO_INSTALL_ISO_PACKAGES" TEXT
+handle_output "# Install updates:      $DO_INSTALL_ISO_UPDATE" TEXT
+handle_output "# Install upgrades:     $DO_INSTALL_ISO_UPGRADE" TEXT
+handle_output "# Dist upgrades:        $DO_INSTALL_ISO_DIST_UPGRADE" TEXT
+handle_output "# Swap size:            $ISO_SWAPSIZE" TEXT
+
+if [ "$DO_PRINT_ENV" = "true" ] || [ "$INTERACTIVE_MODE" = "true" ]; then
+  TEMP_VERBOSE_MODE="false"
+fi
+
+if [ "$DO_PRINT_ENV" = "true" ]; then
+  exit
+fi
+
+# Exit if we're just printing environment variables
+
+# If run in interactive mode ask for values for required parameters
+# Set any unset values to defaults
+
+echo "got here"
+echo "$INTERACTIVE_MODE"
+
+if [ "$INTERACTIVE_MODE" = "true" ]; then
+  # Get release
+  read -p "Enter Release [$ISO_RELEASE]: " NEW_ISO_RELEASE
+  ISO_RELEASE=${NEW_ISO_RELEASE:-$ISO_RELEASE}
+  # Get codename
+  read -p "Enter Codename [$ISO_CODENAME: " NEW_ISO_CODENAME
+  ISO_CODENAME=${NEW_ISO_CODENAME:-$ISO_CODENAME}
+  # Get Architecture
+  read -p "Architecture [$ISO_ARCH]: "
+  ISO_ARCH=${NEW_ISO_ARCH:-$ISO_ARCH}
+  # Get Work directory
+  read -p "Enter Work directory [$WORK_DIR]: " NEW_WORK_DIR
+  WORK_DIR=${NEW_WORK_DIR:-$WORK_DIR}
+  # Get ISO input file
+  read -p "Enter ISO input file [$INPUT_FILE]: " NEW_INPUT_FILE
+  INPUT_FILE=${NEW_INPUT_FILE:-$INPUT_FILE}
+  # Get output file
+  read -p "Enter ISO output file [$OUTPUT_FILE]: " NEW_OUTPUT_FILE
+  OUTPUT_FILE=${NEW_OUTPUT_FILE:-$OUTPUT_FILE}
+  # Get ISO URL
+  read -p "Enter ISO URL [$ISO_URL]: " NEW_ISO_URL
+  ISO_URL=${NEW_ISO_URL:-$ISO_URL}
+  # Get ISO Volume ID
+  read -p "Enter ISO Volume ID [$ISO_VOLID]: " NEW_ISO_VOLID
+  ISO_VOLID=${NEW_ISO_VOLID:-$ISO_VOLID}
+  # Get Hostname
+  read -p "Enter Hostname[$ISO_HOSTNAME]: " NEW_ISO_HOSTNAME
+  ISO_HOSTNAME=${NEW_ISO_HOSTNAME:-$ISO_HOSTNAME}
+  # Get Username
+  read -p "Enter Username [$ISO_USERNAME]: " NEW_ISO_USERNAME
+  ISO_USERNAME=${NEW_ISO_USERNAME:-$ISO_USERNAME}
+  # Get User Real NAme
+  read -p "Enter User Realname [$ISO_REALNAME]: " NEW_ISO_REALNAME
+  ISO_REALNAME=${NEW_ISO_REALNAME:-$ISO_REALNAME}
+  # Get Password
+  read -s -p "Enter password [$ISO_PASSWORD]: " NEW_ISO_PASSWORD
+  ISO_PASSWORD=${NEW_ISO_PASSWORD:-$ISO_PASSWORD}
+  # Get Timezone
+  read -p "Enter Timezone: " NEW_ISO_TIMEZONE
+  ISO_TIMEZONE=${NEW_ISO_TIMEZONE:-$ISO_TIMEZONE}
+  # Get NIC
+  read -p "Enter NIC [$ISO_NIC]: " NEW_ISO_NIC
+  ISO_NIC=${NEW_ISO_NIC:-$ISO_NIC}
+  # Get DHCP
+  read -p "Use DHCP? [$ISO_DHCP]: " NEW_ISO_DHCP
+  ISO_DHCP=${NEW_ISO_DHCP:-$ISO_DHCP}
+  # Get Static IP information if no DHCP
+  if [ "$ISO_DHCP" = "false" ]; then
+    # Get IP
+    read -p "Enter IP [$ISO_IP]: " NEW_ISO_IP
+    ISO_IP=${NEW_ISO_IP:-$ISO_IP}
+    # Get CIDR 
+    read -p "Enter CIDR [$ISO_CIDR]: " NEW_ISO_CIDR
+    ISO_CIDR=${NEW_ISO_CIDR:-$ISO_CIDR}
+    # Get Geteway 
+    read -p "Enter Gateway [$ISO_GATEWAY]: " NEW_ISO_GATEWAY
+    ISO_GATEWAY=${NEW_ISO_GATEWAY:-$ISO_GATEWAY}
+    # Get DNS
+    read -p "Enter DNS [$ISO_DNS]: " NEW_ISO_DNS
+    ISO_DNS=${NEW_ISO_DNS:-$ISO_DNS}
+  fi
+  # Get Kernel
+  read -p "Enter Kernel [$ISO_KERNEL]: " NEW_ISO_KERNEL
+  ISO_KERNEL=${NEW_ISO_KERNEL:-$ISO_KERNEL}
+  # Get Kernel Arguments
+  read -p "Enter Kernel Arguments [$ISO_KERNEL_ARGS]: " NEW_ISO_KERNEL_ARGS
+  ISO_KERNEL_ARGS=${NEW_ISO_KERNEL_ARGS:-$ISO_KERNEL_ARGS}
+  # Get Keyboard Layout
+  read -p "Enter IP [$ISO_LAYOUT]: " NEW_ISO_LAYOUT
+  ISO_LAYOUT=${NEW_ISO_LAYOUT:-$ISO_LAYOUT}
+  # Get Locale
+  read -p "Enter IP [$ISO_LOCALE]: " NEW_ISO_LOCALE
+  ISO_LOCALE=${NEW_ISO_LOCALE:-$ISO_LOCALE}
+  # Get LC _ALL
+  read -p "Enter LC_ALL [$ISO_LC_ALL]: " NEW_ISO_LC_ALL
+  ISO_LC_ALL=${NEW_ISO_LC_ALL:-$ISO_LC_ALL}
+  # Get Root Disk(s) 
+  read -p "Enter Root Disk(s) [$ISO_DEVICES]: " NEW_ISO_DEVICES
+  ISO_DEVICES=${NEW_ISO_DEVICES:-$ISO_DEVICES}
+  # Get Volume Managers 
+  read -p "Enter Volume Manager(s) [$ISO_VOLMGRS]: " NEW_ISO_VOLMGRS
+  ISO_VOLMGRS=${NEW_ISO_VOLMGRS:-$ISO_VOLMGRS}
+  # Get Default Grub Menu selection
+  read -p "Enter Default Grub Menu [$ISO_GRUB_MENU]: " NEW_ISO_GRUB_MENU
+  ISO_GRUB_MENU=${NEW_ISO_GRUB_MENU:-$ISO_GRUB_MENU}
+  # Get Grub Timeout
+  read -p "Enter Grub Timeout [$ISO_GRUB_TIMEOUT]: " NEW_ISO_GRUB_TIMEOUT
+  ISO_GRUB_TIMEOUT=${NEW_ISO_GRUB_TIMEOUT:-$ISO_GRUB_TIMEOUT}
+  # Get Autoinstall directory 
+  read -p "Enter Auttoinstall Directory [$ISO_AUTOINSTALL_DIR]: " NEW_ISO_AUTOINSTALL_DIR
+  ISO_AUTOINSTALL_DIR=${NEW_ISO_AUTOINSTALL_DIR:-$ISO_AUTOINSTALL_DIR}
+  # Get Install Mount
+  read -p "Enter Install Mount [$ISO_INSTALL_MOUNT]: " NEW_ISO_INSTALL_MOUNT
+  ISO_INSTALL_MOUNT=${NEW_ISO_INSTALL_MOUNT:-$ISO_INSTALL_MOUNT}
+  # Get Install Target
+  read -p "Enter Install Target [$ISO_TARGET_MOUNT]: " NEW_ISO_TARGET_MOUNT
+  ISO_TARGET_MOUNT=${NEW_ISO_TARGET_MOUNT:-$ISO_TARGET_MOUNT}
+  # Get whether to do squashfs
+  read -p "Recreate squashfs? [$DO_ISO_SQUASHFS_UPDATE]: " NEW_DO_ISO_SQUASHFS_UPDATE
+  DO_ISO_SQUASHFS_UPDATE=${NEW_DO_ISO_SQUASHFS_UPDATE:-$DO_ISO_SQUASHFS_UPDATE}
+  if  [ "$DO_ISO_SQUASHFS_UPDATE" = "true" ]; then
+    # Get squashfs packages
+    read -p "Enter Squashfs Packages [$ISO_CHROOT_PACKAGEP]: " NEW_ISO_CHROOT_PACKAGE
+    ISO_CHROOT_PACKAGE=${NEW_ISO_CHROOT_PACKAGE:-$IISO_CHROOT_PACKAGE}
+  fi
+  # Get whether to install packages as part of install
+  read -p "Install additional packages [$DO_INSTALL_ISO_PACKAGES]: " NEW_DO_INSTALL_ISO_PACKAGES
+  DO_INSTALL_ISO_PACKAGES=${NEW_DO_INSTALL_ISO_PACKAGES:-$DO_INSTALL_ISO_PACKAGES}
+  if [ "$DO_INSTALL_ISO_PACKAGES" = "true" ]; then
+    # Get IP
+    read -p "Enter Additional Packages to install[$ISO_INSTALL_PACKAGES]: " NEW_ISO_INSTALL_PACKAGES
+    ISO_INSTALL_PACKAGES=${NEW_ISO_INSTALL_PACKAGES:-$ISO_INSTALL_PACKAGES}
+  fi
+  # Get whether to install updates
+  read -p "Install updates? [$DO_INSTALL_ISO_UPDATE]: " NEW_DO_INSTALL_ISO_UPDATE
+  DO_INSTALL_ISO_UPDATE=${NEW_DO_INSTALL_ISO_UPDATEP:-$DO_INSTALL_ISO_UPDATE}
+  if [ "$DO_INSTALL_ISO_UPDATE" = "true" ]; then
+    # Get wether to install upgrades 
+    read -p "Upgrade packages? [$DO_INSTALL_ISO_UPGRADE]: " NEW_DO_INSTALL_ISO_UPGRADE
+    DO_INSTALL_ISO_UPGRADE=${NEW_DO_INSTALL_ISO_UPGRADE:-$DO_INSTALL_ISO_UPGRADE}
+    # Get whether to do a dist-updrage
+    read -p "Install Distribution Upgrade if available (e.g. 20.04.4 -> 20.04.5)? [$DO_INSTALL_ISO_DIST_UPGRADE]: " NEW_DO_INSTALL_ISO_DIST_UPGRADE
+    DO_INSTALL_ISO_DIST_UPGRADE=${NEW_DO_INSTALL_ISO_DIST_UPGRADE:-$DO_INSTALL_ISO_DIST_UPGRADE}
+  fi
+  # Get swap size 
+  read -p "Enter Swap Size [$ISO_SWAPSIZE]: " NEW_ISO_SWAPSIZE
+  ISO_SWAPSIZE=${NEW_ISO_SWAPSIZE:-$ISO_SWAPSIZE}
+fi
 
 if [ "$DO_DOCKER" = "true" ] || [ "$DO_CHECK_DOCKER" = "true" ]; then
   if ! [ -f "/.dockerenv" ]; then
