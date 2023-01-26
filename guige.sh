@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Name:         guige (Generic Ubuntu ISO Generation Engine)
-# Version:      0.7.2
+# Version:      0.7.3
 # Release:      1
 # License:      CC-BA (Creative Commons By Attribution)
 #               http://creativecommons.org/licenses/by/4.0/legalcode
@@ -53,6 +53,7 @@ REQUIRED_PACKAGES="p7zip-full wget xorriso whois squashfs-tools sudo file rsync"
 DEFAULT_DOCKER_ARCH="amd64 arm64"
 DEFAULT_ISO_SSH_KEY_FILE="$HOME/.ssh/id_rsa.pub"
 DEFAULT_ISO_SSH_KEY=""
+DEFAULT_ISO_ALLOW_PASSWORD="true"
 
 # Default flags
 
@@ -187,10 +188,10 @@ print_help () {
     -a|--action:          Action to perform (e.g. createiso, justiso, runchrootscript, checkdocker, installrequired)
     -B|--layout           Layout (default: $DEFAULT_ISO_LAYOUT)
     -C|--cidr:            CIDR
-    -c|--sshkeyfile       SSH key file to use as SSH key (default: $DEFAULT_ISO_SSH_KEY_FILE)
-    -d|--bootdisk         Boot Disk devices (default: $DEFAULT_ISO_DEVICES)
-    -E|--locale           LANGUAGE (default: $DEFAULT_ISO_LOCALE)
-    -e|--lcall            LC_ALL (default: $DEFAULT_ISO_LC_ALL)
+    -c|--sshkeyfile:      SSH key file to use as SSH key (default: $DEFAULT_ISO_SSH_KEY_FILE)
+    -d|--bootdisk:        Boot Disk devices (default: $DEFAULT_ISO_DEVICES)
+    -E|--locale:          LANGUAGE (default: $DEFAULT_ISO_LOCALE)
+    -e|--lcall:           LC_ALL (default: $DEFAULT_ISO_LC_ALL)
     -f|--delete:          Remove previously created files (default: $FORCE_MODE)
     -G|--gateway:         Gateway
     -g|--grubmenu:        Set default grub menu (default: $DEFAULT_ISO_GRUB_MENU)
@@ -205,7 +206,7 @@ print_help () {
     -L|--release:         LSB release (default: $DEFAULT_ISO_RELEASE)
     -M|--installtarget:   Where the install mounts the target filesystem (default: $DEFAULT_ISO_TARGET_DIR)
     -m|--installmount:    Where the install mounts the CD during install (default: $DEFAULT_ISO_INSTALL_MOUNT)
-    -N|--dns              DNS Server
+    -N|--dns:             DNS Server
     -n|--nic:             Network device (default: $DEFAULT_ISO_NIC)
     -O|--isopackages:     List of packages to install (default: $DEFAULT_ISO_PACKAGES)
     -o|--outputiso:       Output ISO file (default: $DEFAULT_OUTPUT_FILE_BASE)
@@ -220,13 +221,14 @@ print_help () {
     -T|--timezone:        Timezone (default: $DEFAULT_ISO_TIMEZONE)
     -t|--testmode         Test mode (display commands but don't run them)
     -U|--username:        Username (default: $DEFAULT_ISO_USERNAME)
-    -u|--postinstall      Postinstall action (e.g. installpackages, upgrade, distupgrade)
+    -u|--postinstall:     Postinstall action (e.g. installpackages, upgrade, distupgrade)
     -V|--version          Display Script Version
     -v|--verbose          Verbose output (default: $VERBOSE_MODE)
     -W|--workdir:         Work directory (default: $DEFAULT_WORK_DIR)
     -w|--checkdirs        Check work directories exist
-    -X|--isovolid         ISO Volume ID (default: $DEFAULT_ISO_VOLID)
+    -X|--isovolid:        ISO Volume ID (default: $DEFAULT_ISO_VOLID)
     -x|--grubtimeout:     Grub timeout (default: $DEFAULT_ISO_GRUB_TIMEOUT)
+    -Y|--allowpassword:   Allow password access via SSH (default: $DEFAULT_ISO_ALLOW_PASSWORD)
     -Z|--nounmount        Do not unmount loopback filesystems (useful for troubleshooting)
     -z|--volumemanager:   Volume Managers (defauls: $DEFAULT_ISO_VOLMGRS)
 HELP
@@ -1190,7 +1192,7 @@ prepare_autoinstall_iso () {
         fi
         handle_output "echo \"    version: 2\" >> $CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
         handle_output "echo \"  ssh:\" >> $CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
-        handle_output "echo \"    allow-pw: true\" >> $CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
+        handle_output "echo \"    allow-pw: $ISO_ALLOW_PASSWORD\" >> $CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
         handle_output "echo \"    authorized-keys: [$ISO_SSH_KEY]\" >> $CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
         handle_output "echo \"    install-server: true\" >> $CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
         handle_output "echo \"  storage:\" >> $CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
@@ -1344,7 +1346,7 @@ prepare_autoinstall_iso () {
           fi
           echo "    version: 2" >> $CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data
           echo "  ssh:" >> $CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data
-          echo "    allow-pw: true" >> $CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data
+          echo "    allow-pw: $ISO_ALLOW_PASSWORD" >> $CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data
           echo "    authorized-keys: [$ISO_SSH_KEY]" >> $CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data
           echo "    install-server: true" >> $CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data
           echo "  storage:" >> $CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data
@@ -1643,6 +1645,10 @@ do
       ISO_GRUB_TIMEOUT="$2"
       shift 2
       ;;
+    -Y|--allowpassword)
+      ISO_ALLOW_PASSWORD="$2"
+      shift 2
+      ;;
     -Z|--nounmount)
       DO_NO_UNMOUNT_ISO="true";
       shift
@@ -1817,6 +1823,9 @@ if [ "$ISO_DNS" = "" ]; then
 fi
 if [ "$ISO_IP" = "" ]; then
   ISO_IP="$DEFAULT_ISO_IP"
+fi
+if [ "$ISO_ALLOW_PASSWORD" = "" ]; then
+  ISO_ALLOW_PASSWORD="$DEFAULT_ISO_ALLOW_PASSWORD"
 fi
 if [ "$ISO_PASSWORD" = "" ]; then
   ISO_PASSWORD="$DEFAULT_ISO_PASSWORD"
@@ -2065,6 +2074,9 @@ if [ "$INTERACTIVE_MODE" = "true" ]; then
   # Get Password
   read -s -p "Enter password [$ISO_PASSWORD]: " NEW_ISO_PASSWORD
   ISO_PASSWORD=${NEW_ISO_PASSWORD:-$ISO_PASSWORD}
+  # Get wether to allow SSH Password
+  read -s -p "Allow SSH access with password [$ISO_ALLOW_PASSWORD]: " NEW_ISO_ALLOW_PASSWORD
+  ISO_ALLOW_PASSWORD=${NEW_ISO_ALLOW_PASSWORD:-$ISO_ALLOW_PASSWORD}
   # Get Timezone
   read -p "Enter Timezone: " NEW_ISO_TIMEZONE
   ISO_TIMEZONE=${NEW_ISO_TIMEZONE:-$ISO_TIMEZONE}

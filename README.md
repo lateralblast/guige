@@ -11,7 +11,7 @@ used to hang a shield on the shoulder or neck when not in use.
 Version
 -------
 
-Current version: 0.7.2
+Current version: 0.7.3
 
 Introduction
 ------------
@@ -69,10 +69,10 @@ You can get help using the -h or --help switch:
     -a|--action:          Action to perform (e.g. createiso, justiso, runchrootscript, checkdocker, installrequired)
     -B|--layout           Layout (default: us)
     -C|--cidr:            CIDR
-    -c|--sshkeyfile       SSH key file to use as SSH key (default: /Users/spindler/.ssh/id_rsa.pub)
-    -d|--bootdisk         Boot Disk devices (default: ROOT_DEV)
-    -E|--locale           LANGUAGE (default: en_US.UTF-8)
-    -e|--lcall            LC_ALL (default: en_US)
+    -c|--sshkeyfile:      SSH key file to use as SSH key (default: /Users/spindler/.ssh/id_rsa.pub)
+    -d|--bootdisk:        Boot Disk devices (default: ROOT_DEV)
+    -E|--locale:          LANGUAGE (default: en_US.UTF-8)
+    -e|--lcall:           LC_ALL (default: en_US)
     -f|--delete:          Remove previously created files (default: false)
     -G|--gateway:         Gateway
     -g|--grubmenu:        Set default grub menu (default: 0)
@@ -87,7 +87,7 @@ You can get help using the -h or --help switch:
     -L|--release:         LSB release (default: 22.04.1)
     -M|--installtarget:   Where the install mounts the target filesystem (default: )
     -m|--installmount:    Where the install mounts the CD during install (default: /cdrom)
-    -N|--dns              DNS Server
+    -N|--dns:             DNS Server
     -n|--nic:             Network device (default: eth0)
     -O|--isopackages:     List of packages to install (default: zfsutils-linux grub-efi zfs-initramfs net-tools curl wget sudo file rsync)
     -o|--outputiso:       Output ISO file (default: ubuntu-22.04.1-live-server-arm64-autoinstall.iso)
@@ -102,13 +102,14 @@ You can get help using the -h or --help switch:
     -T|--timezone:        Timezone (default: Australia/Melbourne)
     -t|--testmode         Test mode (display commands but don't run them)
     -U|--username:        Username (default: ubuntu)
-    -u|--postinstall      Postinstall action (e.g. installpackages, upgrade, distupgrade)
+    -u|--postinstall:     Postinstall action (e.g. installpackages, upgrade, distupgrade)
     -V|--version          Display Script Version
     -v|--verbose          Verbose output (default: false)
     -W|--workdir:         Work directory (default: /Users/spindler/ubuntu-iso/22.04.1)
     -w|--checkdirs        Check work directories exist
-    -X|--isovolid         ISO Volume ID (default: Ubuntu 22.04.1 Server)
+    -X|--isovolid:        ISO Volume ID (default: Ubuntu 22.04.1 Server)
     -x|--grubtimeout:     Grub timeout (default: 10)
+    -Y|--allowpassword:   Allow password access via SSH (default: true)
     -Z|--nounmount        Do not unmount loopback filesystems (useful for troubleshooting)
     -z|--volumemanager:   Volume Managers (defauls: zfs lvm)
 ```
