@@ -1263,7 +1263,7 @@ prepare_autoinstall_iso () {
           handle_output "echo \"      type: mount\" >> $CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
           handle_output "echo \"      id: mount-disk1p2\" >> $CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
           handle_output "echo \"    swap:\" >> $CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
-          handle_output "echo \"      swap: $SWAPSIZE\" >> $CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
+          handle_output "echo \"      swap: $ISO_SWAPSIZE\" >> $CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
         fi
         if [ "$ISO_VOLMGR" = "lvm" ]; then
             handle_output "echo \"    layout:\" >> $CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
@@ -1417,7 +1417,7 @@ prepare_autoinstall_iso () {
             echo "      type: mount" >> $CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data
             echo "      id: mount-disk1p2" >> $CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data
             echo "    swap:" >> $CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data
-            echo "      swap: $SWAPSIZE" >> $CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data
+            echo "      swap: $ISO_SWAPSIZE" >> $CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data
           fi
           if [ "$ISO_VOLMGR" = "lvm" ]; then
             echo "    layout:" >> $CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data
