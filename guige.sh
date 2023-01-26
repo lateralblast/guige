@@ -187,17 +187,17 @@ print_help () {
     -A|--codename         Linux release codename (default: $DEFAULT_ISO_CODENAME)
     -a|--action:          Action to perform (e.g. createiso, justiso, runchrootscript, checkdocker, installrequired)
     -B|--layout           Layout (default: $DEFAULT_ISO_LAYOUT)
-    -C|--cidr:            CIDR
+    -C|--cidr:            CIDR (default: $DEFAULT_ISO_CIDR)
     -c|--sshkeyfile:      SSH key file to use as SSH key (default: $DEFAULT_ISO_SSH_KEY_FILE)
     -d|--bootdisk:        Boot Disk devices (default: $DEFAULT_ISO_DEVICES)
     -E|--locale:          LANGUAGE (default: $DEFAULT_ISO_LOCALE)
     -e|--lcall:           LC_ALL (default: $DEFAULT_ISO_LC_ALL)
     -f|--delete:          Remove previously created files (default: $FORCE_MODE)
-    -G|--gateway:         Gateway
+    -G|--gateway:         Gateway (default $DEFAULT_ISO_GATEWAY)
     -g|--grubmenu:        Set default grub menu (default: $DEFAULT_ISO_GRUB_MENU)
     -H|--hostname:        Hostname (default: $DEFAULT_ISO_HOSTNAME)
     -h|--help             Help/Usage Information
-    -I|--ip:              IP Address
+    -I|--ip:              IP Address (default: $DEFAULT_ISO_IP)
     -i|--inputiso:        Input/base ISO file (default: $DEFAULT_INPUT_FILE_BASE)
     -J|--hwe              Use HWE kernel (defaults: $ISO_HWE_KERNEL)
     -j|--autoinstalldir   Directory where autoinstall config files are stored on ISO (default: $DEFAULT_ISO_AUTOINSTALL_DIR)
@@ -206,7 +206,7 @@ print_help () {
     -L|--release:         LSB release (default: $DEFAULT_ISO_RELEASE)
     -M|--installtarget:   Where the install mounts the target filesystem (default: $DEFAULT_ISO_TARGET_DIR)
     -m|--installmount:    Where the install mounts the CD during install (default: $DEFAULT_ISO_INSTALL_MOUNT)
-    -N|--dns:             DNS Server
+    -N|--dns:             DNS Server (ddefault: $DEFAULT_ISO_DNS)
     -n|--nic:             Network device (default: $DEFAULT_ISO_NIC)
     -O|--isopackages:     List of packages to install (default: $DEFAULT_ISO_PACKAGES)
     -o|--outputiso:       Output ISO file (default: $DEFAULT_OUTPUT_FILE_BASE)
@@ -1795,6 +1795,9 @@ if [ "$ISO_SSH_KEY_FILE" = "" ]; then
   ISO_SSH_KEY_FILE="$DEFAULT_ISO_SSH_KEY_FILE"
 else
   ISO_SSH_KEY="$DEFAULT_ISO_SSH_KEY"
+fi
+if [ "$ISO_CIDR" = "" ]; then
+  ISO_CIDR="$DEFAULT_ISO_CIDR"
 fi
 if [ "$ISO_ARCH" = "" ]; then
   ISO_ARCH="$DEFAULT_ISO_ARCH"

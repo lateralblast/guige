@@ -68,17 +68,17 @@ You can get help using the -h or --help switch:
     -A|--codename         Linux release codename (default: jammy)
     -a|--action:          Action to perform (e.g. createiso, justiso, runchrootscript, checkdocker, installrequired)
     -B|--layout           Layout (default: us)
-    -C|--cidr:            CIDR
+    -C|--cidr:            CIDR (default: 24)
     -c|--sshkeyfile:      SSH key file to use as SSH key (default: /Users/spindler/.ssh/id_rsa.pub)
     -d|--bootdisk:        Boot Disk devices (default: ROOT_DEV)
     -E|--locale:          LANGUAGE (default: en_US.UTF-8)
     -e|--lcall:           LC_ALL (default: en_US)
     -f|--delete:          Remove previously created files (default: false)
-    -G|--gateway:         Gateway
+    -G|--gateway:         Gateway (default 192.168.1.254)
     -g|--grubmenu:        Set default grub menu (default: 0)
     -H|--hostname:        Hostname (default: ubuntu)
     -h|--help             Help/Usage Information
-    -I|--ip:              IP Address
+    -I|--ip:              IP Address (default: 192.168.1.2)
     -i|--inputiso:        Input/base ISO file (default: ubuntu-22.04.1-live-server-arm64.iso)
     -J|--hwe              Use HWE kernel (defaults: false)
     -j|--autoinstalldir   Directory where autoinstall config files are stored on ISO (default: autoinstall)
@@ -87,7 +87,7 @@ You can get help using the -h or --help switch:
     -L|--release:         LSB release (default: 22.04.1)
     -M|--installtarget:   Where the install mounts the target filesystem (default: )
     -m|--installmount:    Where the install mounts the CD during install (default: /cdrom)
-    -N|--dns:             DNS Server
+    -N|--dns:             DNS Server (ddefault: )
     -n|--nic:             Network device (default: eth0)
     -O|--isopackages:     List of packages to install (default: zfsutils-linux grub-efi zfs-initramfs net-tools curl wget sudo file rsync)
     -o|--outputiso:       Output ISO file (default: ubuntu-22.04.1-live-server-arm64-autoinstall.iso)
