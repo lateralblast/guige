@@ -1154,8 +1154,8 @@ prepare_autoinstall_iso () {
         handle_output "echo \"    - arches:\" >> $CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
         handle_output "echo \"      - default\" >> $CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
         handle_output "echo \"      uri: http://ports.ubuntu.com/ubuntu-ports\" >> $CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
-        handle_output "echo \"  package_update: false\" >> $CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
-        handle_output "echo \"  package_upgrade: false\" >> $CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
+        handle_output "echo \"  package_update: $DO_INSTALL_ISO_UPDATE\" >> $CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
+        handle_output "echo \"  package_upgrade: $DO_INSTALL_ISO_UPGRADE\" >> $CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
         handle_output "echo \"  drivers:\" >> $CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
         handle_output "echo \"    install: false\" >> $CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
         handle_output "echo \"  user-data:\" >> $CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
@@ -1308,8 +1308,8 @@ prepare_autoinstall_iso () {
           echo "    - arches:" >> $CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data
           echo "      - default" >> $CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data
           echo "      uri: http://ports.ubuntu.com/ubuntu-ports" >> $CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data
-          echo "  package_update: false" >> $CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data
-          echo "  package_upgrade: false" >> $CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data
+          echo "  package_update: $DO_ISO_INSTALL_UPDATE" >> $CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data
+          echo "  package_upgrade: $DO_INSTALL_ISO_UPGRADE" >> $CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data
           echo "  drivers:" >> $CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data
           echo "    install: false" >> $CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data
           echo "  user-data:" >> $CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data
