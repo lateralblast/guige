@@ -11,7 +11,7 @@ used to hang a shield on the shoulder or neck when not in use.
 Version
 -------
 
-Current version: 0.7.1
+Current version: 0.7.2
 
 Introduction
 ------------
@@ -64,11 +64,12 @@ Usage
 You can get help using the -h or --help switch:
 
 ```
-   Usage: guige.sh [OPTIONS...]
+  Usage: guige.sh [OPTIONS...]
     -A|--codename         Linux release codename (default: jammy)
     -a|--action:          Action to perform (e.g. createiso, justiso, runchrootscript, checkdocker, installrequired)
     -B|--layout           Layout (default: us)
     -C|--cidr:            CIDR
+    -c|--sshkeyfile       SSH key file to use as SSH key (default: /Users/spindler/.ssh/id_rsa.pub)
     -d|--bootdisk         Boot Disk devices (default: ROOT_DEV)
     -E|--locale           LANGUAGE (default: en_US.UTF-8)
     -e|--lcall            LC_ALL (default: en_US)
@@ -78,7 +79,7 @@ You can get help using the -h or --help switch:
     -H|--hostname:        Hostname (default: ubuntu)
     -h|--help             Help/Usage Information
     -I|--ip:              IP Address
-    -i|--inputiso:        Input/base ISO file (default: ubuntu-22.04.1-live-server-amd64.iso)
+    -i|--inputiso:        Input/base ISO file (default: ubuntu-22.04.1-live-server-arm64.iso)
     -J|--hwe              Use HWE kernel (defaults: false)
     -j|--autoinstalldir   Directory where autoinstall config files are stored on ISO (default: autoinstall)
     -K|--kernel:          Kernel package (default: linux-generic)
@@ -89,11 +90,11 @@ You can get help using the -h or --help switch:
     -N|--dns              DNS Server
     -n|--nic:             Network device (default: eth0)
     -O|--isopackages:     List of packages to install (default: zfsutils-linux grub-efi zfs-initramfs net-tools curl wget sudo file rsync)
-    -o|--outputiso:       Output ISO file (default: ubuntu-22.04.1-live-server-amd64-autoinstall.iso)
+    -o|--outputiso:       Output ISO file (default: ubuntu-22.04.1-live-server-arm64-autoinstall.iso)
     -P|--password:        Password (default: ubuntu)
     -p|--chrootpackages:  List of packages to add to ISO (default: )
     -Q|--build:           Type of ISO to build (default: live-server)
-    -q|--arch:            Architecture (default: amd64)
+    -q|--arch:            Architecture (default: arm64)
     -R|--realname:        Realname (default Ubuntu)
     -r|--mode:            Mode (default: defaults)
     -S|--swapsize:        Swap size (default 2G)
@@ -104,7 +105,7 @@ You can get help using the -h or --help switch:
     -u|--postinstall      Postinstall action (e.g. installpackages, upgrade, distupgrade)
     -V|--version          Display Script Version
     -v|--verbose          Verbose output (default: false)
-    -W|--workdir:         Work directory (default: /home/sysadmin/ubuntu-iso/22.04.1)
+    -W|--workdir:         Work directory (default: /Users/spindler/ubuntu-iso/22.04.1)
     -w|--checkdirs        Check work directories exist
     -X|--isovolid         ISO Volume ID (default: Ubuntu 22.04.1 Server)
     -x|--grubtimeout:     Grub timeout (default: 10)

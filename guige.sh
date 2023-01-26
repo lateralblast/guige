@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Name:         guige (Generic Ubuntu ISO Generation Engine)
-# Version:      0.7.1
+# Version:      0.7.2
 # Release:      1
 # License:      CC-BA (Creative Commons By Attribution)
 #               http://creativecommons.org/licenses/by/4.0/legalcode
@@ -51,6 +51,8 @@ DEFAULT_ISO_BUILD_TYPE="live-server"
 DEFAULT_ISO_PACKAGES="zfsutils-linux grub-efi zfs-initramfs net-tools curl wget sudo file rsync"
 REQUIRED_PACKAGES="p7zip-full wget xorriso whois squashfs-tools sudo file rsync"
 DEFAULT_DOCKER_ARCH="amd64 arm64"
+DEFAULT_ISO_SSH_KEY_FILE="$HOME/.ssh/id_rsa.pub"
+DEFAULT_ISO_SSH_KEY=""
 
 # Default flags
 
@@ -185,6 +187,7 @@ print_help () {
     -a|--action:          Action to perform (e.g. createiso, justiso, runchrootscript, checkdocker, installrequired)
     -B|--layout           Layout (default: $DEFAULT_ISO_LAYOUT)
     -C|--cidr:            CIDR
+    -c|--sshkeyfile       SSH key file to use as SSH key (default: $DEFAULT_ISO_SSH_KEY_FILE)
     -d|--bootdisk         Boot Disk devices (default: $DEFAULT_ISO_DEVICES)
     -E|--locale           LANGUAGE (default: $DEFAULT_ISO_LOCALE)
     -e|--lcall            LC_ALL (default: $DEFAULT_ISO_LC_ALL)
@@ -1188,7 +1191,7 @@ prepare_autoinstall_iso () {
         handle_output "echo \"    version: 2\" >> $CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
         handle_output "echo \"  ssh:\" >> $CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
         handle_output "echo \"    allow-pw: true\" >> $CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
-        handle_output "echo \"    authorized-keys: []\" >> $CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
+        handle_output "echo \"    authorized-keys: [$ISO_SSH_KEY]\" >> $CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
         handle_output "echo \"    install-server: true\" >> $CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
         handle_output "echo \"  storage:\" >> $CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
         if [ "$ISO_VOLMGR" = "zfs" ]; then
@@ -1342,7 +1345,7 @@ prepare_autoinstall_iso () {
           echo "    version: 2" >> $CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data
           echo "  ssh:" >> $CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data
           echo "    allow-pw: true" >> $CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data
-          echo "    authorized-keys: []" >> $CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data
+          echo "    authorized-keys: [$ISO_SSH_KEY]" >> $CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data
           echo "    install-server: true" >> $CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data
           echo "  storage:" >> $CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data
           if [ "$ISO_VOLMGR" = "zfs" ]; then
@@ -1474,6 +1477,12 @@ do
     -C|--cidr)
       ISO_CIDR="$2"
       shift 2
+      ;;
+    -c|--sshkeyfile)
+      ISO_SSH_KEY_FILE="$2"
+      shift 2
+      DO_ISO_SSH_KEY="true"
+      shift
       ;;
     -d|--bootdisk)
       ISO_DEVICES+="$2"
@@ -1776,6 +1785,11 @@ case $DELETE in
     FULL_FORCE_MODE="false"
 esac
 
+if [ "$ISO_SSH_KEY_FILE" = "" ]; then
+  ISO_SSH_KEY_FILE="$DEFAULT_ISO_SSH_KEY_FILE"
+else
+  ISO_SSH_KEY="$DEFAULT_ISO_SSH_KEY"
+fi
 if [ "$ISO_ARCH" = "" ]; then
   ISO_ARCH="$DEFAULT_ISO_ARCH"
   DOCKER_ARCH="$DEFAULT_DOCKER_ARCH"
@@ -2141,6 +2155,14 @@ if [ "$INTERACTIVE_MODE" = "true" ]; then
   # Get swap size 
   read -p "Enter Swap Size [$ISO_SWAPSIZE]: " NEW_ISO_SWAPSIZE
   ISO_SWAPSIZE=${NEW_ISO_SWAPSIZE:-$ISO_SWAPSIZE}
+  # Determine wether we use an SSH key
+  read -p "Use SSH keys? [$DO_ISO_SSH_KEY]: " NEW_DO_ISO_SSH_KEY
+  DO_ISO_SSH_KEY=${NEW_DO_ISO_SSH_KEY:-$DO_ISO_SSH_KEY}
+  if [ "$DO_ISO_SSH_KEY" = "true" ]; then
+    # Determine wether we use an SSH key
+    read -p "SSH keys file [$ISO_SSH_KEY_FILE]: " NEW_ISO_SSH_KEY_FILE
+    ISO_SSH_KEY_FILE=${NEW_ISO_SSH_KEY_FILE:-$ISO_SSH_KEY_FILE}
+  fi
 fi
 
 if [ "$DO_DOCKER" = "true" ] || [ "$DO_CHECK_DOCKER" = "true" ]; then
@@ -2173,6 +2195,16 @@ if [ "$DO_DOCKER" = "true" ] || [ "$DO_CHECK_DOCKER" = "true" ]; then
     fi
   fi
   DO_PRINT_HELP="false"
+fi
+
+# Get SSH key
+
+if [ "$DO_ISO_SSH_KEY" = "true" ]; then
+  if ! [ -f "$ISO_SSH_KEY_FILE" ]; then
+    echo "SSH Key file ($ISO_SSH_KEY_FILE) does not exist"
+  else
+    ISO_SSH_KEY=$(cat $ISO_SSH_KEY_FILE)
+  fi
 fi
 
 # Handle specific functions
