@@ -135,3 +135,6 @@
 # Collapsed some commandline options
 # 0.6.8: Wed 25 Jan 2023 23:29:55 AEDT
 # Collapsed more commandline options
+# 0.6.9: Thu 26 Jan 2023 08:59:00 AEDT
+# Added initial support for static IP config
+# 0.7.0: Bug fixes for static IP config

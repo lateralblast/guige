@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Name:         guige (Generic Ubuntu ISO Generation Engine)
-# Version:      0.6.8
+# Version:      0.7.0
 # Release:      1
 # License:      CC-BA (Creative Commons By Attribution)
 #               http://creativecommons.org/licenses/by/4.0/legalcode
@@ -36,7 +36,7 @@ DEFAULT_ISO_KERNEL="linux-generic"
 DEFAULT_ISO_KERNEL_ARGS="net.ifnames=0 biosdevname=0"
 DEFAULT_ISO_NIC="eth0"
 DEFAULT_ISO_IP="192.168.1.2"
-DEFAULT_ISO_NETMASK="255.255.255.0"
+DEFAULT_ISO_CIDR="24"
 DEFAULT_ISO_GATEWAY="192.168.1.254"
 DEFAULT_ISO_SWAPSIZE="2G"
 DEFAULT_ISO_MENU="0"
@@ -183,15 +183,16 @@ print_help () {
     -A|--codename         Linux release codename (default: $DEFAULT_ISO_CODENAME)
     -a|--action:          Action to perform (e.g. createiso, justiso, runchrootscript, checkdocker, installrequired)
     -B|--layout           Layout (default: $DEFAULT_ISO_LAYOUT)
-    -D|--mode:            Mode (default: $DEFAULT_MODE)
+    -C|--cidr:            CIDR
     -d|--bootdisk         Boot Disk devices (default: $DEFAULT_ISO_DEVICES)
     -E|--locale           LANGUAGE (default: $DEFAULT_ISO_LOCALE)
     -e|--lcall            LC_ALL (default: $DEFAULT_ISO_LC_ALL)
     -f|--delete:          Remove previously created files (default: $FORCE_MODE)
-    -G|--isovolid         ISO Volume ID (default: $DEFAULT_ISO_VOLID)
+    -G|--gateway:         Gateway
     -g|--grubmenu:        Set default grub menu (default: $DEFAULT_ISO_GRUB_MENU)
     -H|--hostname:        Hostname (default: $DEFAULT_ISO_HOSTNAME)
     -h|--help             Help/Usage Information
+    -I|--ip:              IP Address
     -i|--inputiso:        Input/base ISO file (default: $DEFAULT_INPUT_FILE_BASE)
     -J|--hwe              Use HWE kernel (defaults: $ISO_HWE_KERNEL)
     -j|--autoinstalldir   Directory where autoinstall config files are stored on ISO (default: $DEFAULT_ISO_AUTOINSTALL_DIR)
@@ -200,8 +201,8 @@ print_help () {
     -L|--release:         LSB release (default: $DEFAULT_ISO_RELEASE)
     -M|--installtarget:   Where the install mounts the target filesystem (default: $DEFAULT_ISO_TARGET_DIR)
     -m|--installmount:    Where the install mounts the CD during install (default: $DEFAULT_ISO_INSTALL_MOUNT)
-    -N|--nic:             Network device (default: $DEFAULT_ISO_NIC)
-    -n|--nounmount        Do not unmount loopback filesystems (useful for troubleshooting)
+    -N|--dns              DNS Server
+    -n|--nic:             Network device (default: $DEFAULT_ISO_NIC)
     -O|--isopackages:     List of packages to install (default: $DEFAULT_ISO_PACKAGES)
     -o|--outputiso:       Output ISO file (default: $DEFAULT_OUTPUT_FILE_BASE)
     -P|--password:        Password (default: $DEFAULT_ISO_USERNAME)
@@ -209,6 +210,7 @@ print_help () {
     -Q|--build:           Type of ISO to build (default: $DEFAULT_ISO_BUILD_TYPE)
     -q|--arch:            Architecture (default: $DEFAULT_ISO_ARCH)
     -R|--realname:        Realname (default $DEFAULT_ISO_REALNAME)
+    -r|--mode:            Mode (default: $DEFAULT_MODE)
     -S|--swapsize:        Swap size (default $DEFAULT_ISO_SWAPSIZE)
     -s|--staticip         Static IP configuration (default DHCP)
     -T|--timezone:        Timezone (default: $DEFAULT_ISO_TIMEZONE)
@@ -219,7 +221,9 @@ print_help () {
     -v|--verbose          Verbose output (default: $VERBOSE_MODE)
     -W|--workdir:         Work directory (default: $DEFAULT_WORK_DIR)
     -w|--checkdirs        Check work directories exist
+    -X|--isovolid         ISO Volume ID (default: $DEFAULT_ISO_VOLID)
     -x|--grubtimeout:     Grub timeout (default: $DEFAULT_ISO_GRUB_TIMEOUT)
+    -Z|--nounmount        Do not unmount loopback filesystems (useful for troubleshooting)
     -z|--volumemanager:   Volume Managers (defauls: $DEFAULT_ISO_VOLMGRS)
 HELP
   exit
@@ -1167,10 +1171,19 @@ prepare_autoinstall_iso () {
         handle_output "echo \"  locale: $ISO_LOCALE\" >> $CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
         handle_output "echo \"  network:\" >> $CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
         handle_output "echo \"    ethernets:\" >> $CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
-        handle_output "echo \"      $NIC:\" >> $CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
-        handle_output "echo \"        critical: true\" >> $CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
-        handle_output "echo \"        dhcp-identifier: mac\" >> $CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
-        handle_output "echo \"        dhcp4: $ISO_DHCP\" >> $CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
+        handle_output "echo \"      $ISO_NIC:\" >> $CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
+        if [ "$ISO_DHCP" = "true" ]; then
+          handle_output "echo \"        critical: true\" >> $CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
+          handle_output "echo \"        dhcp-identifier: mac\" >> $CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
+          handle_output "echo \"        dhcp4: $ISO_DHCP\" >> $CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
+        else
+          handle_output "echo \"        addresses:\" >> $CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
+          handle_output "echo \"        - $ISO_IP/$ISO_CIDR\" >> $CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
+          handle_output "echo \"        gateway4; $ISO_GATEWAY\" >> $CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
+          handle_output "echo \"        nameservers:\" >> $CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
+          handle_output "echo \"          addresses:\" >> $CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
+          handle_output "echo \"          - $ISO_DNS\" >> $CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
+        fi
         handle_output "echo \"    version: 2\" >> $CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
         handle_output "echo \"  ssh:\" >> $CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
         handle_output "echo \"    allow-pw: true\" >> $CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
@@ -1313,9 +1326,18 @@ prepare_autoinstall_iso () {
           echo "  network:" >> $CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data
           echo "    ethernets:" >> $CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data
           echo "      $ISO_NIC:" >> $CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data
-          echo "        critical: true" >> $CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data
-          echo "        dhcp-identifier: mac" >> $CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data
-          echo "        dhcp4: $ISO_DHCP" >> $CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data
+          if [ "$ISO_DHCP" = "true" ]; then
+            echo "        critical: true" >> $CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data
+            echo "        dhcp-identifier: mac" >> $CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data
+            echo "        dhcp4: $ISO_DHCP" >> $CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data
+          else
+            echo "        addresses:" >> $CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data
+            echo "        - $ISO_IP/$ISO_CIDR" >> $CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data
+            echo "        gateway4: $ISO_GATEWAY" >> $CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data
+            echo "        nameservers:" >> $CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data
+            echo "          addresses:" >> $CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data
+            echo "          - $ISO_DNS" >> $CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data
+          fi
           echo "    version: 2" >> $CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data
           echo "  ssh:" >> $CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data
           echo "    allow-pw: true" >> $CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data
@@ -1448,8 +1470,8 @@ do
       ISO_LAYOUT="$2"
       shift 2
       ;;
-    -D|--mode)
-      MODE="$2"
+    -C|--cidr)
+      ISO_CIDR="$2"
       shift 2
       ;;
     -d|--bootdisk)
@@ -1468,8 +1490,8 @@ do
       DELETE="$2"
       shift 2
       ;;
-    -G|--isovolid)
-      ISO_VOLID="$2"
+    -G|--gateway)
+      ISO_GATEWAY="$2"
       shift 2
       ;;
     -g|--grubmenu)
@@ -1483,6 +1505,10 @@ do
     -h|--help)
       print_help 
       exit
+      ;;
+    -I|--ip)
+      ISO_IP="$2"
+      shift 2
       ;;
     -i|--inputiso)
       INPUT_FILE="$2"
@@ -1513,7 +1539,11 @@ do
       ISO_INSTALL_MOUNT="$2"
       shift 2 
       ;;
-    -N|--nic)
+    -N|--dns)
+      ISO_DNS="$2"
+      shift 2
+      ;;
+    -n|--nic)
       ISO_NIC="$2"
       shift 2
       ;;
@@ -1548,6 +1578,10 @@ do
       ;;
     -R|--realname)
       ISO_REALNAME="$2"
+      shift 2
+      ;;
+    -r|--mode)
+      MODE="$2"
       shift 2
       ;;
     -S|--swapsize)
@@ -1591,9 +1625,17 @@ do
       OLD_WORK_DIR="$2"
       shift 2
       ;;
+    -X|--isovolid)
+      ISO_VOLID="$2"
+      shift 2
+      ;;
     -x|--grubtimeout)
       ISO_GRUB_TIMEOUT="$2"
       shift 2
+      ;;
+    -Z|--nounmount)
+      DO_NO_UNMOUNT_ISO="true";
+      shift
       ;;
     -z|--volumemanager)
       ISO_VOLMGR="$2"
