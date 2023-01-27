@@ -64,12 +64,13 @@ Usage
 You can get help using the -h or --help switch:
 
 ```
-  Usage: guige.sh [OPTIONS...]
+ Usage: guige.sh [OPTIONS...]
     -A|--codename         Linux release codename (default: jammy)
     -a|--action:          Action to perform (e.g. createiso, justiso, runchrootscript, checkdocker, installrequired)
     -B|--layout           Layout (default: us)
     -C|--cidr:            CIDR (default: 24)
     -c|--sshkeyfile:      SSH key file to use as SSH key (default: /Users/spindler/.ssh/id_rsa.pub)
+    -D|--installdrivers   Install additional drivers (default: false)
     -d|--bootdisk:        Boot Disk devices (default: ROOT_DEV)
     -E|--locale:          LANGUAGE (default: en_US.UTF-8)
     -e|--lcall:           LC_ALL (default: en_US)

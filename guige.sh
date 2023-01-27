@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Name:         guige (Generic Ubuntu ISO Generation Engine)
-# Version:      0.7.3
+# Version:      0.7.4
 # Release:      1
 # License:      CC-BA (Creative Commons By Attribution)
 #               http://creativecommons.org/licenses/by/4.0/legalcode
@@ -54,6 +54,7 @@ DEFAULT_DOCKER_ARCH="amd64 arm64"
 DEFAULT_ISO_SSH_KEY_FILE="$HOME/.ssh/id_rsa.pub"
 DEFAULT_ISO_SSH_KEY=""
 DEFAULT_ISO_ALLOW_PASSWORD="true"
+DEFAULT_ISO_INSTALL_DRIVERS="false"
 
 # Default flags
 
@@ -89,6 +90,7 @@ DO_ISO_SQUASHFS_UPDATE="false"
 DO_ISO_QUERY="false"
 DO_DOCKER="false"
 DO_PRINT_ENV="false"
+
 
 # Get OS name
 
@@ -189,6 +191,7 @@ print_help () {
     -B|--layout           Layout (default: $DEFAULT_ISO_LAYOUT)
     -C|--cidr:            CIDR (default: $DEFAULT_ISO_CIDR)
     -c|--sshkeyfile:      SSH key file to use as SSH key (default: $DEFAULT_ISO_SSH_KEY_FILE)
+    -D|--installdrivers   Install additional drivers (default: $DEFAULT_ISO_INSTALL_DRIVERS)
     -d|--bootdisk:        Boot Disk devices (default: $DEFAULT_ISO_DEVICES)
     -E|--locale:          LANGUAGE (default: $DEFAULT_ISO_LOCALE)
     -e|--lcall:           LC_ALL (default: $DEFAULT_ISO_LC_ALL)
@@ -1162,7 +1165,7 @@ prepare_autoinstall_iso () {
         handle_output "echo \"  package_update: $DO_INSTALL_ISO_UPDATE\" >> $CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
         handle_output "echo \"  package_upgrade: $DO_INSTALL_ISO_UPGRADE\" >> $CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
         handle_output "echo \"  drivers:\" >> $CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
-        handle_output "echo \"    install: false\" >> $CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
+        handle_output "echo \"    install: $ISO_INSTALL_DRIVERS\" >> $CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
         handle_output "echo \"  user-data:\" >> $CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
         handle_output "echo \"    timezone: $TIMEZONE\" >> $CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
         handle_output "echo \"  identity:\" >> $CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
@@ -1316,7 +1319,7 @@ prepare_autoinstall_iso () {
           echo "  package_update: $DO_ISO_INSTALL_UPDATE" >> $CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data
           echo "  package_upgrade: $DO_INSTALL_ISO_UPGRADE" >> $CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data
           echo "  drivers:" >> $CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data
-          echo "    install: false" >> $CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data
+          echo "    install: $ISO_INSTALL_DRIVERS" >> $CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data
           echo "  user-data:" >> $CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data
           echo "    timezone: $TIMEZONE" >> $CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data
           echo "  identity:" >> $CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data
@@ -1485,6 +1488,10 @@ do
       shift 2
       DO_ISO_SSH_KEY="true"
       shift
+      ;;
+    -D|--installdrivers)
+      ISO_INSTALL_DRIVERS="$2"
+      shift 2
       ;;
     -d|--bootdisk)
       ISO_DEVICES+="$2"
@@ -1798,6 +1805,9 @@ else
 fi
 if [ "$ISO_CIDR" = "" ]; then
   ISO_CIDR="$DEFAULT_ISO_CIDR"
+fi
+if [ "$ISO_INSTALL_DRIVERS" = "" ]; then
+  ISO_INSTALL_DRIVERS="$DEFAULT_ISO_INSTALL_DRIVERS"
 fi
 if [ "$ISO_ARCH" = "" ]; then
   ISO_ARCH="$DEFAULT_ISO_ARCH"
@@ -2178,6 +2188,9 @@ if [ "$INTERACTIVE_MODE" = "true" ]; then
     read -p "SSH keys file [$ISO_SSH_KEY_FILE]: " NEW_ISO_SSH_KEY_FILE
     ISO_SSH_KEY_FILE=${NEW_ISO_SSH_KEY_FILE:-$ISO_SSH_KEY_FILE}
   fi
+  # Get wether to install drivers 
+  read -p "Enter Swap Size [$ISO_INSTALL_DRIVERS]: " NEW_ISO_INSTALL_DRIVERS
+  ISO_INSTALL_DRIVERS=${NEW_ISO_INSTALL_DRIVERS:-$ISO_INSTALL_DRIVERS}
 fi
 
 if [ "$DO_DOCKER" = "true" ] || [ "$DO_CHECK_DOCKER" = "true" ]; then
