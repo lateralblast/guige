@@ -53,7 +53,7 @@ REQUIRED_PACKAGES="p7zip-full wget xorriso whois squashfs-tools sudo file rsync"
 DEFAULT_DOCKER_ARCH="amd64 arm64"
 DEFAULT_ISO_SSH_KEY_FILE="$HOME/.ssh/id_rsa.pub"
 DEFAULT_ISO_SSH_KEY=""
-DEFAULT_ISO_ALLOW_PASSWORD="true"
+DEFAULT_ISO_ALLOW_PASSWORD="false"
 DEFAULT_ISO_INSTALL_DRIVERS="false"
 
 # Default flags
@@ -231,7 +231,7 @@ print_help () {
     -w|--checkdirs        Check work directories exist
     -X|--isovolid:        ISO Volume ID (default: $DEFAULT_ISO_VOLID)
     -x|--grubtimeout:     Grub timeout (default: $DEFAULT_ISO_GRUB_TIMEOUT)
-    -Y|--allowpassword:   Allow password access via SSH (default: $DEFAULT_ISO_ALLOW_PASSWORD)
+    -Y|--allowpassword   Allow password access via SSH (default: $DEFAULT_ISO_ALLOW_PASSWORD)
     -Z|--nounmount        Do not unmount loopback filesystems (useful for troubleshooting)
     -z|--volumemanager:   Volume Managers (defauls: $DEFAULT_ISO_VOLMGRS)
 HELP
@@ -1490,8 +1490,8 @@ do
       shift
       ;;
     -D|--installdrivers)
-      ISO_INSTALL_DRIVERS="$2"
-      shift 2
+      ISO_INSTALL_DRIVERS="true"
+      shift
       ;;
     -d|--bootdisk)
       ISO_DEVICES+="$2"
@@ -1653,8 +1653,8 @@ do
       shift 2
       ;;
     -Y|--allowpassword)
-      ISO_ALLOW_PASSWORD="$2"
-      shift 2
+      ISO_ALLOW_PASSWORD="true"
+      shift
       ;;
     -Z|--nounmount)
       DO_NO_UNMOUNT_ISO="true";
