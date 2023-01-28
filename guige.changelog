@@ -147,3 +147,7 @@
 # Added option for allowing SSH password access
 # 0.7.4: Fri 27 Jan 2023 14:35:50 AEDT
 # Added option to install addtional drivers
+# 0.7.5: Sat 28 Jan 2023 23:47:09 AEDT
+# Added code to deploy ISO to Dell Server via Ansible
+# 0.7.6: Sun 29 Jan 2023 08:34:10 AEDT
+# Bug fixes

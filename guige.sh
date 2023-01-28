@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Name:         guige (Generic Ubuntu ISO Generation Engine)
-# Version:      0.7.5
+# Version:      0.7.6
 # Release:      1
 # License:      CC-BA (Creative Commons By Attribution)
 #               http://creativecommons.org/licenses/by/4.0/legalcode
@@ -120,7 +120,7 @@ fi
 if [ -f "/usr/bin/uname" ]; then
   DEFAULT_ISO_ARCH=$( uname -m )
   if [ "$DEFAULT_ISO_OS_NAME" = "Ubuntu" ]; then
-    DEFAULT_BOOT_SERVER=$( ip addr | grep "inet " | grep -v "127.0.0.1" |head -1 |awk '{print $2}' |cut -f1 -d/ )
+    DEFAULT_BOOT_SERVER_IP=$( ip addr | grep "inet " | grep -v "127.0.0.1" |head -1 |awk '{print $2}' |cut -f1 -d/ )
     if [ "$DEFAULT_ISO_ARCH" = "x86_64" ]; then
       DEFAULT_ISO_ARCH="amd64"
     fi
@@ -128,11 +128,11 @@ if [ -f "/usr/bin/uname" ]; then
       DEFAULT_ISO_ARCH="arm64"
     fi
   else
-    DEFAULT_BOOT_SERVER=$( ifconfig | grep "inet " | grep -v "127.0.0.1" |head -1 |awk '{print $2}' )
+    DEFAULT_BOOT_SERVER_IP=$( ifconfig | grep "inet " | grep -v "127.0.0.1" |head -1 |awk '{print $2}' )
   fi
 else
   DEFAULT_ISO_ARCH="$CURRENT_ISO_ARCH"
-  DEFAULT_BOOT_SERVER=$( ifconfig | grep "inet " | grep -v "127.0.0.1" |head -1 |awk '{print $2}' )
+  DEFAULT_BOOT_SERVER_IP=$( ifconfig | grep "inet " | grep -v "127.0.0.1" |head -1 |awk '{print $2}' )
 fi
 
 # Get default release
@@ -208,7 +208,7 @@ print_help () {
     -A|--codename         Linux release codename (default: $DEFAULT_ISO_CODENAME)
     -a|--action:          Action to perform (e.g. createiso, justiso, runchrootscript, checkdocker, installrequired)
     -B|--layout           Layout (default: $DEFAULT_ISO_LAYOUT)
-    -b|--bootserver:      NFS/Bootserver IP (default: $DEFAULT_BOOT_SERVER)
+    -b|--bootserverip:    NFS/Bootserver IP (default: $DEFAULT_BOOT_SERVER_IP)
     -C|--cidr:            CIDR (default: $DEFAULT_ISO_CIDR)
     -c|--sshkeyfile:      SSH key file to use as SSH key (default: $DEFAULT_ISO_SSH_KEY_FILE)
     -D|--installdrivers   Install additional drivers (default: $DEFAULT_ISO_INSTALL_DRIVERS)
@@ -651,7 +651,7 @@ create_ansible () {
   handle_output "echo \"    command:                    \\\"{{ idrac_osd_command_default }}\\\"\" >> $IDRAC_YAML"
   handle_output "echo \"    validate_certs:             no\" >> $IDRAC_YAML"
   handle_output "echo \"    force_basic_auth:           yes\" >> $IDRAC_YAML"
-  handle_output "echo \"    share_name:                 $BMC_IP:$NFS_DIR\" >> $IDRAC_YAML"
+  handle_output "echo \"    share_name:                 $BOOT_SERVER_IP:$NFS_DIR\" >> $IDRAC_YAML"
   handle_output "echo \"    ubuntu_iso:                 $NFS_FILE\" >> $IDRAC_YAML"
   handle_output "echo \"  collections:\" >> $IDRAC_YAML"
   handle_output "echo \"    - dellemc.openmanage\" >> $IDRAC_YAML"
@@ -752,7 +752,7 @@ create_ansible () {
     echo "    command:                    \"{{ idrac_osd_command_default }}\"" >> $IDRAC_YAML
     echo "    validate_certs:             no" >> $IDRAC_YAML
     echo "    force_basic_auth:           yes" >> $IDRAC_YAML
-    echo "    share_name:                 $BMC_IP:$NFS_DIR" >> $IDRAC_YAML
+    echo "    share_name:                 $BOOT_SERVER_IP:$NFS_DIR" >> $IDRAC_YAML
     echo "    ubuntu_iso:                 $NFS_FILE" >> $IDRAC_YAML
     echo "  collections:" >> $IDRAC_YAML
     echo "    - dellemc.openmanage" >> $IDRAC_YAML
@@ -845,9 +845,7 @@ install_server () {
   handle_output "# Execute ansible" TEXT
   handle_output "cd $WORK_DIR ; ansible-playbook $IDRAC_YAML -i $HOSTS_YAML"
   if [ "$TEST_MODE" = "false" ]; then
-    echo ""
-#    cd $WORK_DIR/$ISO_RELEASE ; ansible-playbook $IDRAC_YAML -i $HOSTS_YAML
-#    cd $WORK_DIR/$ISO_RELEASE ; ansible-playbook $IDRAC_YAML -i $HOSTS_YAML
+    cd $WORK_DIR/$ISO_RELEASE ; ansible-playbook $IDRAC_YAML -i $HOSTS_YAML
   fi
 }
 
@@ -1810,8 +1808,8 @@ do
       ISO_LAYOUT="$2"
       shift 2
       ;;
-    -b|--bootserver)
-      BOOT_SERVER="$2"
+    -b|--bootserverip)
+      BOOT_SERVER_IP="$2"
       shift 2
       ;;
     -C|--cidr)
@@ -2167,8 +2165,8 @@ if [ "$ISO_SSH_KEY_FILE" = "" ]; then
 else
   ISO_SSH_KEY="$DEFAULT_ISO_SSH_KEY"
 fi
-if [ "$BOOT_SERVER" = "" ]; then
-  BOOT_SERVER="$DEFAULT_BOOT_SERVER"
+if [ "$BOOT_SERVER_IP" = "" ]; then
+  BOOT_SERVER_IP="$DEFAULT_BOOT_SERVER_IP"
 fi
 if [ "$BMC_USERNAME" = "" ]; then
   BMC_USERNAME="$DEFAULT_BMC_USERNAME"

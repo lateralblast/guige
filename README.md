@@ -11,7 +11,7 @@ used to hang a shield on the shoulder or neck when not in use.
 Version
 -------
 
-Current version: 0.7.5
+Current version: 0.7.6
 
 Introduction
 ------------
@@ -68,7 +68,7 @@ You can get help using the -h or --help switch:
     -A|--codename         Linux release codename (default: jammy)
     -a|--action:          Action to perform (e.g. createiso, justiso, runchrootscript, checkdocker, installrequired)
     -B|--layout           Layout (default: us)
-    -b|--bootserver:      NFS/Bootserver IP (default: 192.168.1.47)
+    -b|--bootserverip:    NFS/Bootserver IP (default: 192.168.1.47)
     -C|--cidr:            CIDR (default: 24)
     -c|--sshkeyfile:      SSH key file to use as SSH key (default: /Users/spindler/.ssh/id_rsa.pub)
     -D|--installdrivers   Install additional drivers (default: false)
@@ -206,7 +206,7 @@ Create Ansible code to deploy ISO to Dell Server (but don't deploy):
 Deploy ISO to Dell Server using Ansible:
 
 ```
-./guige.sh --action installserver --bmcip 192.168.11.238 --bmcusername root --bmcpassword XXXXXXXX --arch amd64
+./guige.sh --action installserver --bmcip 192.168.11.238 --bmcusername root --bmcpassword XXXXXXXX --arch amd64 --bootserverip 192.168.11.5
 ```
 
 Process
