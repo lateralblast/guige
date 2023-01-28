@@ -11,7 +11,7 @@ used to hang a shield on the shoulder or neck when not in use.
 Version
 -------
 
-Current version: 0.7.3
+Current version: 0.7.5
 
 Introduction
 ------------
@@ -64,16 +64,18 @@ Usage
 You can get help using the -h or --help switch:
 
 ```
- Usage: guige.sh [OPTIONS...]
+  Usage: guige.sh [OPTIONS...]
     -A|--codename         Linux release codename (default: jammy)
     -a|--action:          Action to perform (e.g. createiso, justiso, runchrootscript, checkdocker, installrequired)
     -B|--layout           Layout (default: us)
+    -b|--bootserver:      NFS/Bootserver IP (default: 192.168.1.47)
     -C|--cidr:            CIDR (default: 24)
     -c|--sshkeyfile:      SSH key file to use as SSH key (default: /Users/spindler/.ssh/id_rsa.pub)
     -D|--installdrivers   Install additional drivers (default: false)
     -d|--bootdisk:        Boot Disk devices (default: ROOT_DEV)
     -E|--locale:          LANGUAGE (default: en_US.UTF-8)
     -e|--lcall:           LC_ALL (default: en_US)
+    -F|--bmcusername:     BMC/iDRAC User (default: root)
     -f|--delete:          Remove previously created files (default: false)
     -G|--gateway:         Gateway (default 192.168.1.254)
     -g|--grubmenu:        Set default grub menu (default: 0)
@@ -86,6 +88,7 @@ You can get help using the -h or --help switch:
     -K|--kernel:          Kernel package (default: linux-generic)
     -k|--kernelargs:      Kernel arguments (default: net.ifnames=0 biosdevname=0)
     -L|--release:         LSB release (default: 22.04.1)
+    -l|--bmcip:           BMC/iDRAC IP (default: 192.168.1.3)
     -M|--installtarget:   Where the install mounts the target filesystem (default: )
     -m|--installmount:    Where the install mounts the CD during install (default: /cdrom)
     -N|--dns:             DNS Server (ddefault: )
@@ -110,7 +113,8 @@ You can get help using the -h or --help switch:
     -w|--checkdirs        Check work directories exist
     -X|--isovolid:        ISO Volume ID (default: Ubuntu 22.04.1 Server)
     -x|--grubtimeout:     Grub timeout (default: 10)
-    -Y|--allowpassword:   Allow password access via SSH (default: true)
+    -Y|--allowpassword    Allow password access via SSH (default: false)
+    -y|--bmcpassword:     BMC/iDRAC password (default: calvin)
     -Z|--nounmount        Do not unmount loopback filesystems (useful for troubleshooting)
     -z|--volumemanager:   Volume Managers (defauls: zfs lvm)
 ```
@@ -185,6 +189,24 @@ Create an ISO with a static IP configuration:
 
 ```
 ./guige.sh --action createiso --verbose --staticip --ip 192.168.1.211 --cidr 24 --dns 8.8.8.8 --gateway 192.168.1.254
+```
+
+Create NFS export for ISO for server install via iDRAC:
+
+```
+./guige.sh --action createexport --bmcip 192.168.11.238
+```
+
+Create Ansible code to deploy ISO to Dell Server (but don't deploy):
+
+```
+./guige.sh --action createansible --bmcip 192.168.11.238 --bmcusername root --bmcpassword XXXXXXXX --arch amd64
+```
+
+Deploy ISO to Dell Server using Ansible:
+
+```
+./guige.sh --action installserver --bmcip 192.168.11.238 --bmcusername root --bmcpassword XXXXXXXX --arch amd64
 ```
 
 Process

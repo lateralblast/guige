@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Name:         guige (Generic Ubuntu ISO Generation Engine)
-# Version:      0.7.4
+# Version:      0.7.5
 # Release:      1
 # License:      CC-BA (Creative Commons By Attribution)
 #               http://creativecommons.org/licenses/by/4.0/legalcode
@@ -18,6 +18,11 @@ SCRIPT_FILE="$0"
 START_PATH=$( pwd )
 SCRIPT_BIN=$( basename $0 |sed "s/^\.\///g")
 SCRIPT_FILE="$START_PATH/$SCRIPT_BIN"
+OS_NAME=$( uname -o )
+OS_ARCH=$( uname -m )
+OS_USER=$( echo $USER )
+BMC_PORT="443"
+BMC_EXPOSE_DURATION="180"
 
 # Default variables
 
@@ -49,12 +54,19 @@ DEFAULT_ISO_LC_ALL="en_US"
 DEFAULT_ISO_LAYOUT="us"
 DEFAULT_ISO_BUILD_TYPE="live-server"
 DEFAULT_ISO_PACKAGES="zfsutils-linux grub-efi zfs-initramfs net-tools curl wget sudo file rsync"
-REQUIRED_PACKAGES="p7zip-full wget xorriso whois squashfs-tools sudo file rsync"
+REQUIRED_PACKAGES="p7zip-full wget xorriso whois squashfs-tools sudo file rsync net-tools nfs-server ansible"
 DEFAULT_DOCKER_ARCH="amd64 arm64"
 DEFAULT_ISO_SSH_KEY_FILE="$HOME/.ssh/id_rsa.pub"
 DEFAULT_ISO_SSH_KEY=""
 DEFAULT_ISO_ALLOW_PASSWORD="false"
 DEFAULT_ISO_INSTALL_DRIVERS="false"
+DEFAULT_BMC_USERNAME="root"
+DEFAULT_BMC_PASSWORD="calvin"
+DEFAULT_BMC_IP="192.168.1.3"
+
+if [ "$OS_NAME" = "Darwin" ]; then
+  REQUIRED_PACKAGES="p7zip wget xorriso ansible squashfs"
+fi
 
 # Default flags
 
@@ -90,6 +102,9 @@ DO_ISO_SQUASHFS_UPDATE="false"
 DO_ISO_QUERY="false"
 DO_DOCKER="false"
 DO_PRINT_ENV="false"
+DO_INSTALL_SERVER="false"
+DO_CREATE_EXPORT="false"
+DO_CREATE_ANSIBLE="false"
 
 
 # Get OS name
@@ -104,16 +119,20 @@ fi
 
 if [ -f "/usr/bin/uname" ]; then
   DEFAULT_ISO_ARCH=$( uname -m )
-  if [ "$DEFAULT_ISO_OSNAME" = "Ubuntu" ]; then
+  if [ "$DEFAULT_ISO_OS_NAME" = "Ubuntu" ]; then
+    DEFAULT_BOOT_SERVER=$( ip addr | grep "inet " | grep -v "127.0.0.1" |head -1 |awk '{print $2}' |cut -f1 -d/ )
     if [ "$DEFAULT_ISO_ARCH" = "x86_64" ]; then
       DEFAULT_ISO_ARCH="amd64"
     fi
     if [ "$DEFAULT_ISO_ARCH" = "aarch64" ]; then
       DEFAULT_ISO_ARCH="arm64"
     fi
+  else
+    DEFAULT_BOOT_SERVER=$( ifconfig | grep "inet " | grep -v "127.0.0.1" |head -1 |awk '{print $2}' )
   fi
 else
   DEFAULT_ISO_ARCH="$CURRENT_ISO_ARCH"
+  DEFAULT_BOOT_SERVER=$( ifconfig | grep "inet " | grep -v "127.0.0.1" |head -1 |awk '{print $2}' )
 fi
 
 # Get default release
@@ -142,8 +161,8 @@ fi
 
 # Check default arches for Docker
 
-if [ "$( uname -o )" = "Darwin" ]; then
-  if [ "$( uname -m )" = "arm64" ]; then
+if [ "$OS_NAME" = "Darwin" ]; then
+  if [ "$OS_ARCH" = "arm64" ]; then
     DEFAULT_DOCKER_ARCH="amd64 arm64"
   else
     DEFAULT_DOCKER_ARCH="amd64"
@@ -189,12 +208,14 @@ print_help () {
     -A|--codename         Linux release codename (default: $DEFAULT_ISO_CODENAME)
     -a|--action:          Action to perform (e.g. createiso, justiso, runchrootscript, checkdocker, installrequired)
     -B|--layout           Layout (default: $DEFAULT_ISO_LAYOUT)
+    -b|--bootserver:      NFS/Bootserver IP (default: $DEFAULT_BOOT_SERVER)
     -C|--cidr:            CIDR (default: $DEFAULT_ISO_CIDR)
     -c|--sshkeyfile:      SSH key file to use as SSH key (default: $DEFAULT_ISO_SSH_KEY_FILE)
     -D|--installdrivers   Install additional drivers (default: $DEFAULT_ISO_INSTALL_DRIVERS)
     -d|--bootdisk:        Boot Disk devices (default: $DEFAULT_ISO_DEVICES)
     -E|--locale:          LANGUAGE (default: $DEFAULT_ISO_LOCALE)
     -e|--lcall:           LC_ALL (default: $DEFAULT_ISO_LC_ALL)
+    -F|--bmcusername:     BMC/iDRAC User (default: $DEFAULT_BMC_USERNAME)
     -f|--delete:          Remove previously created files (default: $FORCE_MODE)
     -G|--gateway:         Gateway (default $DEFAULT_ISO_GATEWAY)
     -g|--grubmenu:        Set default grub menu (default: $DEFAULT_ISO_GRUB_MENU)
@@ -207,6 +228,7 @@ print_help () {
     -K|--kernel:          Kernel package (default: $DEFAULT_ISO_KERNEL)
     -k|--kernelargs:      Kernel arguments (default: $DEFAULT_ISO_KERNEL_ARGS)
     -L|--release:         LSB release (default: $DEFAULT_ISO_RELEASE)
+    -l|--bmcip:           BMC/iDRAC IP (default: $DEFAULT_BMC_IP)
     -M|--installtarget:   Where the install mounts the target filesystem (default: $DEFAULT_ISO_TARGET_DIR)
     -m|--installmount:    Where the install mounts the CD during install (default: $DEFAULT_ISO_INSTALL_MOUNT)
     -N|--dns:             DNS Server (ddefault: $DEFAULT_ISO_DNS)
@@ -231,7 +253,8 @@ print_help () {
     -w|--checkdirs        Check work directories exist
     -X|--isovolid:        ISO Volume ID (default: $DEFAULT_ISO_VOLID)
     -x|--grubtimeout:     Grub timeout (default: $DEFAULT_ISO_GRUB_TIMEOUT)
-    -Y|--allowpassword   Allow password access via SSH (default: $DEFAULT_ISO_ALLOW_PASSWORD)
+    -Y|--allowpassword    Allow password access via SSH (default: $DEFAULT_ISO_ALLOW_PASSWORD)
+    -y|--bmcpassword:     BMC/iDRAC password (default: $DEFAULT_BMC_PASSWORD)
     -Z|--nounmount        Do not unmount loopback filesystems (useful for troubleshooting)
     -z|--volumemanager:   Volume Managers (defauls: $DEFAULT_ISO_VOLMGRS)
 HELP
@@ -431,11 +454,17 @@ check_work_dir () {
 install_required_packages () {
   handle_output "# Check required packages are installed" TEXT
   for PACKAGE in $REQUIRED_PACKAGES; do
-    PACKAGE_VERSION=$( apt show $PACKAGE 2>&1 |grep Version )
-    if ! [ -x "$PACKAGE_VERSION" ]; then
-      handle_output "sudo apt install -y $PACKAGE"
+    if [ "$OS_NAME" = "Darwin" ]; then
+      PACKAGE_VERSION=$( brew list |grep $PACKAGE )
+      COMMAND="brew install $PACKAGE"
+    else
+      PACKAGE_VERSION=$( apt show $PACKAGE 2>&1 |grep Version )
+      COMMAND="sudo apt install -y $PACKAGE"
+    fi
+    if [ -z "$PACKAGE_VERSION" ]; then
+      handle_output "$COMMAND"
       if [ "$TEST_MODE" = "false" ]; then
-        sudo apt install -y $PACKAGE
+        $COMMAND
       fi
     fi
   done
@@ -543,6 +572,200 @@ copy_iso () {
     handle_output "rsync -a $ISO_MOUNT_DIR/ $ISO_NEW_DIR/cd"
     if [ "$TEST_MODE" = "false" ]; then
       rsync -a $ISO_MOUNT_DIR/ $ISO_NEW_DIR/cd
+    fi
+  fi
+}
+
+# Function: Check ansible
+
+check_ansible () {
+  handle_output "# Check ansible is installed" TEXT
+  handle_output "ANSIBLE_BIN=\$( which ansible )"
+  handle_output  "ANSIBLE_CHECK=\$( basename $ANSIBLE_BIN )" 
+  ANSIBLE_BIN=$( which ansible )
+  ANSIBLE_CHECK=$( basename $ANSIBLE_BIN ) 
+  if [ "$OS_NAME" = "Darwin" ]; then
+    COMMAND="brew install ansible"
+  else
+    COMMAND="sudo apt install -y ansible"
+  fi
+  handle_output "$COMMAND"
+  if ! [ "$ANSIBLE_CHECK" = "ansible" ]; then
+    if [ "$TEST_MODE" = "false" ]; then
+      $COMMAND
+    fi
+  fi
+  handle_output "# Check ansible collection is installed" TEXT
+  handle_output "ANSIBLE_CHECK=\$( ansible-galaxy collection list |grep \"dellemc.openmanage\" |awk '{print \$1}' |uniq )"
+  ANSIBLE_CHECK=$( ansible-galaxy collection list |grep "dellemc.openmanage" |awk '{print $1}' |uniq )
+    handle_output "ansible-galaxy collection install dellemc.openmanage"
+  if ! [ "$ANSIBLE_CHECK" = "dellemc.openmanage" ]; then
+    if [ "$TEST_MODE" = "false" ]; then
+      ansible-galaxy collection install dellemc.openmanage
+    fi
+  fi
+}
+
+# Function: Create Ansible
+
+create_ansible () {
+  HOSTS_YAML="$WORK_DIR/hosts.yaml"
+  handle_output "# Create $HOSTS_YAML" TEXT
+  if [ "$TEST_MODE" = "false" ]; then
+    echo "---" > $HOSTS_YAML
+    echo "idrac:" >> $HOSTS_YAML
+    echo "  hosts:" >> $HOSTS_YAML
+    echo "    $ISO_HOSTNAME:" >> $HOSTS_YAML
+    echo "      ansible_host:   $BMC_IP" >> $HOSTS_YAML
+    echo "      baseuri:        $BMC_IP" >> $HOSTS_YAML
+    echo "      idrac_user:     $BMC_USERNAME" >> $HOSTS_YAML
+    echo "      idrac_password: $BMC_PASSWORD" >> $HOSTS_YAML
+  fi
+  IDRAC_YAML="$WORK_DIR/idrac.yaml"
+  NFS_FILE=$( basename $OUTPUT_FILE )
+  NFS_DIR=$( dirname $OUTPUT_FILE )
+  handle_output "# Create $HOSTS_YAML" TEXT
+  if [ "$TEST_MODE" = "false" ]; then
+    echo "- hosts: idrac" > $IDRAC_YAML
+    echo "  name: $ISO_VOLID" >> $IDRAC_YAML
+    echo "  gather_facts: False" >> $IDRAC_YAML
+    echo "  vars:" >> $IDRAC_YAML
+    echo "    idrac_osd_command_allowable_values: [\"BootToNetworkISO\", \"GetAttachStatus\", \"DetachISOImage\"]" >> $IDRAC_YAML
+    echo "    idrac_osd_command_default: \"GetAttachStatus\"" >> $IDRAC_YAML
+    echo "    GetAttachStatus_Code:" >> $IDRAC_YAML
+    echo "      DriversAttachStatus:" >> $IDRAC_YAML
+    echo "        \"0\": \"NotAttached\"" >> $IDRAC_YAML
+    echo "        \"1\": \"Attached\"" >> $IDRAC_YAML
+    echo "      ISOAttachStatus:" >> $IDRAC_YAML
+    echo "        \"0\": \"NotAttached\"" >> $IDRAC_YAML
+    echo "        \"1\": \"Attached\"" >> $IDRAC_YAML
+    echo "    idrac_https_port:           $BMC_PORT" >> $IDRAC_YAML
+    echo "    expose_duration:            $BMC_EXPOSE_DURATION" >> $IDRAC_YAML
+    echo "    command:                    \"{{ idrac_osd_command_default }}\"" >> $IDRAC_YAML
+    echo "    validate_certs:             no" >> $IDRAC_YAML
+    echo "    force_basic_auth:           yes" >> $IDRAC_YAML
+    echo "    share_name:                 $BMC_IP:$NFS_DIR" >> $IDRAC_YAML
+    echo "    ubuntu_iso:                 $NFS_FILE" >> $IDRAC_YAML
+    echo "  collections:" >> $IDRAC_YAML
+    echo "    - dellemc.openmanage" >> $IDRAC_YAML
+    echo "  tasks:" >> $IDRAC_YAML
+    echo "    - name: find the URL for the DellOSDeploymentService" >> $IDRAC_YAML
+    echo "      ansible.builtin.uri:" >> $IDRAC_YAML
+    echo "        url: \"https://{{ baseuri }}/redfish/v1/Systems/System.Embedded.1\"" >> $IDRAC_YAML
+    echo "        user: \"{{ idrac_user }}\"" >> $IDRAC_YAML
+    echo "        password: \"{{ idrac_password }}\"" >> $IDRAC_YAML
+    echo "        method: GET" >> $IDRAC_YAML
+    echo "        headers:" >> $IDRAC_YAML
+    echo "          Accept: \"application/json\"" >> $IDRAC_YAML
+    echo "          OData-Version: \"4.0\"" >> $IDRAC_YAML
+    echo "        status_code: 200" >> $IDRAC_YAML
+    echo "        validate_certs: \"{{ validate_certs }}\"" >> $IDRAC_YAML
+    echo "        force_basic_auth: \"{{ force_basic_auth }}\"" >> $IDRAC_YAML
+    echo "      register: result" >> $IDRAC_YAML
+    echo "      delegate_to: localhost" >> $IDRAC_YAML
+    echo "    - name: find the URL for the DellOSDeploymentService" >> $IDRAC_YAML
+    echo "      ansible.builtin.set_fact:" >> $IDRAC_YAML
+    echo "        idrac_osd_service_url: \"{{ result.json.Links.Oem.Dell.DellOSDeploymentService['@odata.id'] }}\"" >> $IDRAC_YAML
+    echo "      when:" >> $IDRAC_YAML
+    echo "        - result.json.Links.Oem.Dell.DellOSDeploymentService is defined" >> $IDRAC_YAML
+    echo "    - block:" >> $IDRAC_YAML
+    echo "        - name: get ISO attach status" >> $IDRAC_YAML
+    echo "          ansible.builtin.uri:" >> $IDRAC_YAML
+    echo "            url: \"https://{{ baseuri }}{{ idrac_osd_service_url }}/Actions/DellOSDeploymentService.GetAttachStatus\"" >> $IDRAC_YAML
+    echo "            user: \"{{ idrac_user }}\"" >> $IDRAC_YAML
+    echo "            password: \"{{ idrac_password }}\"" >> $IDRAC_YAML
+    echo "            method: POST" >> $IDRAC_YAML
+    echo "            headers:" >> $IDRAC_YAML
+    echo "              Accept: \"application/json\"" >> $IDRAC_YAML
+    echo "              Content-Type: \"application/json\"" >> $IDRAC_YAML
+    echo "              OData-Version: \"4.0\"" >> $IDRAC_YAML
+    echo "            body: \"{}\"" >> $IDRAC_YAML
+    echo "            status_code: 200" >> $IDRAC_YAML
+    echo "            force_basic_auth: \"{{ force_basic_auth }}\"" >> $IDRAC_YAML
+    echo "          register: attach_status" >> $IDRAC_YAML
+    echo "          delegate_to: localhost" >> $IDRAC_YAML
+    echo "        - name: set ISO attach status as a fact variable" >> $IDRAC_YAML
+    echo "          ansible.builtin.set_fact:" >> $IDRAC_YAML
+    echo "            idrac_iso_attach_status: \"{{ idrac_iso_attach_status | default({}) | combine({item.key: item.value}) }}\"" >> $IDRAC_YAML
+    echo "          with_dict:" >> $IDRAC_YAML
+    echo "            DriversAttachStatus: \"{{ attach_status.json.DriversAttachStatus }}\"" >> $IDRAC_YAML
+    echo "            ISOAttachStatus: \"{{ attach_status.json.ISOAttachStatus }}\"" >> $IDRAC_YAML
+    echo "      when:" >> $IDRAC_YAML
+    echo "        - idrac_osd_service_url is defined" >> $IDRAC_YAML
+    echo "        - idrac_osd_service_url|length > 0" >> $IDRAC_YAML
+    echo "    - block:" >> $IDRAC_YAML
+    echo "        - name: detach ISO image if attached" >> $IDRAC_YAML
+    echo "          ansible.builtin.uri:" >> $IDRAC_YAML
+    echo "            url: \"https://{{ baseuri }}{{ idrac_osd_service_url }}/Actions/DellOSDeploymentService.DetachISOImage\"" >> $IDRAC_YAML
+    echo "            user: \"{{ idrac_user }}\"" >> $IDRAC_YAML
+    echo "            password: \"{{ idrac_password }}\"" >> $IDRAC_YAML
+    echo "            method: POST" >> $IDRAC_YAML
+    echo "            headers:" >> $IDRAC_YAML
+    echo "              Accept: \"application/json\"" >> $IDRAC_YAML
+    echo "              Content-Type: \"application/json\"" >> $IDRAC_YAML
+    echo "              OData-Version: \"4.0\"" >> $IDRAC_YAML
+    echo "            body: \"{}\"" >> $IDRAC_YAML
+    echo "            status_code: 200" >> $IDRAC_YAML
+    echo "            force_basic_auth: \"{{ force_basic_auth }}\"" >> $IDRAC_YAML
+    echo "          register: detach_status" >> $IDRAC_YAML
+    echo "          delegate_to: localhost" >> $IDRAC_YAML
+    echo "        - ansible.builtin.debug:" >> $IDRAC_YAML
+    echo "            msg: \"Successfuly detached the ISO image\"" >> $IDRAC_YAML
+    echo "      when:" >> $IDRAC_YAML
+    echo "        - idrac_osd_service_url is defined and idrac_osd_service_url|length > 0" >> $IDRAC_YAML
+    echo "        - idrac_iso_attach_status" >> $IDRAC_YAML
+    echo "        - idrac_iso_attach_status.ISOAttachStatus == \"Attached\" or" >> $IDRAC_YAML
+    echo "          idrac_iso_attach_status.DriversAttachStatus == \"Attached\"" >> $IDRAC_YAML
+    echo "    - name: boot to network ISO" >> $IDRAC_YAML
+    echo "      dellemc.openmanage.idrac_os_deployment:" >> $IDRAC_YAML
+    echo "        idrac_ip: \"{{ baseuri }}\"" >> $IDRAC_YAML
+    echo "        idrac_user: \"{{ idrac_user }}\"" >> $IDRAC_YAML
+    echo "        idrac_password: \"{{ idrac_password }}\"" >> $IDRAC_YAML
+    echo "        share_name: \"{{ share_name }}\"" >> $IDRAC_YAML
+    echo "        iso_image: \"{{ ubuntu_iso }}\"" >> $IDRAC_YAML
+    echo "        expose_duration: \"{{ expose_duration }}\"" >> $IDRAC_YAML
+    echo "      register: boot_to_network_iso_status" >> $IDRAC_YAML
+    echo "      delegate_to: localhost" >> $IDRAC_YAML
+  fi
+}
+
+# Function: Install server
+
+install_server () {
+  HOSTS_YAML="$WORK_DIR/hosts.yaml"
+  IDRAC_YAML="$WORK_DIR/idrac.yaml"
+  handle_output "# Execute ansible" TEXT
+  handle_output "cd $WORK_DIR ; ansible-playbook $IDRAC_YAML -i $HOSTS_YAML"
+  if [ "$TEST_MODE" = "false" ]; then
+    echo ""
+#    cd $WORK_DIR/$ISO_RELEASE ; ansible-playbook $IDRAC_YAML -i $HOSTS_YAML
+#    cd $WORK_DIR/$ISO_RELEASE ; ansible-playbook $IDRAC_YAML -i $HOSTS_YAML
+  fi
+}
+
+# Function: Setup NFS server to export ISO
+
+create_export () {
+  NFS_DIR="$WORK_DIR/files"
+  handle_output "# Check export is enabled" TEXT
+  if [ -f "/etc/exports" ]; then
+    EXPORT_CHECK=$( cat /etc/exports |grep -v ^# |grep "$NFS_DIR" |grep "$BMC_IP" |awk '{print $1}' | head -1 )
+  else
+    EXPORT_CHECK=""
+  fi
+  if [ -z "$EXPORT_CHECK" ]; then
+    if [ "$OS_NAME" = "Darwin" ]; then
+      handle_output "echo \"$NFS_DIR --mapall=$OS_USER $BMC_IP\" |sudo tee -a /etc/exports"
+      handle_output "sudo nfsd enable"
+      handle_output "sudo nfsd restart"
+      echo "$NFS_DIR --mapall=$OS_USER $BMC_IP" |sudo tee -a /etc/exports
+      sudo nfsd enable
+      sudo nfsd restart
+    else
+      handle_output "echo \"$NFS_DIR $BMC_IP(sync,wdelay,hide,no_subtree_check,sec=sys,rw,secure,root_squash,no_all_squash)\" |sudo tee -a /etc/exports"
+      handle_output "sudo exportfs -a"
+      echo "$NFS_DIR $BMC_IP(sync,wdelay,hide,no_subtree_check,sec=sys,rw,secure,root_squash,no_all_squash)" |sudo tee -a /etc/exports
+      sudo exportfs -a
     fi
   fi
 }
@@ -1479,6 +1702,10 @@ do
       ISO_LAYOUT="$2"
       shift 2
       ;;
+    -b|--bootserver)
+      BOOT_SERVER="$2"
+      shift 2
+      ;;
     -C|--cidr)
       ISO_CIDR="$2"
       shift 2
@@ -1503,6 +1730,10 @@ do
       ;;
     -e|--lcall)
       ISO_LC_ALL="$2"
+      shift 2
+      ;;
+    -F|--bmcusername)
+      BMC_USERNAME="$2"
       shift 2
       ;;
     -f|--delete)
@@ -1548,6 +1779,10 @@ do
       ;;
     -L|--release)
       ISO_RELEASE="$2"
+      shift 2
+      ;;
+    -l|--bmcip)
+      BMC_IP="$2"
       shift 2
       ;;
     -M|--installtarget)
@@ -1656,6 +1891,10 @@ do
       ISO_ALLOW_PASSWORD="true"
       shift
       ;;
+    -y|--bmcpassword)
+      BMC_PASSWORD="$2"
+      shift 2
+      ;;
     -Z|--nounmount)
       DO_NO_UNMOUNT_ISO="true";
       shift
@@ -1678,6 +1917,23 @@ done
 # Process action switch
 
 case $ACTION in
+  "createexport")
+    DO_CHECK_WORK_DIR="true"
+    DO_INSTALL_REQUIRED_PACKAGES="true"
+    DO_CREATE_EXPORT="true"
+    ;;
+  "createansible")
+    DO_CHECK_WORK_DIR="true"
+    DO_INSTALL_REQUIRED_PACKAGES="true"
+    DO_CREATE_ANSIBLE="true"
+    ;;
+  "installserver")
+    DO_CHECK_WORK_DIR="true"
+    DO_INSTALL_REQUIRED_PACKAGES="true"
+    DO_CREATE_EXPORT="true"
+    DO_CREATE_ANSIBLE="true"
+    DO_INSTALL_SERVER="true"
+    ;;
   "printenv")
     DO_PRINT_ENV="true"
     ;;
@@ -1802,6 +2058,18 @@ if [ "$ISO_SSH_KEY_FILE" = "" ]; then
   ISO_SSH_KEY_FILE="$DEFAULT_ISO_SSH_KEY_FILE"
 else
   ISO_SSH_KEY="$DEFAULT_ISO_SSH_KEY"
+fi
+if [ "$BOOT_SERVER" = "" ]; then
+  BOOT_SERVER="$DEFAULT_BOOT_SERVER"
+fi
+if [ "$BMC_USERNAME" = "" ]; then
+  BMC_USERNAME="$DEFAULT_BMC_USERNAME"
+fi
+if [ "$BMC_PASSWORD" = "" ]; then
+  BMC_PASSWORD="$DEFAULT_BMC_PASSWORD"
+fi
+if [ "$BMC_IP" = "" ]; then
+  BMC_IP="$DEFAULT_BMC_IP"
 fi
 if [ "$ISO_CIDR" = "" ]; then
   ISO_CIDR="$DEFAULT_ISO_CIDR"
@@ -2254,6 +2522,16 @@ fi
 if [ "$DO_INSTALL_REQUIRED_PACKAGES" = "true" ]; then
   DO_PRINT_HELP="false"
   install_required_packages
+fi
+if [ "$DO_CREATE_EXPORT" = "true" ]; then
+  create_export
+fi
+if [ "$DO_CREATE_ANSIBLE" = "true" ]; then
+  check_ansible
+  create_ansible
+fi
+if [ "$DO_INSTALL_SERVER" = "true" ]; then
+  install_server
 fi
 if [ "$DO_GET_BASE_ISO" = "true" ]; then
   DO_PRINT_HELP="false"
