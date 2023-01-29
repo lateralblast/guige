@@ -153,3 +153,5 @@
 # Bug fixes
 # 0.7.7: Sun 29 Jan 2023 11:08:59 AEDT
 # Bug fixes and improvements
+# 0.7.8: Mon 30 Jan 2023 08:42:17 AEDT
+# Added initial racadm functionality to drive iDRAC

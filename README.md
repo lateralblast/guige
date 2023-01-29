@@ -11,7 +11,7 @@ used to hang a shield on the shoulder or neck when not in use.
 Version
 -------
 
-Current version: 0.7.7
+Current version: 0.7.8
 
 Introduction
 ------------
@@ -207,7 +207,13 @@ Create Ansible code to deploy ISO to Dell Server (but don't deploy):
 Deploy ISO to Dell Server using Ansible:
 
 ```
-./guige.sh --action installserver --bmcip 192.168.11.238 --bmcusername root --bmcpassword XXXXXXXX --arch amd64 --bootserverip 192.168.11.5
+./guige.sh --action runansible --bmcip 192.168.11.238 --bmcusername root --bmcpassword XXXXXXXX --arch amd64 --bootserverip 192.168.11.5
+```
+
+Deploy ISO to Dell Server using racadm:
+
+```
+./guige.sh --action runracadm --bmcip 192.168.11.238 --bmcusername root --bmcpassword XXXXXXXX --arch amd64 --bootserverip 192.168.11.5
 ```
 
 Process

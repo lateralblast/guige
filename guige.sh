@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Name:         guige (Generic Ubuntu ISO Generation Engine)
-# Version:      0.7.7
+# Version:      0.7.8
 # Release:      1
 # License:      CC-BA (Creative Commons By Attribution)
 #               http://creativecommons.org/licenses/by/4.0/legalcode
@@ -106,6 +106,8 @@ DO_PRINT_ENV="false"
 DO_INSTALL_SERVER="false"
 DO_CREATE_EXPORT="false"
 DO_CREATE_ANSIBLE="false"
+DO_CHECK_RACADM="false"
+DO_EXECUTE_RACADM="false"
 
 
 # Get OS name
@@ -447,6 +449,57 @@ check_work_dir () {
       fi
     fi
   done
+}
+
+# Function: Execute racadm
+
+execute_racadm () {
+  handle_output "# Execute racadm" TEXT
+  handle_output "$RACADM_BIN -H $BMC_IP -u $BMC_USERNAME -p $BMC_PASSWORD -c \"remoteimage -d\""
+  handle_output "$RACADM_BIN -H $BMC_IP -u $BMC_USERNAME -p $BMC_PASSWORD -c \"remoteimage -c -l $BOOT_SERVER_IP:BOOT_SERVER_FILE\""
+  handle_output "$RACADM_BIN -H $BMC_IP -u $BMC_USERNAME -p $BMC_PASSWORD -c \"config -g cfgServerInfo -o cfgServerBootOnce 1\""
+  handle_output "$RACADM_BIN -H $BMC_IP -u $BMC_USERNAME -p $BMC_PASSWORD -c \"config -g cfgServerInfo -o cfgServerFirstBootDevice VCD-DVD\""
+  handle_output "$RACADM_BIN -H $BMC_IP -u $BMC_USERNAME -p $BMC_PASSWORD -c \"racadm serveraction powercycle\""
+  if [ "$TEST_MODE" = "false" ]; then
+    $RACADM_BIN -H $BMC_IP -u $BMC_USERNAME -p $BMC_PASSWORD -c "remoteimage -d"
+    $RACADM_BIN -H $BMC_IP -u $BMC_USERNAME -p $BMC_PASSWORD -c "remoteimage -c -l $BOOT_SERVER_IP:BOOT_SERVER_FILE"
+    $RACADM_BIN -H $BMC_IP -u $BMC_USERNAME -p $BMC_PASSWORD -c "config -g cfgServerInfo -o cfgServerBootOnce 1"
+    $RACADM_BIN -H $BMC_IP -u $BMC_USERNAME -p $BMC_PASSWORD -c "config -g cfgServerInfo -o cfgServerFirstBootDevice VCD-DVD"
+    $RACADM_BIN -H $BMC_IP -u $BMC_USERNAME -p $BMC_PASSWORD -c "racadm serveraction powercycle"
+  fi
+}
+
+# Function: Check racadm
+
+check_racadm () {
+  handle_output "# Check racadm" TEXT
+  RACADM_TEST=$( which racadm |grep "^/" )
+  if [ -z "$RACADM_TEST" ]; then
+    if ! [ -f "$HOME/.local/bin/racadm" ]; then
+      PIP_TEST=$( which racadm |grep "^/" )
+      if ! [ -z "$PIP_TEST"]; then
+        PIP_TEST=$( pip list |grep rac |awk '{print $1}')
+        if [ "$PIP_TEST" = "pip" ]; then
+          handle_output "pip install --user rac"
+          if [ "$TEST_MODE" = "false" ]; then
+            pip install --user rac
+            RACADM_BIN="$HOME/.local/bin/racadm"
+          else
+            handle_output "# No racadm found" TEXT
+            exit
+          fi
+        else
+          handle_output "# No racadm found" TEXT
+          handle_output "# No pip found to install Python racadm module" TEXT
+          exit
+        fi
+      fi
+    else
+      RACADM_BIN="$HOME/.local/bin/racadm"
+    fi
+  else
+    RACADM_BIN="$RACADM_TEST"
+  fi
 }
 
 # Function: Install required packages
@@ -2031,6 +2084,13 @@ done
 # Process action switch
 
 case $ACTION in
+  "checkracadm")
+    DO_CHECK_RACADM="true"
+    ;;
+  "runracadm")
+    DO_CHECK_RACADM="true"
+    DO_EXECUTE_RACADM="true"
+    ;;
   "createexport")
     DO_CHECK_WORK_DIR="true"
     DO_INSTALL_REQUIRED_PACKAGES="true"
@@ -2041,7 +2101,7 @@ case $ACTION in
     DO_INSTALL_REQUIRED_PACKAGES="true"
     DO_CREATE_ANSIBLE="true"
     ;;
-  "installserver")
+  "runansible")
     DO_CHECK_WORK_DIR="true"
     DO_INSTALL_REQUIRED_PACKAGES="true"
     DO_CREATE_EXPORT="true"
@@ -2665,6 +2725,12 @@ fi
 # Prepare ISO
 # Create ISO
 
+if [ "$DO_CHECK_RACADM" = "true" ]; then
+  check_racadm
+fi
+if [ "$DO_EXECUTE_RACADM" = "true" ]; then
+  execute_racadm
+fi
 if [ "$DO_CHECK_WORK_DIR" = "true" ]; then
   DO_PRINT_HELP="false"
   check_work_dir
