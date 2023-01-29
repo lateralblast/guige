@@ -151,3 +151,5 @@
 # Added code to deploy ISO to Dell Server via Ansible
 # 0.7.6: Sun 29 Jan 2023 08:34:10 AEDT
 # Bug fixes
+# 0.7.7: Sun 29 Jan 2023 11:08:59 AEDT
+# Bug fixes and improvements

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Name:         guige (Generic Ubuntu ISO Generation Engine)
-# Version:      0.7.6
+# Version:      0.7.7
 # Release:      1
 # License:      CC-BA (Creative Commons By Attribution)
 #               http://creativecommons.org/licenses/by/4.0/legalcode
@@ -82,6 +82,7 @@ INTERACTIVE_MODE="false"
 ISO_HWE_KERNEL="false"
 DO_DAILY_ISO="false"
 DO_CHECK_DOCKER="false"
+DO_CUSTOM_BOOT_SERVER_FILE="false"
 
 # Set function variables
 
@@ -187,6 +188,7 @@ DEFAULT_ISO_INSTALL_MOUNT="/cdrom"
 
 DEFAULT_INPUT_FILE="$DEFAULT_WORK_DIR/files/ubuntu-$DEFAULT_ISO_RELEASE-live-server-$DEFAULT_ISO_ARCH.iso"
 DEFAULT_OUTPUT_FILE="$DEFAULT_WORK_DIR/files/ubuntu-$DEFAULT_ISO_RELEASE-live-server-$DEFAULT_ISO_ARCH-autoinstall.iso"
+DEFAULT_BOOT_SERVER_FILE="$DEFAULT_OUTPUT_FILE"
 DEFAULT_ISO_SQUASHFS_FILE="$DEFAULT_ISO_MOUNT_DIR/casper/ubuntu-server-minimal.squashfs"
 DEFAULT_GRUB_FILE="$DEFAULT_WORK_DIR/grub.cfg"
 DEFAULT_ISO_VOLID="$DEFAULT_ISO_OSNAME $DEFAULT_ISO_RELEASE Server"
@@ -205,6 +207,7 @@ SCRIPT_VERSION=$( cd $START_PATH ; cat $0 | grep '^# Version' | awk '{print $3}'
 print_help () {
   cat <<-HELP
   Usage: ${0##*/} [OPTIONS...]
+    -1|--bootserverfile   Boot sever file (default: $DEFAULT_BOOT_SERVER_FILE)
     -A|--codename         Linux release codename (default: $DEFAULT_ISO_CODENAME)
     -a|--action:          Action to perform (e.g. createiso, justiso, runchrootscript, checkdocker, installrequired)
     -B|--layout           Layout (default: $DEFAULT_ISO_LAYOUT)
@@ -630,8 +633,8 @@ create_ansible () {
     echo "      idrac_password: $BMC_PASSWORD" >> $HOSTS_YAML
   fi
   IDRAC_YAML="$WORK_DIR/idrac.yaml"
-  NFS_FILE=$( basename $OUTPUT_FILE )
-  NFS_DIR=$( dirname $OUTPUT_FILE )
+  NFS_FILE=$( basename $BOOT_SERVER_FILE )
+  NFS_DIR=$( dirname $BOOT_SERVER_FILE )
   handle_output "# Create $HOSTS_YAML" TEXT
   handle_output "echo \"- hosts: idrac\" > $IDRAC_YAML"
   handle_output "echo \"  name: $ISO_VOLID\" >> $IDRAC_YAML"
@@ -651,7 +654,7 @@ create_ansible () {
   handle_output "echo \"    command:                    \\\"{{ idrac_osd_command_default }}\\\"\" >> $IDRAC_YAML"
   handle_output "echo \"    validate_certs:             no\" >> $IDRAC_YAML"
   handle_output "echo \"    force_basic_auth:           yes\" >> $IDRAC_YAML"
-  handle_output "echo \"    share_name:                 $BOOT_SERVER_IP:$NFS_DIR\" >> $IDRAC_YAML"
+  handle_output "echo \"    share_name:                 $BOOT_SERVER_IP:$NFS_DIR/\" >> $IDRAC_YAML"
   handle_output "echo \"    ubuntu_iso:                 $NFS_FILE\" >> $IDRAC_YAML"
   handle_output "echo \"  collections:\" >> $IDRAC_YAML"
   handle_output "echo \"    - dellemc.openmanage\" >> $IDRAC_YAML"
@@ -752,7 +755,7 @@ create_ansible () {
     echo "    command:                    \"{{ idrac_osd_command_default }}\"" >> $IDRAC_YAML
     echo "    validate_certs:             no" >> $IDRAC_YAML
     echo "    force_basic_auth:           yes" >> $IDRAC_YAML
-    echo "    share_name:                 $BOOT_SERVER_IP:$NFS_DIR" >> $IDRAC_YAML
+    echo "    share_name:                 $BOOT_SERVER_IP:$NFS_DIR/" >> $IDRAC_YAML
     echo "    ubuntu_iso:                 $NFS_FILE" >> $IDRAC_YAML
     echo "  collections:" >> $IDRAC_YAML
     echo "    - dellemc.openmanage" >> $IDRAC_YAML
@@ -1796,6 +1799,11 @@ fi
 while test $# -gt 0
 do
   case $1 in
+    -1|--bootserverfile)
+      BOOT_SERVER_FILE="$2"
+      DO_CUSTOM_BOOT_SERVER_FILE="true"
+      shift 2
+      ;;
     -A|--codename)
       ISO_CODENAME="$2"
       shift 2
@@ -2160,6 +2168,12 @@ case $DELETE in
     FULL_FORCE_MODE="false"
 esac
 
+if [ "$ISO_ARCH" = "" ]; then
+  ISO_ARCH="$DEFAULT_ISO_ARCH"
+  DOCKER_ARCH="$DEFAULT_DOCKER_ARCH"
+else
+  DOCKER_ARCH="$ISO_ARCH"
+fi
 if [ "$ISO_SSH_KEY_FILE" = "" ]; then
   ISO_SSH_KEY_FILE="$DEFAULT_ISO_SSH_KEY_FILE"
 else
@@ -2167,6 +2181,9 @@ else
 fi
 if [ "$BOOT_SERVER_IP" = "" ]; then
   BOOT_SERVER_IP="$DEFAULT_BOOT_SERVER_IP"
+fi
+if [ "$BOOT_SERVER_FILE" = "" ]; then
+  BOOT_SERVER_FILE="$DEFAULT_BOOT_SERVER_FILE"
 fi
 if [ "$BMC_USERNAME" = "" ]; then
   BMC_USERNAME="$DEFAULT_BMC_USERNAME"
@@ -2182,12 +2199,6 @@ if [ "$ISO_CIDR" = "" ]; then
 fi
 if [ "$ISO_INSTALL_DRIVERS" = "" ]; then
   ISO_INSTALL_DRIVERS="$DEFAULT_ISO_INSTALL_DRIVERS"
-fi
-if [ "$ISO_ARCH" = "" ]; then
-  ISO_ARCH="$DEFAULT_ISO_ARCH"
-  DOCKER_ARCH="$DEFAULT_DOCKER_ARCH"
-else
-  DOCKER_ARCH="$ISO_ARCH"
 fi
 if [ "$ISO_RELEASE" = "" ]; then
   ISO_RELEASE="$DEFAULT_ISO_RELEASE"
@@ -2297,28 +2308,33 @@ fi
 if [ "$INPUT_FILE" = "" ]; then
   INPUT_FILE="$DEFAULT_INPUT_FILE"
 fi
-
 if [ "$DO_ISO_QUERY" = "true" ]; then
   get_info_from_iso
 else
-  case $ISO_BUILD_TYPE in
-    "daily-live"|"daily-live-server")
-      INPUT_FILE="$WORK_DIR/files/$ISO_CODENAME-live-server-$ISO_ARCH.iso"
-      OUTPUT_FILE="$WORK_DIR/files/$ISO_CODENAME-live-server-$ISO_ARCH-autoinstall.iso"
-      ;;
-    "daily-desktop")
-      INPUT_FILE="$WORK_DIR/files/$ISO_CODENAME-desktop-$ISO_ARCH.iso"
-      OUTPUT_FILE="$WORK_DIR/files/$ISO_CODENAME-desktop-$ISO_ARCH-autoinstall.iso"
-      ;;
-    "desktop")
-      INPUT_FILE="$WORK_DIR/files/ubuntu-$ISO_RELEASE-desktop-$ISO_ARCH.iso"
-      OUTPUT_FILE="$WORK_DIR/files/ubuntu-$ISO_RELEASE-desktop-$ISO_ARCH-autoinstall.iso"
-      ;;
-    *)
-      INPUT_FILE="$WORK_DIR/files/ubuntu-$ISO_RELEASE-live-server-$ISO_ARCH.iso"
-      OUTPUT_FILE="$WORK_DIR/files/ubuntu-$ISO_RELEASE-live-server-$ISO_ARCH-autoinstall.iso"
-      ;;
-  esac 
+  if [ "$DO_CUSTOM_BOOT_SERVER_FILE" = "false" ]; then
+    case $ISO_BUILD_TYPE in
+      "daily-live"|"daily-live-server")
+        INPUT_FILE="$WORK_DIR/files/$ISO_CODENAME-live-server-$ISO_ARCH.iso"
+        OUTPUT_FILE="$WORK_DIR/files/$ISO_CODENAME-live-server-$ISO_ARCH-autoinstall.iso"
+        BOOT_SERVER_FILE="$OUTPUT_FILE"
+        ;;
+      "daily-desktop")
+        INPUT_FILE="$WORK_DIR/files/$ISO_CODENAME-desktop-$ISO_ARCH.iso"
+        OUTPUT_FILE="$WORK_DIR/files/$ISO_CODENAME-desktop-$ISO_ARCH-autoinstall.iso"
+        BOOT_SERVER_FILE="$OUTPUT_FILE"
+        ;;
+      "desktop")
+        INPUT_FILE="$WORK_DIR/files/ubuntu-$ISO_RELEASE-desktop-$ISO_ARCH.iso"
+        OUTPUT_FILE="$WORK_DIR/files/ubuntu-$ISO_RELEASE-desktop-$ISO_ARCH-autoinstall.iso"
+        BOOT_SERVER_FILE="$OUTPUT_FILE"
+        ;;
+      *)
+        INPUT_FILE="$WORK_DIR/files/ubuntu-$ISO_RELEASE-live-server-$ISO_ARCH.iso"
+        OUTPUT_FILE="$WORK_DIR/files/ubuntu-$ISO_RELEASE-live-server-$ISO_ARCH-autoinstall.iso"
+        BOOT_SERVER_FILE="$OUTPUT_FILE"
+        ;;
+    esac 
+  fi
 fi
 
 # Update Default work directories
@@ -2407,6 +2423,15 @@ handle_output "# Install updates:      $DO_INSTALL_ISO_UPDATE" TEXT
 handle_output "# Install upgrades:     $DO_INSTALL_ISO_UPGRADE" TEXT
 handle_output "# Dist upgrades:        $DO_INSTALL_ISO_DIST_UPGRADE" TEXT
 handle_output "# Swap size:            $ISO_SWAPSIZE" TEXT
+if [ "$DO_CREATE_EXPORT" = "true" ] || [ "$DO_CREATE_ANSIBLE" = "true" ]; then
+  handle_output "# Bootserver IP:        $BOOT_SERVER_IP" TEXT
+  handle_output "# Bootserver file:      $BOOT_SERVER_FILE" TEXT
+fi
+if [ "$DO_CREATE_ANSIBLE" = "true" ] ; then
+  handle_output "# BMC IP:               $BMC_IP" TEXT
+  handle_output "# BMC Username:         $BMC_USERNAME" TEXT
+  handle_output "# BMC Password:         $BMC_PASSWORD" TEXT
+fi
 
 if [ "$DO_PRINT_ENV" = "true" ] || [ "$INTERACTIVE_MODE" = "true" ]; then
   TEMP_VERBOSE_MODE="false"
@@ -2421,150 +2446,169 @@ fi
 # If run in interactive mode ask for values for required parameters
 # Set any unset values to defaults
 
-echo "got here"
-echo "$INTERACTIVE_MODE"
-
 if [ "$INTERACTIVE_MODE" = "true" ]; then
-  # Get release
-  read -p "Enter Release [$ISO_RELEASE]: " NEW_ISO_RELEASE
-  ISO_RELEASE=${NEW_ISO_RELEASE:-$ISO_RELEASE}
-  # Get codename
-  read -p "Enter Codename [$ISO_CODENAME: " NEW_ISO_CODENAME
-  ISO_CODENAME=${NEW_ISO_CODENAME:-$ISO_CODENAME}
-  # Get Architecture
-  read -p "Architecture [$ISO_ARCH]: "
-  ISO_ARCH=${NEW_ISO_ARCH:-$ISO_ARCH}
-  # Get Work directory
-  read -p "Enter Work directory [$WORK_DIR]: " NEW_WORK_DIR
-  WORK_DIR=${NEW_WORK_DIR:-$WORK_DIR}
-  # Get ISO input file
-  read -p "Enter ISO input file [$INPUT_FILE]: " NEW_INPUT_FILE
-  INPUT_FILE=${NEW_INPUT_FILE:-$INPUT_FILE}
-  # Get output file
-  read -p "Enter ISO output file [$OUTPUT_FILE]: " NEW_OUTPUT_FILE
-  OUTPUT_FILE=${NEW_OUTPUT_FILE:-$OUTPUT_FILE}
-  # Get ISO URL
-  read -p "Enter ISO URL [$ISO_URL]: " NEW_ISO_URL
-  ISO_URL=${NEW_ISO_URL:-$ISO_URL}
-  # Get ISO Volume ID
-  read -p "Enter ISO Volume ID [$ISO_VOLID]: " NEW_ISO_VOLID
-  ISO_VOLID=${NEW_ISO_VOLID:-$ISO_VOLID}
-  # Get Hostname
-  read -p "Enter Hostname[$ISO_HOSTNAME]: " NEW_ISO_HOSTNAME
-  ISO_HOSTNAME=${NEW_ISO_HOSTNAME:-$ISO_HOSTNAME}
-  # Get Username
-  read -p "Enter Username [$ISO_USERNAME]: " NEW_ISO_USERNAME
-  ISO_USERNAME=${NEW_ISO_USERNAME:-$ISO_USERNAME}
-  # Get User Real NAme
-  read -p "Enter User Realname [$ISO_REALNAME]: " NEW_ISO_REALNAME
-  ISO_REALNAME=${NEW_ISO_REALNAME:-$ISO_REALNAME}
-  # Get Password
-  read -s -p "Enter password [$ISO_PASSWORD]: " NEW_ISO_PASSWORD
-  ISO_PASSWORD=${NEW_ISO_PASSWORD:-$ISO_PASSWORD}
-  # Get wether to allow SSH Password
-  read -s -p "Allow SSH access with password [$ISO_ALLOW_PASSWORD]: " NEW_ISO_ALLOW_PASSWORD
-  ISO_ALLOW_PASSWORD=${NEW_ISO_ALLOW_PASSWORD:-$ISO_ALLOW_PASSWORD}
-  # Get Timezone
-  read -p "Enter Timezone: " NEW_ISO_TIMEZONE
-  ISO_TIMEZONE=${NEW_ISO_TIMEZONE:-$ISO_TIMEZONE}
-  # Get NIC
-  read -p "Enter NIC [$ISO_NIC]: " NEW_ISO_NIC
-  ISO_NIC=${NEW_ISO_NIC:-$ISO_NIC}
-  # Get DHCP
-  read -p "Use DHCP? [$ISO_DHCP]: " NEW_ISO_DHCP
-  ISO_DHCP=${NEW_ISO_DHCP:-$ISO_DHCP}
-  # Get Static IP information if no DHCP
-  if [ "$ISO_DHCP" = "false" ]; then
-    # Get IP
-    read -p "Enter IP [$ISO_IP]: " NEW_ISO_IP
-    ISO_IP=${NEW_ISO_IP:-$ISO_IP}
-    # Get CIDR 
-    read -p "Enter CIDR [$ISO_CIDR]: " NEW_ISO_CIDR
-    ISO_CIDR=${NEW_ISO_CIDR:-$ISO_CIDR}
-    # Get Geteway 
-    read -p "Enter Gateway [$ISO_GATEWAY]: " NEW_ISO_GATEWAY
-    ISO_GATEWAY=${NEW_ISO_GATEWAY:-$ISO_GATEWAY}
-    # Get DNS
-    read -p "Enter DNS [$ISO_DNS]: " NEW_ISO_DNS
-    ISO_DNS=${NEW_ISO_DNS:-$ISO_DNS}
-  fi
-  # Get Kernel
-  read -p "Enter Kernel [$ISO_KERNEL]: " NEW_ISO_KERNEL
-  ISO_KERNEL=${NEW_ISO_KERNEL:-$ISO_KERNEL}
-  # Get Kernel Arguments
-  read -p "Enter Kernel Arguments [$ISO_KERNEL_ARGS]: " NEW_ISO_KERNEL_ARGS
-  ISO_KERNEL_ARGS=${NEW_ISO_KERNEL_ARGS:-$ISO_KERNEL_ARGS}
-  # Get Keyboard Layout
-  read -p "Enter IP [$ISO_LAYOUT]: " NEW_ISO_LAYOUT
-  ISO_LAYOUT=${NEW_ISO_LAYOUT:-$ISO_LAYOUT}
-  # Get Locale
-  read -p "Enter IP [$ISO_LOCALE]: " NEW_ISO_LOCALE
-  ISO_LOCALE=${NEW_ISO_LOCALE:-$ISO_LOCALE}
-  # Get LC _ALL
-  read -p "Enter LC_ALL [$ISO_LC_ALL]: " NEW_ISO_LC_ALL
-  ISO_LC_ALL=${NEW_ISO_LC_ALL:-$ISO_LC_ALL}
-  # Get Root Disk(s) 
-  read -p "Enter Root Disk(s) [$ISO_DEVICES]: " NEW_ISO_DEVICES
-  ISO_DEVICES=${NEW_ISO_DEVICES:-$ISO_DEVICES}
-  # Get Volume Managers 
-  read -p "Enter Volume Manager(s) [$ISO_VOLMGRS]: " NEW_ISO_VOLMGRS
-  ISO_VOLMGRS=${NEW_ISO_VOLMGRS:-$ISO_VOLMGRS}
-  # Get Default Grub Menu selection
-  read -p "Enter Default Grub Menu [$ISO_GRUB_MENU]: " NEW_ISO_GRUB_MENU
-  ISO_GRUB_MENU=${NEW_ISO_GRUB_MENU:-$ISO_GRUB_MENU}
-  # Get Grub Timeout
-  read -p "Enter Grub Timeout [$ISO_GRUB_TIMEOUT]: " NEW_ISO_GRUB_TIMEOUT
-  ISO_GRUB_TIMEOUT=${NEW_ISO_GRUB_TIMEOUT:-$ISO_GRUB_TIMEOUT}
-  # Get Autoinstall directory 
-  read -p "Enter Auttoinstall Directory [$ISO_AUTOINSTALL_DIR]: " NEW_ISO_AUTOINSTALL_DIR
-  ISO_AUTOINSTALL_DIR=${NEW_ISO_AUTOINSTALL_DIR:-$ISO_AUTOINSTALL_DIR}
-  # Get Install Mount
-  read -p "Enter Install Mount [$ISO_INSTALL_MOUNT]: " NEW_ISO_INSTALL_MOUNT
-  ISO_INSTALL_MOUNT=${NEW_ISO_INSTALL_MOUNT:-$ISO_INSTALL_MOUNT}
-  # Get Install Target
-  read -p "Enter Install Target [$ISO_TARGET_MOUNT]: " NEW_ISO_TARGET_MOUNT
-  ISO_TARGET_MOUNT=${NEW_ISO_TARGET_MOUNT:-$ISO_TARGET_MOUNT}
-  # Get whether to do squashfs
-  read -p "Recreate squashfs? [$DO_ISO_SQUASHFS_UPDATE]: " NEW_DO_ISO_SQUASHFS_UPDATE
-  DO_ISO_SQUASHFS_UPDATE=${NEW_DO_ISO_SQUASHFS_UPDATE:-$DO_ISO_SQUASHFS_UPDATE}
-  if  [ "$DO_ISO_SQUASHFS_UPDATE" = "true" ]; then
-    # Get squashfs packages
-    read -p "Enter Squashfs Packages [$ISO_CHROOT_PACKAGEP]: " NEW_ISO_CHROOT_PACKAGE
-    ISO_CHROOT_PACKAGE=${NEW_ISO_CHROOT_PACKAGE:-$IISO_CHROOT_PACKAGE}
-  fi
-  # Get whether to install packages as part of install
-  read -p "Install additional packages [$DO_INSTALL_ISO_PACKAGES]: " NEW_DO_INSTALL_ISO_PACKAGES
-  DO_INSTALL_ISO_PACKAGES=${NEW_DO_INSTALL_ISO_PACKAGES:-$DO_INSTALL_ISO_PACKAGES}
-  if [ "$DO_INSTALL_ISO_PACKAGES" = "true" ]; then
-    # Get IP
-    read -p "Enter Additional Packages to install[$ISO_INSTALL_PACKAGES]: " NEW_ISO_INSTALL_PACKAGES
-    ISO_INSTALL_PACKAGES=${NEW_ISO_INSTALL_PACKAGES:-$ISO_INSTALL_PACKAGES}
-  fi
-  # Get whether to install updates
-  read -p "Install updates? [$DO_INSTALL_ISO_UPDATE]: " NEW_DO_INSTALL_ISO_UPDATE
-  DO_INSTALL_ISO_UPDATE=${NEW_DO_INSTALL_ISO_UPDATEP:-$DO_INSTALL_ISO_UPDATE}
-  if [ "$DO_INSTALL_ISO_UPDATE" = "true" ]; then
-    # Get wether to install upgrades 
-    read -p "Upgrade packages? [$DO_INSTALL_ISO_UPGRADE]: " NEW_DO_INSTALL_ISO_UPGRADE
-    DO_INSTALL_ISO_UPGRADE=${NEW_DO_INSTALL_ISO_UPGRADE:-$DO_INSTALL_ISO_UPGRADE}
-    # Get whether to do a dist-updrage
-    read -p "Install Distribution Upgrade if available (e.g. 20.04.4 -> 20.04.5)? [$DO_INSTALL_ISO_DIST_UPGRADE]: " NEW_DO_INSTALL_ISO_DIST_UPGRADE
-    DO_INSTALL_ISO_DIST_UPGRADE=${NEW_DO_INSTALL_ISO_DIST_UPGRADE:-$DO_INSTALL_ISO_DIST_UPGRADE}
-  fi
-  # Get swap size 
-  read -p "Enter Swap Size [$ISO_SWAPSIZE]: " NEW_ISO_SWAPSIZE
-  ISO_SWAPSIZE=${NEW_ISO_SWAPSIZE:-$ISO_SWAPSIZE}
-  # Determine wether we use an SSH key
-  read -p "Use SSH keys? [$DO_ISO_SSH_KEY]: " NEW_DO_ISO_SSH_KEY
-  DO_ISO_SSH_KEY=${NEW_DO_ISO_SSH_KEY:-$DO_ISO_SSH_KEY}
-  if [ "$DO_ISO_SSH_KEY" = "true" ]; then
+  if [ "$DO_CREATE_EXPORT" = "true" ] || [ "$DO_CREATE_ANSIBLE" = "true" ]; then
+    if [ "$DO_CREATE_EXPORT" = "true" ] || [ "$DO_CREATE_ANSIBLE" = "true" ]; then
+      # Get bootserver IP
+      read -p "Enter Bootserver IP [$BOOT_SERVER_IP]: " NEW_BOOT_SERVER_IP
+      BOOT_SERVER_IP=${NEW_BOOT_SERVER_IP:-$BOOT_SERVER_IP}
+      # Get bootserver file 
+      read -p "Enter Bootserver file [$BOOT_SERVER_FILE]: " NEW_BOOT_SERVER_FILE
+      BOOT_SERVER_FILE=${NEW_BOOT_SERVER_FILE:-$BOOT_SERVER_FILE}
+    fi
+    if [ "$DO_CREATE_ANSIBLE" = "true" ]; then
+      # Get BMC IP
+      read -p "Enter BMC/iDRAC IP [$BMC_IP]: " NEW_BMC_IP
+      BMC_IP=${NEW_BMC_IP:-$BMC_IP}
+      # Get BMC Username 
+      read -p "Enter BMC/iDRAC Username [$BMC_USERNAME]: " NEW_BMC_USERNAME
+      BMC_USERNAME=${NEW_BMC_USERNAME:-$BMC_USERNAME}
+      # Get BMC Password
+      read -p "Enter BMC/iDRAC Password [$BMC_PASSWORD]: " NEW_BMC_PASSWORD
+      BMC_PASSWORD=${NEW_BMC_PASSWORD:-$BMC_PASSWORD}
+    fi
+  else
+    # Get release
+    read -p "Enter Release [$ISO_RELEASE]: " NEW_ISO_RELEASE
+    ISO_RELEASE=${NEW_ISO_RELEASE:-$ISO_RELEASE}
+    # Get codename
+    read -p "Enter Codename [$ISO_CODENAME: " NEW_ISO_CODENAME
+    ISO_CODENAME=${NEW_ISO_CODENAME:-$ISO_CODENAME}
+    # Get Architecture
+    read -p "Architecture [$ISO_ARCH]: "
+    ISO_ARCH=${NEW_ISO_ARCH:-$ISO_ARCH}
+    # Get Work directory
+    read -p "Enter Work directory [$WORK_DIR]: " NEW_WORK_DIR
+    WORK_DIR=${NEW_WORK_DIR:-$WORK_DIR}
+    # Get ISO input file
+    read -p "Enter ISO input file [$INPUT_FILE]: " NEW_INPUT_FILE
+    INPUT_FILE=${NEW_INPUT_FILE:-$INPUT_FILE}
+    # Get output file
+    read -p "Enter ISO output file [$OUTPUT_FILE]: " NEW_OUTPUT_FILE
+    OUTPUT_FILE=${NEW_OUTPUT_FILE:-$OUTPUT_FILE}
+    # Get ISO URL
+    read -p "Enter ISO URL [$ISO_URL]: " NEW_ISO_URL
+    ISO_URL=${NEW_ISO_URL:-$ISO_URL}
+    # Get ISO Volume ID
+    read -p "Enter ISO Volume ID [$ISO_VOLID]: " NEW_ISO_VOLID
+    ISO_VOLID=${NEW_ISO_VOLID:-$ISO_VOLID}
+    # Get Hostname
+    read -p "Enter Hostname[$ISO_HOSTNAME]: " NEW_ISO_HOSTNAME
+    ISO_HOSTNAME=${NEW_ISO_HOSTNAME:-$ISO_HOSTNAME}
+    # Get Username
+    read -p "Enter Username [$ISO_USERNAME]: " NEW_ISO_USERNAME
+    ISO_USERNAME=${NEW_ISO_USERNAME:-$ISO_USERNAME}
+    # Get User Real NAme
+    read -p "Enter User Realname [$ISO_REALNAME]: " NEW_ISO_REALNAME
+    ISO_REALNAME=${NEW_ISO_REALNAME:-$ISO_REALNAME}
+    # Get Password
+    read -s -p "Enter password [$ISO_PASSWORD]: " NEW_ISO_PASSWORD
+    ISO_PASSWORD=${NEW_ISO_PASSWORD:-$ISO_PASSWORD}
+    # Get wether to allow SSH Password
+    read -s -p "Allow SSH access with password [$ISO_ALLOW_PASSWORD]: " NEW_ISO_ALLOW_PASSWORD
+    ISO_ALLOW_PASSWORD=${NEW_ISO_ALLOW_PASSWORD:-$ISO_ALLOW_PASSWORD}
+    # Get Timezone
+    read -p "Enter Timezone: " NEW_ISO_TIMEZONE
+    ISO_TIMEZONE=${NEW_ISO_TIMEZONE:-$ISO_TIMEZONE}
+    # Get NIC
+    read -p "Enter NIC [$ISO_NIC]: " NEW_ISO_NIC
+    ISO_NIC=${NEW_ISO_NIC:-$ISO_NIC}
+    # Get DHCP
+    read -p "Use DHCP? [$ISO_DHCP]: " NEW_ISO_DHCP
+    ISO_DHCP=${NEW_ISO_DHCP:-$ISO_DHCP}
+    # Get Static IP information if no DHCP
+    if [ "$ISO_DHCP" = "false" ]; then
+      # Get IP
+      read -p "Enter IP [$ISO_IP]: " NEW_ISO_IP
+      ISO_IP=${NEW_ISO_IP:-$ISO_IP}
+      # Get CIDR 
+      read -p "Enter CIDR [$ISO_CIDR]: " NEW_ISO_CIDR
+      ISO_CIDR=${NEW_ISO_CIDR:-$ISO_CIDR}
+      # Get Geteway 
+      read -p "Enter Gateway [$ISO_GATEWAY]: " NEW_ISO_GATEWAY
+      ISO_GATEWAY=${NEW_ISO_GATEWAY:-$ISO_GATEWAY}
+      # Get DNS
+      read -p "Enter DNS [$ISO_DNS]: " NEW_ISO_DNS
+      ISO_DNS=${NEW_ISO_DNS:-$ISO_DNS}
+    fi
+    # Get Kernel
+    read -p "Enter Kernel [$ISO_KERNEL]: " NEW_ISO_KERNEL
+    ISO_KERNEL=${NEW_ISO_KERNEL:-$ISO_KERNEL}
+    # Get Kernel Arguments
+    read -p "Enter Kernel Arguments [$ISO_KERNEL_ARGS]: " NEW_ISO_KERNEL_ARGS
+    ISO_KERNEL_ARGS=${NEW_ISO_KERNEL_ARGS:-$ISO_KERNEL_ARGS}
+    # Get Keyboard Layout
+    read -p "Enter IP [$ISO_LAYOUT]: " NEW_ISO_LAYOUT
+    ISO_LAYOUT=${NEW_ISO_LAYOUT:-$ISO_LAYOUT}
+    # Get Locale
+    read -p "Enter IP [$ISO_LOCALE]: " NEW_ISO_LOCALE
+    ISO_LOCALE=${NEW_ISO_LOCALE:-$ISO_LOCALE}
+    # Get LC _ALL
+    read -p "Enter LC_ALL [$ISO_LC_ALL]: " NEW_ISO_LC_ALL
+    ISO_LC_ALL=${NEW_ISO_LC_ALL:-$ISO_LC_ALL}
+    # Get Root Disk(s) 
+    read -p "Enter Root Disk(s) [$ISO_DEVICES]: " NEW_ISO_DEVICES
+    ISO_DEVICES=${NEW_ISO_DEVICES:-$ISO_DEVICES}
+    # Get Volume Managers 
+    read -p "Enter Volume Manager(s) [$ISO_VOLMGRS]: " NEW_ISO_VOLMGRS
+    ISO_VOLMGRS=${NEW_ISO_VOLMGRS:-$ISO_VOLMGRS}
+    # Get Default Grub Menu selection
+    read -p "Enter Default Grub Menu [$ISO_GRUB_MENU]: " NEW_ISO_GRUB_MENU
+    ISO_GRUB_MENU=${NEW_ISO_GRUB_MENU:-$ISO_GRUB_MENU}
+    # Get Grub Timeout
+    read -p "Enter Grub Timeout [$ISO_GRUB_TIMEOUT]: " NEW_ISO_GRUB_TIMEOUT
+    ISO_GRUB_TIMEOUT=${NEW_ISO_GRUB_TIMEOUT:-$ISO_GRUB_TIMEOUT}
+    # Get Autoinstall directory 
+    read -p "Enter Auttoinstall Directory [$ISO_AUTOINSTALL_DIR]: " NEW_ISO_AUTOINSTALL_DIR
+    ISO_AUTOINSTALL_DIR=${NEW_ISO_AUTOINSTALL_DIR:-$ISO_AUTOINSTALL_DIR}
+    # Get Install Mount
+    read -p "Enter Install Mount [$ISO_INSTALL_MOUNT]: " NEW_ISO_INSTALL_MOUNT
+    ISO_INSTALL_MOUNT=${NEW_ISO_INSTALL_MOUNT:-$ISO_INSTALL_MOUNT}
+    # Get Install Target
+    read -p "Enter Install Target [$ISO_TARGET_MOUNT]: " NEW_ISO_TARGET_MOUNT
+    ISO_TARGET_MOUNT=${NEW_ISO_TARGET_MOUNT:-$ISO_TARGET_MOUNT}
+    # Get whether to do squashfs
+    read -p "Recreate squashfs? [$DO_ISO_SQUASHFS_UPDATE]: " NEW_DO_ISO_SQUASHFS_UPDATE
+    DO_ISO_SQUASHFS_UPDATE=${NEW_DO_ISO_SQUASHFS_UPDATE:-$DO_ISO_SQUASHFS_UPDATE}
+    if  [ "$DO_ISO_SQUASHFS_UPDATE" = "true" ]; then
+      # Get squashfs packages
+      read -p "Enter Squashfs Packages [$ISO_CHROOT_PACKAGEP]: " NEW_ISO_CHROOT_PACKAGE
+      ISO_CHROOT_PACKAGE=${NEW_ISO_CHROOT_PACKAGE:-$IISO_CHROOT_PACKAGE}
+    fi
+    # Get whether to install packages as part of install
+    read -p "Install additional packages [$DO_INSTALL_ISO_PACKAGES]: " NEW_DO_INSTALL_ISO_PACKAGES
+    DO_INSTALL_ISO_PACKAGES=${NEW_DO_INSTALL_ISO_PACKAGES:-$DO_INSTALL_ISO_PACKAGES}
+    if [ "$DO_INSTALL_ISO_PACKAGES" = "true" ]; then
+      # Get IP
+      read -p "Enter Additional Packages to install[$ISO_INSTALL_PACKAGES]: " NEW_ISO_INSTALL_PACKAGES
+      ISO_INSTALL_PACKAGES=${NEW_ISO_INSTALL_PACKAGES:-$ISO_INSTALL_PACKAGES}
+    fi
+    # Get whether to install updates
+    read -p "Install updates? [$DO_INSTALL_ISO_UPDATE]: " NEW_DO_INSTALL_ISO_UPDATE
+    DO_INSTALL_ISO_UPDATE=${NEW_DO_INSTALL_ISO_UPDATEP:-$DO_INSTALL_ISO_UPDATE}
+    if [ "$DO_INSTALL_ISO_UPDATE" = "true" ]; then
+      # Get wether to install upgrades 
+      read -p "Upgrade packages? [$DO_INSTALL_ISO_UPGRADE]: " NEW_DO_INSTALL_ISO_UPGRADE
+      DO_INSTALL_ISO_UPGRADE=${NEW_DO_INSTALL_ISO_UPGRADE:-$DO_INSTALL_ISO_UPGRADE}
+      # Get whether to do a dist-updrage
+      read -p "Install Distribution Upgrade if available (e.g. 20.04.4 -> 20.04.5)? [$DO_INSTALL_ISO_DIST_UPGRADE]: " NEW_DO_INSTALL_ISO_DIST_UPGRADE
+      DO_INSTALL_ISO_DIST_UPGRADE=${NEW_DO_INSTALL_ISO_DIST_UPGRADE:-$DO_INSTALL_ISO_DIST_UPGRADE}
+    fi
+    # Get swap size 
+    read -p "Enter Swap Size [$ISO_SWAPSIZE]: " NEW_ISO_SWAPSIZE
+    ISO_SWAPSIZE=${NEW_ISO_SWAPSIZE:-$ISO_SWAPSIZE}
     # Determine wether we use an SSH key
-    read -p "SSH keys file [$ISO_SSH_KEY_FILE]: " NEW_ISO_SSH_KEY_FILE
-    ISO_SSH_KEY_FILE=${NEW_ISO_SSH_KEY_FILE:-$ISO_SSH_KEY_FILE}
+    read -p "Use SSH keys? [$DO_ISO_SSH_KEY]: " NEW_DO_ISO_SSH_KEY
+    DO_ISO_SSH_KEY=${NEW_DO_ISO_SSH_KEY:-$DO_ISO_SSH_KEY}
+    if [ "$DO_ISO_SSH_KEY" = "true" ]; then
+      # Determine wether we use an SSH key
+      read -p "SSH keys file [$ISO_SSH_KEY_FILE]: " NEW_ISO_SSH_KEY_FILE
+      ISO_SSH_KEY_FILE=${NEW_ISO_SSH_KEY_FILE:-$ISO_SSH_KEY_FILE}
+    fi
+    # Get wether to install drivers 
+    read -p "Enter Swap Size [$ISO_INSTALL_DRIVERS]: " NEW_ISO_INSTALL_DRIVERS
+    ISO_INSTALL_DRIVERS=${NEW_ISO_INSTALL_DRIVERS:-$ISO_INSTALL_DRIVERS}
   fi
-  # Get wether to install drivers 
-  read -p "Enter Swap Size [$ISO_INSTALL_DRIVERS]: " NEW_ISO_INSTALL_DRIVERS
-  ISO_INSTALL_DRIVERS=${NEW_ISO_INSTALL_DRIVERS:-$ISO_INSTALL_DRIVERS}
 fi
 
 if [ "$DO_DOCKER" = "true" ] || [ "$DO_CHECK_DOCKER" = "true" ]; then

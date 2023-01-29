@@ -11,7 +11,7 @@ used to hang a shield on the shoulder or neck when not in use.
 Version
 -------
 
-Current version: 0.7.6
+Current version: 0.7.7
 
 Introduction
 ------------
@@ -65,6 +65,7 @@ You can get help using the -h or --help switch:
 
 ```
   Usage: guige.sh [OPTIONS...]
+    -1|--bootserverfile   Boot sever file (default: /files/ubuntu-22.04.1-live-server-arm64-autoinstall.iso)
     -A|--codename         Linux release codename (default: jammy)
     -a|--action:          Action to perform (e.g. createiso, justiso, runchrootscript, checkdocker, installrequired)
     -B|--layout           Layout (default: us)
