@@ -126,8 +126,6 @@ Todo
 Things I plan to do:
 
 - Full support for 20.04 (at the moment LVM based installs are working ZFS is not)
-- Support for modified squashfs being copied to install ISO
-- Run via multipass to enable building VMs easier on non Linux platforms
 
 Thanks
 ------
