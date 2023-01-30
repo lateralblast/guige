@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Name:         guige (Generic Ubuntu ISO Generation Engine)
-# Version:      0.7.8
+# Version:      0.7.9
 # Release:      1
 # License:      CC-BA (Creative Commons By Attribution)
 #               http://creativecommons.org/licenses/by/4.0/legalcode
@@ -18,7 +18,7 @@ SCRIPT_FILE="$0"
 START_PATH=$( pwd )
 SCRIPT_BIN=$( basename $0 |sed "s/^\.\///g")
 SCRIPT_FILE="$START_PATH/$SCRIPT_BIN"
-OS_NAME=$( uname -o )
+OS_NAME=$( uname )
 OS_ARCH=$( uname -m )
 OS_USER=$( echo $USER )
 BMC_PORT="443"
@@ -476,10 +476,10 @@ check_racadm () {
   RACADM_TEST=$( which racadm |grep "^/" )
   if [ -z "$RACADM_TEST" ]; then
     if ! [ -f "$HOME/.local/bin/racadm" ]; then
-      PIP_TEST=$( which racadm |grep "^/" )
-      if ! [ -z "$PIP_TEST"]; then
+      PIP_TEST=$( which pip |grep "^/" )
+      if ! [ -z "$PIP_TEST" ]; then
         PIP_TEST=$( pip list |grep rac |awk '{print $1}')
-        if [ "$PIP_TEST" = "pip" ]; then
+        if [ -z "$PIP_TEST" ]; then
           handle_output "pip install --user rac"
           if [ "$TEST_MODE" = "false" ]; then
             pip install --user rac
@@ -2120,7 +2120,7 @@ case $ACTION in
     DO_CHECK_WORK_DIR="true"
     DO_GET_BASE_ISO="true"
     ;;
-  "installrequired")
+  "installrequired"|"checkrequired")
     DO_INSTALL_REQUIRED_PACKAGES="true"
     ;;
   "checkdirs")
@@ -2727,9 +2727,12 @@ fi
 
 if [ "$DO_CHECK_RACADM" = "true" ]; then
   check_racadm
+  exit
 fi
 if [ "$DO_EXECUTE_RACADM" = "true" ]; then
+  check_racadm
   execute_racadm
+  exit
 fi
 if [ "$DO_CHECK_WORK_DIR" = "true" ]; then
   DO_PRINT_HELP="false"
