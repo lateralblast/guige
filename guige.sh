@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Name:         guige (Generic Ubuntu ISO Generation Engine)
-# Version:      0.7.9
+# Version:      0.8.0
 # Release:      1
 # License:      CC-BA (Creative Commons By Attribution)
 #               http://creativecommons.org/licenses/by/4.0/legalcode
@@ -19,7 +19,7 @@ START_PATH=$( pwd )
 SCRIPT_BIN=$( basename $0 |sed "s/^\.\///g")
 SCRIPT_FILE="$START_PATH/$SCRIPT_BIN"
 OS_NAME=$( uname )
-OS_ARCH=$( uname -m )
+OS_ARCH=$( uname -m | sed "s/aarch64/arm64/g" |sed "s/x86_64/amd64/g")
 OS_USER=$( echo $USER )
 BMC_PORT="443"
 BMC_EXPOSE_DURATION="180"
@@ -121,13 +121,13 @@ fi
 # Get Architecture
 
 if [ -f "/usr/bin/uname" ]; then
-  DEFAULT_ISO_ARCH=$( uname -m )
+  DEFAULT_ISO_ARCH=$( uname -m | sed "s/aarch64/arm64/g" |sed "s/x86_64/amd64/g" )
   if [ "$DEFAULT_ISO_OS_NAME" = "Ubuntu" ]; then
     DEFAULT_BOOT_SERVER_IP=$( ip addr | grep "inet " | grep -v "127.0.0.1" |head -1 |awk '{print $2}' |cut -f1 -d/ )
-    if [ "$DEFAULT_ISO_ARCH" = "x86_64" ]; then
+    if [ "$DEFAULT_ISO_ARCH" = "x86_64" ] || [ "$DEFAULT_ISO_ARCH" = "amd64" ]; then
       DEFAULT_ISO_ARCH="amd64"
     fi
-    if [ "$DEFAULT_ISO_ARCH" = "aarch64" ]; then
+    if [ "$DEFAULT_ISO_ARCH" = "aarch64" ] || [ "$DEFAULT_ISO_ARCH" = "arm64" ]; then
       DEFAULT_ISO_ARCH="arm64"
     fi
   else
