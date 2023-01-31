@@ -1996,6 +1996,7 @@ do
     -q|--arch)
       ISO_ARCH="$2"
       shift 2
+      ISO_ARCH=$( echo "$ISO_ARCH" |sed "s/aarch64/arm64/g" |sed "s/x86_64/amd64/g" )
       ;;
     -R|--realname)
       ISO_REALNAME="$2"
