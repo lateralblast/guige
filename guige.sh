@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Name:         guige (Generic Ubuntu ISO Generation Engine)
-# Version:      0.8.0
+# Version:      0.8.1
 # Release:      1
 # License:      CC-BA (Creative Commons By Attribution)
 #               http://creativecommons.org/licenses/by/4.0/legalcode
@@ -16,11 +16,11 @@
 SCRIPT_ARGS="$@"
 SCRIPT_FILE="$0"
 START_PATH=$( pwd )
-SCRIPT_BIN=$( basename $0 |sed "s/^\.\///g")
+SCRIPT_BIN=$( basename "$0" |sed "s/^\.\///g")
 SCRIPT_FILE="$START_PATH/$SCRIPT_BIN"
 OS_NAME=$( uname )
 OS_ARCH=$( uname -m | sed "s/aarch64/arm64/g" |sed "s/x86_64/amd64/g")
-OS_USER=$( echo $USER )
+OS_USER="$USER"
 BMC_PORT="443"
 BMC_EXPOSE_DURATION="180"
 
@@ -31,7 +31,7 @@ CURRENT_ISO_RELEASE="22.04.1"
 CURRENT_DOCKER_UBUNTU_RELEASE="22.04"
 CURRENT_ISO_CODENAME="jammy"
 CURRENT_ISO_ARCH="amd64"
-CURRENT_ISO_OSNAME="Ubuntu"
+CURRENT_ISO_OS_NAME="Ubuntu"
 DEFAULT_ISO_HOSTNAME="ubuntu"
 DEFAULT_ISO_REALNAME="Ubuntu"
 DEFAULT_ISO_USERNAME="ubuntu"
@@ -44,7 +44,6 @@ DEFAULT_ISO_IP="192.168.1.2"
 DEFAULT_ISO_CIDR="24"
 DEFAULT_ISO_GATEWAY="192.168.1.254"
 DEFAULT_ISO_SWAPSIZE="2G"
-DEFAULT_ISO_MENU="0"
 DEFAULT_ISO_DEVICES="ROOT_DEV"
 DEFAULT_ISO_VOLMGRS="zfs lvm"
 DEFAULT_ISO_GRUB_MENU="0"
@@ -77,7 +76,6 @@ FULL_FORCE_MODE="false"
 VERBOSE_MODE="false"
 TEMP_VERBOSE_MODE="false"
 DEFAULT_MODE="defaults"
-DEFAULT_ACTION="none"
 INTERACTIVE_MODE="false"
 ISO_HWE_KERNEL="false"
 DO_DAILY_ISO="false"
@@ -113,16 +111,16 @@ DO_EXECUTE_RACADM="false"
 # Get OS name
 
 if [ -f "/usr/bin/lsb_release" ]; then
-  DEFAULT_ISO_OSNAME=$( lsb_release -d |awk '{print $2}' )
+  DEFAULT_ISO_OS_NAME=$( lsb_release -d |awk '{print $2}' )
 else
-  DEFAULT_ISO_OSNAME="$CURRENT_ISO_OSNAME"
+  DEFAULT_ISO_OS_NAME="$CURRENT_ISO_OS_NAME"
 fi
 
 # Get Architecture
 
 if [ -f "/usr/bin/uname" ]; then
   DEFAULT_ISO_ARCH=$( uname -m | sed "s/aarch64/arm64/g" |sed "s/x86_64/amd64/g" )
-  if [ "$DEFAULT_ISO_OS_NAME" = "Ubuntu" ]; then
+  if [ "$OS_NAME" = "Ubuntu" ]; then
     DEFAULT_BOOT_SERVER_IP=$( ip addr | grep "inet " | grep -v "127.0.0.1" |head -1 |awk '{print $2}' |cut -f1 -d/ )
     if [ "$DEFAULT_ISO_ARCH" = "x86_64" ] || [ "$DEFAULT_ISO_ARCH" = "amd64" ]; then
       DEFAULT_ISO_ARCH="amd64"
@@ -141,7 +139,7 @@ fi
 # Get default release
 
 if [ -f "/usr/bin/lsb_release" ]; then
-  if [ "$DEFAULT_OSNAME" = "Ubuntu" ]; then
+  if [ "$DEFAULT_OS_NAME" = "Ubuntu" ]; then
     DEFAULT_ISO_RELEASE=$( lsb_release -d |awk '{print $3}' )
   else
     DEFAULT_ISO_RELEASE="$CURRENT_ISO_RELEASE"
@@ -153,7 +151,7 @@ fi
 # Get default codename
 
 if [ -f "/usr/bin/lsb_release" ]; then
-  if [ "$DEFAULT_ISO_OSNAME" = "Ubuntu" ]; then
+  if [ "$DEFAULT_ISO_OS_NAME" = "Ubuntu" ]; then
     DEFAULT_ISO_CODENAME=$( lsb_release -cs )
   else
     DEFAULT_ISO_CODENAME="$CURRENT_ISO_CODENAME"
@@ -193,7 +191,7 @@ DEFAULT_OUTPUT_FILE="$DEFAULT_WORK_DIR/files/ubuntu-$DEFAULT_ISO_RELEASE-live-se
 DEFAULT_BOOT_SERVER_FILE="$DEFAULT_OUTPUT_FILE"
 DEFAULT_ISO_SQUASHFS_FILE="$DEFAULT_ISO_MOUNT_DIR/casper/ubuntu-server-minimal.squashfs"
 DEFAULT_GRUB_FILE="$DEFAULT_WORK_DIR/grub.cfg"
-DEFAULT_ISO_VOLID="$DEFAULT_ISO_OSNAME $DEFAULT_ISO_RELEASE Server"
+DEFAULT_ISO_VOLID="$DEFAULT_ISO_OS_NAME $DEFAULT_ISO_RELEASE Server"
 
 # Basename of files
 
@@ -206,10 +204,14 @@ SCRIPT_VERSION=$( cd $START_PATH ; cat $0 | grep '^# Version' | awk '{print $3}'
 
 # Function: Print help
 
+DEFAULT_BOOT_SERVER_FILE_BASE=$(basename "$DEFAULT_BOOT_SERVER_FILE")
+DEFAULT_ISO_SQUASHFS_FILE_BASE=$( basename "$DEFAULT_ISO_SQUASHFS_FILE" )
+
 print_help () {
   cat <<-HELP
   Usage: ${0##*/} [OPTIONS...]
-    -1|--bootserverfile   Boot sever file (default: $DEFAULT_BOOT_SERVER_FILE)
+    -1|--bootserverfile   Boot sever file (default: $DEFAULT_BOOT_SERVER_FILE_BASE)
+    -2|--squashfsfile     Squashfs file (default: $DEFAULT_ISO_SQUASHFS_FILE_BASE)
     -A|--codename         Linux release codename (default: $DEFAULT_ISO_CODENAME)
     -a|--action:          Action to perform (e.g. createiso, justiso, runchrootscript, checkdocker, installrequired)
     -B|--layout           Layout (default: $DEFAULT_ISO_LAYOUT)
@@ -1857,6 +1859,10 @@ do
       DO_CUSTOM_BOOT_SERVER_FILE="true"
       shift 2
       ;;
+    -2|--squashfsfile)
+      ISO_SQUASHFS_FILE="$2"
+      shift 2
+      ;;
     -A|--codename)
       ISO_CODENAME="$2"
       shift 2
@@ -2396,6 +2402,9 @@ else
         ;;
     esac 
   fi
+fi
+if [ "$ISO_SQUASHFS_FILE" = "" ]; then
+  ISO_SQUASHFS_FILE="$DEFAULT_ISO_SQUASHFS_FILE"
 fi
 
 # Update Default work directories

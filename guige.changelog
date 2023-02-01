@@ -159,3 +159,5 @@
 # Bug fixes
 # 0.8.0: Tue 31 Jan 2023 22:42:32 AEDT
 # Bug fixes
+# 0.8.1: Wed  1 Feb 2023 21:17:54 AEDT
+# Bug fixes and added squashfsfile option
