@@ -13,7 +13,7 @@
 # Packager:     Richard Spindler <richard@lateralblast.com.au>
 # Description:  Shell script designed to simplify creation of custom Ubuntu
 
-SCRIPT_ARGS="$@"
+SCRIPT_ARGS="$*"
 SCRIPT_FILE="$0"
 START_PATH=$( pwd )
 SCRIPT_BIN=$( basename "$0" |sed "s/^\.\///g")
@@ -197,7 +197,7 @@ DEFAULT_OUTPUT_FILE_BASE=$( basename "$DEFAULT_OUTPUT_FILE" )
 
 # Get the version of the script from the script itself
 
-SCRIPT_VERSION=$( cd "$START_PATH" ; cat "$0" | grep '^# Version' | awk '{print $3}' )
+SCRIPT_VERSION=$( grep '^# Version' < "$0" | awk '{print $3}' )
 
 # Function: Print help
 
@@ -365,7 +365,7 @@ check_docker_config () {
           echo "      - /docker/$SCRIPT_NAME-$DIR_ARCH/:/root/ubuntu-iso/" >> "$WORK_DIR/$DIR_ARCH/docker-compose.yml"
           echo "FROM ubuntu:$CURRENT_DOCKER_UBUNTU_RELEASE" > "$WORK_DIR/$DIR_ARCH/Dockerfile"
           echo "RUN apt-get update && apt-get install -y $REQUIRED_PACKAGES" >> "$WORK_DIR/$DIR_ARCH/Dockerfile"
-          cd "$WORK_DIR/$DIR_ARCH" ; docker build . --tag "$SCRIPT_NAME-$DIR_ARCH" --platform linux/$DIR_ARCH
+          docker build "$WORK_DIR/$DIR_ARCH" --tag "$SCRIPT_NAME-$DIR_ARCH" --platform linux/$DIR_ARCH
         fi
       fi
     done
@@ -456,17 +456,17 @@ check_work_dir () {
 
 execute_racadm () {
   handle_output "# Execute racadm" TEXT
-  handle_output "$RACADM_BIN -H $BMC_IP -u $BMC_USERNAME -p $BMC_PASSWORD -c \"remoteimage -d\""
-  handle_output "$RACADM_BIN -H $BMC_IP -u $BMC_USERNAME -p $BMC_PASSWORD -c \"remoteimage -c -l $BOOT_SERVER_IP:BOOT_SERVER_FILE\""
-  handle_output "$RACADM_BIN -H $BMC_IP -u $BMC_USERNAME -p $BMC_PASSWORD -c \"config -g cfgServerInfo -o cfgServerBootOnce 1\""
-  handle_output "$RACADM_BIN -H $BMC_IP -u $BMC_USERNAME -p $BMC_PASSWORD -c \"config -g cfgServerInfo -o cfgServerFirstBootDevice VCD-DVD\""
-  handle_output "$RACADM_BIN -H $BMC_IP -u $BMC_USERNAME -p $BMC_PASSWORD -c \"racadm serveraction powercycle\""
+  handle_output "$RACADM_BIN -H \"$BMC_IP\" -u \"$BMC_USERNAME\" -p \"$BMC_PASSWORD\" -c \"remoteimage -d\""
+  handle_output "$RACADM_BIN -H \"$BMC_IP\" -u \"$BMC_USERNAME\" -p \"$BMC_PASSWORD\" -c \"remoteimage -c -l $BOOT_SERVER_IP:BOOT_SERVER_FILE\""
+  handle_output "$RACADM_BIN -H \"$BMC_IP\" -u \"$BMC_USERNAME\" -p \"$BMC_PASSWORD\" -c \"config -g cfgServerInfo -o cfgServerBootOnce 1\""
+  handle_output "$RACADM_BIN -H \"$BMC_IP\" -u \"$BMC_USERNAME\" -p \"$BMC_PASSWORD\" -c \"config -g cfgServerInfo -o cfgServerFirstBootDevice VCD-DVD\""
+  handle_output "$RACADM_BIN -H \"$BMC_IP\" -u \"$BMC_USERNAME\" -p \"$BMC_PASSWORD\" -c \"racadm serveraction powercycle\""
   if [ "$TEST_MODE" = "false" ]; then
-    $RACADM_BIN -H $BMC_IP -u $BMC_USERNAME -p $BMC_PASSWORD -c "remoteimage -d"
-    $RACADM_BIN -H $BMC_IP -u $BMC_USERNAME -p $BMC_PASSWORD -c "remoteimage -c -l $BOOT_SERVER_IP:BOOT_SERVER_FILE"
-    $RACADM_BIN -H $BMC_IP -u $BMC_USERNAME -p $BMC_PASSWORD -c "config -g cfgServerInfo -o cfgServerBootOnce 1"
-    $RACADM_BIN -H $BMC_IP -u $BMC_USERNAME -p $BMC_PASSWORD -c "config -g cfgServerInfo -o cfgServerFirstBootDevice VCD-DVD"
-    $RACADM_BIN -H $BMC_IP -u $BMC_USERNAME -p $BMC_PASSWORD -c "racadm serveraction powercycle"
+    $RACADM_BIN -H "$BMC_IP" -u "$BMC_USERNAME" -p "$BMC_PASSWORD" -c "remoteimage -d"
+    $RACADM_BIN -H "$BMC_IP" -u "$BMC_USERNAME" -p "$BMC_PASSWORD" -c "remoteimage -c -l $BOOT_SERVER_IP:BOOT_SERVER_FILE"
+    $RACADM_BIN -H "$BMC_IP" -u "$BMC_USERNAME" -p "$BMC_PASSWORD" -c "config -g cfgServerInfo -o cfgServerBootOnce 1"
+    $RACADM_BIN -H "$BMC_IP" -u "$BMC_USERNAME" -p "$BMC_PASSWORD" -c "config -g cfgServerInfo -o cfgServerFirstBootDevice VCD-DVD"
+    $RACADM_BIN -H "$BMC_IP" -u "$BMC_USERNAME" -p "$BMC_PASSWORD" -c "racadm serveraction powercycle"
   fi
 }
 
@@ -513,10 +513,10 @@ install_required_packages () {
   for PACKAGE in $REQUIRED_PACKAGES; do
     if [ "$OS_NAME" = "Darwin" ]; then
       PACKAGE_VERSION=$( brew list |grep "$PACKAGE" )
-      COMMAND="brew install $PACKAGE"
+      COMMAND="brew install \"$PACKAGE\""
     else
-      PACKAGE_VERSION=$( apt show $PACKAGE 2>&1 |grep Version )
-      COMMAND="sudo apt install -y $PACKAGE"
+      PACKAGE_VERSION=$( apt show "$PACKAGE" 2>&1 |grep Version )
+      COMMAND="sudo apt install -y \"$PACKAGE\""
     fi
     if [ -z "$PACKAGE_VERSION" ]; then
       handle_output "$COMMAND"
@@ -531,8 +531,8 @@ install_required_packages () {
 
 check_base_iso_file () {
   if [ -f "$INPUT_FILE" ]; then
-    BASE_INPUT_FILE=$( basename $INPUT_FILE )
-    FILE_TYPE=$( file $WORK_DIR/files/$BASE_INPUT_FILE | awk '{print $2}' )
+    BASE_INPUT_FILE=$( basename "$INPUT_FILE" )
+    FILE_TYPE=$( file "$WORK_DIR/files/$BASE_INPUT_FILE" | awk '{print $2}' )
     if ! [ "$FILE_TYPE" = "ISO" ] || [ "$FILE_TYPE" = "DOS/MBR" ]; then
       TEMP_VERBOSE_MODE="true"
       handle_output "# Warning: $WORK_DIR/files/$BASE_INPUT_FILE is not a valid ISO file" TEXT
