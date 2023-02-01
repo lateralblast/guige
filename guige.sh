@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Name:         guige (Generic Ubuntu ISO Generation Engine)
-# Version:      0.8.1
+# Version:      0.8.2
 # Release:      1
 # License:      CC-BA (Creative Commons By Attribution)
 #               http://creativecommons.org/licenses/by/4.0/legalcode
@@ -31,7 +31,6 @@ CURRENT_ISO_RELEASE="22.04.1"
 CURRENT_DOCKER_UBUNTU_RELEASE="22.04"
 CURRENT_ISO_CODENAME="jammy"
 CURRENT_ISO_ARCH="amd64"
-CURRENT_ISO_OS_NAME="Ubuntu"
 DEFAULT_ISO_HOSTNAME="ubuntu"
 DEFAULT_ISO_REALNAME="Ubuntu"
 DEFAULT_ISO_USERNAME="ubuntu"
@@ -177,8 +176,6 @@ fi
 DEFAULT_WORK_DIR=$HOME/ubuntu-iso/$DEFAULT_ISO_RELEASE
 DEFAULT_DOCKER_WORK_DIR=/root/ubuntu-iso/$DEFAULT_ISO_RELEASE
 DEFAULT_ISO_MOUNT_DIR="$DEFAULT_WORK_DIR/isomount"
-DEFAULT_ISO_NEW_DIR="$DEFAULT_WORK_DIR/isonew"
-DEFAULT_ISO_SOURCE_DIR="$DEFAULT_WORK_DIR/source-files"
 
 DEFAULT_ISO_AUTOINSTALL_DIR="autoinstall"
 DEFAULT_ISO_TARGET_MOUNT="/target"
@@ -190,28 +187,30 @@ DEFAULT_INPUT_FILE="$DEFAULT_WORK_DIR/files/ubuntu-$DEFAULT_ISO_RELEASE-live-ser
 DEFAULT_OUTPUT_FILE="$DEFAULT_WORK_DIR/files/ubuntu-$DEFAULT_ISO_RELEASE-live-server-$DEFAULT_ISO_ARCH-autoinstall.iso"
 DEFAULT_BOOT_SERVER_FILE="$DEFAULT_OUTPUT_FILE"
 DEFAULT_ISO_SQUASHFS_FILE="$DEFAULT_ISO_MOUNT_DIR/casper/ubuntu-server-minimal.squashfs"
-DEFAULT_GRUB_FILE="$DEFAULT_WORK_DIR/grub.cfg"
+DEFAULT_ISO_GRUB_FILE="$DEFAULT_WORK_DIR/grub.cfg"
 DEFAULT_ISO_VOLID="$DEFAULT_ISO_OS_NAME $DEFAULT_ISO_RELEASE Server"
 
 # Basename of files
 
-DEFAULT_INPUT_FILE_BASE=$( basename $DEFAULT_INPUT_FILE )
-DEFAULT_OUTPUT_FILE_BASE=$( basename $DEFAULT_OUTPUT_FILE )
+DEFAULT_INPUT_FILE_BASE=$( basename "$DEFAULT_INPUT_FILE" )
+DEFAULT_OUTPUT_FILE_BASE=$( basename "$DEFAULT_OUTPUT_FILE" )
 
 # Get the version of the script from the script itself
 
-SCRIPT_VERSION=$( cd $START_PATH ; cat $0 | grep '^# Version' | awk '{print $3}' )
+SCRIPT_VERSION=$( cd "$START_PATH" ; cat "$0" | grep '^# Version' | awk '{print $3}' )
 
 # Function: Print help
 
 DEFAULT_BOOT_SERVER_FILE_BASE=$(basename "$DEFAULT_BOOT_SERVER_FILE")
 DEFAULT_ISO_SQUASHFS_FILE_BASE=$( basename "$DEFAULT_ISO_SQUASHFS_FILE" )
+DEFAULT_ISO_GRUB_FILE_BASE=$( basename "$DEFAULT_ISO_GRUB_FILE" )
 
 print_help () {
   cat <<-HELP
   Usage: ${0##*/} [OPTIONS...]
     -1|--bootserverfile   Boot sever file (default: $DEFAULT_BOOT_SERVER_FILE_BASE)
     -2|--squashfsfile     Squashfs file (default: $DEFAULT_ISO_SQUASHFS_FILE_BASE)
+    -3|--grubfile         GRUB file (default: $DEFAULT_ISO_GRUB_FILE_BASE)
     -A|--codename         Linux release codename (default: $DEFAULT_ISO_CODENAME)
     -a|--action:          Action to perform (e.g. createiso, justiso, runchrootscript, checkdocker, installrequired)
     -B|--layout           Layout (default: $DEFAULT_ISO_LAYOUT)
@@ -1863,6 +1862,10 @@ do
       ISO_SQUASHFS_FILE="$2"
       shift 2
       ;;
+    -3|--grubfile)
+      ISO_GRUB_FILE="$2"
+      shift 2
+      ;;
     -A|--codename)
       ISO_CODENAME="$2"
       shift 2
@@ -2405,6 +2408,9 @@ else
 fi
 if [ "$ISO_SQUASHFS_FILE" = "" ]; then
   ISO_SQUASHFS_FILE="$DEFAULT_ISO_SQUASHFS_FILE"
+fi
+if [ "$ISO_GRUB_FILE" = "" ]; then
+  ISO_GRUB_FILE="$DEFAULT_ISO_GRUB_FILE"
 fi
 
 # Update Default work directories

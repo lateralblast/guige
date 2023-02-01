@@ -161,3 +161,5 @@
 # Bug fixes
 # 0.8.1: Wed  1 Feb 2023 21:17:54 AEDT
 # Bug fixes and added squashfsfile option
+# 0.8.2: Wed  1 Feb 2023 22:04:59 AEDT
+# Bug fixes and added grubfile options

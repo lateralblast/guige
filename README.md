@@ -11,7 +11,7 @@ used to hang a shield on the shoulder or neck when not in use.
 Version
 -------
 
-Current version: 0.8.1
+Current version: 0.8.2
 
 Introduction
 ------------
@@ -67,10 +67,11 @@ You can get help using the -h or --help switch:
   Usage: guige.sh [OPTIONS...]
     -1|--bootserverfile   Boot sever file (default: ubuntu-22.04.1-live-server-arm64-autoinstall.iso)
     -2|--squashfsfile     Squashfs file (default: ubuntu-server-minimal.squashfs)
+    -3|--grubfile         GRUB file (default: grub.cfg)
     -A|--codename         Linux release codename (default: jammy)
     -a|--action:          Action to perform (e.g. createiso, justiso, runchrootscript, checkdocker, installrequired)
     -B|--layout           Layout (default: us)
-    -b|--bootserverip:    NFS/Bootserver IP (default: )
+    -b|--bootserverip:    NFS/Bootserver IP (default: 192.168.1.47)
     -C|--cidr:            CIDR (default: 24)
     -c|--sshkeyfile:      SSH key file to use as SSH key (default: /Users/spindler/.ssh/id_rsa.pub)
     -D|--installdrivers   Install additional drivers (default: false)
@@ -111,9 +112,9 @@ You can get help using the -h or --help switch:
     -u|--postinstall:     Postinstall action (e.g. installpackages, upgrade, distupgrade)
     -V|--version          Display Script Version
     -v|--verbose          Verbose output (default: false)
-    -W|--workdir:         Work directory (default: /Users/spindler/ubuntu-iso/22.04.1)
+    -W|--workdir:         Work directory (default: /home/ubuntu/ubuntu-iso/22.04.1)
     -w|--checkdirs        Check work directories exist
-    -X|--isovolid:        ISO Volume ID (default: Ubuntu 22.04.1 Server)
+    -X|--isovolid:        ISO Volume ID (default:  22.04.1 Server)
     -x|--grubtimeout:     Grub timeout (default: 10)
     -Y|--allowpassword    Allow password access via SSH (default: false)
     -y|--bmcpassword:     BMC/iDRAC password (default: calvin)
