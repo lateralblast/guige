@@ -314,7 +314,7 @@ check_docker_config () {
     for DIR_ARCH in $DOCKER_ARCH; do
       if ! [ -d "$WORK_DIR/$DIR_ARCH" ]; then
         handle_output "mkdir $WORK_DIR/$DIR_ARCH"
-        mkdir $WORK_DIR/$DIR_ARCH
+        mkdir -p "$WORK_DIR/$DIR_ARCH"
       fi
       handle_output "# Check docker images" TEXT
       handle_output "docker images |grep \"^$SCRIPT_NAME-$DIR_ARCH\" |awk '{print \$1}'"
@@ -344,28 +344,28 @@ check_docker_config () {
       DOCKER_VOLUME_CHECK=$( docker volume list |grep "^$SCRIPT_NAME-$DIR_ARCH" |awk '{print $1}' )
       if ! [ "$DOCKER_VOLUME_CHECK" = "$SCRIPT_NAME-$DIR_ARCH" ]; then
         if [ "$TEST_MODE" = "false" ]; then
-          docker volume create $SCRIPT_NAME-$DIR_ARCH
+          docker volume create "$SCRIPT_NAME-$DIR_ARCH"
         fi
       fi
       if ! [ "$DOCKER_IMAGE_CHECK" = "$SCRIPT_NAME-$DIR_ARCH" ]; then
         if [ "$TEST_MODE" = "false" ]; then
-          echo "version: \"3\"" > $WORK_DIR/$DIR_ARCH/docker-compose.yml
-          echo "" >> $WORK_DIR/$DIR_ARCH/docker-compose.yml
-          echo "services:" >> $WORK_DIR/$DIR_ARCH/docker-compose.yml
-          echo "  $SCRIPT_NAME-$DIR_ARCH:" >> $WORK_DIR/$DIR_ARCH/docker-compose.yml
-          echo "    build:" >> $WORK_DIR/$DIR_ARCH/docker-compose.yml
-          echo "      context: ." >> $WORK_DIR/$DIR_ARCH/docker-compose.yml
-          echo "      dockerfile: Dockerfile" >> $WORK_DIR/$DIR_ARCH/docker-compose.yml
-          echo "    image: $SCRIPT_NAME-$DIR_ARCH" >> $WORK_DIR/$DIR_ARCH/docker-compose.yml
-          echo "    container_name: $SCRIPT_NAME-$DIR_ARCH" >> $WORK_DIR/$DIR_ARCH/docker-compose.yml
-          echo "    entrypoint: /bin/bash" >> $WORK_DIR/$DIR_ARCH/docker-compose.yml
-          echo "    working_dir: /root" >> $WORK_DIR/$DIR_ARCH/docker-compose.yml
-          echo "    platform: linux/$DIR_ARCH" >> $WORK_DIR/$DIR_ARCH/docker-compose.yml
-          echo "    volumes:" >> $WORK_DIR/$DIR_ARCH/docker-compose.yml
-          echo "      - /docker/$SCRIPT_NAME-$DIR_ARCH/:/root/ubuntu-iso/" >> $WORK_DIR/$DIR_ARCH/docker-compose.yml
-          echo "FROM ubuntu:$CURRENT_DOCKER_UBUNTU_RELEASE" > $WORK_DIR/$DIR_ARCH/Dockerfile
-          echo "RUN apt-get update && apt-get install -y $REQUIRED_PACKAGES" >> $WORK_DIR/$DIR_ARCH/Dockerfile
-          cd $WORK_DIR/$DIR_ARCH ; docker build . --tag $SCRIPT_NAME-$DIR_ARCH --platform linux/$DIR_ARCH
+          echo "version: \"3\"" > "$WORK_DIR/$DIR_ARCH/docker-compose.yml"
+          echo "" >> "$WORK_DIR/$DIR_ARCH/docker-compose.yml"
+          echo "services:" >> "$WORK_DIR/$DIR_ARCH/docker-compose.yml"
+          echo "  $SCRIPT_NAME-$DIR_ARCH:" >> "$WORK_DIR/$DIR_ARCH/docker-compose.yml"
+          echo "    build:" >> "$WORK_DIR/$DIR_ARCH/docker-compose.yml"
+          echo "      context: ." >> "$WORK_DIR/$DIR_ARCH/docker-compose.yml"
+          echo "      dockerfile: Dockerfile" >> "$WORK_DIR/$DIR_ARCH/docker-compose.yml"
+          echo "    image: $SCRIPT_NAME-$DIR_ARCH" >> "$WORK_DIR/$DIR_ARCH/docker-compose.yml"
+          echo "    container_name: $SCRIPT_NAME-$DIR_ARCH" >> "$WORK_DIR/$DIR_ARCH/docker-compose.yml"
+          echo "    entrypoint: /bin/bash" >> "$WORK_DIR/$DIR_ARCH/docker-compose.yml"
+          echo "    working_dir: /root" >> "$WORK_DIR/$DIR_ARCH/docker-compose.yml"
+          echo "    platform: linux/$DIR_ARCH" >> "$WORK_DIR/$DIR_ARCH/docker-compose.yml"
+          echo "    volumes:" >> "$WORK_DIR/$DIR_ARCH/docker-compose.yml"
+          echo "      - /docker/$SCRIPT_NAME-$DIR_ARCH/:/root/ubuntu-iso/" >> "$WORK_DIR/$DIR_ARCH/docker-compose.yml"
+          echo "FROM ubuntu:$CURRENT_DOCKER_UBUNTU_RELEASE" > "$WORK_DIR/$DIR_ARCH/Dockerfile"
+          echo "RUN apt-get update && apt-get install -y $REQUIRED_PACKAGES" >> "$WORK_DIR/$DIR_ARCH/Dockerfile"
+          cd "$WORK_DIR/$DIR_ARCH" ; docker build . --tag "$SCRIPT_NAME-$DIR_ARCH" --platform linux/$DIR_ARCH
         fi
       fi
     done
@@ -376,9 +376,9 @@ check_docker_config () {
 
 get_info_from_iso () {
   handle_output "# Analysing $INPUT_FILE"
-  TEST_FILE=$( basename $INPUT_FILE )
-  TEST_NAME=$( echo $TEST_FILE | cut -f1 -d- )
-  TEST_TYPE=$( echo $TEST_FILE | cut -f2 -d- )
+  TEST_FILE=$( basename "$INPUT_FILE" )
+  TEST_NAME=$( echo "$TEST_FILE" | cut -f1 -d- )
+  TEST_TYPE=$( echo "$TEST_FILE" | cut -f2 -d- )
   case $TEST_NAME in
     "jammy")
       ISO_RELEASE="22.04"
@@ -389,7 +389,7 @@ get_info_from_iso () {
       ISO_DISTRO="Ubuntu"
       ;;
     "ubuntu")
-      ISO_RELEASE=$(echo $TEST_FILE |cut -f2 -d- )
+      ISO_RELEASE=$(echo "$TEST_FILE" |cut -f2 -d- )
       ISO_DISTRO="Ubuntu"
       ;;
     *)
@@ -398,16 +398,16 @@ get_info_from_iso () {
   esac
   if [ "$TEST_NAME" = "ubuntu" ]; then
     if [ "$TEST_TYPE" = "desktop" ]; then
-      ISO_ARCH=$( echo $TEST_FILE |cut -f4 -d- |cut -f1 -d. )
+      ISO_ARCH=$( echo "$TEST_FILE" |cut -f4 -d- |cut -f1 -d. )
     else
-      ISO_ARCH=$( echo $TEST_FILE |cut -f5 -d- |cut -f1 -d. )
+      ISO_ARCH=$( echo "$TEST_FILE" |cut -f5 -d- |cut -f1 -d. )
       TEST_TYPE="live-server"
     fi
   else
     if [ "$TEST_TYPE" = "desktop" ]; then
-      ISO_ARCH=$( echo $TEST_FILE |cut -f3 -d- |cut -f1 -d. )
+      ISO_ARCH=$( echo "$TEST_FILE" |cut -f3 -d- |cut -f1 -d. )
     else
-      ISO_ARCH=$( echo $TEST_FILE |cut -f4 -d- |cut -f1 -d. )
+      ISO_ARCH=$( echo "$TEST_FILE" |cut -f4 -d- |cut -f1 -d. )
       TEST_TYPE="live-server"
     fi
   fi
@@ -438,7 +438,7 @@ check_work_dir () {
         handle_output "sudo rm -rf $ISO_DIR"
         if [[ $ISO_DIR =~ [0-9a-zA-Z] ]]; then
           if [ "$TEST_MODE" = "false" ]; then
-            sudo rm -rf $ISO_DIR
+            sudo rm -rf "$ISO_DIR"
           fi
         fi
       fi
@@ -446,7 +446,7 @@ check_work_dir () {
     if ! [ -d "$ISO_DIR" ]; then
       handle_output "# Create $ISO_DIR if it doesn't exist" TEXT
       if [ "$TEST_MODE" = "false" ]; then
-        mkdir -p $ISO_DIR
+        mkdir -p "$ISO_DIR"
       fi
     fi
   done
@@ -478,7 +478,7 @@ check_racadm () {
   if [ -z "$RACADM_TEST" ]; then
     if ! [ -f "$HOME/.local/bin/racadm" ]; then
       PIP_TEST=$( which pip |grep "^/" )
-      if ! [ -z "$PIP_TEST" ]; then
+      if [ -n "$PIP_TEST" ]; then
         PIP_TEST=$( pip list |grep rac |awk '{print $1}')
         if [ -z "$PIP_TEST" ]; then
           handle_output "pip install --user rac"
@@ -512,7 +512,7 @@ install_required_packages () {
   handle_output "# Check required packages are installed" TEXT
   for PACKAGE in $REQUIRED_PACKAGES; do
     if [ "$OS_NAME" = "Darwin" ]; then
-      PACKAGE_VERSION=$( brew list |grep $PACKAGE )
+      PACKAGE_VERSION=$( brew list |grep "$PACKAGE" )
       COMMAND="brew install $PACKAGE"
     else
       PACKAGE_VERSION=$( apt show $PACKAGE 2>&1 |grep Version )
@@ -565,18 +565,18 @@ check_base_iso_file () {
 
 get_base_iso () {
   handle_output "# Check source ISO exists and grab it if it doesn't" TEXT
-  BASE_INPUT_FILE=$( basename $INPUT_FILE )
+  BASE_INPUT_FILE=$( basename "$INPUT_FILE" )
   if [ "$FULL_FORCE_MODE" = "true" ]; then
     handle_output "rm $WORK_DIR/files/$BASE_INPUT_FILE" 
     if [ "$TEST_MODE" = "false" ]; then
-      rm $WORK_DIR/files/$BASE_INPUT_FILE
+      rm "$WORK_DIR/files/$BASE_INPUT_FILE"
     fi
   fi
   check_base_iso_file
   handle_output "wget $ISO_URL -O $WORK_DIR/files/$BASE_INPUT_FILE"
   if ! [ -f "$WORK_DIR/files/$BASE_INPUT_FILE" ]; then
     if [ "$TEST_MODE" = "false" ]; then
-      wget $ISO_URL -O $WORK_DIR/files/$BASE_INPUT_FILE
+      wget "$ISO_URL" -O "$WORK_DIR/files/$BASE_INPUT_FILE"
     fi
   fi
 }
@@ -588,7 +588,7 @@ get_base_iso () {
 unmount_iso () {
   handle_output "sudo umount -l $ISO_MOUNT_DIR"
   if [ "$TEST_MODE" = "false" ]; then
-    sudo umount -l $ISO_MOUNT_DIR
+    sudo umount -l "$ISO_MOUNT_DIR"
   fi
 }
 
@@ -602,14 +602,14 @@ mount_iso () {
   check_base_iso_file
   handle_output "sudo mount -o loop $WORK_DIR/files/$BASE_INPUT_FILE $ISO_MOUNT_DIR"
   if [ "$TEST_MODE" = "false" ]; then
-    sudo mount -o loop $WORK_DIR/files/$BASE_INPUT_FILE $ISO_MOUNT_DIR
+    sudo mount -o loop "$WORK_DIR/files/$BASE_INPUT_FILE $ISO_MOUNT_DIR"
   fi
 }
 
 unmount_squashfs () {
   handle_output "sudo umount $ISO_NEW_DIR/squashfs"
   if [ "$TEST_MODE" = "false" ]; then
-    sudo umount $ISO_NEW_DIR/squashfs
+    sudo umount "$ISO_NEW_DIR/squashfs"
   fi
 }
 
@@ -623,12 +623,12 @@ copy_iso () {
   if [ "$VERBOSE_MODE" = "true" ]; then
     handle_output "rsync -av $ISO_MOUNT_DIR/ $ISO_NEW_DIR/cd"
     if [ "$TEST_MODE" = "false" ]; then
-      rsync -av $ISO_MOUNT_DIR/ $ISO_NEW_DIR/cd
+      rsync -av "$ISO_MOUNT_DIR" "$ISO_NEW_DIR/cd"
     fi
   else
     handle_output "rsync -a $ISO_MOUNT_DIR/ $ISO_NEW_DIR/cd"
     if [ "$TEST_MODE" = "false" ]; then
-      rsync -a $ISO_MOUNT_DIR/ $ISO_NEW_DIR/cd
+      rsync -a "$ISO_MOUNT_DIR" "$ISO_NEW_DIR/cd"
     fi
   fi
 }
@@ -640,7 +640,7 @@ check_ansible () {
   handle_output "ANSIBLE_BIN=\$( which ansible )"
   handle_output  "ANSIBLE_CHECK=\$( basename $ANSIBLE_BIN )" 
   ANSIBLE_BIN=$( which ansible )
-  ANSIBLE_CHECK=$( basename $ANSIBLE_BIN ) 
+  ANSIBLE_CHECK=$( basename "$ANSIBLE_BIN" ) 
   if [ "$OS_NAME" = "Darwin" ]; then
     COMMAND="brew install ansible"
   else
@@ -677,18 +677,18 @@ create_ansible () {
   handle_output "echo \"      idrac_user:     $BMC_USERNAME\" >> $HOSTS_YAML"
   handle_output "echo \"      idrac_password: $BMC_PASSWORD\" >> $HOSTS_YAML"
   if [ "$TEST_MODE" = "false" ]; then
-    echo "---" > $HOSTS_YAML
-    echo "idrac:" >> $HOSTS_YAML
-    echo "  hosts:" >> $HOSTS_YAML
-    echo "    $ISO_HOSTNAME:" >> $HOSTS_YAML
-    echo "      ansible_host:   $BMC_IP" >> $HOSTS_YAML
-    echo "      baseuri:        $BMC_IP" >> $HOSTS_YAML
-    echo "      idrac_user:     $BMC_USERNAME" >> $HOSTS_YAML
-    echo "      idrac_password: $BMC_PASSWORD" >> $HOSTS_YAML
+    echo "---" > "$HOSTS_YAML"
+    echo "idrac:" >> "$HOSTS_YAML"
+    echo "  hosts:" >> "$HOSTS_YAML"
+    echo "    $ISO_HOSTNAME:" >> "$HOSTS_YAML"
+    echo "      ansible_host:   $BMC_IP" >> "$HOSTS_YAML"
+    echo "      baseuri:        $BMC_IP" >> "$HOSTS_YAML"
+    echo "      idrac_user:     $BMC_USERNAME" >> "$HOSTS_YAML"
+    echo "      idrac_password: $BMC_PASSWORD" >> "$HOSTS_YAML"
   fi
   IDRAC_YAML="$WORK_DIR/idrac.yaml"
-  NFS_FILE=$( basename $BOOT_SERVER_FILE )
-  NFS_DIR=$( dirname $BOOT_SERVER_FILE )
+  NFS_FILE=$( basename "$BOOT_SERVER_FILE" )
+  NFS_DIR=$( dirname "$BOOT_SERVER_FILE" )
   handle_output "# Create $HOSTS_YAML" TEXT
   handle_output "echo \"- hosts: idrac\" > $IDRAC_YAML"
   handle_output "echo \"  name: $ISO_VOLID\" >> $IDRAC_YAML"
@@ -791,106 +791,106 @@ create_ansible () {
   handle_output "echo \"      register: boot_to_network_iso_status\" >> $IDRAC_YAML"
   handle_output "echo \"      delegate_to: localhost\" >> $IDRAC_YAML"
   if [ "$TEST_MODE" = "false" ]; then
-    echo "- hosts: idrac" > $IDRAC_YAML
-    echo "  name: $ISO_VOLID" >> $IDRAC_YAML
-    echo "  gather_facts: False" >> $IDRAC_YAML
-    echo "  vars:" >> $IDRAC_YAML
-    echo "    idrac_osd_command_allowable_values: [\"BootToNetworkISO\", \"GetAttachStatus\", \"DetachISOImage\"]" >> $IDRAC_YAML
-    echo "    idrac_osd_command_default: \"GetAttachStatus\"" >> $IDRAC_YAML
-    echo "    GetAttachStatus_Code:" >> $IDRAC_YAML
-    echo "      DriversAttachStatus:" >> $IDRAC_YAML
-    echo "        \"0\": \"NotAttached\"" >> $IDRAC_YAML
-    echo "        \"1\": \"Attached\"" >> $IDRAC_YAML
-    echo "      ISOAttachStatus:" >> $IDRAC_YAML
-    echo "        \"0\": \"NotAttached\"" >> $IDRAC_YAML
-    echo "        \"1\": \"Attached\"" >> $IDRAC_YAML
-    echo "    idrac_https_port:           $BMC_PORT" >> $IDRAC_YAML
-    echo "    expose_duration:            $BMC_EXPOSE_DURATION" >> $IDRAC_YAML
-    echo "    command:                    \"{{ idrac_osd_command_default }}\"" >> $IDRAC_YAML
-    echo "    validate_certs:             no" >> $IDRAC_YAML
-    echo "    force_basic_auth:           yes" >> $IDRAC_YAML
-    echo "    share_name:                 $BOOT_SERVER_IP:$NFS_DIR/" >> $IDRAC_YAML
-    echo "    ubuntu_iso:                 $NFS_FILE" >> $IDRAC_YAML
-    echo "  collections:" >> $IDRAC_YAML
-    echo "    - dellemc.openmanage" >> $IDRAC_YAML
-    echo "  tasks:" >> $IDRAC_YAML
-    echo "    - name: find the URL for the DellOSDeploymentService" >> $IDRAC_YAML
-    echo "      ansible.builtin.uri:" >> $IDRAC_YAML
-    echo "        url: \"https://{{ baseuri }}/redfish/v1/Systems/System.Embedded.1\"" >> $IDRAC_YAML
-    echo "        user: \"{{ idrac_user }}\"" >> $IDRAC_YAML
-    echo "        password: \"{{ idrac_password }}\"" >> $IDRAC_YAML
-    echo "        method: GET" >> $IDRAC_YAML
-    echo "        headers:" >> $IDRAC_YAML
-    echo "          Accept: \"application/json\"" >> $IDRAC_YAML
-    echo "          OData-Version: \"4.0\"" >> $IDRAC_YAML
-    echo "        status_code: 200" >> $IDRAC_YAML
-    echo "        validate_certs: \"{{ validate_certs }}\"" >> $IDRAC_YAML
-    echo "        force_basic_auth: \"{{ force_basic_auth }}\"" >> $IDRAC_YAML
-    echo "      register: result" >> $IDRAC_YAML
-    echo "      delegate_to: localhost" >> $IDRAC_YAML
-    echo "    - name: find the URL for the DellOSDeploymentService" >> $IDRAC_YAML
-    echo "      ansible.builtin.set_fact:" >> $IDRAC_YAML
-    echo "        idrac_osd_service_url: \"{{ result.json.Links.Oem.Dell.DellOSDeploymentService['@odata.id'] }}\"" >> $IDRAC_YAML
-    echo "      when:" >> $IDRAC_YAML
-    echo "        - result.json.Links.Oem.Dell.DellOSDeploymentService is defined" >> $IDRAC_YAML
-    echo "    - block:" >> $IDRAC_YAML
-    echo "        - name: get ISO attach status" >> $IDRAC_YAML
-    echo "          ansible.builtin.uri:" >> $IDRAC_YAML
-    echo "            url: \"https://{{ baseuri }}{{ idrac_osd_service_url }}/Actions/DellOSDeploymentService.GetAttachStatus\"" >> $IDRAC_YAML
-    echo "            user: \"{{ idrac_user }}\"" >> $IDRAC_YAML
-    echo "            password: \"{{ idrac_password }}\"" >> $IDRAC_YAML
-    echo "            method: POST" >> $IDRAC_YAML
-    echo "            headers:" >> $IDRAC_YAML
-    echo "              Accept: \"application/json\"" >> $IDRAC_YAML
-    echo "              Content-Type: \"application/json\"" >> $IDRAC_YAML
-    echo "              OData-Version: \"4.0\"" >> $IDRAC_YAML
-    echo "            body: \"{}\"" >> $IDRAC_YAML
-    echo "            status_code: 200" >> $IDRAC_YAML
-    echo "            force_basic_auth: \"{{ force_basic_auth }}\"" >> $IDRAC_YAML
-    echo "          register: attach_status" >> $IDRAC_YAML
-    echo "          delegate_to: localhost" >> $IDRAC_YAML
-    echo "        - name: set ISO attach status as a fact variable" >> $IDRAC_YAML
-    echo "          ansible.builtin.set_fact:" >> $IDRAC_YAML
-    echo "            idrac_iso_attach_status: \"{{ idrac_iso_attach_status | default({}) | combine({item.key: item.value}) }}\"" >> $IDRAC_YAML
-    echo "          with_dict:" >> $IDRAC_YAML
-    echo "            DriversAttachStatus: \"{{ attach_status.json.DriversAttachStatus }}\"" >> $IDRAC_YAML
-    echo "            ISOAttachStatus: \"{{ attach_status.json.ISOAttachStatus }}\"" >> $IDRAC_YAML
-    echo "      when:" >> $IDRAC_YAML
-    echo "        - idrac_osd_service_url is defined" >> $IDRAC_YAML
-    echo "        - idrac_osd_service_url|length > 0" >> $IDRAC_YAML
-    echo "    - block:" >> $IDRAC_YAML
-    echo "        - name: detach ISO image if attached" >> $IDRAC_YAML
-    echo "          ansible.builtin.uri:" >> $IDRAC_YAML
-    echo "            url: \"https://{{ baseuri }}{{ idrac_osd_service_url }}/Actions/DellOSDeploymentService.DetachISOImage\"" >> $IDRAC_YAML
-    echo "            user: \"{{ idrac_user }}\"" >> $IDRAC_YAML
-    echo "            password: \"{{ idrac_password }}\"" >> $IDRAC_YAML
-    echo "            method: POST" >> $IDRAC_YAML
-    echo "            headers:" >> $IDRAC_YAML
-    echo "              Accept: \"application/json\"" >> $IDRAC_YAML
-    echo "              Content-Type: \"application/json\"" >> $IDRAC_YAML
-    echo "              OData-Version: \"4.0\"" >> $IDRAC_YAML
-    echo "            body: \"{}\"" >> $IDRAC_YAML
-    echo "            status_code: 200" >> $IDRAC_YAML
-    echo "            force_basic_auth: \"{{ force_basic_auth }}\"" >> $IDRAC_YAML
-    echo "          register: detach_status" >> $IDRAC_YAML
-    echo "          delegate_to: localhost" >> $IDRAC_YAML
-    echo "        - ansible.builtin.debug:" >> $IDRAC_YAML
-    echo "            msg: \"Successfuly detached the ISO image\"" >> $IDRAC_YAML
-    echo "      when:" >> $IDRAC_YAML
-    echo "        - idrac_osd_service_url is defined and idrac_osd_service_url|length > 0" >> $IDRAC_YAML
-    echo "        - idrac_iso_attach_status" >> $IDRAC_YAML
-    echo "        - idrac_iso_attach_status.ISOAttachStatus == \"Attached\" or" >> $IDRAC_YAML
-    echo "          idrac_iso_attach_status.DriversAttachStatus == \"Attached\"" >> $IDRAC_YAML
-    echo "    - name: boot to network ISO" >> $IDRAC_YAML
-    echo "      dellemc.openmanage.idrac_os_deployment:" >> $IDRAC_YAML
-    echo "        idrac_ip: \"{{ baseuri }}\"" >> $IDRAC_YAML
-    echo "        idrac_user: \"{{ idrac_user }}\"" >> $IDRAC_YAML
-    echo "        idrac_password: \"{{ idrac_password }}\"" >> $IDRAC_YAML
-    echo "        share_name: \"{{ share_name }}\"" >> $IDRAC_YAML
-    echo "        iso_image: \"{{ ubuntu_iso }}\"" >> $IDRAC_YAML
-    echo "        expose_duration: \"{{ expose_duration }}\"" >> $IDRAC_YAML
-    echo "      register: boot_to_network_iso_status" >> $IDRAC_YAML
-    echo "      delegate_to: localhost" >> $IDRAC_YAML
+    echo "- hosts: idrac" > "$IDRAC_YAML"
+    echo "  name: $ISO_VOLID" >> "$IDRAC_YAML"
+    echo "  gather_facts: False" >> "$IDRAC_YAML"
+    echo "  vars:" >> "$IDRAC_YAML"
+    echo "    idrac_osd_command_allowable_values: [\"BootToNetworkISO\", \"GetAttachStatus\", \"DetachISOImage\"]" >> "$IDRAC_YAML"
+    echo "    idrac_osd_command_default: \"GetAttachStatus\"" >> "$IDRAC_YAML"
+    echo "    GetAttachStatus_Code:" >> "$IDRAC_YAML"
+    echo "      DriversAttachStatus:" >> "$IDRAC_YAML"
+    echo "        \"0\": \"NotAttached\"" >> "$IDRAC_YAML"
+    echo "        \"1\": \"Attached\"" >> "$IDRAC_YAML"
+    echo "      ISOAttachStatus:" >> "$IDRAC_YAML"
+    echo "        \"0\": \"NotAttached\"" >> "$IDRAC_YAML"
+    echo "        \"1\": \"Attached\"" >> "$IDRAC_YAML"
+    echo "    idrac_https_port:           $BMC_PORT" >> "$IDRAC_YAML"
+    echo "    expose_duration:            $BMC_EXPOSE_DURATION" >> "$IDRAC_YAML"
+    echo "    command:                    \"{{ idrac_osd_command_default }}\"" >> "$IDRAC_YAML"
+    echo "    validate_certs:             no" >> "$IDRAC_YAML"
+    echo "    force_basic_auth:           yes" >> "$IDRAC_YAML"
+    echo "    share_name:                 $BOOT_SERVER_IP:$NFS_DIR/" >> "$IDRAC_YAML"
+    echo "    ubuntu_iso:                 $NFS_FILE" >> "$IDRAC_YAML"
+    echo "  collections:" >> "$IDRAC_YAML"
+    echo "    - dellemc.openmanage" >> "$IDRAC_YAML"
+    echo "  tasks:" >> "$IDRAC_YAML"
+    echo "    - name: find the URL for the DellOSDeploymentService" >> "$IDRAC_YAML"
+    echo "      ansible.builtin.uri:" >> "$IDRAC_YAML"
+    echo "        url: \"https://{{ baseuri }}/redfish/v1/Systems/System.Embedded.1\"" >> "$IDRAC_YAML"
+    echo "        user: \"{{ idrac_user }}\"" >> "$IDRAC_YAML"
+    echo "        password: \"{{ idrac_password }}\"" >> "$IDRAC_YAML"
+    echo "        method: GET" >> "$IDRAC_YAML"
+    echo "        headers:" >> "$IDRAC_YAML"
+    echo "          Accept: \"application/json\"" >> "$IDRAC_YAML"
+    echo "          OData-Version: \"4.0\"" >> "$IDRAC_YAML"
+    echo "        status_code: 200" >> "$IDRAC_YAML"
+    echo "        validate_certs: \"{{ validate_certs }}\"" >> "$IDRAC_YAML"
+    echo "        force_basic_auth: \"{{ force_basic_auth }}\"" >> "$IDRAC_YAML"
+    echo "      register: result" >> "$IDRAC_YAML"
+    echo "      delegate_to: localhost" >> "$IDRAC_YAML"
+    echo "    - name: find the URL for the DellOSDeploymentService" >> "$IDRAC_YAML"
+    echo "      ansible.builtin.set_fact:" >> "$IDRAC_YAML"
+    echo "        idrac_osd_service_url: \"{{ result.json.Links.Oem.Dell.DellOSDeploymentService['@odata.id'] }}\"" >> "$IDRAC_YAML"
+    echo "      when:" >> "$IDRAC_YAML"
+    echo "        - result.json.Links.Oem.Dell.DellOSDeploymentService is defined" >> "$IDRAC_YAML"
+    echo "    - block:" >> "$IDRAC_YAML"
+    echo "        - name: get ISO attach status" >> "$IDRAC_YAML"
+    echo "          ansible.builtin.uri:" >> "$IDRAC_YAML"
+    echo "            url: \"https://{{ baseuri }}{{ idrac_osd_service_url }}/Actions/DellOSDeploymentService.GetAttachStatus\"" >> "$IDRAC_YAML"
+    echo "            user: \"{{ idrac_user }}\"" >> "$IDRAC_YAML"
+    echo "            password: \"{{ idrac_password }}\"" >> "$IDRAC_YAML"
+    echo "            method: POST" >> "$IDRAC_YAML"
+    echo "            headers:" >> "$IDRAC_YAML"
+    echo "              Accept: \"application/json\"" >> "$IDRAC_YAML"
+    echo "              Content-Type: \"application/json\"" >> "$IDRAC_YAML"
+    echo "              OData-Version: \"4.0\"" >> "$IDRAC_YAML"
+    echo "            body: \"{}\"" >> "$IDRAC_YAML"
+    echo "            status_code: 200" >> "$IDRAC_YAML"
+    echo "            force_basic_auth: \"{{ force_basic_auth }}\"" >> "$IDRAC_YAML"
+    echo "          register: attach_status" >> "$IDRAC_YAML"
+    echo "          delegate_to: localhost" >> "$IDRAC_YAML"
+    echo "        - name: set ISO attach status as a fact variable" >> "$IDRAC_YAML"
+    echo "          ansible.builtin.set_fact:" >> "$IDRAC_YAML"
+    echo "            idrac_iso_attach_status: \"{{ idrac_iso_attach_status | default({}) | combine({item.key: item.value}) }}\"" >> "$IDRAC_YAML"
+    echo "          with_dict:" >> "$IDRAC_YAML"
+    echo "            DriversAttachStatus: \"{{ attach_status.json.DriversAttachStatus }}\"" >> "$IDRAC_YAML"
+    echo "            ISOAttachStatus: \"{{ attach_status.json.ISOAttachStatus }}\"" >> "$IDRAC_YAML"
+    echo "      when:" >> "$IDRAC_YAML"
+    echo "        - idrac_osd_service_url is defined" >> "$IDRAC_YAML"
+    echo "        - idrac_osd_service_url|length > 0" >> "$IDRAC_YAML"
+    echo "    - block:" >> "$IDRAC_YAML"
+    echo "        - name: detach ISO image if attached" >> "$IDRAC_YAML"
+    echo "          ansible.builtin.uri:" >> "$IDRAC_YAML"
+    echo "            url: \"https://{{ baseuri }}{{ idrac_osd_service_url }}/Actions/DellOSDeploymentService.DetachISOImage\"" >> "$IDRAC_YAML"
+    echo "            user: \"{{ idrac_user }}\"" >> "$IDRAC_YAML"
+    echo "            password: \"{{ idrac_password }}\"" >> "$IDRAC_YAML"
+    echo "            method: POST" >> "$IDRAC_YAML"
+    echo "            headers:" >> "$IDRAC_YAML"
+    echo "              Accept: \"application/json\"" >> "$IDRAC_YAML"
+    echo "              Content-Type: \"application/json\"" >> "$IDRAC_YAML"
+    echo "              OData-Version: \"4.0\"" >> "$IDRAC_YAML"
+    echo "            body: \"{}\"" >> "$IDRAC_YAML"
+    echo "            status_code: 200" >> "$IDRAC_YAML"
+    echo "            force_basic_auth: \"{{ force_basic_auth }}\"" >> "$IDRAC_YAML"
+    echo "          register: detach_status" >> "$IDRAC_YAML"
+    echo "          delegate_to: localhost" >> "$IDRAC_YAML"
+    echo "        - ansible.builtin.debug:" >> "$IDRAC_YAML"
+    echo "            msg: \"Successfuly detached the ISO image\"" >> "$IDRAC_YAML"
+    echo "      when:" >> "$IDRAC_YAML"
+    echo "        - idrac_osd_service_url is defined and idrac_osd_service_url|length > 0" >> "$IDRAC_YAML"
+    echo "        - idrac_iso_attach_status" >> "$IDRAC_YAML"
+    echo "        - idrac_iso_attach_status.ISOAttachStatus == \"Attached\" or" >> "$IDRAC_YAML"
+    echo "          idrac_iso_attach_status.DriversAttachStatus == \"Attached\"" >> "$IDRAC_YAML"
+    echo "    - name: boot to network ISO" >> "$IDRAC_YAML"
+    echo "      dellemc.openmanage.idrac_os_deployment:" >> "$IDRAC_YAML"
+    echo "        idrac_ip: \"{{ baseuri }}\"" >> "$IDRAC_YAML"
+    echo "        idrac_user: \"{{ idrac_user }}\"" >> "$IDRAC_YAML"
+    echo "        idrac_password: \"{{ idrac_password }}\"" >> "$IDRAC_YAML"
+    echo "        share_name: \"{{ share_name }}\"" >> "$IDRAC_YAML"
+    echo "        iso_image: \"{{ ubuntu_iso }}\"" >> "$IDRAC_YAML"
+    echo "        expose_duration: \"{{ expose_duration }}\"" >> "$IDRAC_YAML"
+    echo "      register: boot_to_network_iso_status" >> "$IDRAC_YAML"
+    echo "      delegate_to: localhost" >> "$IDRAC_YAML"
   fi
 }
 
@@ -902,7 +902,7 @@ install_server () {
   handle_output "# Execute ansible" TEXT
   handle_output "cd $WORK_DIR ; ansible-playbook $IDRAC_YAML -i $HOSTS_YAML"
   if [ "$TEST_MODE" = "false" ]; then
-    cd $WORK_DIR/$ISO_RELEASE ; ansible-playbook $IDRAC_YAML -i $HOSTS_YAML
+    cd "$WORK_DIR/$ISO_RELEASE" ; ansible-playbook "$IDRAC_YAML" -i "$HOSTS_YAML"
   fi
 }
 
@@ -941,24 +941,24 @@ create_export () {
 # sudo cp /etc/resolv.conf /etc/hosts ./isonew/custom/etc/
 
 copy_squashfs () {
-  handle_output "sudo mount -t squashfs -o loop $ISO_SQUASHFS_FILE $ISO_NEW_DIR/squashfs/"
+  handle_output "sudo mount -t squashfs -o loop $ISO_SQUASHFS_FILE $ISO_NEW_DIR/squashfs"
   if [ "$TEST_MODE" = "false" ]; then
-    sudo mount -t squashfs -o loop $ISO_SQUASHFS_FILE $ISO_NEW_DIR/squashfs/
+    sudo mount -t squashfs -o loop "$ISO_SQUASHFS_FILE" "$ISO_NEW_DIR/squashfs"
   fi
   if [ "$VERBOSE_MODE" = "true" ]; then
     handle_output "sudo rsync -av $ISO_NEW_DIR/squashfs/ $ISO_NEW_DIR/custom"
     if [ "$TEST_MODE" = "false" ]; then
-      sudo rsync -av $ISO_NEW_DIR/squashfs/ $ISO_NEW_DIR/custom
+      sudo rsync -av "$ISO_NEW_DIR/squashfs" "$ISO_NEW_DIR/custom"
     fi
   else
     handle_output "sudo rsync -a $ISO_NEW_DIR/squashfs/ $ISO_NEW_DIR/custom"
     if [ "$TEST_MODE" = "false" ]; then
-      sudo rsync -a $ISO_NEW_DIR/squashfs/ $ISO_NEW_DIR/custom
+      sudo rsync -a "$ISO_NEW_DIR/squashfs" "$ISO_NEW_DIR/custom"
     fi
   fi
   handle_output "sudo cp /etc/resolv.conf /etc/hosts $ISO_NEW_DIR/custom/etc/"
   if [ "$TEST_MODE" = "false" ]; then
-    sudo cp /etc/resolv.conf /etc/hosts $ISO_NEW_DIR/custom/etc/
+    sudo cp /etc/resolv.conf /etc/hosts "$ISO_NEW_DIR/custom/etc"
   fi
 }
 
@@ -970,7 +970,7 @@ copy_squashfs () {
 execute_chroot_script () {
   handle_output "sudo chroot $ISO_NEW_DIR/custom /tmp/modify_chroot.sh"
   if [ "$TEST_MODE" = "false" ]; then
-    sudo chroot $ISO_NEW_DIR/custom /tmp/modify_chroot.sh
+    sudo chroot "$ISO_NEW_DIR/custom /tmp/modify_chroot.sh"
   fi
 }
 
@@ -988,13 +988,13 @@ update_iso_squashfs () {
   handle_output "# Making md5sum"
   handle_output "cd $ISO_NEW_DIR ; sudo find . -type f -print0 | xargs -0 md5sum | sed \"s@$ISO_NEW_DIR@.@\" | grep -v md5sum.txt | sudo tee $ISO_NEW_DIR/cd/md5sum.txt"
   if [ "$TEST_MODE" = "false" ]; then
-    sudo mksquashfs $ISO_NEW_DIR/custom $ISO_NEW_DIR/mksquash/filesystem.squashfs -noappend
-    sudo cp $ISO_NEW_DIR/mksquash/filesystem.squashfs $NEW_SQUASHFS_FILE
-    sudo chmod 0444 $NEW_SQUASHFS_FILE
-    sudo echo -n $( sudo du -s --block-size=1 $ISO_NEW_DIR/custom | tail -1 | awk '{print $1}') | sudo tee $ISO_NEW_DIR/mksquash/filesystem.size
-    sudo cp $ISO_NEW_DIR/mksquash/filesystem.size $ISO_SOURCE_DIR/casper/filesystem.size
+    sudo mksquashfs "$ISO_NEW_DIR/custom" "$ISO_NEW_DIR/mksquash/filesystem.squashfs" -noappend
+    sudo cp "$ISO_NEW_DIR/mksquash/filesystem.squashfs" "$NEW_SQUASHFS_FILE"
+    sudo chmod 0444 i"$NEW_SQUASHFS_FILE"
+    sudo echo -n $( sudo du -s --block-size=1 "$ISO_NEW_DIR/custom" | tail -1 | awk '{print $1}') | sudo tee "$ISO_NEW_DIR/mksquash/filesystem.size";
+    sudo cp "$ISO_NEW_DIR/mksquash/filesystem.size" "$ISO_SOURCE_DIR/casper/filesystem.size"
     sudo chmod 0444 $ISO_SOURCE_DIR/casper/filesystem.size
-    cd $ISO_SOURCE_DIR ; sudo find . -type f -print0 | xargs -0 md5sum | sed "s@${ISO_NEW_DIR}@.@" | grep -v md5sum.txt | sudo tee $ISO_SOURCE_DIR/md5sum.txt
+    cd $ISO_SOURCE_DIR ; sudo find . -type f -print0 | xargs -0 md5sum | sed "s@${ISO_NEW_DIR}@.@" | grep -v md5sum.txt | sudo tee "$ISO_SOURCE_DIR/md5sum.txt"
   fi
 }
 
