@@ -11,7 +11,7 @@ used to hang a shield on the shoulder or neck when not in use.
 Version
 -------
 
-Current version: 0.8.2
+Current version: 0.8.3
 
 Introduction
 ------------
@@ -71,7 +71,7 @@ You can get help using the -h or --help switch:
     -A|--codename         Linux release codename (default: jammy)
     -a|--action:          Action to perform (e.g. createiso, justiso, runchrootscript, checkdocker, installrequired)
     -B|--layout           Layout (default: us)
-    -b|--bootserverip:    NFS/Bootserver IP (default: 192.168.1.47)
+    -b|--bootserverip:    NFS/Bootserver IP (default: 192.168.1.18)
     -C|--cidr:            CIDR (default: 24)
     -c|--sshkeyfile:      SSH key file to use as SSH key (default: /Users/spindler/.ssh/id_rsa.pub)
     -D|--installdrivers   Install additional drivers (default: false)
@@ -112,7 +112,7 @@ You can get help using the -h or --help switch:
     -u|--postinstall:     Postinstall action (e.g. installpackages, upgrade, distupgrade)
     -V|--version          Display Script Version
     -v|--verbose          Verbose output (default: false)
-    -W|--workdir:         Work directory (default: /home/ubuntu/ubuntu-iso/22.04.1)
+    -W|--workdir:         Work directory (default: /Users/spindler/ubuntu-iso/22.04.1)
     -w|--checkdirs        Check work directories exist
     -X|--isovolid:        ISO Volume ID (default:  22.04.1 Server)
     -x|--grubtimeout:     Grub timeout (default: 10)
@@ -146,26 +146,26 @@ Get usage/help information:
 Install required packages:
 
 ```
-./guide.sh --action installrequired
+./guige.sh --action installrequired
 ```
 
 Download base ISO (jammy)
 
 ```
-./guide.sh --action getiso 
+./guige.sh --action getiso 
 ```
 
 Create ISO (performs all steps):
 
 ```
-./guide.sh --action createiso
+./guige.sh --action createiso
 ```
 
 Run the previous command but in test mode (don't execute commands) to produce output suitable for creating a script:
 
 
 ```
-./guide.sh --action createiso --testmode
+./guige.sh --action createiso --testmode
 ```
 
 Use docker to create amd64 ISOs on Apple Silicon:
