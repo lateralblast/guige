@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Name:         guige (Generic Ubuntu ISO Generation Engine)
-# Version:      0.8.3
+# Version:      0.8.4
 # Release:      1
 # License:      CC-BA (Creative Commons By Attribution)
 #               http://creativecommons.org/licenses/by/4.0/legalcode
@@ -11,7 +11,7 @@
 # Distribution: Ubuntu Linux
 # Vendor:       UNIX
 # Packager:     Richard Spindler <richard@lateralblast.com.au>
-# Description:  Shell script designed to simplify creation of custom Ubuntu
+# Description:  Shell script designed to simplify creation of custom Ubuntu Install ISOs
 
 SCRIPT_ARGS="$*"
 SCRIPT_FILE="$0"
@@ -528,8 +528,8 @@ install_required_packages () {
 check_base_iso_file () {
   if [ -f "$INPUT_FILE" ]; then
     BASE_INPUT_FILE=$( basename "$INPUT_FILE" )
-    FILE_TYPE=$( file "$WORK_DIR/files/$BASE_INPUT_FILE" | awk '{print $2}' )
-    if ! [ "$FILE_TYPE" = "ISO" ] || [ "$FILE_TYPE" = "DOS/MBR" ]; then
+    FILE_TYPE=$( file "$WORK_DIR/files/$BASE_INPUT_FILE" |cur -f2 -d: |egrep "MBR|ISO")
+    if [ -n "$FILE_TYPE" ]; then
       TEMP_VERBOSE_MODE="true"
       handle_output "# Warning: $WORK_DIR/files/$BASE_INPUT_FILE is not a valid ISO file" TEXT
       exit
