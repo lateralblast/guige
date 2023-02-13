@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Name:         guige (Generic Ubuntu ISO Generation Engine)
-# Version:      0.8.4
+# Version:      0.8.6
 # Release:      1
 # License:      CC-BA (Creative Commons By Attribution)
 #               http://creativecommons.org/licenses/by/4.0/legalcode
@@ -1335,7 +1335,7 @@ prepare_autoinstall_iso () {
   handle_output "rm -rf \"$WORK_DIR/BOOT\""
   handle_output "mkdir -p \"$PACKAGE_DIR\""
   handle_output "mkdir -p \"$SCRIPT_DIR\""
-  handle_output "cp \"$ISO_NEW_DIR/custom/var/cache/apt/archives/*.deb\" \"$PACKAGE_DIR\""
+  handle_output "cp \"$ISO_NEW_DIR\"/custom/var/cache/apt/archives/*.deb \"$PACKAGE_DIR\""
   for ISO_DEVICE in $ISO_DEVICES; do
     for ISO_VOLMGR in $ISO_VOLMGRS; do
       handle_output "mkdir -p \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE\""
@@ -1353,9 +1353,9 @@ prepare_autoinstall_iso () {
       done
     done
     if [ "$VERBOSE_MODE" = "true" ]; then
-      sudo cp -v "$ISO_NEW_DIR/custom/var/cache/apt/archives/*.deb" "$PACKAGE_DIR"
+      sudo cp -v "$ISO_NEW_DIR"/custom/var/cache/apt/archives/*.deb "$PACKAGE_DIR"
     else
-      sudo cp -v "$ISO_NEW_DIR/custom/var/cache/apt/archives/*.deb" "$PACKAGE_DIR"
+      sudo cp "$ISO_NEW_DIR"/custom/var/cache/apt/archives/*.deb "$PACKAGE_DIR"
     fi
   fi
   if [ -d "$WORK_DIR/BOOT" ]; then
@@ -1662,8 +1662,8 @@ prepare_autoinstall_iso () {
         fi
         handle_output "echo \"  early-commands:\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
         handle_output "echo \"    - \\\"sudo dpkg --auto-deconfigure --force-depends -i $ISO_INSTALL_MOUNT/$ISO_AUTOINSTALL_DIR/packages/*.deb\\\"\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
-        if [ "$ISO_VOLMGR" = "zfs" ]; then
-          handle_output "echo \"    - \\\"sed -i \\\\\"s/ROOT_DEV/\$(lsblk -x TYPE|grep disk |head -1 |awk '{print \$1}')/g\\\\\" /autoinstall.yaml\\\"\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
+        if [ "$ISO_VOLMGR" = "zfs" ] && [ "$ISO_DEVICE" = "ROOT_DEV" ]; then
+          handle_output "echo \"    - \\\"sed -i \\\\\"s/ROOT_DEV/\$(lsblk -x TYPE|grep disk |sort |head -1 |awk '{print \$1}')/g\\\\\" /autoinstall.yaml\\\"\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
         fi
         handle_output "echo \"  late-commands:\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
         handle_output "echo \"    - \\\"echo 'GRUB_CMDLINE_LINUX=\\\\\\\"$ISO_KERNEL_ARGS\\\\\\\"' >> $ISO_TARGET_MOUNT/etc/default/grub\\\"\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
@@ -1815,8 +1815,8 @@ prepare_autoinstall_iso () {
             echo "      name: lvm" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
           fi
           echo "  early-commands:" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
-          if [ "$ISO_VOLMGR" = "zfs" ]; then
-            echo "    - \"sed -i \\\"s/ROOT_DEV/\$(lsblk -x TYPE|grep disk |head -1 |awk '{print \$1}')/g\\\" /autoinstall.yaml\"" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
+          if [ "$ISO_VOLMGR" = "zfs" ] && [ "$ISO_DEVICE" = "ROOT_DEV" ]; then
+            echo "    - \"sed -i \\\"s/ROOT_DEV/\$(lsblk -x TYPE|grep disk |sort |head -1 |awk '{print \$1}')/g\\\" /autoinstall.yaml\"" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
           fi
           echo "    - \"dpkg --auto-deconfigure --force-depends -i $ISO_INSTALL_MOUNT/$ISO_AUTOINSTALL_DIR/packages/*.deb\"" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
           echo "  late-commands:" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"

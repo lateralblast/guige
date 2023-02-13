@@ -167,3 +167,7 @@
 # Code cleanup and bug fixes
 # 0.8.4: Sat  4 Feb 2023 19:04:32 AEDT
 # Improved ISO file check
+# 0.8.5: Wed  8 Feb 2023 13:57:46 AEDT
+# Improved first disk detection
+# 0.8.6: Mon 13 Feb 2023 15:46:34 AEDT
+# Bug fixes
