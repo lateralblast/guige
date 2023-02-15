@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Name:         guige (Generic Ubuntu ISO Generation Engine)
-# Version:      0.8.6
+# Version:      0.8.7
 # Release:      1
 # License:      CC-BA (Creative Commons By Attribution)
 #               http://creativecommons.org/licenses/by/4.0/legalcode
@@ -40,6 +40,7 @@ DEFAULT_ISO_KERNEL="linux-generic"
 DEFAULT_ISO_KERNEL_ARGS="net.ifnames=0 biosdevname=0"
 DEFAULT_ISO_NIC="eth0"
 DEFAULT_ISO_IP="192.168.1.2"
+DEFAULT_ISO_DNS="8.8.8.8"
 DEFAULT_ISO_CIDR="24"
 DEFAULT_ISO_GATEWAY="192.168.1.254"
 DEFAULT_ISO_SWAPSIZE="2G"
@@ -205,8 +206,7 @@ print_help () {
   cat <<-HELP
   Usage: ${0##*/} [OPTIONS...]
     -1|--bootserverfile   Boot sever file (default: $DEFAULT_BOOT_SERVER_FILE_BASE)
-    -2|--squashfsfile     Squashfs file (default: $DEFAULT_ISO_SQUASHFS_FILE_BASE)
-    -3|--grubfile         GRUB file (default: $DEFAULT_ISO_GRUB_FILE_BASE)
+    -2|--grubfile         GRUB file (default: $DEFAULT_ISO_GRUB_FILE_BASE)
     -A|--codename         Linux release codename (default: $DEFAULT_ISO_CODENAME)
     -a|--action:          Action to perform (e.g. createiso, justiso, runchrootscript, checkdocker, installrequired)
     -B|--layout           Layout (default: $DEFAULT_ISO_LAYOUT)
@@ -244,7 +244,7 @@ print_help () {
     -R|--realname:        Realname (default $DEFAULT_ISO_REALNAME)
     -r|--mode:            Mode (default: $DEFAULT_MODE)
     -S|--swapsize:        Swap size (default $DEFAULT_ISO_SWAPSIZE)
-    -s|--staticip         Static IP configuration (default DHCP)
+    -s|--squashfsfile     Squashfs file (default: $DEFAULT_ISO_SQUASHFS_FILE_BASE)
     -T|--timezone:        Timezone (default: $DEFAULT_ISO_TIMEZONE)
     -t|--testmode         Test mode (display commands but don't run them)
     -U|--username:        Username (default: $DEFAULT_ISO_USERNAME)
@@ -456,13 +456,13 @@ execute_racadm () {
   handle_output "$RACADM_BIN -H \"$BMC_IP\" -u \"$BMC_USERNAME\" -p \"$BMC_PASSWORD\" -c \"remoteimage -c -l $BOOT_SERVER_IP:BOOT_SERVER_FILE\""
   handle_output "$RACADM_BIN -H \"$BMC_IP\" -u \"$BMC_USERNAME\" -p \"$BMC_PASSWORD\" -c \"config -g cfgServerInfo -o cfgServerBootOnce 1\""
   handle_output "$RACADM_BIN -H \"$BMC_IP\" -u \"$BMC_USERNAME\" -p \"$BMC_PASSWORD\" -c \"config -g cfgServerInfo -o cfgServerFirstBootDevice VCD-DVD\""
-  handle_output "$RACADM_BIN -H \"$BMC_IP\" -u \"$BMC_USERNAME\" -p \"$BMC_PASSWORD\" -c \"racadm serveraction powercycle\""
+  handle_output "$RACADM_BIN -H \"$BMC_IP\" -u \"$BMC_USERNAME\" -p \"$BMC_PASSWORD\" -c \"serveraction powercycle\""
   if [ "$TEST_MODE" = "false" ]; then
     $RACADM_BIN -H "$BMC_IP" -u "$BMC_USERNAME" -p "$BMC_PASSWORD" -c "remoteimage -d"
     $RACADM_BIN -H "$BMC_IP" -u "$BMC_USERNAME" -p "$BMC_PASSWORD" -c "remoteimage -c -l $BOOT_SERVER_IP:BOOT_SERVER_FILE"
     $RACADM_BIN -H "$BMC_IP" -u "$BMC_USERNAME" -p "$BMC_PASSWORD" -c "config -g cfgServerInfo -o cfgServerBootOnce 1"
     $RACADM_BIN -H "$BMC_IP" -u "$BMC_USERNAME" -p "$BMC_PASSWORD" -c "config -g cfgServerInfo -o cfgServerFirstBootDevice VCD-DVD"
-    $RACADM_BIN -H "$BMC_IP" -u "$BMC_USERNAME" -p "$BMC_PASSWORD" -c "racadm serveraction powercycle"
+    $RACADM_BIN -H "$BMC_IP" -u "$BMC_USERNAME" -p "$BMC_PASSWORD" -c "serveraction powercycle"
   fi
 }
 
@@ -1855,11 +1855,7 @@ do
       DO_CUSTOM_BOOT_SERVER_FILE="true"
       shift 2
       ;;
-    -2|--squashfsfile)
-      ISO_SQUASHFS_FILE="$2"
-      shift 2
-      ;;
-    -3|--grubfile)
+    -2|--grubfile)
       ISO_GRUB_FILE="$2"
       shift 2
       ;;
@@ -2011,9 +2007,9 @@ do
       ISO_SWAPSIZE="$2"
       shift 2
       ;;
-    -s|--staticip)
-      ISO_DHCP="false"
-      shift
+    -s|--squashfsfile)
+      ISO_SQUASHFS_FILE="$2"
+      shift 2
       ;;
     -T|--timezone)
       ISO_TIMEZONE="$2"
@@ -2402,6 +2398,25 @@ if [ "$ISO_SQUASHFS_FILE" = "" ]; then
 fi
 if [ "$ISO_GRUB_FILE" = "" ]; then
   ISO_GRUB_FILE="$DEFAULT_ISO_GRUB_FILE"
+fi
+
+# Update output file
+
+if ! [ "$ISO_HOSTNAME" = "$DEFAULT_ISO_HOSTNAME" ]; then
+  TEMP_DIR_NAME=$( dirname "$OUTPUT_FILE" )
+  TEMP_FILE_NAME=$( basename "$OUTPUT_FILE" .iso )
+  OUTPUT_FILE="$TEMP_DIR_NAME/$TEMP_FILE_NAME-$ISO_HOSTNAME.iso"
+fi
+if ! [ "$ISO_IP" = "$DEFAULT_ISO_IP" ]; then
+  ISO_DHCP="false"
+  TEMP_DIR_NAME=$( dirname "$OUTPUT_FILE" )
+  TEMP_FILE_NAME=$( basename "$OUTPUT_FILE" .iso )
+  OUTPUT_FILE="$TEMP_DIR_NAME/$TEMP_FILE_NAME-$ISO_IP.iso"
+fi
+if ! [ "$ISO_USERNAME" = "$DEFAULT_ISO_USERNAME" ]; then
+  TEMP_DIR_NAME=$( dirname "$OUTPUT_FILE" )
+  TEMP_FILE_NAME=$( basename "$OUTPUT_FILE" .iso )
+  OUTPUT_FILE="$TEMP_DIR_NAME/$TEMP_FILE_NAME-$ISO_USERNAME.iso"
 fi
 
 # Update Default work directories

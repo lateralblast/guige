@@ -171,3 +171,5 @@
 # Improved first disk detection
 # 0.8.6: Mon 13 Feb 2023 15:46:34 AEDT
 # Bug fixes
+# 0.8.7: Wed 15 Feb 2023 15:23:45 AEDT
+# Bug fixes and added code to change output filename if hostname/username/ip are set
