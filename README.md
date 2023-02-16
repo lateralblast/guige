@@ -11,7 +11,38 @@ used to hang a shield on the shoulder or neck when not in use.
 Version
 -------
 
-Current version: 0.8.7
+Current version: 0.8.8
+
+Prerequisites
+-------------
+
+The Following packages are required on Linux (or in the Docker container when building ISO on non Linux platforms):
+
+- p7zip-full (created to extract ISO contents)
+- wget (required to fetch file)
+- xorriso (required to create ISO)
+- whois (required for mkpasswd to create password hashes)
+- squashfs-tools (required for copying/manipulating root filesystem on ISO)
+- sudo (required for mounting loop back filesystems e.g. ISO and squashfs)
+- file (required to check files have downloaded correctly)
+- rsync (required for copying from base ISO and to to destination ISO image)
+- dialog (required for installing packages in chroot environment)
+
+The following packages are optional for additional features:
+
+- docker (required to create ISO on non Linux platforms)
+- nfs-kernel-server (required for racadm and redfish based ISO deployment)
+- ansible (required for iDRAC redfish ISO deployment)
+
+For best results:
+
+- When creating ZFS based installs UEFI should be used for the entirety of install process
+- When using UEFI based installs with USB sticks, the ISO should be written to the USB stick in UEFI mode
+
+Hints / Observations:
+
+- I've found Rufus the most reliable for creating bootable USB sticks
+- When using Rufus and using UEFI based installs, change the Target system to UEFI (non CSM)
 
 Introduction
 ------------
@@ -66,14 +97,13 @@ You can get help using the -h or --help switch:
 ```
   Usage: guige.sh [OPTIONS...]
     -1|--bootserverfile   Boot sever file (default: ubuntu-22.04.1-live-server-arm64-autoinstall.iso)
-    -2|--squashfsfile     Squashfs file (default: ubuntu-server-minimal.squashfs)
-    -3|--grubfile         GRUB file (default: grub.cfg)
+    -2|--grubfile         GRUB file (default: grub.cfg)
     -A|--codename         Linux release codename (default: jammy)
     -a|--action:          Action to perform (e.g. createiso, justiso, runchrootscript, checkdocker, installrequired)
     -B|--layout           Layout (default: us)
-    -b|--bootserverip:    NFS/Bootserver IP (default: 192.168.1.18)
+    -b|--bootserverip:    NFS/Bootserver IP (default: 192.168.1.43)
     -C|--cidr:            CIDR (default: 24)
-    -c|--sshkeyfile:      SSH key file to use as SSH key (default: /Users/spindler/.ssh/id_rsa.pub)
+    -c|--sshkeyfile:      SSH key file to use as SSH key (default: ~/.ssh/id_rsa.pub)
     -D|--installdrivers   Install additional drivers (default: false)
     -d|--bootdisk:        Boot Disk devices (default: ROOT_DEV)
     -E|--locale:          LANGUAGE (default: en_US.UTF-8)
@@ -92,11 +122,11 @@ You can get help using the -h or --help switch:
     -k|--kernelargs:      Kernel arguments (default: net.ifnames=0 biosdevname=0)
     -L|--release:         LSB release (default: 22.04.1)
     -l|--bmcip:           BMC/iDRAC IP (default: 192.168.1.3)
-    -M|--installtarget:   Where the install mounts the target filesystem (default: )
+    -M|--installtarget:   Where the install mounts the target filesystem (default: /target)
     -m|--installmount:    Where the install mounts the CD during install (default: /cdrom)
-    -N|--dns:             DNS Server (ddefault: )
+    -N|--dns:             DNS Server (ddefault: 8.8.8.8)
     -n|--nic:             Network device (default: eth0)
-    -O|--isopackages:     List of packages to install (default: zfsutils-linux grub-efi zfs-initramfs net-tools curl wget sudo file rsync)
+    -O|--isopackages:     List of packages to install (default: zfsutils-linux grub-efi zfs-initramfs net-tools curl wget sudo file rsync dialog)
     -o|--outputiso:       Output ISO file (default: ubuntu-22.04.1-live-server-arm64-autoinstall.iso)
     -P|--password:        Password (default: ubuntu)
     -p|--chrootpackages:  List of packages to add to ISO (default: )
@@ -105,16 +135,16 @@ You can get help using the -h or --help switch:
     -R|--realname:        Realname (default Ubuntu)
     -r|--mode:            Mode (default: defaults)
     -S|--swapsize:        Swap size (default 2G)
-    -s|--staticip         Static IP configuration (default DHCP)
+    -s|--squashfsfile     Squashfs file (default: ubuntu-server-minimal.squashfs)
     -T|--timezone:        Timezone (default: Australia/Melbourne)
     -t|--testmode         Test mode (display commands but don't run them)
     -U|--username:        Username (default: ubuntu)
     -u|--postinstall:     Postinstall action (e.g. installpackages, upgrade, distupgrade)
     -V|--version          Display Script Version
     -v|--verbose          Verbose output (default: false)
-    -W|--workdir:         Work directory (default: /Users/spindler/ubuntu-iso/22.04.1)
+    -W|--workdir:         Work directory (default: ~/22.04.1)
     -w|--checkdirs        Check work directories exist
-    -X|--isovolid:        ISO Volume ID (default:  22.04.1 Server)
+    -X|--isovolid:        ISO Volume ID (default: ubuntu 22.04.1 Server)
     -x|--grubtimeout:     Grub timeout (default: 10)
     -Y|--allowpassword    Allow password access via SSH (default: false)
     -y|--bmcpassword:     BMC/iDRAC password (default: calvin)

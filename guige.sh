@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Name:         guige (Generic Ubuntu ISO Generation Engine)
-# Version:      0.8.7
+# Version:      0.8.8
 # Release:      1
 # License:      CC-BA (Creative Commons By Attribution)
 #               http://creativecommons.org/licenses/by/4.0/legalcode
@@ -27,6 +27,7 @@ BMC_EXPOSE_DURATION="180"
 # Default variables
 
 SCRIPT_NAME="guige"
+CURRENT_ISO_OS_NAME="ubuntu"
 CURRENT_ISO_RELEASE="22.04.1"
 CURRENT_DOCKER_UBUNTU_RELEASE="22.04"
 CURRENT_ISO_CODENAME="jammy"
@@ -56,6 +57,7 @@ DEFAULT_ISO_PACKAGES="zfsutils-linux grub-efi zfs-initramfs net-tools curl wget 
 REQUIRED_PACKAGES="p7zip-full wget xorriso whois squashfs-tools sudo file rsync net-tools nfs-kernel-server ansible dialog"
 DEFAULT_DOCKER_ARCH="amd64 arm64"
 DEFAULT_ISO_SSH_KEY_FILE="$HOME/.ssh/id_rsa.pub"
+MASKED_DEFAULT_ISO_SSH_KEY_FILE="~/.ssh/id_rsa.pub"
 DEFAULT_ISO_SSH_KEY=""
 DEFAULT_ISO_ALLOW_PASSWORD="false"
 DEFAULT_ISO_INSTALL_DRIVERS="false"
@@ -171,6 +173,7 @@ fi
 # Default work directories
 
 DEFAULT_WORK_DIR=$HOME/ubuntu-iso/$DEFAULT_ISO_RELEASE
+MASKED_DEFAULT_WORK_DIR="~/$DEFAULT_ISO_RELEASE"
 DEFAULT_DOCKER_WORK_DIR=/root/ubuntu-iso/$DEFAULT_ISO_RELEASE
 DEFAULT_ISO_MOUNT_DIR="$DEFAULT_WORK_DIR/isomount"
 
@@ -212,7 +215,7 @@ print_help () {
     -B|--layout           Layout (default: $DEFAULT_ISO_LAYOUT)
     -b|--bootserverip:    NFS/Bootserver IP (default: $DEFAULT_BOOT_SERVER_IP)
     -C|--cidr:            CIDR (default: $DEFAULT_ISO_CIDR)
-    -c|--sshkeyfile:      SSH key file to use as SSH key (default: $DEFAULT_ISO_SSH_KEY_FILE)
+    -c|--sshkeyfile:      SSH key file to use as SSH key (default: $MASKED_DEFAULT_ISO_SSH_KEY_FILE)
     -D|--installdrivers   Install additional drivers (default: $DEFAULT_ISO_INSTALL_DRIVERS)
     -d|--bootdisk:        Boot Disk devices (default: $DEFAULT_ISO_DEVICES)
     -E|--locale:          LANGUAGE (default: $DEFAULT_ISO_LOCALE)
@@ -231,7 +234,7 @@ print_help () {
     -k|--kernelargs:      Kernel arguments (default: $DEFAULT_ISO_KERNEL_ARGS)
     -L|--release:         LSB release (default: $DEFAULT_ISO_RELEASE)
     -l|--bmcip:           BMC/iDRAC IP (default: $DEFAULT_BMC_IP)
-    -M|--installtarget:   Where the install mounts the target filesystem (default: $DEFAULT_ISO_TARGET_DIR)
+    -M|--installtarget:   Where the install mounts the target filesystem (default: $DEFAULT_ISO_TARGET_MOUNT)
     -m|--installmount:    Where the install mounts the CD during install (default: $DEFAULT_ISO_INSTALL_MOUNT)
     -N|--dns:             DNS Server (ddefault: $DEFAULT_ISO_DNS)
     -n|--nic:             Network device (default: $DEFAULT_ISO_NIC)
@@ -251,7 +254,7 @@ print_help () {
     -u|--postinstall:     Postinstall action (e.g. installpackages, upgrade, distupgrade)
     -V|--version          Display Script Version
     -v|--verbose          Verbose output (default: $VERBOSE_MODE)
-    -W|--workdir:         Work directory (default: $DEFAULT_WORK_DIR)
+    -W|--workdir:         Work directory (default: $MASKED_DEFAULT_WORK_DIR)
     -w|--checkdirs        Check work directories exist
     -X|--isovolid:        ISO Volume ID (default: $DEFAULT_ISO_VOLID)
     -x|--grubtimeout:     Grub timeout (default: $DEFAULT_ISO_GRUB_TIMEOUT)

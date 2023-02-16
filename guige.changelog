@@ -173,3 +173,5 @@
 # Bug fixes
 # 0.8.7: Wed 15 Feb 2023 15:23:45 AEDT
 # Bug fixes and added code to change output filename if hostname/username/ip are set
+# 0.8.8: Thu 16 Feb 2023 14:44:03 AEDT
+# Bug fixes and documentation updates
