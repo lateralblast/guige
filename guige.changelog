@@ -181,3 +181,5 @@
 # Code cleanup
 # 0.9.1: Fri 24 Feb 2023 16:40:07 AEDT
 # Fixed directory mount for docker for daily builds and updated documentation
+# 0.9.2: Fri 24 Feb 2023 18:28:47 AEDT
+# Bug fixes

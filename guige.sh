@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Name:         guige (Generic Ubuntu ISO Generation Engine)
-# Version:      0.9.1
+# Version:      0.9.2
 # Release:      1
 # License:      CC-BA (Creative Commons By Attribution)
 #               http://creativecommons.org/licenses/by/4.0/legalcode
@@ -28,7 +28,7 @@ BMC_EXPOSE_DURATION="180"
 
 SCRIPT_NAME="guige"
 CURRENT_ISO_OS_NAME="ubuntu"
-CURRENT_ISO_RELEASE="22.04.1"
+CURRENT_ISO_RELEASE="22.04.2"
 CURRENT_DOCKER_UBUNTU_RELEASE="22.04"
 CURRENT_ISO_CODENAME="jammy"
 CURRENT_ISO_ARCH="amd64"
@@ -381,12 +381,24 @@ get_info_from_iso () {
   TEST_NAME=$( echo "$TEST_FILE" | cut -f1 -d- )
   TEST_TYPE=$( echo "$TEST_FILE" | cut -f2 -d- )
   case $TEST_NAME in
-    "jammy")
-      ISO_RELEASE="22.04"
+    "bionic")
+      ISO_RELEASE="18.04"
       ISO_DISTRO="Ubuntu"
       ;;
     "focal")
       ISO_RELEASE="20.04"
+      ISO_DISTRO="Ubuntu"
+      ;;
+    "jammy")
+      ISO_RELEASE="22.04"
+      ISO_DISTRO="Ubuntu"
+      ;;
+    "kinetic")
+      ISO_RELEASE="22.10"
+      ISO_DISTRO="Ubuntu"
+      ;;
+    "lunar")
+      ISO_RELEASE="23.04"
       ISO_DISTRO="Ubuntu"
       ;;
     "ubuntu")
@@ -533,8 +545,8 @@ install_required_packages () {
 check_base_iso_file () {
   if [ -f "$INPUT_FILE" ]; then
     BASE_INPUT_FILE=$( basename "$INPUT_FILE" )
-    FILE_TYPE=$( file "$WORK_DIR/files/$BASE_INPUT_FILE" |cur -f2 -d: |egrep "MBR|ISO")
-    if [ -n "$FILE_TYPE" ]; then
+    FILE_TYPE=$( file "$WORK_DIR/files/$BASE_INPUT_FILE" |cut -f2 -d: |egrep "MBR|ISO")
+    if [ -z "$FILE_TYPE" ]; then
       TEMP_VERBOSE_MODE="true"
       handle_output "# Warning: $WORK_DIR/files/$BASE_INPUT_FILE is not a valid ISO file" TEXT
       exit
@@ -2394,8 +2406,8 @@ if [ "$WORK_DIR" = "" ]; then
     WORK_DIR="$HOME/ubuntu-iso/$ISO_CODENAME"
     DOCKER_WORK_DIR="/root/ubuntu-iso/$ISO_CODENAME"
   else
-    WORK_DIR="$DEFAULT_WORK_DIR"
-    DOCKER_WORK_DIR="$DEFAULT_DOCKER_WORK_DIR"
+    WORK_DIR="$HOME/ubuntu-iso/$ISO_RELEASE"
+    DOCKER_WORK_DIR="/root/ubuntu-iso/$ISO_RELEASE"
   fi
 else
   if [ "$DO_DAILY_ISO" = "true" ]; then
