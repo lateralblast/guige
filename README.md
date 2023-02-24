@@ -11,7 +11,7 @@ used to hang a shield on the shoulder or neck when not in use.
 Version
 -------
 
-Current version: 0.8.8
+Current version: 0.9.1
 
 Prerequisites
 -------------
@@ -43,6 +43,7 @@ Hints / Observations:
 
 - I've found Rufus the most reliable for creating bootable USB sticks
 - When using Rufus and using UEFI based installs, change the Target system to UEFI (non CSM)
+- To get the Ubuntu ISO to boot on ARM reliably it's best to go with the very latest release (e.g. use --build daily-live)
 
 Introduction
 ------------
@@ -96,8 +97,9 @@ You can get help using the -h or --help switch:
 
 ```
   Usage: guige.sh [OPTIONS...]
-    -1|--bootserverfile   Boot sever file (default: ubuntu-22.04.1-live-server-arm64-autoinstall.iso)
+    -1|--bootserverfile   Boot sever file (default: ubuntu-22.04.1-live-server-arm64-efi-autoinstall.iso)
     -2|--grubfile         GRUB file (default: grub.cfg)
+    -9|--boottype         Boot type (default: efi)
     -A|--codename         Linux release codename (default: jammy)
     -a|--action:          Action to perform (e.g. createiso, justiso, runchrootscript, checkdocker, installrequired)
     -B|--layout           Layout (default: us)
@@ -126,8 +128,8 @@ You can get help using the -h or --help switch:
     -m|--installmount:    Where the install mounts the CD during install (default: /cdrom)
     -N|--dns:             DNS Server (ddefault: 8.8.8.8)
     -n|--nic:             Network device (default: eth0)
-    -O|--isopackages:     List of packages to install (default: zfsutils-linux grub-efi zfs-initramfs net-tools curl wget sudo file rsync dialog)
-    -o|--outputiso:       Output ISO file (default: ubuntu-22.04.1-live-server-arm64-autoinstall.iso)
+    -O|--isopackages:     List of packages to install (default: zfsutils-linux zfs-initramfs net-tools curl wget sudo file rsync dialog)
+    -o|--outputiso:       Output ISO file (default: ubuntu-22.04.1-live-server-arm64-efi-autoinstall.iso)
     -P|--password:        Password (default: ubuntu)
     -p|--chrootpackages:  List of packages to add to ISO (default: )
     -Q|--build:           Type of ISO to build (default: live-server)
@@ -158,6 +160,7 @@ Todo
 Things I plan to do:
 
 - Full support for 20.04 (at the moment LVM based installs are working ZFS is not)
+- Support of BIOS based installs for ZFS root (related to previous point - currently only EFI based installs work for ZFS root)
 
 Thanks
 ------
