@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Name:         guige (Generic Ubuntu ISO Generation Engine)
-# Version:      0.9.2
+# Version:      0.9.3
 # Release:      1
 # License:      CC-BA (Creative Commons By Attribution)
 #               http://creativecommons.org/licenses/by/4.0/legalcode
@@ -2389,9 +2389,6 @@ fi
 if [ "$ISO_LAYOUT" = "" ]; then
   ISO_LAYOUT="$DEFAULT_ISO_LAYOUT"
 fi
-if [ "$ISO_VOLID" = "" ]; then
-  ISO_VOLID="$DEFAULT_ISO_VOLID"
-fi
 if [ "$ISO_INSTALL_MOUNT" = "" ]; then
   ISO_INSTALL_MOUNT="$DEFAULT_ISO_INSTALL_MOUNT"
 fi
@@ -2417,6 +2414,17 @@ else
 fi
 if [ "$ISO_BUILD_TYPE" = "" ]; then
   ISO_BUILD_TYPE="$DEFAULT_ISO_BUILD_TYPE"
+fi
+if [ "$ISO_OS_NAME" = "" ]; then
+  ISO_OS_NAME="$DEFAULT_ISO_OS_NAME"
+fi
+if [ "$ISO_VOLID" = "" ]; then
+  ISO_VOLID="$DEFAULT_ISO_VOLID"
+  case $ISO_BUILD_TYPE in
+    "daily-desktop"|"desktop")
+      ISO_VOLID="$ISO_OS_NAME $ISO_RELEASE Desktop"
+      ;;
+  esac
 fi
 if [ "$INPUT_FILE" = "" ]; then
   INPUT_FILE="$DEFAULT_INPUT_FILE"
