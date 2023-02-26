@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Name:         guige (Generic Ubuntu ISO Generation Engine)
-# Version:      0.9.5
+# Version:      0.9.6
 # Release:      1
 # License:      CC-BA (Creative Commons By Attribution)
 #               http://creativecommons.org/licenses/by/4.0/legalcode
@@ -371,6 +371,36 @@ check_docker_config () {
       fi
     done
   fi
+}
+
+# Function: Get codename
+
+get_code_name() {
+  REL_NO="$ISO_MAJOR_REL.$ISO_MINOR_REL"
+  case $REL_NO in
+    "20.04")
+      ISO_CODENAME="focal"
+      ;;
+    "20.10")
+      ISO_CODENAME="groovy"
+      ;;
+    "21.04")
+      ISO_CODENAME="hirsute"
+      ;;
+    "21.10")
+      ISO_CODENAME="impish"
+      ;;
+    "22.04")
+      ISO_CODENAME="jammy"
+      ;;
+    "22.10")
+      ISO_CODENAME="kinetic"
+      ;;
+    "23.04")
+      ISO_CODENAME="lunar"
+      ;;
+  esac
+
 }
 
 # Function: Get info from iso
@@ -2297,6 +2327,7 @@ else
   esac
 fi
 ISO_MAJOR_REL=$(echo "$ISO_RELEASE" |cut -f1 -d.)
+ISO_MINOR_REL=$(echo "$ISO_RELEASE" |cut -f2 -d.)
 if [ "$ISO_USERNAME" = "" ]; then
   ISO_USERNAME="$DEFAULT_ISO_USERNAME"
 fi
@@ -2361,7 +2392,7 @@ if [ "$ISO_KERNEL" = "" ]; then
   ISO_KERNEL="$DEFAULT_ISO_KERNEL"
 fi
 if [ "$CODENAME" = "" ]; then
-  ISO_CODENAME="$DEFAULT_ISO_CODENAME"
+  get_code_name
 fi
 if [ "$ISO_LOCALE" = "" ]; then
   ISO_LOCALE="$DEFAULT_ISO_LOCALE"
@@ -2491,7 +2522,11 @@ fi
 BASE_INPUT_FILE=$( basename "$INPUT_FILE" )
 case $ISO_BUILD_TYPE in 
   "daily-live"|"daily-live-server")
-    ISO_URL="https://cdimage.ubuntu.com/ubuntu-server/$ISO_CODENAME/daily-live/current/$BASE_INPUT_FILE"
+    if [ "$ISO_RELEASE" = "23.04" ]; then
+      ISO_URL="https://cdimage.ubuntu.com/ubuntu-server/daily-live/current/$ISO_CODENAME-live-server-$ISO_ARCH.iso"
+    else
+      ISO_URL="https://cdimage.ubuntu.com/ubuntu-server/$ISO_CODENAME/daily-live/current/$BASE_INPUT_FILE"
+    fi
     NEW_DIR="$ISO_CODENAME"
    ;;
   "daily-desktop") 

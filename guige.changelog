@@ -189,3 +189,5 @@
 # Added some handling for detemining Ubuntu update/minor release number
 # 0.9.5: Sun 26 Feb 2023 18:53:45 AEDT
 # Bug fixes and documentation updates
+# 0.9.6: Sun 26 Feb 2023 21:35:46 AEDT
+# Improved Ubuntu version support/flexibility
