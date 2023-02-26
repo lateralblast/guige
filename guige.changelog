@@ -185,3 +185,7 @@
 # Bug fixes
 # 0.9.3: Sat 25 Feb 2023 15:03:39 AEDT
 # Improved Volume ID determination for Desktop
+# 0.9.4: Sun 26 Feb 2023 16:04:52 AEDT
+# Added some handling for detemining Ubuntu update/minor release number
+# 0.9.5: Sun 26 Feb 2023 18:53:45 AEDT
+# Bug fixes and documentation updates

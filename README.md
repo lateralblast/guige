@@ -11,7 +11,7 @@ used to hang a shield on the shoulder or neck when not in use.
 Version
 -------
 
-Current version: 0.9.3
+Current version: 0.9.5
 
 Prerequisites
 -------------
@@ -76,10 +76,10 @@ By default the script will create an autoinstall ISO that uses DHCP,
 and installs packages from the ISO rather than fetching them over the network.
 
 The current default install options in the grub menu are:
-- ZFS on first available disk
-- LVM on first available disk
+- ZFS on first available disk (EFI mode)
+- LVM on first available disk (EFI and BIOS mode)
 
-These can be modified via command line arguments.
+These can be modified via command line arguments. If BIOS is chosen as 
 
 An example of the grub menu when booting from the ISO:
 
@@ -159,8 +159,7 @@ Todo
 
 Things I plan to do:
 
-- Full support for 20.04 (at the moment LVM based installs are working ZFS is not)
-- Support of BIOS based installs for ZFS root (related to previous point - currently only EFI based installs work for ZFS root)
+- Get ZFS root to work with BIOS baes installs (currently ZFS root only works with EFI based installs)
 
 Thanks
 ------
