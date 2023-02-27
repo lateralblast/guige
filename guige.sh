@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Name:         guige (Generic Ubuntu ISO Generation Engine)
-# Version:      0.9.6
+# Version:      1.0.0
 # Release:      1
 # License:      CC-BA (Creative Commons By Attribution)
 #               http://creativecommons.org/licenses/by/4.0/legalcode
@@ -54,7 +54,7 @@ DEFAULT_ISO_LC_ALL="en_US"
 DEFAULT_ISO_LAYOUT="us"
 DEFAULT_ISO_BUILD_TYPE="live-server"
 DEFAULT_ISO_BOOT_TYPE="efi"
-DEFAULT_ISO_PACKAGES="zfsutils-linux zfs-initramfs net-tools curl wget sudo file rsync dialog"
+DEFAULT_ISO_PACKAGES="zfsutils-linux zfs-initramfs net-tools curl wget sudo file rsync dialog setserial"
 REQUIRED_PACKAGES="p7zip-full wget xorriso whois squashfs-tools sudo file rsync net-tools nfs-kernel-server ansible dialog"
 DEFAULT_DOCKER_ARCH="amd64 arm64"
 DEFAULT_ISO_SSH_KEY_FILE="$HOME/.ssh/id_rsa.pub"
@@ -1626,7 +1626,7 @@ prepare_autoinstall_iso () {
         handle_output "echo \"    version: 2\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
         handle_output "echo \"  ssh:\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
         handle_output "echo \"    allow-pw: $ISO_ALLOW_PASSWORD\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
-        handle_output "echo \"    authorized-keys: [$ISO_SSH_KEY]\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
+        handle_output "echo \"    authorized-keys: [ \"$ISO_SSH_KEY\" ]\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
         handle_output "echo \"    install-server: true\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
         handle_output "echo \"  storage:\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
         if [ "$ISO_VOLMGR" = "zfs" ]; then
@@ -1654,7 +1654,7 @@ prepare_autoinstall_iso () {
           handle_output "echo \"      preserve: false\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
           handle_output "echo \"      type: format\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
           handle_output "echo \"      id: disk1p1fs1\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
-          handle_output "echo \"    - path: /boot/efi\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
+          handle_output "echo \"    - path: /boot/$ISO_BOOT_TYPE\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
           handle_output "echo \"      device: disk1p1fs1\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
           handle_output "echo \"      type: mount\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
           handle_output "echo \"      id: mount-2\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
@@ -1714,9 +1714,16 @@ prepare_autoinstall_iso () {
         fi
         handle_output "echo \"  late-commands:\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
         handle_output "echo \"    - \\\"echo 'GRUB_CMDLINE_LINUX=\\\\\\\"$ISO_KERNEL_ARGS\\\\\\\"' >> $ISO_TARGET_MOUNT/etc/default/grub\\\"\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
+        handle_output "echo \"    - \\\"echo '$ISO_USERNAME ALL=(ALL) NOPASSWD: ALL' >> $ISO_TARGET_MOUNT/etc/sudoers.d/$ISO_USERNAME\\\"\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
+        handle_output "echo \"    - \\\"curtin in-target --target=$ISO_TARGET_MOUNT -- systemctl enable serial-getty@ttyS0.service\\\"\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
+        handle_output "echo \"    - \\\"curtin in-target --target=$ISO_TARGET_MOUNT -- systemctl start serial-getty@ttyS0.service\\\"\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
         handle_output "echo \"    - \\\"curtin in-target --target=$ISO_TARGET_MOUNT -- /usr/sbin/update-grub\\\"\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
-        if [ "$DO_INSTALL_ISO_UPDATE" = "true" ] || [ "$DO_INSTALL_ISO_PACKAGES" = "true" ] || [ "$DO_DIST_UPGRADE" = "true" ]; then
+        if [ "$DO_INSTALL_ISO_UPDATE" = "true" ] || [ "$DO_INSTALL_ISO_DIST_UPGRADE" = "true" ]; then
           handle_output "echo \"    - \\\"curtin in-target --target=$ISO_TARGET_MOUNT -- apt update\\\"\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
+          if [ "$ISO_MAJOR_REL" = "22" ]; then
+            handle_output "echo \"    - \\\"curtin in-target --target=$ISO_TARGET_MOUNT -- apt-get install ubuntu-advantage-tools\\\"\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
+            handle_output "echo \"    - \\\"curtin in-target --target=$ISO_TARGET_MOUNT -- pro config set apt_news=false\\\"\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
+          fi
         fi
         if [ "$DO_INSTALL_ISO_UPGRADE" = "true" ]; then
           handle_output "echo \"    - \\\"curtin in-target --target=$ISO_TARGET_MOUNT -- apt upgrade -y\\\"\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
@@ -1780,7 +1787,7 @@ prepare_autoinstall_iso () {
           echo "    version: 2" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
           echo "  ssh:" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
           echo "    allow-pw: $ISO_ALLOW_PASSWORD" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
-          echo "    authorized-keys: [$ISO_SSH_KEY]" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
+          echo "    authorized-keys: [ \"$ISO_SSH_KEY\" ]" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
           echo "    install-server: true" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
           echo "  storage:" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
           if [ "$ISO_VOLMGR" = "zfs" ]; then
@@ -1853,8 +1860,9 @@ prepare_autoinstall_iso () {
             echo "    - path: /" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
             echo "      device: disk1p2fs1" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
             echo "      type: mount" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
-            echo "      id: mount-disk1p2" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
+            echo "      id: mount-disk1p2fs1" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
             echo "    swap:" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
+
             echo "      swap: $ISO_SWAPSIZE" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
           fi
           if [ "$ISO_VOLMGR" = "lvm" ]; then
@@ -1868,17 +1876,24 @@ prepare_autoinstall_iso () {
           echo "    - \"dpkg --auto-deconfigure --force-depends -i $ISO_INSTALL_MOUNT/$ISO_AUTOINSTALL_DIR/packages/*.deb\"" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
           echo "  late-commands:" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
           echo "    - \"echo 'GRUB_CMDLINE_LINUX=\\\"$ISO_KERNEL_ARGS\\\"' >> $ISO_TARGET_MOUNT/etc/default/grub\"" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
+          echo "    - \"echo '$ISO_USERNAME ALL=(ALL) NOPASSWD: ALL' >> $ISO_TARGET_MOUNT/etc/sudoers.d/$ISO_USERNAME\"" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
+          echo "    - \"curtin in-target --target=$ISO_TARGET_MOUNT -- systemctl enable serial-getty@ttyS0.service\"" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
+          echo "    - \"curtin in-target --target=$ISO_TARGET_MOUNT -- systemctl start serial-getty@ttyS0.service\"" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
           echo "    - \"curtin in-target --target=$ISO_TARGET_MOUNT -- update-grub\"" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
-          if [ "$DO_ISO_INSTALL_UPDATE" = "true" ] || [ "$DO_INSTALL_ISO_PACKAGES" = "true" ] || [ "$DO_DIST_UPGRADE" = "true" ]; then
+          if [ "$DO_INSTALL_ISO_UPDATE" = "true" ] || [ "$DO_INSTALL_ISO_DIST_UPGRADE" = "true" ]; then
             echo "    - \"curtin in-target --target=$ISO_TARGET_MOUNT -- apt update\"" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
+            if [ "$ISO_MAJOR_REL" = "22" ]; then
+              echo "    - \"curtin in-target --target=$ISO_TARGET_MOUNT -- apt-get install ubuntu-advantage-tools\"" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
+              echo "    - \"curtin in-target --target=$ISO_TARGET_MOUNT -- pro config set apt_news=false\"" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
+            fi
           fi
-          if [ "$DO_ISO_INSTALL_UPGRADE" = "true" ]; then
+          if [ "$DO_INSTALL_ISO_UPGRADE" = "true" ]; then
             echo "    - \"curtin in-target --target=$ISO_TARGET_MOUNT -- apt upgrade -y\"" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
           fi
-          if [ "$DO_ISO_DIST_UPGRADE" = "true" ]; then
+          if [ "$DO_INSTALL_ISO_DIST_UPGRADE" = "true" ]; then
             echo "    - \"curtin in-target --target=$ISO_TARGET_MOUNT -- apt dist-upgrade -y\"" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
           fi
-          if [ "$DO_ISO_INSTALL_PACKAGES" = "true" ]; then
+          if [ "$DO_INSTALL_ISO_PACKAGES" = "true" ]; then
             echo "    - \"curtin in-target --target=$ISO_TARGET_MOUNT -- apt install -y $ISO_INSTALL_PACKAGES\"" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
           fi
           echo "  version: 1" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
@@ -1932,9 +1947,8 @@ do
       ;;
     -c|--sshkeyfile)
       ISO_SSH_KEY_FILE="$2"
-      shift 2
       DO_ISO_SSH_KEY="true"
-      shift
+      shift 2
       ;;
     -D|--installdrivers)
       ISO_INSTALL_DRIVERS="true"
@@ -1966,7 +1980,7 @@ do
       ;;
     -g|--grubmenu)
       ISO_GRUB_MENU="$2"
-      shift
+      shift 2
       ;;
     -H|--hostname)
       ISO_HOSTNAME="$2"
@@ -2245,6 +2259,12 @@ case $ISO_POSTINSTALL in
   "updates"|"upgrades")
     DO_INSTALL_ISO_UPDATE="true"
     DO_INSTALL_ISO_UPGRADE="true"
+    ;;
+  "all")
+    DO_INSTALL_ISO_UPDATE="true"
+    DO_INSTALL_ISO_UPGRADE="true"
+    DO_INSTALL_ISO_DIST_UPGRADE="true"
+    DO_INSTALL_ISO_PACKAGES="true"
     ;;
   *)
     DO_INSTALL_ISO_PACKAGES="true"
@@ -2574,6 +2594,9 @@ handle_output "# Hostname:             $ISO_HOSTNAME" TEXT
 handle_output "# Username:             $ISO_USERNAME" TEXT
 handle_output "# Realname:             $ISO_REALNAME" TEXT
 handle_output "# Timezone:             $ISO_TIMEZONE" TEXT
+if [ -n "$ISO_SSH_KEY_FILE" ]; then
+  handle_output "# SSH Key file:         $ISO_SSH_KEY_FILE" TEXT
+fi
 handle_output "# NIC:                  $ISO_NIC" TEXT
 handle_output "# DHCP:                 $ISO_DHCP" TEXT
 if [ "$ISO_DHCP" = "false" ]; then
@@ -2826,7 +2849,7 @@ if [ "$DO_ISO_SSH_KEY" = "true" ]; then
   if ! [ -f "$ISO_SSH_KEY_FILE" ]; then
     echo "SSH Key file ($ISO_SSH_KEY_FILE) does not exist"
   else
-    ISO_SSH_KEY=$(cat "$ISO_SSH_KEY_FILE")
+    ISO_SSH_KEY=$(<"$ISO_SSH_KEY_FILE")
   fi
 fi
 
