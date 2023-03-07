@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Name:         guige (Generic Ubuntu ISO Generation Engine)
-# Version:      1.0.0
+# Version:      1.0.3
 # Release:      1
 # License:      CC-BA (Creative Commons By Attribution)
 #               http://creativecommons.org/licenses/by/4.0/legalcode
@@ -54,6 +54,9 @@ DEFAULT_ISO_LC_ALL="en_US"
 DEFAULT_ISO_LAYOUT="us"
 DEFAULT_ISO_BUILD_TYPE="live-server"
 DEFAULT_ISO_BOOT_TYPE="efi"
+DEFAULT_ISO_SERIAL_PORT="ttyS1"
+DEFAULT_ISO_SERIAL_PORT_ADDRESS="0x02f8"
+DEFAULT_ISO_SERIAL_PORT_SPEED="115200"
 DEFAULT_ISO_PACKAGES="zfsutils-linux zfs-initramfs net-tools curl wget sudo file rsync dialog setserial"
 REQUIRED_PACKAGES="p7zip-full wget xorriso whois squashfs-tools sudo file rsync net-tools nfs-kernel-server ansible dialog"
 DEFAULT_DOCKER_ARCH="amd64 arm64"
@@ -61,7 +64,6 @@ DEFAULT_ISO_SSH_KEY_FILE="$HOME/.ssh/id_rsa.pub"
 MASKED_DEFAULT_ISO_SSH_KEY_FILE="~/.ssh/id_rsa.pub"
 DEFAULT_ISO_SSH_KEY=""
 DEFAULT_ISO_ALLOW_PASSWORD="false"
-DEFAULT_ISO_INSTALL_DRIVERS="false"
 DEFAULT_BMC_USERNAME="root"
 DEFAULT_BMC_PASSWORD="calvin"
 DEFAULT_BMC_IP="192.168.1.3"
@@ -84,7 +86,9 @@ DO_CUSTOM_BOOT_SERVER_FILE="false"
 # Set function variables
 
 DO_INSTALL_REQUIRED_PACKAGES="false"
+DO_INSTALL_ISO_NETWORK_UPDATES="false"
 DO_INSTALL_ISO_PACKAGES="false"
+DO_INSTALL_ISO_DRIVERS="false"
 DO_GET_BASE_ISO="false"
 DO_CHECK_WORK_DIR="false"
 DO_PREPARE_AUTOINSTALL_ISO_ONLY="false"
@@ -173,9 +177,9 @@ fi
 
 # Default work directories
 
-DEFAULT_WORK_DIR=$HOME/ubuntu-iso/$DEFAULT_ISO_RELEASE
-MASKED_DEFAULT_WORK_DIR="~/$DEFAULT_ISO_RELEASE"
-DEFAULT_DOCKER_WORK_DIR=/root/ubuntu-iso/$DEFAULT_ISO_RELEASE
+DEFAULT_WORK_DIR=$HOME/$SCRIPT_NAME/$DEFAULT_ISO_RELEASE
+MASKED_DEFAULT_WORK_DIR="~/$SCRIPT_NAME/$DEFAULT_ISO_RELEASE"
+DEFAULT_DOCKER_WORK_DIR=/root/$SCRIPT_NAME/$DEFAULT_ISO_RELEASE
 DEFAULT_ISO_MOUNT_DIR="$DEFAULT_WORK_DIR/isomount"
 
 DEFAULT_ISO_AUTOINSTALL_DIR="autoinstall"
@@ -209,61 +213,63 @@ DEFAULT_ISO_GRUB_FILE_BASE=$( basename "$DEFAULT_ISO_GRUB_FILE" )
 print_help () {
   cat <<-HELP
   Usage: ${0##*/} [OPTIONS...]
-    -1|--bootserverfile   Boot sever file (default: $DEFAULT_BOOT_SERVER_FILE_BASE)
-    -2|--grubfile         GRUB file (default: $DEFAULT_ISO_GRUB_FILE_BASE)
-    -9|--boottype         Boot type (default: $DEFAULT_ISO_BOOT_TYPE)
-    -A|--codename         Linux release codename (default: $DEFAULT_ISO_CODENAME)
-    -a|--action:          Action to perform (e.g. createiso, justiso, runchrootscript, checkdocker, installrequired)
-    -B|--layout           Layout (default: $DEFAULT_ISO_LAYOUT)
-    -b|--bootserverip:    NFS/Bootserver IP (default: $DEFAULT_BOOT_SERVER_IP)
-    -C|--cidr:            CIDR (default: $DEFAULT_ISO_CIDR)
-    -c|--sshkeyfile:      SSH key file to use as SSH key (default: $MASKED_DEFAULT_ISO_SSH_KEY_FILE)
-    -D|--installdrivers   Install additional drivers (default: $DEFAULT_ISO_INSTALL_DRIVERS)
-    -d|--bootdisk:        Boot Disk devices (default: $DEFAULT_ISO_DEVICES)
-    -E|--locale:          LANGUAGE (default: $DEFAULT_ISO_LOCALE)
-    -e|--lcall:           LC_ALL (default: $DEFAULT_ISO_LC_ALL)
-    -F|--bmcusername:     BMC/iDRAC User (default: $DEFAULT_BMC_USERNAME)
-    -f|--delete:          Remove previously created files (default: $FORCE_MODE)
-    -G|--gateway:         Gateway (default $DEFAULT_ISO_GATEWAY)
-    -g|--grubmenu:        Set default grub menu (default: $DEFAULT_ISO_GRUB_MENU)
-    -H|--hostname:        Hostname (default: $DEFAULT_ISO_HOSTNAME)
-    -h|--help             Help/Usage Information
-    -I|--ip:              IP Address (default: $DEFAULT_ISO_IP)
-    -i|--inputiso:        Input/base ISO file (default: $DEFAULT_INPUT_FILE_BASE)
-    -J|--hwe              Use HWE kernel (defaults: $ISO_HWE_KERNEL)
-    -j|--autoinstalldir   Directory where autoinstall config files are stored on ISO (default: $DEFAULT_ISO_AUTOINSTALL_DIR)
-    -K|--kernel:          Kernel package (default: $DEFAULT_ISO_KERNEL)
-    -k|--kernelargs:      Kernel arguments (default: $DEFAULT_ISO_KERNEL_ARGS)
-    -L|--release:         LSB release (default: $DEFAULT_ISO_RELEASE)
-    -l|--bmcip:           BMC/iDRAC IP (default: $DEFAULT_BMC_IP)
-    -M|--installtarget:   Where the install mounts the target filesystem (default: $DEFAULT_ISO_TARGET_MOUNT)
-    -m|--installmount:    Where the install mounts the CD during install (default: $DEFAULT_ISO_INSTALL_MOUNT)
-    -N|--dns:             DNS Server (ddefault: $DEFAULT_ISO_DNS)
-    -n|--nic:             Network device (default: $DEFAULT_ISO_NIC)
-    -O|--isopackages:     List of packages to install (default: $DEFAULT_ISO_PACKAGES)
-    -o|--outputiso:       Output ISO file (default: $DEFAULT_OUTPUT_FILE_BASE)
-    -P|--password:        Password (default: $DEFAULT_ISO_USERNAME)
-    -p|--chrootpackages:  List of packages to add to ISO (default: $DEFAULT_PACKAGES)
-    -Q|--build:           Type of ISO to build (default: $DEFAULT_ISO_BUILD_TYPE)
-    -q|--arch:            Architecture (default: $DEFAULT_ISO_ARCH)
-    -R|--realname:        Realname (default $DEFAULT_ISO_REALNAME)
-    -r|--mode:            Mode (default: $DEFAULT_MODE)
-    -S|--swapsize:        Swap size (default $DEFAULT_ISO_SWAPSIZE)
-    -s|--squashfsfile     Squashfs file (default: $DEFAULT_ISO_SQUASHFS_FILE_BASE)
-    -T|--timezone:        Timezone (default: $DEFAULT_ISO_TIMEZONE)
-    -t|--testmode         Test mode (display commands but don't run them)
-    -U|--username:        Username (default: $DEFAULT_ISO_USERNAME)
-    -u|--postinstall:     Postinstall action (e.g. installpackages, upgrade, distupgrade)
-    -V|--version          Display Script Version
-    -v|--verbose          Verbose output (default: $VERBOSE_MODE)
-    -W|--workdir:         Work directory (default: $MASKED_DEFAULT_WORK_DIR)
-    -w|--checkdirs        Check work directories exist
-    -X|--isovolid:        ISO Volume ID (default: $DEFAULT_ISO_VOLID)
-    -x|--grubtimeout:     Grub timeout (default: $DEFAULT_ISO_GRUB_TIMEOUT)
-    -Y|--allowpassword    Allow password access via SSH (default: $DEFAULT_ISO_ALLOW_PASSWORD)
-    -y|--bmcpassword:     BMC/iDRAC password (default: $DEFAULT_BMC_PASSWORD)
-    -Z|--nounmount        Do not unmount loopback filesystems (useful for troubleshooting)
-    -z|--volumemanager:   Volume Managers (defauls: $DEFAULT_ISO_VOLMGRS)
+    -0|--serialport         Serial Port (default: $DEFAULT_ISO_SERIAL_PORT)
+    -1|--serialportaddress  Serial Port Address (default: $DEFAULT_ISO_SERIAL_PORT_ADDRESS)
+    -2|--serialortspeed     Serial Port Speed (default: $DEFAULT_ISO_SERIAL_PORT_SPEED)
+    -8|--grubfile           GRUB file (default: $DEFAULT_ISO_GRUB_FILE_BASE)
+    -9|--boottype           Boot type (default: $DEFAULT_ISO_BOOT_TYPE)
+    -A|--codename           Linux release codename (default: $DEFAULT_ISO_CODENAME)
+    -a|--action:            Action to perform (e.g. createiso, justiso, runchrootscript, checkdocker, installrequired)
+    -B|--layout             Layout (default: $DEFAULT_ISO_LAYOUT)
+    -b|--bootserverip:      NFS/Bootserver IP (default: $DEFAULT_BOOT_SERVER_IP)
+    -C|--cidr:              CIDR (default: $DEFAULT_ISO_CIDR)
+    -c|--sshkeyfile:        SSH key file to use as SSH key (default: $MASKED_DEFAULT_ISO_SSH_KEY_FILE)
+    -D|--dns:               DNS Server (ddefault: $DEFAULT_ISO_DNS)
+    -d|--bootdisk:          Boot Disk devices (default: $DEFAULT_ISO_DEVICES)
+    -E|--locale:            LANGUAGE (default: $DEFAULT_ISO_LOCALE)
+    -e|--lcall:             LC_ALL (default: $DEFAULT_ISO_LC_ALL)
+    -F|--bmcusername:       BMC/iDRAC User (default: $DEFAULT_BMC_USERNAME)
+    -f|--delete:            Remove previously created files (default: $FORCE_MODE)
+    -G|--gateway:           Gateway (default $DEFAULT_ISO_GATEWAY)
+    -g|--grubmenu:          Set default grub menu (default: $DEFAULT_ISO_GRUB_MENU)
+    -H|--hostname:          Hostname (default: $DEFAULT_ISO_HOSTNAME)
+    -h|--help               Help/Usage Information
+    -I|--ip:                IP Address (default: $DEFAULT_ISO_IP)
+    -i|--inputiso:          Input/base ISO file (default: $DEFAULT_INPUT_FILE_BASE)
+    -J|--hwe                Use HWE kernel (defaults: $ISO_HWE_KERNEL)
+    -j|--autoinstalldir     Directory where autoinstall config files are stored on ISO (default: $DEFAULT_ISO_AUTOINSTALL_DIR)
+    -K|--kernel:            Kernel package (default: $DEFAULT_ISO_KERNEL)
+    -k|--kernelargs:        Kernel arguments (default: $DEFAULT_ISO_KERNEL_ARGS)
+    -L|--release:           LSB release (default: $DEFAULT_ISO_RELEASE)
+    -l|--bmcip:             BMC/iDRAC IP (default: $DEFAULT_BMC_IP)
+    -M|--installtarget:     Where the install mounts the target filesystem (default: $DEFAULT_ISO_TARGET_MOUNT)
+    -m|--installmount:      Where the install mounts the CD during install (default: $DEFAULT_ISO_INSTALL_MOUNT)
+    -N|--bootserverfile     Boot sever file (default: $DEFAULT_BOOT_SERVER_FILE_BASE)
+    -n|--nic:               Network device (default: $DEFAULT_ISO_NIC)
+    -O|--isopackages:       List of packages to install (default: $DEFAULT_ISO_PACKAGES)
+    -o|--outputiso:         Output ISO file (default: $DEFAULT_OUTPUT_FILE_BASE)
+    -P|--password:          Password (default: $DEFAULT_ISO_USERNAME)
+    -p|--chrootpackages:    List of packages to add to ISO (default: $DEFAULT_PACKAGES)
+    -Q|--build:             Type of ISO to build (default: $DEFAULT_ISO_BUILD_TYPE)
+    -q|--arch:              Architecture (default: $DEFAULT_ISO_ARCH)
+    -R|--realname:          Realname (default $DEFAULT_ISO_REALNAME)
+    -r|--mode:              Mode (default: $DEFAULT_MODE)
+    -S|--swapsize:          Swap size (default $DEFAULT_ISO_SWAPSIZE)
+    -s|--squashfsfile       Squashfs file (default: $DEFAULT_ISO_SQUASHFS_FILE_BASE)
+    -T|--timezone:          Timezone (default: $DEFAULT_ISO_TIMEZONE)
+    -t|--testmode           Test mode (display commands but don't run them)
+    -U|--username:          Username (default: $DEFAULT_ISO_USERNAME)
+    -u|--postinstall:       Postinstall action (e.g. installpackages, upgrade, distupgrade, installdrivers, all)
+    -V|--version            Display Script Version
+    -v|--verbose            Verbose output (default: $VERBOSE_MODE)
+    -W|--workdir:           Work directory (default: $MASKED_DEFAULT_WORK_DIR)
+    -w|--checkdirs          Check work directories exist
+    -X|--isovolid:          ISO Volume ID (default: $DEFAULT_ISO_VOLID)
+    -x|--grubtimeout:       Grub timeout (default: $DEFAULT_ISO_GRUB_TIMEOUT)
+    -Y|--allowpassword      Allow password access via SSH (default: $DEFAULT_ISO_ALLOW_PASSWORD)
+    -y|--bmcpassword:       BMC/iDRAC password (default: $DEFAULT_BMC_PASSWORD)
+    -Z|--nounmount          Do not unmount loopback filesystems (useful for troubleshooting)
+    -z|--volumemanager:     Volume Managers (defauls: $DEFAULT_ISO_VOLMGRS)
 HELP
   exit
 }
@@ -335,7 +341,7 @@ check_docker_config () {
       handle_output "echo \"    working_dir: /root\" >> $WORK_DIR/$DIR_ARCH/docker-compose.yml"
       handle_output "echo \"    platform: linux/$DIR_ARCH\" >> $WORK_DIR/$DIR_ARCH/docker-compose.yml"
       handle_output "echo \"    volumes:\" >> $WORK_DIR/$DIR_ARCH/docker-compose.yml"
-      handle_output "echo \"      - /docker/$SCRIPT_NAME-$DIR_ARCH/:/root/ubuntu-iso/\" >> $WORK_DIR/$DIR_ARCH/docker-compose.yml"
+      handle_output "echo \"      - /docker/$SCRIPT_NAME-$DIR_ARCH/:/root/$SCRIPT_NAME/\" >> $WORK_DIR/$DIR_ARCH/docker-compose.yml"
       handle_output "# Create Docker config $WORK_DIR/$DIR_ARCH/Dockerfile" TEXT
       handle_output "echo \"FROM ubuntu:$CURRENT_DOCKER_UBUNTU_RELEASE\" > $WORK_DIR/$DIR_ARCH/Dockerfile"
       handle_output "echo \"RUN apt-get update && apt-get install -y $REQUIRED_PACKAGES\" >> $WORK_DIR/$DIR_ARCH/Dockerfile"
@@ -363,7 +369,7 @@ check_docker_config () {
           echo "    working_dir: /root" >> "$WORK_DIR/$DIR_ARCH/docker-compose.yml"
           echo "    platform: linux/$DIR_ARCH" >> "$WORK_DIR/$DIR_ARCH/docker-compose.yml"
           echo "    volumes:" >> "$WORK_DIR/$DIR_ARCH/docker-compose.yml"
-          echo "      - /docker/$SCRIPT_NAME-$DIR_ARCH/:/root/ubuntu-iso/" >> "$WORK_DIR/$DIR_ARCH/docker-compose.yml"
+          echo "      - /docker/$SCRIPT_NAME-$DIR_ARCH/:/root/$SCRIPT_NAME/" >> "$WORK_DIR/$DIR_ARCH/docker-compose.yml"
           echo "FROM ubuntu:$CURRENT_DOCKER_UBUNTU_RELEASE" > "$WORK_DIR/$DIR_ARCH/Dockerfile"
           echo "RUN apt-get update && apt-get install -y $REQUIRED_PACKAGES" >> "$WORK_DIR/$DIR_ARCH/Dockerfile"
           docker build "$WORK_DIR/$DIR_ARCH" --tag "$SCRIPT_NAME-$DIR_ARCH" --platform "linux/$DIR_ARCH"
@@ -1595,7 +1601,7 @@ prepare_autoinstall_iso () {
         handle_output "echo \"  package_update: $DO_INSTALL_ISO_UPDATE\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
         handle_output "echo \"  package_upgrade: $DO_INSTALL_ISO_UPGRADE\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
         handle_output "echo \"  drivers:\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
-        handle_output "echo \"    install: $ISO_INSTALL_DRIVERS\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
+        handle_output "echo \"    install: $DO_INSTALL_ISO_DRIVERS\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
         handle_output "echo \"  user-data:\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
         handle_output "echo \"    timezone: $TIMEZONE\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
         handle_output "echo \"  identity:\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
@@ -1714,25 +1720,31 @@ prepare_autoinstall_iso () {
         fi
         handle_output "echo \"  late-commands:\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
         handle_output "echo \"    - \\\"echo 'GRUB_CMDLINE_LINUX=\\\\\\\"$ISO_KERNEL_ARGS\\\\\\\"' >> $ISO_TARGET_MOUNT/etc/default/grub\\\"\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
+        handle_output "echo \"    - \\\"echo 'GRUB_TERMINAL=\\\\\\\"serial console\\\\\\\"' >> $ISO_TARGET_MOUNT/etc/default/grub\\\"\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
+        handle_output "echo \"    - \\\"echo 'GRUB_SERIAL_COMMAND=\\\\\\\"serial --speed=$ISO_SERIAL_PORT_SPEED --port=$ISO_SERIAL_PORT_ADDRESS\\\\\\\"' >> $ISO_TARGET_MOUNT/etc/default/grub\\\"\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
+        handle_output "echo \"    - \\\"echo 'GRUB_CMDLINE_LINUX=\\\\\\\"console=tty0 console=vt0 console=$ISO_SERIAL_PORT,$ISO_SERIAL_PORT_SPEED\\\\\\\"' >> $ISO_TARGET_MOUNT/etc/default/grub\\\"\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
+        handle_output "echo \"    - \\\"echo 'GRUB_TIMEOUT=\\\\\\\"$ISO_GRUB_TIMEOUT\\\\\\\"' >> $ISO_TARGET_MOUNT/etc/default/grub\\\"\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
         handle_output "echo \"    - \\\"echo '$ISO_USERNAME ALL=(ALL) NOPASSWD: ALL' >> $ISO_TARGET_MOUNT/etc/sudoers.d/$ISO_USERNAME\\\"\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
         handle_output "echo \"    - \\\"curtin in-target --target=$ISO_TARGET_MOUNT -- systemctl enable serial-getty@ttyS0.service\\\"\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
         handle_output "echo \"    - \\\"curtin in-target --target=$ISO_TARGET_MOUNT -- systemctl start serial-getty@ttyS0.service\\\"\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
         handle_output "echo \"    - \\\"curtin in-target --target=$ISO_TARGET_MOUNT -- /usr/sbin/update-grub\\\"\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
-        if [ "$DO_INSTALL_ISO_UPDATE" = "true" ] || [ "$DO_INSTALL_ISO_DIST_UPGRADE" = "true" ]; then
-          handle_output "echo \"    - \\\"curtin in-target --target=$ISO_TARGET_MOUNT -- apt update\\\"\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
-          if [ "$ISO_MAJOR_REL" = "22" ]; then
-            handle_output "echo \"    - \\\"curtin in-target --target=$ISO_TARGET_MOUNT -- apt-get install ubuntu-advantage-tools\\\"\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
-            handle_output "echo \"    - \\\"curtin in-target --target=$ISO_TARGET_MOUNT -- pro config set apt_news=false\\\"\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
+        if [ "$DO_INSTALL_ISO_NETWORK_UPDATES" = "true" ]; then
+          if [ "$DO_INSTALL_ISO_UPDATE" = "true" ] || [ "$DO_INSTALL_ISO_DIST_UPGRADE" = "true" ]; then
+            handle_output "echo \"    - \\\"curtin in-target --target=$ISO_TARGET_MOUNT -- apt update\\\"\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
+            if [ "$ISO_MAJOR_REL" = "22" ]; then
+              handle_output "echo \"    - \\\"curtin in-target --target=$ISO_TARGET_MOUNT -- apt-get install ubuntu-advantage-tools\\\"\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
+              handle_output "echo \"    - \\\"curtin in-target --target=$ISO_TARGET_MOUNT -- pro config set apt_news=false\\\"\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
+            fi
           fi
-        fi
-        if [ "$DO_INSTALL_ISO_UPGRADE" = "true" ]; then
-          handle_output "echo \"    - \\\"curtin in-target --target=$ISO_TARGET_MOUNT -- apt upgrade -y\\\"\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
-        fi
-        if [ "$DO_INSTALL_ISO_DIST_UPGRADE" = "true" ]; then
-          handle_output "echo \"    - \\\"curtin in-target --target=$ISO_TARGET_MOUNT -- apt dist-upgrade -y\\\"\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
-        fi
-        if [ "$DO_INSTALL_ISO_PACKAGES" = "true" ]; then
-          handle_output "echo \"    - \\\"curtin in-target --target=$ISO_TARGET_MOUNT -- apt install -y $ISO_INSTALL_PACKAGES\\\"\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
+          if [ "$DO_INSTALL_ISO_UPGRADE" = "true" ]; then
+            handle_output "echo \"    - \\\"curtin in-target --target=$ISO_TARGET_MOUNT -- apt upgrade -y\\\"\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
+          fi
+          if [ "$DO_INSTALL_ISO_DIST_UPGRADE" = "true" ]; then
+            handle_output "echo \"    - \\\"curtin in-target --target=$ISO_TARGET_MOUNT -- apt dist-upgrade -y\\\"\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
+          fi
+          if [ "$DO_INSTALL_ISO_PACKAGES" = "true" ]; then
+            handle_output "echo \"    - \\\"curtin in-target --target=$ISO_TARGET_MOUNT -- apt install -y $ISO_INSTALL_PACKAGES\\\"\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
+          fi
         fi
         handle_output "echo \"  version: 1\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
         if [ "$TEST_MODE" = "false" ]; then
@@ -1756,7 +1768,7 @@ prepare_autoinstall_iso () {
           echo "  package_update: $DO_ISO_INSTALL_UPDATE" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
           echo "  package_upgrade: $DO_INSTALL_ISO_UPGRADE" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
           echo "  drivers:" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
-          echo "    install: $ISO_INSTALL_DRIVERS" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
+          echo "    install: $DO_INSTALL_ISO_DRIVERS" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
           echo "  user-data:" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
           echo "    timezone: $TIMEZONE" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
           echo "  identity:" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
@@ -1876,25 +1888,31 @@ prepare_autoinstall_iso () {
           echo "    - \"dpkg --auto-deconfigure --force-depends -i $ISO_INSTALL_MOUNT/$ISO_AUTOINSTALL_DIR/packages/*.deb\"" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
           echo "  late-commands:" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
           echo "    - \"echo 'GRUB_CMDLINE_LINUX=\\\"$ISO_KERNEL_ARGS\\\"' >> $ISO_TARGET_MOUNT/etc/default/grub\"" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
+          echo "    - \"echo 'GRUB_TERMINAL=\\\"serial console\\\"' >> $ISO_TARGET_MOUNT/etc/default/grub\"" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
+          echo "    - \"echo 'GRUB_SERIAL_COMMAND=\\\"serial --speed=$ISO_SERIAL_PORT_SPEED --port=$ISO_SERIAL_PORT_ADDRESS\\\"' >> $ISO_TARGET_MOUNT/etc/default/grub\"" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
+          echo "    - \"echo 'GRUB_CMDLINE_LINUX=\\\"console=tty0 console=vt0 console=$ISO_SERIAL_PORT,$ISO_SERIAL_PORT_SPEED\\\"' >> $ISO_TARGET_MOUNT/etc/default/grub\"" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
+          echo "    - \"echo 'GRUB_TIMEOUT=\\\"$ISO_GRUB_TIMEOUT\\\"' >> $ISO_TARGET_MOUNT/etc/default/grub\"" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
           echo "    - \"echo '$ISO_USERNAME ALL=(ALL) NOPASSWD: ALL' >> $ISO_TARGET_MOUNT/etc/sudoers.d/$ISO_USERNAME\"" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
           echo "    - \"curtin in-target --target=$ISO_TARGET_MOUNT -- systemctl enable serial-getty@ttyS0.service\"" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
           echo "    - \"curtin in-target --target=$ISO_TARGET_MOUNT -- systemctl start serial-getty@ttyS0.service\"" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
           echo "    - \"curtin in-target --target=$ISO_TARGET_MOUNT -- update-grub\"" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
-          if [ "$DO_INSTALL_ISO_UPDATE" = "true" ] || [ "$DO_INSTALL_ISO_DIST_UPGRADE" = "true" ]; then
-            echo "    - \"curtin in-target --target=$ISO_TARGET_MOUNT -- apt update\"" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
-            if [ "$ISO_MAJOR_REL" = "22" ]; then
-              echo "    - \"curtin in-target --target=$ISO_TARGET_MOUNT -- apt-get install ubuntu-advantage-tools\"" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
-              echo "    - \"curtin in-target --target=$ISO_TARGET_MOUNT -- pro config set apt_news=false\"" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
+          if [ "$DO_INSTALL_ISO_NETWORK_UPDATES" = "true" ]; then
+            if [ "$DO_INSTALL_ISO_UPDATE" = "true" ] || [ "$DO_INSTALL_ISO_DIST_UPGRADE" = "true" ]; then
+              echo "    - \"curtin in-target --target=$ISO_TARGET_MOUNT -- apt update\"" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
+              if [ "$ISO_MAJOR_REL" = "22" ]; then
+                echo "    - \"curtin in-target --target=$ISO_TARGET_MOUNT -- apt-get install ubuntu-advantage-tools\"" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
+                echo "    - \"curtin in-target --target=$ISO_TARGET_MOUNT -- pro config set apt_news=false\"" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
+              fi
             fi
-          fi
-          if [ "$DO_INSTALL_ISO_UPGRADE" = "true" ]; then
-            echo "    - \"curtin in-target --target=$ISO_TARGET_MOUNT -- apt upgrade -y\"" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
-          fi
-          if [ "$DO_INSTALL_ISO_DIST_UPGRADE" = "true" ]; then
-            echo "    - \"curtin in-target --target=$ISO_TARGET_MOUNT -- apt dist-upgrade -y\"" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
-          fi
-          if [ "$DO_INSTALL_ISO_PACKAGES" = "true" ]; then
-            echo "    - \"curtin in-target --target=$ISO_TARGET_MOUNT -- apt install -y $ISO_INSTALL_PACKAGES\"" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
+            if [ "$DO_INSTALL_ISO_UPGRADE" = "true" ]; then
+              echo "    - \"curtin in-target --target=$ISO_TARGET_MOUNT -- apt upgrade -y\"" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
+            fi
+            if [ "$DO_INSTALL_ISO_DIST_UPGRADE" = "true" ]; then
+              echo "    - \"curtin in-target --target=$ISO_TARGET_MOUNT -- apt dist-upgrade -y\"" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
+            fi
+            if [ "$DO_INSTALL_ISO_PACKAGES" = "true" ]; then
+              echo "    - \"curtin in-target --target=$ISO_TARGET_MOUNT -- apt install -y $ISO_INSTALL_PACKAGES\"" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
+            fi
           fi
           echo "  version: 1" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
         fi
@@ -1912,12 +1930,19 @@ fi
 while test $# -gt 0
 do
   case $1 in
-    -1|--bootserverfile)
-      BOOT_SERVER_FILE="$2"
-      DO_CUSTOM_BOOT_SERVER_FILE="true"
+    -0|--serialport)
+      ISO_SERIAL_PORT="$2"
       shift 2
       ;;
-    -2|--grubfile)
+    -1|--serialportaddress)
+      ISO_SERIAL_PORT_ADDRESS="$2"
+      shift 2
+      ;;
+    -2|--serialportspeed)
+      ISO_SERIAL_PORT_SPEED="$2"
+      shift 2
+      ;;
+    -8|--grubfile)
       ISO_GRUB_FILE="$2"
       shift 2
       ;;
@@ -1950,9 +1975,9 @@ do
       DO_ISO_SSH_KEY="true"
       shift 2
       ;;
-    -D|--installdrivers)
-      ISO_INSTALL_DRIVERS="true"
-      shift
+    -D|--dns)
+      ISO_DNS="$2"
+      shift 2
       ;;
     -d|--bootdisk)
       ISO_DEVICES+="$2"
@@ -2026,8 +2051,9 @@ do
       ISO_INSTALL_MOUNT="$2"
       shift 2 
       ;;
-    -N|--dns)
-      ISO_DNS="$2"
+    -N|--bootserverfile)
+      BOOT_SERVER_FILE="$2"
+      DO_CUSTOM_BOOT_SERVER_FILE="true"
       shift 2
       ;;
     -n|--nic)
@@ -2251,23 +2277,27 @@ fi
 
 case $ISO_POSTINSTALL in
   "distupgrade"|"dist-upgrade")
+    DO_INSTALL_ISO_NETWORK_UPDATES="true"
     DO_INSTALL_ISO_DIST_UPGRADE="true"
     ;;
   "packages")
+    DO_INSTALL_ISO_NETWORK_UPDATES="true"
     DO_INSTALL_ISO_PACKAGES="true"
     ;;
   "updates"|"upgrades")
+    DO_INSTALL_ISO_NETWORK_UPDATES="true"
     DO_INSTALL_ISO_UPDATE="true"
     DO_INSTALL_ISO_UPGRADE="true"
     ;;
   "all")
+    DO_INSTALL_ISO_NETWORK_UPDATES="true"
     DO_INSTALL_ISO_UPDATE="true"
     DO_INSTALL_ISO_UPGRADE="true"
     DO_INSTALL_ISO_DIST_UPGRADE="true"
     DO_INSTALL_ISO_PACKAGES="true"
     ;;
   *)
-    DO_INSTALL_ISO_PACKAGES="true"
+    DO_INSTALL_ISO_NETWORK_UPDATES="false"
     ;;
 esac
 
@@ -2296,6 +2326,15 @@ case $DELETE in
     FULL_FORCE_MODE="false"
 esac
 
+if [ "$ISO_SERIAL_PORT" = "" ]; then
+  ISO_SERIAL_PORT="$DEFAULT_ISO_SERIAL_PORT"
+fi
+if [ "$ISO_SERIAL_PORT_ADDRESS" = "" ]; then
+  ISO_SERIAL_PORT_ADDRESS="$DEFAULT_ISO_SERIAL_PORT_ADDRESS"
+fi
+if [ "$ISO_SERIAL_PORT_SPEED" = "" ]; then
+  ISO_SERIAL_PORT_SPEED="$DEFAULT_ISO_SERIAL_PORT_SPEED"
+fi
 if [ "$ISO_ARCH" = "" ]; then
   ISO_ARCH="$DEFAULT_ISO_ARCH"
   DOCKER_ARCH="$DEFAULT_DOCKER_ARCH"
@@ -2327,9 +2366,6 @@ if [ "$BMC_IP" = "" ]; then
 fi
 if [ "$ISO_CIDR" = "" ]; then
   ISO_CIDR="$DEFAULT_ISO_CIDR"
-fi
-if [ "$ISO_INSTALL_DRIVERS" = "" ]; then
-  ISO_INSTALL_DRIVERS="$DEFAULT_ISO_INSTALL_DRIVERS"
 fi
 if [ "$ISO_RELEASE" = "" ]; then
   ISO_RELEASE="$DEFAULT_ISO_RELEASE"
@@ -2434,16 +2470,16 @@ if [ "$ISO_AUTOINSTALL_DIR" = "" ]; then
 fi
 if [ "$WORK_DIR" = "" ]; then 
   if [ "$DO_DAILY_ISO" = "true" ]; then
-    WORK_DIR="$HOME/ubuntu-iso/$ISO_CODENAME"
-    DOCKER_WORK_DIR="/root/ubuntu-iso/$ISO_CODENAME"
+    WORK_DIR="$HOME/$SCRIPT_NAME/$ISO_CODENAME"
+    DOCKER_WORK_DIR="/root/$SCRIPT_NAME/$ISO_CODENAME"
   else
-    WORK_DIR="$HOME/ubuntu-iso/$ISO_RELEASE"
-    DOCKER_WORK_DIR="/root/ubuntu-iso/$ISO_RELEASE"
+    WORK_DIR="$HOME/$SCRIPT_NAME/$ISO_RELEASE"
+    DOCKER_WORK_DIR="/root/$SCRIPT_NAME/$ISO_RELEASE"
   fi
 else
   if [ "$DO_DAILY_ISO" = "true" ]; then
-    WORK_DIR="$HOME/ubuntu-iso/$ISO_CODENAME"
-    DOCKER_WORK_DIR="/root/ubuntu-iso/$ISO_CODENAME"
+    WORK_DIR="$HOME/$SCRIPT_NAME/$ISO_CODENAME"
+    DOCKER_WORK_DIR="/root/$SCRIPT_NAME/$ISO_CODENAME"
   fi
 fi
 if [ "$ISO_BUILD_TYPE" = "" ]; then
@@ -2581,58 +2617,62 @@ if [ "$DO_PRINT_ENV" ] || [ "$INTERACTIVE_MODE" = "true" ]; then
 fi
 
 handle_output "# Setting Variables" TEXT
-handle_output "# Release:              $ISO_RELEASE" TEXT
-handle_output "# Codename:             $ISO_CODENAME" TEXT
-handle_output "# Architecture:         $ISO_ARCH" TEXT
-handle_output "# Work directory:       $WORK_DIR" TEXT
-handle_output "# Required packages:    $REQUIRED_PACKAGES" TEXT
-handle_output "# ISO input file:       $INPUT_FILE" TEXT
-handle_output "# ISO output file:      $OUTPUT_FILE" TEXT
-handle_output "# ISO URL:              $ISO_URL" TEXT
-handle_output "# ISO Volume ID:        $ISO_VOLID" TEXT
-handle_output "# Hostname:             $ISO_HOSTNAME" TEXT
-handle_output "# Username:             $ISO_USERNAME" TEXT
-handle_output "# Realname:             $ISO_REALNAME" TEXT
-handle_output "# Timezone:             $ISO_TIMEZONE" TEXT
+handle_output "# Release:                 $ISO_RELEASE" TEXT
+handle_output "# Codename:                $ISO_CODENAME" TEXT
+handle_output "# Architecture:            $ISO_ARCH" TEXT
+handle_output "# Work directory:          $WORK_DIR" TEXT
+handle_output "# Required packages:       $REQUIRED_PACKAGES" TEXT
+handle_output "# ISO input file:          $INPUT_FILE" TEXT
+handle_output "# ISO output file:         $OUTPUT_FILE" TEXT
+handle_output "# ISO URL:                 $ISO_URL" TEXT
+handle_output "# ISO Volume ID:           $ISO_VOLID" TEXT
+handle_output "# Hostname:                $ISO_HOSTNAME" TEXT
+handle_output "# Username:                $ISO_USERNAME" TEXT
+handle_output "# Realname:                $ISO_REALNAME" TEXT
+handle_output "# Timezone:                $ISO_TIMEZONE" TEXT
 if [ -n "$ISO_SSH_KEY_FILE" ]; then
-  handle_output "# SSH Key file:         $ISO_SSH_KEY_FILE" TEXT
+  handle_output "# SSH Key file:            $ISO_SSH_KEY_FILE" TEXT
 fi
-handle_output "# NIC:                  $ISO_NIC" TEXT
-handle_output "# DHCP:                 $ISO_DHCP" TEXT
+handle_output "# NIC:                     $ISO_NIC" TEXT
+handle_output "# DHCP:                    $ISO_DHCP" TEXT
 if [ "$ISO_DHCP" = "false" ]; then
-  handle_output "# IP:                   $ISO_IP/$ISO_CIDR" TEXT
-  handle_output "# Gateway:              $ISO_GATEWAY" TEXT
-  handle_output "# Nameservers:          $ISO_DNS" TEXT
+  handle_output "# IP:                      $ISO_IP/$ISO_CIDR" TEXT
+  handle_output "# Gateway:                 $ISO_GATEWAY" TEXT
+  handle_output "# Nameservers:             $ISO_DNS" TEXT
 fi
-handle_output "# Kernel:               $ISO_KERNEL" TEXT
-handle_output "# Kernel arguments:     $ISO_KERNEL_ARGS" TEXT
-handle_output "# Keyboard Layout:      $ISO_LAYOUT" TEXT
-handle_output "# Locale:               $ISO_LOCALE" TEXT
-handle_output "# LC_ALL:               $ISO_LC_ALL" TEXT
-handle_output "# Root disk(s):         $ISO_DEVICES" TEXT
-handle_output "# Volme Manager(s):     $ISO_VOLMGRS" TEXT
-handle_output "# GRUB Menu:            $ISO_GRUB_MENU" TEXT
-handle_output "# GRUB Timeout:         $ISO_GRUB_TIMEOUT" TEXT
-handle_output "# AI Directory:         $ISO_AUTOINSTALL_DIR" TEXT
-handle_output "# Install mount:        $ISO_INSTALL_MOUNT" TEXT
-handle_output "# Install target:       $ISO_TARGET_MOUNT" TEXT
-handle_output "# Recreate squashfs:    $DO_ISO_SQUASHFS_UPDATE" TEXT
-handle_output "# Squashfs packages:    $ISO_CHROOT_PACKAGES" TEXT
-handle_output "# Additional packages:  $ISO_INSTALL_PACKAGES" TEXT
-handle_output "# Install packages:     $DO_INSTALL_ISO_PACKAGES" TEXT
-handle_output "# Install updates:      $DO_INSTALL_ISO_UPDATE" TEXT
-handle_output "# Install upgrades:     $DO_INSTALL_ISO_UPGRADE" TEXT
-handle_output "# Dist upgrades:        $DO_INSTALL_ISO_DIST_UPGRADE" TEXT
-handle_output "# Swap size:            $ISO_SWAPSIZE" TEXT
+handle_output "# Kernel:                  $ISO_KERNEL" TEXT
+handle_output "# Kernel arguments:        $ISO_KERNEL_ARGS" TEXT
+handle_output "# Keyboard Layout:         $ISO_LAYOUT" TEXT
+handle_output "# Locale:                  $ISO_LOCALE" TEXT
+handle_output "# LC_ALL:                  $ISO_LC_ALL" TEXT
+handle_output "# Root disk(s):            $ISO_DEVICES" TEXT
+handle_output "# Volme Manager(s):        $ISO_VOLMGRS" TEXT
+handle_output "# GRUB Menu:               $ISO_GRUB_MENU" TEXT
+handle_output "# GRUB Timeout:            $ISO_GRUB_TIMEOUT" TEXT
+handle_output "# AI Directory:            $ISO_AUTOINSTALL_DIR" TEXT
+handle_output "# Install mount:           $ISO_INSTALL_MOUNT" TEXT
+handle_output "# Install target:          $ISO_TARGET_MOUNT" TEXT
+handle_output "# Recreate squashfs:       $DO_ISO_SQUASHFS_UPDATE" TEXT
+handle_output "# Squashfs packages:       $ISO_CHROOT_PACKAGES" TEXT
+handle_output "# Additional packages:     $ISO_INSTALL_PACKAGES" TEXT
+handle_output "# Install network updates: $DO_INSTALL_ISO_NETWORK_UPDATES" TEXT
+handle_output "# Install packages:        $DO_INSTALL_ISO_PACKAGES" TEXT
+handle_output "# Install updates:         $DO_INSTALL_ISO_UPDATE" TEXT
+handle_output "# Install upgrades:        $DO_INSTALL_ISO_UPGRADE" TEXT
+handle_output "# Dist upgrades:           $DO_INSTALL_ISO_DIST_UPGRADE" TEXT
+handle_output "# Swap size:               $ISO_SWAPSIZE" TEXT
 if [ "$DO_CREATE_EXPORT" = "true" ] || [ "$DO_CREATE_ANSIBLE" = "true" ]; then
-  handle_output "# Bootserver IP:        $BOOT_SERVER_IP" TEXT
-  handle_output "# Bootserver file:      $BOOT_SERVER_FILE" TEXT
+  handle_output "# Bootserver IP:           $BOOT_SERVER_IP" TEXT
+  handle_output "# Bootserver file:         $BOOT_SERVER_FILE" TEXT
 fi
 if [ "$DO_CREATE_ANSIBLE" = "true" ] ; then
-  handle_output "# BMC IP:               $BMC_IP" TEXT
-  handle_output "# BMC Username:         $BMC_USERNAME" TEXT
-  handle_output "# BMC Password:         $BMC_PASSWORD" TEXT
+  handle_output "# BMC IP:                  $BMC_IP" TEXT
+  handle_output "# BMC Username:            $BMC_USERNAME" TEXT
+  handle_output "# BMC Password:            $BMC_PASSWORD" TEXT
 fi
+handle_output "# Serial Port:             $ISO_SERIAL_PORT" TEXT
+handle_output "# Serial Port Address:     $ISO_SERIAL_PORT_ADDRESS" TEXT
+handle_output "# Serial Port Speed:       $ISO_SERIAL_PORT_SPEED" TEXT
 
 if [ "$DO_PRINT_ENV" = "true" ] || [ "$INTERACTIVE_MODE" = "true" ]; then
   TEMP_VERBOSE_MODE="false"
@@ -2784,16 +2824,21 @@ if [ "$INTERACTIVE_MODE" = "true" ]; then
       read -r -p "Enter Additional Packages to install[$ISO_INSTALL_PACKAGES]: " NEW_ISO_INSTALL_PACKAGES
       ISO_INSTALL_PACKAGES=${NEW_ISO_INSTALL_PACKAGES:-$ISO_INSTALL_PACKAGES}
     fi
+    # Get wether to install network updates
+    read -r -p "Install Network Updates? [$DO_INSTALL_ISO_NETWORK_UPDATES]: " NEW_DO_INSTALL_ISO_NETWORK_UPDATES
+    DO_INSTALL_ISO_NETWORK_UPDATES=${NEW_DO_INSTALL_ISO_NETWORK_UPDATES:-$DO_INSTALL_ISO_NETWORK_UPDATES}
     # Get whether to install updates
-    read -r -p "Install updates? [$DO_INSTALL_ISO_UPDATE]: " NEW_DO_INSTALL_ISO_UPDATE
-    DO_INSTALL_ISO_UPDATE=${NEW_DO_INSTALL_ISO_UPDATE:-$DO_INSTALL_ISO_UPDATE}
-    if [ "$DO_INSTALL_ISO_UPDATE" = "true" ]; then
-      # Get wether to install upgrades 
-      read -r -p "Upgrade packages? [$DO_INSTALL_ISO_UPGRADE]: " NEW_DO_INSTALL_ISO_UPGRADE
-      DO_INSTALL_ISO_UPGRADE=${NEW_DO_INSTALL_ISO_UPGRADE:-$DO_INSTALL_ISO_UPGRADE}
-      # Get whether to do a dist-updrage
-      read -r -p "Install Distribution Upgrade if available (e.g. 20.04.4 -> 20.04.5)? [$DO_INSTALL_ISO_DIST_UPGRADE]: " NEW_DO_INSTALL_ISO_DIST_UPGRADE
-      DO_INSTALL_ISO_DIST_UPGRADE=${NEW_DO_INSTALL_ISO_DIST_UPGRADE:-$DO_INSTALL_ISO_DIST_UPGRADE}
+    if [ "$DO_INSTALL_ISO_NETWORK_UPDATES" = "true" ]; then
+      read -r -p "Install updates? [$DO_INSTALL_ISO_UPDATE]: " NEW_DO_INSTALL_ISO_UPDATE
+      DO_INSTALL_ISO_UPDATE=${NEW_DO_INSTALL_ISO_UPDATE:-$DO_INSTALL_ISO_UPDATE}
+      if [ "$DO_INSTALL_ISO_UPDATE" = "true" ]; then
+        # Get wether to install upgrades 
+        read -r -p "Upgrade packages? [$DO_INSTALL_ISO_UPGRADE]: " NEW_DO_INSTALL_ISO_UPGRADE
+        DO_INSTALL_ISO_UPGRADE=${NEW_DO_INSTALL_ISO_UPGRADE:-$DO_INSTALL_ISO_UPGRADE}
+        # Get whether to do a dist-updrage
+        read -r -p "Install Distribution Upgrade if available (e.g. 20.04.4 -> 20.04.5)? [$DO_INSTALL_ISO_DIST_UPGRADE]: " NEW_DO_INSTALL_ISO_DIST_UPGRADE
+        DO_INSTALL_ISO_DIST_UPGRADE=${NEW_DO_INSTALL_ISO_DIST_UPGRADE:-$DO_INSTALL_ISO_DIST_UPGRADE}
+      fi
     fi
     # Get swap size 
     read -r -p "Enter Swap Size [$ISO_SWAPSIZE]: " NEW_ISO_SWAPSIZE
@@ -2807,8 +2852,17 @@ if [ "$INTERACTIVE_MODE" = "true" ]; then
       ISO_SSH_KEY_FILE=${NEW_ISO_SSH_KEY_FILE:-$ISO_SSH_KEY_FILE}
     fi
     # Get wether to install drivers 
-    read -r -p "Enter Swap Size [$ISO_INSTALL_DRIVERS]: " NEW_ISO_INSTALL_DRIVERS
-    ISO_INSTALL_DRIVERS=${NEW_ISO_INSTALL_DRIVERS:-$ISO_INSTALL_DRIVERS}
+    read -r -p "Install Drivers? [$DO_INSTALL_ISO_DRIVERS]: " NEW_INSTALL_ISO_DRIVERS
+    DO_INSTALL_ISO_DRIVERS=${NEW_INSTALL_ISO_DRIVERS:-$DO_INSTALL_ISO_DRIVERS}
+    # Get Serial Port 
+    read -r -p "Serial Port? [$ISO_SERIAL_PORT]: " NEW_ISO_SERIAL_PORT
+    ISO_SERIAL_PORT=${NEW_ISO_SERIAL_PORT:-$ISO_SERIAL_PORT}
+    # Get Serial Port Address
+    read -r -p "Serial Port Address? [$ISO_SERIAL_PORT_ADDRESS]: " NEW_ISO_SERIAL_PORT_ADDRESS
+    ISO_SERIAL_PORT_ADDRESS=${NEW_ISO_SERIAL_PORT_ADDRESS:-$ISO_SERIAL_PORT_ADDRESS}
+    # Get Serial Port Speed 
+    read -r -p "Serial Port Speed? [$ISO_SERIAL_PORT_SPEED]: " NEW_ISO_SERIAL_PORT_SPEED
+    ISO_SERIAL_PORT_SPEED=${NEW_ISO_SERIAL_PORT_SPEED:-$ISO_SERIAL_PORT_SPEED}
   fi
 fi
 
@@ -2829,7 +2883,7 @@ if [ "$DO_DOCKER" = "true" ] || [ "$DO_CHECK_DOCKER" = "true" ]; then
     fi
     handle_output "echo \"#!/bin/bash\" > $LOCAL_SCRIPT"
     handle_output "echo \"$DOCKER_WORK_DIR/files/$SCRIPT_BIN $SCRIPT_ARGS --workdir $DOCKER_WORK_DIR --oldworkdir $WORK_DIR\" >> $LOCAL_SCRIPT"
-    handle_output "docker run --privileged=true --cap-add=CAP_MKNOD --device-cgroup-rule=\"b 7:* rmw\" --platform \"linux/$ISO_ARCH\" --mount source=\"$SCRIPT_NAME-$ISO_ARCH,target=/root/ubuntu-iso\" --mount type=bind,source=\"$WORK_DIR/files,target=/root/ubuntu-iso/$NEW_DIR/files\"  \"$SCRIPT_NAME-$ISO_ARCH\" /bin/bash \"$DOCKER_SCRIPT\""
+    handle_output "docker run --privileged=true --cap-add=CAP_MKNOD --device-cgroup-rule=\"b 7:* rmw\" --platform \"linux/$ISO_ARCH\" --mount source=\"$SCRIPT_NAME-$ISO_ARCH,target=/root/$SCRIPT_NAME\" --mount type=bind,source=\"$WORK_DIR/files,target=/root/$SCRIPT_NAME/$NEW_DIR/files\"  \"$SCRIPT_NAME-$ISO_ARCH\" /bin/bash \"$DOCKER_SCRIPT\""
     if ! [ "$TEST_MODE" = "true" ]; then
       echo "#!/bin/bash" > "$LOCAL_SCRIPT"
       echo "$DOCKER_WORK_DIR/files/$SCRIPT_BIN $SCRIPT_ARGS --workdir $DOCKER_WORK_DIR --oldworkdir $WORK_DIR" >> "$LOCAL_SCRIPT"
@@ -2837,7 +2891,7 @@ if [ "$DO_DOCKER" = "true" ] || [ "$DO_CHECK_DOCKER" = "true" ]; then
         BASE_DOCKER_OUTPUT_FILE=$( basename "$OUTPUT_FILE" )
         echo "# Output file will be at \"$WORK_DIR/files/$BASE_DOCKER_OUTPUT_FILE\"" 
       fi
-      exec docker run --privileged=true --cap-add=CAP_MKNOD --device-cgroup-rule="b 7:* rmw" --platform "linux/$ISO_ARCH" --mount source="$SCRIPT_NAME-$ISO_ARCH,target=/root/ubuntu-iso" --mount type=bind,source="$WORK_DIR/files,target=/root/ubuntu-iso/$NEW_DIR/files"  "$SCRIPT_NAME-$ISO_ARCH" /bin/bash "$DOCKER_SCRIPT"
+      exec docker run --privileged=true --cap-add=CAP_MKNOD --device-cgroup-rule="b 7:* rmw" --platform "linux/$ISO_ARCH" --mount source="$SCRIPT_NAME-$ISO_ARCH,target=/root/$SCRIPT_NAME" --mount type=bind,source="$WORK_DIR/files,target=/root/$SCRIPT_NAME/$NEW_DIR/files"  "$SCRIPT_NAME-$ISO_ARCH" /bin/bash "$DOCKER_SCRIPT"
     fi
   fi
   DO_PRINT_HELP="false"

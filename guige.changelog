@@ -199,3 +199,9 @@
 # Added code to disable Ubuntu Pro messages on Ubuntu 22.04
 # 1.0.0: Mon 27 Feb 2023 17:49:17 AEDT
 # Bug fixes
+# 1.0.1: Wed  8 Mar 2023 09:09:14 AEDT
+# Bug fixes and code cleanup
+# 1.0.2: Wed  8 Mar 2023 09:31:20 AEDT
+# Added serial support to late-commands
+# 1.0.3: Wed  8 Mar 2023 10:24:50 AEDT
+# Bug fixes 
