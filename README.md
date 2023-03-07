@@ -44,6 +44,9 @@ Hints / Observations:
 - I've found Rufus the most reliable for creating bootable USB sticks
 - When using Rufus and using UEFI based installs, change the Target system to UEFI (non CSM)
 - To get the Ubuntu ISO to boot on ARM reliably it's best to go with the very latest release (e.g. use --build daily-live)
+- A lot of older/earlier BIOS/BMCs will still boot in legacy BIOS mode even when the system is configured to use UEFI
+  - iDRAC version 7 and earlier appear to do this
+  - Booting to a USB stick created with a GPT partition and UEFI (non CSM) with Rufus addresses this issue
 
 Introduction
 ------------
