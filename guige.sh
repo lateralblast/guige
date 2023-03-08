@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Name:         guige (Generic Ubuntu ISO Generation Engine)
-# Version:      1.0.3
+# Version:      1.0.4
 # Release:      1
 # License:      CC-BA (Creative Commons By Attribution)
 #               http://creativecommons.org/licenses/by/4.0/legalcode
@@ -38,7 +38,7 @@ DEFAULT_ISO_USERNAME="ubuntu"
 DEFAULT_ISO_TIMEZONE="Australia/Melbourne"
 DEFAULT_ISO_PASSWORD="ubuntu"
 DEFAULT_ISO_KERNEL="linux-generic"
-DEFAULT_ISO_KERNEL_ARGS="net.ifnames=0 biosdevname=0"
+DEFAULT_ISO_KERNEL_ARGS=""
 DEFAULT_ISO_NIC="eth0"
 DEFAULT_ISO_IP="192.168.1.2"
 DEFAULT_ISO_DNS="8.8.8.8"
@@ -57,6 +57,7 @@ DEFAULT_ISO_BOOT_TYPE="efi"
 DEFAULT_ISO_SERIAL_PORT="ttyS1"
 DEFAULT_ISO_SERIAL_PORT_ADDRESS="0x02f8"
 DEFAULT_ISO_SERIAL_PORT_SPEED="115200"
+DEFAULT_ISO_USE_BIOSDEVNAME="false"
 DEFAULT_ISO_PACKAGES="zfsutils-linux zfs-initramfs net-tools curl wget sudo file rsync dialog setserial"
 REQUIRED_PACKAGES="p7zip-full wget xorriso whois squashfs-tools sudo file rsync net-tools nfs-kernel-server ansible dialog"
 DEFAULT_DOCKER_ARCH="amd64 arm64"
@@ -216,6 +217,7 @@ print_help () {
     -0|--serialport         Serial Port (default: $DEFAULT_ISO_SERIAL_PORT)
     -1|--serialportaddress  Serial Port Address (default: $DEFAULT_ISO_SERIAL_PORT_ADDRESS)
     -2|--serialortspeed     Serial Port Speed (default: $DEFAULT_ISO_SERIAL_PORT_SPEED)
+    -3|--usebiosdevname     Use biosdevname kernel parameter (default: $DEFAULT_ISO_USE_BIOSDEVNAME)
     -8|--grubfile           GRUB file (default: $DEFAULT_ISO_GRUB_FILE_BASE)
     -9|--boottype           Boot type (default: $DEFAULT_ISO_BOOT_TYPE)
     -A|--codename           Linux release codename (default: $DEFAULT_ISO_CODENAME)
@@ -1719,10 +1721,9 @@ prepare_autoinstall_iso () {
           handle_output "echo \"    - \\\"sed -i \\\\\"s/ROOT_DEV/\$(lsblk -x TYPE|grep disk |sort |head -1 |awk '{print \$1}')/g\\\\\" /autoinstall.yaml\\\"\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
         fi
         handle_output "echo \"  late-commands:\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
-        handle_output "echo \"    - \\\"echo 'GRUB_CMDLINE_LINUX=\\\\\\\"$ISO_KERNEL_ARGS\\\\\\\"' >> $ISO_TARGET_MOUNT/etc/default/grub\\\"\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
         handle_output "echo \"    - \\\"echo 'GRUB_TERMINAL=\\\\\\\"serial console\\\\\\\"' >> $ISO_TARGET_MOUNT/etc/default/grub\\\"\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
         handle_output "echo \"    - \\\"echo 'GRUB_SERIAL_COMMAND=\\\\\\\"serial --speed=$ISO_SERIAL_PORT_SPEED --port=$ISO_SERIAL_PORT_ADDRESS\\\\\\\"' >> $ISO_TARGET_MOUNT/etc/default/grub\\\"\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
-        handle_output "echo \"    - \\\"echo 'GRUB_CMDLINE_LINUX=\\\\\\\"console=tty0 console=vt0 console=$ISO_SERIAL_PORT,$ISO_SERIAL_PORT_SPEED\\\\\\\"' >> $ISO_TARGET_MOUNT/etc/default/grub\\\"\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
+        handle_output "echo \"    - \\\"echo 'GRUB_CMDLINE_LINUX=\\\\\\\"console=tty0 console=$ISO_SERIAL_PORT,$ISO_SERIAL_PORT_SPEED $ISO_KERNEL_ARGS\\\\\\\"' >> $ISO_TARGET_MOUNT/etc/default/grub\\\"\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
         handle_output "echo \"    - \\\"echo 'GRUB_TIMEOUT=\\\\\\\"$ISO_GRUB_TIMEOUT\\\\\\\"' >> $ISO_TARGET_MOUNT/etc/default/grub\\\"\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
         handle_output "echo \"    - \\\"echo '$ISO_USERNAME ALL=(ALL) NOPASSWD: ALL' >> $ISO_TARGET_MOUNT/etc/sudoers.d/$ISO_USERNAME\\\"\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
         handle_output "echo \"    - \\\"curtin in-target --target=$ISO_TARGET_MOUNT -- systemctl enable serial-getty@ttyS0.service\\\"\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
@@ -1887,10 +1888,9 @@ prepare_autoinstall_iso () {
           fi
           echo "    - \"dpkg --auto-deconfigure --force-depends -i $ISO_INSTALL_MOUNT/$ISO_AUTOINSTALL_DIR/packages/*.deb\"" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
           echo "  late-commands:" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
-          echo "    - \"echo 'GRUB_CMDLINE_LINUX=\\\"$ISO_KERNEL_ARGS\\\"' >> $ISO_TARGET_MOUNT/etc/default/grub\"" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
           echo "    - \"echo 'GRUB_TERMINAL=\\\"serial console\\\"' >> $ISO_TARGET_MOUNT/etc/default/grub\"" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
           echo "    - \"echo 'GRUB_SERIAL_COMMAND=\\\"serial --speed=$ISO_SERIAL_PORT_SPEED --port=$ISO_SERIAL_PORT_ADDRESS\\\"' >> $ISO_TARGET_MOUNT/etc/default/grub\"" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
-          echo "    - \"echo 'GRUB_CMDLINE_LINUX=\\\"console=tty0 console=vt0 console=$ISO_SERIAL_PORT,$ISO_SERIAL_PORT_SPEED\\\"' >> $ISO_TARGET_MOUNT/etc/default/grub\"" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
+          echo "    - \"echo 'GRUB_CMDLINE_LINUX=\\\"$ISO_KERNEL_ARGS console=tty0 console=$ISO_SERIAL_PORT,$ISO_SERIAL_PORT_SPEED\\\"' >> $ISO_TARGET_MOUNT/etc/default/grub\"" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
           echo "    - \"echo 'GRUB_TIMEOUT=\\\"$ISO_GRUB_TIMEOUT\\\"' >> $ISO_TARGET_MOUNT/etc/default/grub\"" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
           echo "    - \"echo '$ISO_USERNAME ALL=(ALL) NOPASSWD: ALL' >> $ISO_TARGET_MOUNT/etc/sudoers.d/$ISO_USERNAME\"" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
           echo "    - \"curtin in-target --target=$ISO_TARGET_MOUNT -- systemctl enable serial-getty@ttyS0.service\"" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
@@ -1941,6 +1941,10 @@ do
     -2|--serialportspeed)
       ISO_SERIAL_PORT_SPEED="$2"
       shift 2
+      ;;
+    -2|--usebiosdevname)
+      ISO_USE_BIOSDEVNAME="true"
+      shift
       ;;
     -8|--grubfile)
       ISO_GRUB_FILE="$2"
@@ -2535,6 +2539,12 @@ fi
 if [ "$ISO_GRUB_FILE" = "" ]; then
   ISO_GRUB_FILE="$DEFAULT_ISO_GRUB_FILE"
 fi
+if [ "$ISO_USE_BIOSDEVNAME" = "" ]; then
+  ISO_USE_BIOSDEVNAME="$DEFAULT_ISO_USE_BIOSDEVNAME"
+fi
+if [ "$ISO_USE_BIOSDEVNAME" = "true" ]; then
+  ISO_KERNEL_ARGS="$ISO_KERNEL_ARGS net.ifnames=0 biosdevname=0"
+fi
 
 # Update output file
 
@@ -2617,62 +2627,63 @@ if [ "$DO_PRINT_ENV" ] || [ "$INTERACTIVE_MODE" = "true" ]; then
 fi
 
 handle_output "# Setting Variables" TEXT
-handle_output "# Release:                 $ISO_RELEASE" TEXT
-handle_output "# Codename:                $ISO_CODENAME" TEXT
-handle_output "# Architecture:            $ISO_ARCH" TEXT
-handle_output "# Work directory:          $WORK_DIR" TEXT
-handle_output "# Required packages:       $REQUIRED_PACKAGES" TEXT
-handle_output "# ISO input file:          $INPUT_FILE" TEXT
-handle_output "# ISO output file:         $OUTPUT_FILE" TEXT
-handle_output "# ISO URL:                 $ISO_URL" TEXT
-handle_output "# ISO Volume ID:           $ISO_VOLID" TEXT
-handle_output "# Hostname:                $ISO_HOSTNAME" TEXT
-handle_output "# Username:                $ISO_USERNAME" TEXT
-handle_output "# Realname:                $ISO_REALNAME" TEXT
-handle_output "# Timezone:                $ISO_TIMEZONE" TEXT
+handle_output "# Release:                     $ISO_RELEASE" TEXT
+handle_output "# Codename:                    $ISO_CODENAME" TEXT
+handle_output "# Architecture:                $ISO_ARCH" TEXT
+handle_output "# Work directory:              $WORK_DIR" TEXT
+handle_output "# Required packages:           $REQUIRED_PACKAGES" TEXT
+handle_output "# ISO input file:              $INPUT_FILE" TEXT
+handle_output "# ISO output file:             $OUTPUT_FILE" TEXT
+handle_output "# ISO URL:                     $ISO_URL" TEXT
+handle_output "# ISO Volume ID:               $ISO_VOLID" TEXT
+handle_output "# Hostname:                    $ISO_HOSTNAME" TEXT
+handle_output "# Username:                    $ISO_USERNAME" TEXT
+handle_output "# Realname:                    $ISO_REALNAME" TEXT
+handle_output "# Timezone:                    $ISO_TIMEZONE" TEXT
 if [ -n "$ISO_SSH_KEY_FILE" ]; then
-  handle_output "# SSH Key file:            $ISO_SSH_KEY_FILE" TEXT
+  handle_output "# SSH Key file:                $ISO_SSH_KEY_FILE" TEXT
 fi
-handle_output "# NIC:                     $ISO_NIC" TEXT
-handle_output "# DHCP:                    $ISO_DHCP" TEXT
+handle_output "# NIC:                         $ISO_NIC" TEXT
+handle_output "# DHCP:                        $ISO_DHCP" TEXT
 if [ "$ISO_DHCP" = "false" ]; then
-  handle_output "# IP:                      $ISO_IP/$ISO_CIDR" TEXT
-  handle_output "# Gateway:                 $ISO_GATEWAY" TEXT
-  handle_output "# Nameservers:             $ISO_DNS" TEXT
+  handle_output "# IP:                          $ISO_IP/$ISO_CIDR" TEXT
+  handle_output "# Gateway:                     $ISO_GATEWAY" TEXT
+  handle_output "# Nameservers:                 $ISO_DNS" TEXT
 fi
-handle_output "# Kernel:                  $ISO_KERNEL" TEXT
-handle_output "# Kernel arguments:        $ISO_KERNEL_ARGS" TEXT
-handle_output "# Keyboard Layout:         $ISO_LAYOUT" TEXT
-handle_output "# Locale:                  $ISO_LOCALE" TEXT
-handle_output "# LC_ALL:                  $ISO_LC_ALL" TEXT
-handle_output "# Root disk(s):            $ISO_DEVICES" TEXT
-handle_output "# Volme Manager(s):        $ISO_VOLMGRS" TEXT
-handle_output "# GRUB Menu:               $ISO_GRUB_MENU" TEXT
-handle_output "# GRUB Timeout:            $ISO_GRUB_TIMEOUT" TEXT
-handle_output "# AI Directory:            $ISO_AUTOINSTALL_DIR" TEXT
-handle_output "# Install mount:           $ISO_INSTALL_MOUNT" TEXT
-handle_output "# Install target:          $ISO_TARGET_MOUNT" TEXT
-handle_output "# Recreate squashfs:       $DO_ISO_SQUASHFS_UPDATE" TEXT
-handle_output "# Squashfs packages:       $ISO_CHROOT_PACKAGES" TEXT
-handle_output "# Additional packages:     $ISO_INSTALL_PACKAGES" TEXT
-handle_output "# Install network updates: $DO_INSTALL_ISO_NETWORK_UPDATES" TEXT
-handle_output "# Install packages:        $DO_INSTALL_ISO_PACKAGES" TEXT
-handle_output "# Install updates:         $DO_INSTALL_ISO_UPDATE" TEXT
-handle_output "# Install upgrades:        $DO_INSTALL_ISO_UPGRADE" TEXT
-handle_output "# Dist upgrades:           $DO_INSTALL_ISO_DIST_UPGRADE" TEXT
-handle_output "# Swap size:               $ISO_SWAPSIZE" TEXT
+handle_output "# Kernel:                      $ISO_KERNEL" TEXT
+handle_output "# Kernel arguments:            $ISO_KERNEL_ARGS" TEXT
+handle_output "# Keyboard Layout:             $ISO_LAYOUT" TEXT
+handle_output "# Locale:                      $ISO_LOCALE" TEXT
+handle_output "# LC_ALL:                      $ISO_LC_ALL" TEXT
+handle_output "# Root disk(s):                $ISO_DEVICES" TEXT
+handle_output "# Volme Manager(s):            $ISO_VOLMGRS" TEXT
+handle_output "# GRUB Menu:                   $ISO_GRUB_MENU" TEXT
+handle_output "# GRUB Timeout:                $ISO_GRUB_TIMEOUT" TEXT
+handle_output "# AI Directory:                $ISO_AUTOINSTALL_DIR" TEXT
+handle_output "# Install mount:               $ISO_INSTALL_MOUNT" TEXT
+handle_output "# Install target:              $ISO_TARGET_MOUNT" TEXT
+handle_output "# Recreate squashfs:           $DO_ISO_SQUASHFS_UPDATE" TEXT
+handle_output "# Squashfs packages:           $ISO_CHROOT_PACKAGES" TEXT
+handle_output "# Additional packages:         $ISO_INSTALL_PACKAGES" TEXT
+handle_output "# Install network updates:     $DO_INSTALL_ISO_NETWORK_UPDATES" TEXT
+handle_output "# Install packages:            $DO_INSTALL_ISO_PACKAGES" TEXT
+handle_output "# Install updates:             $DO_INSTALL_ISO_UPDATE" TEXT
+handle_output "# Install upgrades:            $DO_INSTALL_ISO_UPGRADE" TEXT
+handle_output "# Dist upgrades:               $DO_INSTALL_ISO_DIST_UPGRADE" TEXT
+handle_output "# Swap size:                   $ISO_SWAPSIZE" TEXT
 if [ "$DO_CREATE_EXPORT" = "true" ] || [ "$DO_CREATE_ANSIBLE" = "true" ]; then
-  handle_output "# Bootserver IP:           $BOOT_SERVER_IP" TEXT
-  handle_output "# Bootserver file:         $BOOT_SERVER_FILE" TEXT
+  handle_output "# Bootserver IP:               $BOOT_SERVER_IP" TEXT
+  handle_output "# Bootserver file:             $BOOT_SERVER_FILE" TEXT
 fi
 if [ "$DO_CREATE_ANSIBLE" = "true" ] ; then
-  handle_output "# BMC IP:                  $BMC_IP" TEXT
-  handle_output "# BMC Username:            $BMC_USERNAME" TEXT
-  handle_output "# BMC Password:            $BMC_PASSWORD" TEXT
+  handle_output "# BMC IP:                      $BMC_IP" TEXT
+  handle_output "# BMC Username:                $BMC_USERNAME" TEXT
+  handle_output "# BMC Password:                $BMC_PASSWORD" TEXT
 fi
-handle_output "# Serial Port:             $ISO_SERIAL_PORT" TEXT
-handle_output "# Serial Port Address:     $ISO_SERIAL_PORT_ADDRESS" TEXT
-handle_output "# Serial Port Speed:       $ISO_SERIAL_PORT_SPEED" TEXT
+handle_output "# Serial Port:                 $ISO_SERIAL_PORT" TEXT
+handle_output "# Serial Port Address:         $ISO_SERIAL_PORT_ADDRESS" TEXT
+handle_output "# Serial Port Speed:           $ISO_SERIAL_PORT_SPEED" TEXT
+handle_output "# Use biosdevnames parameter:  $ISO_USE_BIOSDEVNAME"
 
 if [ "$DO_PRINT_ENV" = "true" ] || [ "$INTERACTIVE_MODE" = "true" ]; then
   TEMP_VERBOSE_MODE="false"

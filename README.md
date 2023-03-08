@@ -11,7 +11,7 @@ used to hang a shield on the shoulder or neck when not in use.
 Version
 -------
 
-Current version: 1.0.3
+Current version: 1.0.4
 
 Prerequisites
 -------------
@@ -103,6 +103,7 @@ You can get help using the -h or --help switch:
     -0|--serialport         Serial Port (default: ttyS1)
     -1|--serialportaddress  Serial Port Address (default: 0x02f8)
     -2|--serialortspeed     Serial Port Speed (default: 115200)
+    -3|--usebiosdevname     Use biosdevname kernel parameter (default: false)
     -8|--grubfile           GRUB file (default: grub.cfg)
     -9|--boottype           Boot type (default: efi)
     -A|--codename           Linux release codename (default: jammy)
@@ -126,7 +127,7 @@ You can get help using the -h or --help switch:
     -J|--hwe                Use HWE kernel (defaults: false)
     -j|--autoinstalldir     Directory where autoinstall config files are stored on ISO (default: autoinstall)
     -K|--kernel:            Kernel package (default: linux-generic)
-    -k|--kernelargs:        Kernel arguments (default: net.ifnames=0 biosdevname=0)
+    -k|--kernelargs:        Kernel arguments (default: )
     -L|--release:           LSB release (default: 22.04.2)
     -l|--bmcip:             BMC/iDRAC IP (default: 192.168.1.3)
     -M|--installtarget:     Where the install mounts the target filesystem (default: /target)

@@ -205,3 +205,5 @@
 # Added serial support to late-commands
 # 1.0.3: Wed  8 Mar 2023 10:24:50 AEDT
 # Bug fixes 
+# 1.0.4: Wed  8 Mar 2023 18:32:04 AEDT
+# Added code to enable biosdevnames
