@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Name:         guige (Generic Ubuntu ISO Generation Engine)
-# Version:      1.0.4
+# Version:      1.0.5
 # Release:      1
 # License:      CC-BA (Creative Commons By Attribution)
 #               http://creativecommons.org/licenses/by/4.0/legalcode
@@ -19,7 +19,7 @@ START_PATH=$( pwd )
 SCRIPT_BIN=$( basename "$0" |sed "s/^\.\///g")
 SCRIPT_FILE="$START_PATH/$SCRIPT_BIN"
 OS_NAME=$( uname )
-OS_ARCH=$( uname -m | sed "s/aarch64/arm64/g" |sed "s/x86_64/amd64/g")
+OS_ARCH=$( uname -m |sed "s/aarch64/arm64/g" |sed "s/x86_64/amd64/g")
 OS_USER="$USER"
 BMC_PORT="443"
 BMC_EXPOSE_DURATION="180"
@@ -178,9 +178,9 @@ fi
 
 # Default work directories
 
-DEFAULT_WORK_DIR=$HOME/$SCRIPT_NAME/$DEFAULT_ISO_RELEASE
-MASKED_DEFAULT_WORK_DIR="~/$SCRIPT_NAME/$DEFAULT_ISO_RELEASE"
-DEFAULT_DOCKER_WORK_DIR=/root/$SCRIPT_NAME/$DEFAULT_ISO_RELEASE
+DEFAULT_WORK_DIR=$HOME/$SCRIPT_NAME/$DEFAULT_ISO_OS_NAME/$DEFAULT_ISO_RELEASE
+MASKED_DEFAULT_WORK_DIR="~/$SCRIPT_NAME/$DEFAULT_ISO_OS_NAME/$DEFAULT_ISO_RELEASE"
+DEFAULT_DOCKER_WORK_DIR=/root/$SCRIPT_NAME/$DEFAULT_ISO_OS_NAME/$DEFAULT_ISO_RELEASE
 DEFAULT_ISO_MOUNT_DIR="$DEFAULT_WORK_DIR/isomount"
 
 DEFAULT_ISO_AUTOINSTALL_DIR="autoinstall"
@@ -214,64 +214,58 @@ DEFAULT_ISO_GRUB_FILE_BASE=$( basename "$DEFAULT_ISO_GRUB_FILE" )
 print_help () {
   cat <<-HELP
   Usage: ${0##*/} [OPTIONS...]
-    -0|--serialport         Serial Port (default: $DEFAULT_ISO_SERIAL_PORT)
-    -1|--serialportaddress  Serial Port Address (default: $DEFAULT_ISO_SERIAL_PORT_ADDRESS)
-    -2|--serialortspeed     Serial Port Speed (default: $DEFAULT_ISO_SERIAL_PORT_SPEED)
-    -3|--usebiosdevname     Use biosdevname kernel parameter (default: $DEFAULT_ISO_USE_BIOSDEVNAME)
-    -8|--grubfile           GRUB file (default: $DEFAULT_ISO_GRUB_FILE_BASE)
-    -9|--boottype           Boot type (default: $DEFAULT_ISO_BOOT_TYPE)
-    -A|--codename           Linux release codename (default: $DEFAULT_ISO_CODENAME)
-    -a|--action:            Action to perform (e.g. createiso, justiso, runchrootscript, checkdocker, installrequired)
-    -B|--layout             Layout (default: $DEFAULT_ISO_LAYOUT)
-    -b|--bootserverip:      NFS/Bootserver IP (default: $DEFAULT_BOOT_SERVER_IP)
-    -C|--cidr:              CIDR (default: $DEFAULT_ISO_CIDR)
-    -c|--sshkeyfile:        SSH key file to use as SSH key (default: $MASKED_DEFAULT_ISO_SSH_KEY_FILE)
-    -D|--dns:               DNS Server (ddefault: $DEFAULT_ISO_DNS)
-    -d|--bootdisk:          Boot Disk devices (default: $DEFAULT_ISO_DEVICES)
-    -E|--locale:            LANGUAGE (default: $DEFAULT_ISO_LOCALE)
-    -e|--lcall:             LC_ALL (default: $DEFAULT_ISO_LC_ALL)
-    -F|--bmcusername:       BMC/iDRAC User (default: $DEFAULT_BMC_USERNAME)
-    -f|--delete:            Remove previously created files (default: $FORCE_MODE)
-    -G|--gateway:           Gateway (default $DEFAULT_ISO_GATEWAY)
-    -g|--grubmenu:          Set default grub menu (default: $DEFAULT_ISO_GRUB_MENU)
-    -H|--hostname:          Hostname (default: $DEFAULT_ISO_HOSTNAME)
-    -h|--help               Help/Usage Information
-    -I|--ip:                IP Address (default: $DEFAULT_ISO_IP)
-    -i|--inputiso:          Input/base ISO file (default: $DEFAULT_INPUT_FILE_BASE)
-    -J|--hwe                Use HWE kernel (defaults: $ISO_HWE_KERNEL)
-    -j|--autoinstalldir     Directory where autoinstall config files are stored on ISO (default: $DEFAULT_ISO_AUTOINSTALL_DIR)
-    -K|--kernel:            Kernel package (default: $DEFAULT_ISO_KERNEL)
-    -k|--kernelargs:        Kernel arguments (default: $DEFAULT_ISO_KERNEL_ARGS)
-    -L|--release:           LSB release (default: $DEFAULT_ISO_RELEASE)
-    -l|--bmcip:             BMC/iDRAC IP (default: $DEFAULT_BMC_IP)
-    -M|--installtarget:     Where the install mounts the target filesystem (default: $DEFAULT_ISO_TARGET_MOUNT)
-    -m|--installmount:      Where the install mounts the CD during install (default: $DEFAULT_ISO_INSTALL_MOUNT)
-    -N|--bootserverfile     Boot sever file (default: $DEFAULT_BOOT_SERVER_FILE_BASE)
-    -n|--nic:               Network device (default: $DEFAULT_ISO_NIC)
-    -O|--isopackages:       List of packages to install (default: $DEFAULT_ISO_PACKAGES)
-    -o|--outputiso:         Output ISO file (default: $DEFAULT_OUTPUT_FILE_BASE)
-    -P|--password:          Password (default: $DEFAULT_ISO_USERNAME)
-    -p|--chrootpackages:    List of packages to add to ISO (default: $DEFAULT_PACKAGES)
-    -Q|--build:             Type of ISO to build (default: $DEFAULT_ISO_BUILD_TYPE)
-    -q|--arch:              Architecture (default: $DEFAULT_ISO_ARCH)
-    -R|--realname:          Realname (default $DEFAULT_ISO_REALNAME)
-    -r|--mode:              Mode (default: $DEFAULT_MODE)
-    -S|--swapsize:          Swap size (default $DEFAULT_ISO_SWAPSIZE)
-    -s|--squashfsfile       Squashfs file (default: $DEFAULT_ISO_SQUASHFS_FILE_BASE)
-    -T|--timezone:          Timezone (default: $DEFAULT_ISO_TIMEZONE)
-    -t|--testmode           Test mode (display commands but don't run them)
-    -U|--username:          Username (default: $DEFAULT_ISO_USERNAME)
-    -u|--postinstall:       Postinstall action (e.g. installpackages, upgrade, distupgrade, installdrivers, all)
-    -V|--version            Display Script Version
-    -v|--verbose            Verbose output (default: $VERBOSE_MODE)
-    -W|--workdir:           Work directory (default: $MASKED_DEFAULT_WORK_DIR)
-    -w|--checkdirs          Check work directories exist
-    -X|--isovolid:          ISO Volume ID (default: $DEFAULT_ISO_VOLID)
-    -x|--grubtimeout:       Grub timeout (default: $DEFAULT_ISO_GRUB_TIMEOUT)
-    -Y|--allowpassword      Allow password access via SSH (default: $DEFAULT_ISO_ALLOW_PASSWORD)
-    -y|--bmcpassword:       BMC/iDRAC password (default: $DEFAULT_BMC_PASSWORD)
-    -Z|--nounmount          Do not unmount loopback filesystems (useful for troubleshooting)
-    -z|--volumemanager:     Volume Managers (defauls: $DEFAULT_ISO_VOLMGRS)
+    -A|--codename            Linux release codename (default: $DEFAULT_ISO_CODENAME)
+    -a|--action:             Action to perform (e.g. createiso, justiso, runchrootscript, checkdocker, installrequired)
+    -B|--layout              Layout (default: $DEFAULT_ISO_LAYOUT)
+    -b|--bootserverip:       NFS/Bootserver IP (default: $DEFAULT_BOOT_SERVER_IP)
+    -C|--cidr:               CIDR (default: $DEFAULT_ISO_CIDR)
+    -c|--sshkeyfile:         SSH key file to use as SSH key (default: $MASKED_DEFAULT_ISO_SSH_KEY_FILE)
+    -D|--dns:                DNS Server (ddefault: $DEFAULT_ISO_DNS)
+    -d|--bootdisk:           Boot Disk devices (default: $DEFAULT_ISO_DEVICES)
+    -E|--locale:             LANGUAGE (default: $DEFAULT_ISO_LOCALE)
+    -e|--lcall:              LC_ALL (default: $DEFAULT_ISO_LC_ALL)
+    -F|--bmcusername:        BMC/iDRAC User (default: $DEFAULT_BMC_USERNAME)
+    -f|--delete:             Remove previously created files (default: $FORCE_MODE)
+    -G|--gateway:            Gateway (default $DEFAULT_ISO_GATEWAY)
+    -g|--grubmenu:           Set default grub menu (default: $DEFAULT_ISO_GRUB_MENU)
+    -H|--hostname:           Hostname (default: $DEFAULT_ISO_HOSTNAME)
+    -h|--help                Help/Usage Information
+    -I|--ip:                 IP Address (default: $DEFAULT_ISO_IP)
+    -i|--inputiso:           Input/base ISO file (default: $DEFAULT_INPUT_FILE_BASE)
+    -J|--grubfile            GRUB file (default: $DEFAULT_ISO_GRUB_FILE_BASE)
+    -j|--autoinstalldir      Directory where autoinstall config files are stored on ISO (default: $DEFAULT_ISO_AUTOINSTALL_DIR)
+    -K|--kernel:             Kernel package (default: $DEFAULT_ISO_KERNEL)
+    -k|--kernelargs:         Kernel arguments (default: $DEFAULT_ISO_KERNEL_ARGS)
+    -L|--release:            LSB release (default: $DEFAULT_ISO_RELEASE)
+    -l|--bmcip:              BMC/iDRAC IP (default: $DEFAULT_BMC_IP)
+    -M|--installtarget:      Where the install mounts the target filesystem (default: $DEFAULT_ISO_TARGET_MOUNT)
+    -m|--installmount:       Where the install mounts the CD during install (default: $DEFAULT_ISO_INSTALL_MOUNT)
+    -N|--bootserverfile      Boot sever file (default: $DEFAULT_BOOT_SERVER_FILE_BASE)
+    -n|--nic:                Network device (default: $DEFAULT_ISO_NIC)
+    -O|--isopackages:        List of packages to install (default: $DEFAULT_ISO_PACKAGES)
+    -o|--outputiso:          Output ISO file (default: $DEFAULT_OUTPUT_FILE_BASE)
+    -P|--password:           Password (default: $DEFAULT_ISO_USERNAME)
+    -p|--chrootpackages:     List of packages to add to ISO (default: $DEFAULT_PACKAGES)
+    -Q|--build:              Type of ISO to build (default: $DEFAULT_ISO_BUILD_TYPE)
+    -q|--arch:               Architecture (default: $DEFAULT_ISO_ARCH)
+    -R|--realname:           Realname (default $DEFAULT_ISO_REALNAME)
+    -r|--serialportspeed:    Serial Port Speed (default: $DEFAULT_ISO_SERIAL_PORT_SPEED)
+    -S|--swapsize:           Swap size (default $DEFAULT_ISO_SWAPSIZE)
+    -s|--squashfsfile:       Squashfs file (default: $DEFAULT_ISO_SQUASHFS_FILE_BASE)
+    -T|--timezone:           Timezone (default: $DEFAULT_ISO_TIMEZONE)
+    -t|--serialportaddress:  Serial Port Address (default: $DEFAULT_ISO_SERIAL_PORT_ADDRESS)
+    -U|--username:           Username (default: $DEFAULT_ISO_USERNAME)
+    -u|--postinstall:        Postinstall action (e.g. installpackages, upgrade, distupgrade, installdrivers, all)
+    -V|--version             Display Script Version
+    -v|--serialport          Serial Port (default: $DEFAULT_ISO_SERIAL_PORT)
+    -W|--workdir:            Work directory (default: $MASKED_DEFAULT_WORK_DIR)
+    -w|--oldworkdir:         Docker work directory (used internally)
+    -X|--isovolid:           ISO Volume ID (default: $DEFAULT_ISO_VOLID)
+    -x|--grubtimeout:        Grub timeout (default: $DEFAULT_ISO_GRUB_TIMEOUT)
+    -Y|--allowpassword       Allow password access via SSH (default: $DEFAULT_ISO_ALLOW_PASSWORD)
+    -y|--bmcpassword:        BMC/iDRAC password (default: $DEFAULT_BMC_PASSWORD)
+    -Z|--options:            Options (e.g. hwe, nounmount, testmode, bios, efi, verbose, interactive)
+    -z|--volumemanager:      Volume Managers (defauls: $DEFAULT_ISO_VOLMGRS)
 HELP
   exit
 }
@@ -1930,30 +1924,6 @@ fi
 while test $# -gt 0
 do
   case $1 in
-    -0|--serialport)
-      ISO_SERIAL_PORT="$2"
-      shift 2
-      ;;
-    -1|--serialportaddress)
-      ISO_SERIAL_PORT_ADDRESS="$2"
-      shift 2
-      ;;
-    -2|--serialportspeed)
-      ISO_SERIAL_PORT_SPEED="$2"
-      shift 2
-      ;;
-    -2|--usebiosdevname)
-      ISO_USE_BIOSDEVNAME="true"
-      shift
-      ;;
-    -8|--grubfile)
-      ISO_GRUB_FILE="$2"
-      shift 2
-      ;;
-    -9|--boottype)
-      ISO_BOOT_TYPE="$2"
-      shift 2
-      ;;
     -A|--codename)
       ISO_CODENAME="$2"
       shift 2
@@ -2026,10 +1996,13 @@ do
       INPUT_FILE="$2"
       shift 2
       ;;
-    -J|--hwe)
-      ISO_HWE_KERNEL="true"
-      ISO_KERNEL="linux-generic-hwe"
-      shift
+    -J|--grubfile)
+      ISO_GRUB_FILE="$2"
+      shift 2
+      ;;
+    -j|--autoinstalldir)
+      ISO_AUTOINSTALL_DIR="$2"
+      shift 2
       ;;
     -K|--kernel)
       ISO_KERNEL="$2"
@@ -2094,8 +2067,8 @@ do
       ISO_REALNAME="$2"
       shift 2
       ;;
-    -r|--mode)
-      MODE="$2"
+    -r|--serialportspeed)
+      ISO_SERIAL_PORT_SPEED="$2"
       shift 2
       ;;
     -S|--swapsize)
@@ -2110,9 +2083,9 @@ do
       ISO_TIMEZONE="$2"
       shift 2
       ;;
-    -t|--testmode)
-      TEST_MODE="true"
-      shift
+    -t|--serialportaddress)
+      ISO_SERIAL_PORT_ADDRESS="$2"
+      shift 2
       ;;
     -U|--username)
       ISO_USERNAME="$2"
@@ -2127,9 +2100,9 @@ do
       shift
       exit
       ;;
-    -v|--verbose)
-      VERBOSE_MODE="true"
-      shift
+    -v|--serialport)
+      ISO_SERIAL_PORT="$2"
+      shift 2
       ;;
     -W|--workdir)
       WORK_DIR="$2"
@@ -2155,9 +2128,9 @@ do
       BMC_PASSWORD="$2"
       shift 2
       ;;
-    -Z|--nounmount)
-      DO_NO_UNMOUNT_ISO="true";
-      shift
+    -Z|--options)
+      OPTIONS="$2";
+      shift 2
       ;;
     -z|--volumemanager)
       ISO_VOLMGR="$2"
@@ -2172,6 +2145,46 @@ do
       ;;
   esac
 done
+
+# Process option switch
+
+if [[ "$OPTIONS" =~ "hwe" ]]; then
+  ISO_HWE_KERNEL="true"
+  ISO_KERNEL="linux-generic-hwe"
+else
+  ISO_HWE_KERNEL="false"
+fi
+if [[ "$OPTIONS" =~ "biosdevname" ]]; then
+  ISO_USE_BIOSDEVNAME="true"
+else
+  ISO_USE_BIOSDEVNAME="false"
+fi
+if [[ "$OPTIONS" =~ "nounmount" ]]; then
+  DO_NO_UNMOUNT_ISO="true";
+else
+  DO_NO_UNMOUNT_ISO="false";
+fi
+if [[ "$OPTIONS" =~ "testmode" ]]; then
+  TEST_MODE="true";
+else
+  TEST_MODE="false";
+fi
+if [[ "$OPTIONS" =~ "efi" ]]; then
+  ISO_BOOT_TYPE="efi";
+fi
+if [[ "$OPTIONS" =~ "bios" ]]; then
+  ISO_BOOT_TYPE="bios";
+fi
+if [[ "$OPTIONS" =~ "verbose" ]]; then
+  VERBOSE_MODE="true";
+else
+  VERBOSE_MODE="false";
+fi
+if [[ "$OPTIONS" =~ "interactive" ]]; then
+  INTERACTIVE_MODE="true";
+else
+  INTERACTIVE_MODE="false";
+fi
 
 # Process action switch
 
@@ -2302,17 +2315,6 @@ case $ISO_POSTINSTALL in
     ;;
   *)
     DO_INSTALL_ISO_NETWORK_UPDATES="false"
-    ;;
-esac
-
-# Mode: interactive or defaults
-
-case $MODE in 
-  "interactive")
-    INTERACTIVE_MODE="true"
-    ;;
-  *)
-    INTERACTIVE_MODE="false"
     ;;
 esac
 
@@ -2474,16 +2476,16 @@ if [ "$ISO_AUTOINSTALL_DIR" = "" ]; then
 fi
 if [ "$WORK_DIR" = "" ]; then 
   if [ "$DO_DAILY_ISO" = "true" ]; then
-    WORK_DIR="$HOME/$SCRIPT_NAME/$ISO_CODENAME"
-    DOCKER_WORK_DIR="/root/$SCRIPT_NAME/$ISO_CODENAME"
+    WORK_DIR="$HOME/$SCRIPT_NAME/$ISO_OS_NAME/$ISO_CODENAME"
+    DOCKER_WORK_DIR="/root/$SCRIPT_NAME/$ISO_OS_NAME/$ISO_CODENAME"
   else
-    WORK_DIR="$HOME/$SCRIPT_NAME/$ISO_RELEASE"
-    DOCKER_WORK_DIR="/root/$SCRIPT_NAME/$ISO_RELEASE"
+    WORK_DIR="$HOME/$SCRIPT_NAME/$ISO_OS_NAME/$ISO_RELEASE"
+    DOCKER_WORK_DIR="/root/$SCRIPT_NAME/$ISO_OS_NAME/$ISO_RELEASE"
   fi
 else
   if [ "$DO_DAILY_ISO" = "true" ]; then
-    WORK_DIR="$HOME/$SCRIPT_NAME/$ISO_CODENAME"
-    DOCKER_WORK_DIR="/root/$SCRIPT_NAME/$ISO_CODENAME"
+    WORK_DIR="$HOME/$SCRIPT_NAME/$ISO_OS_NAME/$ISO_CODENAME"
+    DOCKER_WORK_DIR="/root/$SCRIPT_NAME/$ISO_OS_NAME/$ISO_CODENAME"
   fi
 fi
 if [ "$ISO_BUILD_TYPE" = "" ]; then
@@ -2538,9 +2540,6 @@ if [ "$ISO_SQUASHFS_FILE" = "" ]; then
 fi
 if [ "$ISO_GRUB_FILE" = "" ]; then
   ISO_GRUB_FILE="$DEFAULT_ISO_GRUB_FILE"
-fi
-if [ "$ISO_USE_BIOSDEVNAME" = "" ]; then
-  ISO_USE_BIOSDEVNAME="$DEFAULT_ISO_USE_BIOSDEVNAME"
 fi
 if [ "$ISO_USE_BIOSDEVNAME" = "true" ]; then
   ISO_KERNEL_ARGS="$ISO_KERNEL_ARGS net.ifnames=0 biosdevname=0"
