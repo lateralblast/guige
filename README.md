@@ -209,7 +209,7 @@ Use docker to create amd64 ISOs on Apple Silicon:
 Just do autoinstall config and create ISO (assumes an ISO has been previously create and we are just updating the autoinstall config), enabling updates and installing additional packages (requires networkduring OS install)
 
 ```
-./guige.sh --action justiso --verbose --postinstall distupgrade
+./guige.sh --action justiso --options verbose --postinstall distupgrade
 ```
 
 Build ISO using daily build (this is useful for ARM where daily builds tend to have more hardware support, e.g. being virtualised on Apple Silicon)
@@ -221,7 +221,7 @@ Build ISO using daily build (this is useful for ARM where daily builds tend to h
 Create an ISO with a static IP configuration:
 
 ```
-./guige.sh --action createiso --verbose --staticip --ip 192.168.1.211 --cidr 24 --dns 8.8.8.8 --gateway 192.168.1.254
+./guige.sh --action createiso --options verbose --staticip --ip 192.168.1.211 --cidr 24 --dns 8.8.8.8 --gateway 192.168.1.254
 ```
 
 Create NFS export for ISO for server install via iDRAC:
