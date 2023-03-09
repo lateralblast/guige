@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Name:         guige (Generic Ubuntu ISO Generation Engine)
-# Version:      1.0.9
+# Version:      1.1.1
 # Release:      1
 # License:      CC-BA (Creative Commons By Attribution)
 #               http://creativecommons.org/licenses/by/4.0/legalcode
@@ -58,7 +58,7 @@ DEFAULT_ISO_SERIAL_PORT="ttyS1"
 DEFAULT_ISO_SERIAL_PORT_ADDRESS="0x02f8"
 DEFAULT_ISO_SERIAL_PORT_SPEED="115200"
 DEFAULT_ISO_USE_BIOSDEVNAME="false"
-DEFAULT_ISO_PACKAGES="zfsutils-linux zfs-initramfs net-tools curl wget sudo file rsync dialog setserial"
+DEFAULT_ISO_INSTALL_PACKAGES="zfsutils-linux zfs-initramfs net-tools curl wget sudo file rsync dialog setserial"
 REQUIRED_PACKAGES="p7zip-full wget xorriso whois squashfs-tools sudo file rsync net-tools nfs-kernel-server ansible dialog"
 DEFAULT_DOCKER_ARCH="amd64 arm64"
 DEFAULT_ISO_SSH_KEY_FILE="$HOME/.ssh/id_rsa.pub"
@@ -304,7 +304,7 @@ print_help () {
     -m|--installmount:       Where the install mounts the CD during install (default: $DEFAULT_ISO_INSTALL_MOUNT)
     -N|--bootserverfile      Boot sever file (default: $DEFAULT_BOOT_SERVER_FILE_BASE)
     -n|--nic:                Network device (default: $DEFAULT_ISO_NIC)
-    -O|--isopackages:        List of packages to install (default: $DEFAULT_ISO_PACKAGES)
+    -O|--isopackages:        List of packages to install (default: $DEFAULT_ISO_INSTALL_PACKAGES)
     -o|--outputiso:          Output ISO file (default: $DEFAULT_OUTPUT_FILE_BASE)
     -P|--password:           Password (default: $DEFAULT_ISO_USERNAME)
     -p|--chrootpackages:     List of packages to add to ISO (default: $DEFAULT_PACKAGES)
@@ -1950,7 +1950,10 @@ prepare_autoinstall_iso () {
             echo "    - \"sed -i \\\"s/ROOT_DEV/\$(lsblk -x TYPE|grep disk |sort |head -1 |awk '{print \$1}')/g\\\" /autoinstall.yaml\"" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
           fi
           echo "    - \"dpkg --auto-deconfigure --force-depends -i $ISO_INSTALL_MOUNT/$ISO_AUTOINSTALL_DIR/packages/*.deb\"" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
+          echo "    - \"mkdir -p $ISO_TARGET_MOUNT/var/postinstall/packages\"" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
+          echo "    - \"cp $ISO_INSTALL_MOUNT/$ISO_AUTOINSTALL_DIR/packages/*.deb $ISO_TARGET_MOUNT/var/postinstall/packages/\"" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
           echo "  late-commands:" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
+          echo "    - \"curtin in-target --target=$ISO_TARGET_MOUNT -- dpkg --auto-deconfigure --force-depends -i /var/postinstall/packages/*.deb\"" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
           echo "    - \"echo 'GRUB_TERMINAL=\\\"serial console\\\"' >> $ISO_TARGET_MOUNT/etc/default/grub\"" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
           echo "    - \"echo 'GRUB_SERIAL_COMMAND=\\\"serial --speed=$ISO_SERIAL_PORT_SPEED --port=$ISO_SERIAL_PORT_ADDRESS\\\"' >> $ISO_TARGET_MOUNT/etc/default/grub\"" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
           echo "    - \"echo 'GRUB_CMDLINE_LINUX=\\\"$ISO_KERNEL_ARGS console=tty0 console=$ISO_SERIAL_PORT,$ISO_SERIAL_PORT_SPEED\\\"' >> $ISO_TARGET_MOUNT/etc/default/grub\"" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
@@ -2505,13 +2508,13 @@ if [ "$ISO_PASSWORD" = "" ]; then
   ISO_PASSWORD="$DEFAULT_ISO_PASSWORD"
 fi
 if [ "$ISO_CHROOT_PACKAGES" = "" ]; then
-  ISO_CHROOT_PACKAGES="$DEFAULT_ISO_PACKAGES"
-fi
-if [ "$ISO_PACKAGES" = "" ]; then
-  ISO_PACKAGES="$DEFAULT_ISO_PACKAGES"
+  ISO_CHROOT_PACKAGES="$DEFAULT_ISO_INSTALL_PACKAGES"
 fi
 if [ "$ISO_INSTALL_PACKAGES" = "" ]; then
-  ISO_INSTALL_PACKAGES="$DEFAULT_ISO_PACKAGES"
+  ISO_INSTALL_PACKAGES="$DEFAULT_ISO_INSTALL_PACKAGES"
+fi
+if [ "$ISO_INSTALL_PACKAGES" = "" ]; then
+  ISO_INSTALL_PACKAGES="$DEFAULT_ISO_INSTALL_PACKAGES"
 fi
 if [ "$ISO_TIMEZONE" = "" ]; then
   ISO_TIMEZONE="$DEFAULT_ISO_TIMEZONE"
@@ -2685,15 +2688,15 @@ case $ISO_BUILD_TYPE in
     else
       ISO_URL="https://cdimage.ubuntu.com/ubuntu-server/$ISO_CODENAME/daily-live/current/$BASE_INPUT_FILE"
     fi
-    NEW_DIR="$ISO_CODENAME"
+    NEW_DIR="$ISO_OS_NAME/$ISO_CODENAME"
    ;;
   "daily-desktop") 
     ISO_URL="https://cdimage.ubuntu.com/$ISO_CODENAME/daily-live/current/$BASE_INPUT_FILE"
-    NEW_DIR="$ISO_CODENAME"
+    NEW_DIR="$ISO_OS_NAME/$ISO_CODENAME"
     ;;
   "desktop")
     ISO_URL="https://releases.ubuntu.com/$ISO_RELEASE/$BASE_INPUT_FILE"
-    NEW_DIR="$ISO_RELEASE"
+    NEW_DIR="$ISO_OS_NAME/$ISO_RELEASE"
     ;;
   *)
     if [ "$ISO_ARCH" = "amd64" ]; then
@@ -2702,21 +2705,21 @@ case $ISO_BUILD_TYPE in
     else
       ISO_URL="https://cdimage.ubuntu.com/releases/$ISO_RELEASE/release/$BASE_INPUT_FILE"
     fi
-    NEW_DIR="$ISO_RELEASE"
+    NEW_DIR="$ISO_OS_NAME/$ISO_RELEASE"
     ;;
 esac
 
 # Handle EFI
 
 if [ "$ISO_BOOT_TYPE" = "efi" ]; then
-  ISO_PACKAGES="$ISO_PACKAGES grub-efi"
+  ISO_INSTALL_PACKAGES="$ISO_INSTALL_PACKAGES grub-efi"
   ISO_CHROOT_PACKAGES="$ISO_CHROOT_PACKAGES grub-efi"
 fi
 
 # Ubuntu Pro Apt News
 
 if [ "$ISO_MAJOR_REL" = "22" ]; then
-  ISO_PACKAGES="$ISO_PACKAGES ubuntu-advantage-tools"
+  ISO_INSTALL_PACKAGES="$ISO_INSTALL_PACKAGES ubuntu-advantage-tools"
   ISO_CHROOT_PACKAGES="$ISO_CHROOT_PACKAGES ubuntu-advantage-tools"
 fi
 
