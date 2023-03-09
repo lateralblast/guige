@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Name:         guige (Generic Ubuntu ISO Generation Engine)
-# Version:      1.0.8
+# Version:      1.0.9
 # Release:      1
 # License:      CC-BA (Creative Commons By Attribution)
 #               http://creativecommons.org/licenses/by/4.0/legalcode
@@ -2507,6 +2507,9 @@ fi
 if [ "$ISO_CHROOT_PACKAGES" = "" ]; then
   ISO_CHROOT_PACKAGES="$DEFAULT_ISO_PACKAGES"
 fi
+if [ "$ISO_PACKAGES" = "" ]; then
+  ISO_PACKAGES="$DEFAULT_ISO_PACKAGES"
+fi
 if [ "$ISO_INSTALL_PACKAGES" = "" ]; then
   ISO_INSTALL_PACKAGES="$DEFAULT_ISO_PACKAGES"
 fi
@@ -2706,13 +2709,15 @@ esac
 # Handle EFI
 
 if [ "$ISO_BOOT_TYPE" = "efi" ]; then
-  $ISO_PACKAGES="$ISO_PACKAGES grub-efi"
+  ISO_PACKAGES="$ISO_PACKAGES grub-efi"
+  ISO_CHROOT_PACKAGES="$ISO_CHROOT_PACKAGES grub-efi"
 fi
 
 # Ubuntu Pro Apt News
 
 if [ "$ISO_MAJOR_REL" = "22" ]; then
   ISO_PACKAGES="$ISO_PACKAGES ubuntu-advantage-tools"
+  ISO_CHROOT_PACKAGES="$ISO_CHROOT_PACKAGES ubuntu-advantage-tools"
 fi
 
 # Output variables
