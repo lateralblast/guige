@@ -11,7 +11,7 @@ used to hang a shield on the shoulder or neck when not in use.
 Version
 -------
 
-Current version: 1.0.5
+Current version: 1.0.6
 
 Prerequisites
 -------------
@@ -154,6 +154,63 @@ You can get help using the -h or --help switch:
     -z|--volumemanager:      Volume Managers (defauls: zfs lvm)
 ```
 
+You can get more usage information by using the usage tag with the action switch:
+
+```
+./guige.sh --action usage
+
+  action
+  ------
+
+  checkracadm:            Check RACADM requirements are installed
+  runracadm:              Run racadm to deploy image
+  createexport:           Create export for image (e.g. NFS)
+  createansible:          Create ansible stanza
+  runansible:             Run ansible stanza
+  printenv:               Prints environment
+  checkdocker:            Check docker config
+  checkdirs:              Check work directories
+  getiso:                 Download ISO
+  justiso:                Just perform the ISO creation steps rather than all steps
+  checkrequired:          Check required packages
+  installrequired:        Install required packages
+  createautoinstall:      Just create autoinstall files
+  runchrootscript:        Just run chroot script
+  createiso:              Create ISO
+  createisoandsquashfs:   Create ISO and squashfs
+  dockeriso:              Use Docker to create ISO
+  dockerisoandsquashfs:   Use Docker to create ISO
+  queryiso:               Query ISO for information
+
+  options
+  -------
+
+  hwe:                    Install HWE kernel
+  biosdevname:            Enable biosdevname kernel parameters
+  nounmount:              Don't unmount filesystems (useful for troubleshooting)
+  testmode:               Don't execute commands (useful for testing and generating a script)
+  efi:                    Create UEFI based ISO
+  bios:                   Create BIOS based ISO
+  verbose:                Verbose output
+  interactive:            Interactively ask questions
+
+  postinstall
+  -----------
+
+  distupgrade:            Do distribution upgrade as part of install process
+  packages:               Install packages as part of install process
+  updates:                Do updates as part of install process
+  upgrades:               Do upgrades as part of install process
+  all:                    Do all updates as part of install process
+
+  Examples
+  --------
+
+  Create an ISO with a static IP configuration:
+
+  guige.sh --action createiso --options verbose --ip 192.168.1.211 --cidr 24 --dns 8.8.8.8 --gateway 192.168.1.254
+```
+
 Todo
 ----
 
@@ -221,7 +278,7 @@ Build ISO using daily build (this is useful for ARM where daily builds tend to h
 Create an ISO with a static IP configuration:
 
 ```
-./guige.sh --action createiso --options verbose --staticip --ip 192.168.1.211 --cidr 24 --dns 8.8.8.8 --gateway 192.168.1.254
+./guige.sh --action createiso --options verbose --ip 192.168.1.211 --cidr 24 --dns 8.8.8.8 --gateway 192.168.1.254
 ```
 
 Create NFS export for ISO for server install via iDRAC:

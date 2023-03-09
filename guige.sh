@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Name:         guige (Generic Ubuntu ISO Generation Engine)
-# Version:      1.0.5
+# Version:      1.0.6
 # Release:      1
 # License:      CC-BA (Creative Commons By Attribution)
 #               http://creativecommons.org/licenses/by/4.0/legalcode
@@ -211,8 +211,67 @@ DEFAULT_BOOT_SERVER_FILE_BASE=$(basename "$DEFAULT_BOOT_SERVER_FILE")
 DEFAULT_ISO_SQUASHFS_FILE_BASE=$( basename "$DEFAULT_ISO_SQUASHFS_FILE" )
 DEFAULT_ISO_GRUB_FILE_BASE=$( basename "$DEFAULT_ISO_GRUB_FILE" )
 
+print_usage () {
+  cat <<-USAGE
+
+  action
+  ------
+
+  checkracadm:            Check RACADM requirements are installed
+  runracadm:              Run racadm to deploy image
+  createexport:           Create export for image (e.g. NFS)
+  createansible:          Create ansible stanza
+  runansible:             Run ansible stanza
+  printenv:               Prints environment
+  checkdocker:            Check docker config
+  checkdirs:              Check work directories
+  getiso:                 Download ISO
+  justiso:                Just perform the ISO creation steps rather than all steps
+  checkrequired:          Check required packages
+  installrequired:        Install required packages
+  createautoinstall:      Just create autoinstall files
+  runchrootscript:        Just run chroot script
+  createiso:              Create ISO
+  createisoandsquashfs:   Create ISO and squashfs
+  dockeriso:              Use Docker to create ISO
+  dockerisoandsquashfs:   Use Docker to create ISO
+  queryiso:               Query ISO for information                  
+
+  options
+  -------
+
+  hwe:                    Install HWE kernel
+  biosdevname:            Enable biosdevname kernel parameters
+  nounmount:              Don't unmount filesystems (useful for troubleshooting)
+  testmode:               Don't execute commands (useful for testing and generating a script)
+  efi:                    Create UEFI based ISO
+  bios:                   Create BIOS based ISO
+  verbose:                Verbose output
+  interactive:            Interactively ask questions
+
+  postinstall
+  -----------
+
+  distupgrade:            Do distribution upgrade as part of install process
+  packages:               Install packages as part of install process
+  updates:                Do updates as part of install process
+  upgrades:               Do upgrades as part of install process
+  all:                    Do all updates as part of install process
+
+  Examples
+  --------
+
+  Create an ISO with a static IP configuration:
+
+  ${0##*/} --action createiso --options verbose --ip 192.168.1.211 --cidr 24 --dns 8.8.8.8 --gateway 192.168.1.254
+
+USAGE
+  exit
+}
+
 print_help () {
   cat <<-HELP
+
   Usage: ${0##*/} [OPTIONS...]
     -A|--codename            Linux release codename (default: $DEFAULT_ISO_CODENAME)
     -a|--action:             Action to perform (e.g. createiso, justiso, runchrootscript, checkdocker, installrequired)
@@ -2189,6 +2248,12 @@ fi
 # Process action switch
 
 case $ACTION in
+  "help"|"printhelp")
+    print_help
+    ;;
+  "usage"|"printusage")
+    print_usage
+    ;;
   "checkracadm")
     DO_CHECK_RACADM="true"
     ;;

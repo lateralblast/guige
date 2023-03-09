@@ -209,3 +209,6 @@
 # Added code to enable biosdevnames
 # 1.0.5: Thu  9 Mar 2023 08:48:28 AEDT
 # Code cleanup
+# 1.0.6: Thu  9 Mar 2023 15:45:16 AEDT
+# Added usage information and updated documentation
+
