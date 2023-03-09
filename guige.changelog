@@ -211,4 +211,8 @@
 # Code cleanup
 # 1.0.6: Thu  9 Mar 2023 15:45:16 AEDT
 # Added usage information and updated documentation
+# 1.0.7: Thu  9 Mar 2023 17:34:28 AEDT
+# Disable autoupdates
+# 1.0.8: Thu  9 Mar 2023 19:22:22 AEDT
+# Improvements and bug fixes
 

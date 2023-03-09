@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Name:         guige (Generic Ubuntu ISO Generation Engine)
-# Version:      1.0.6
+# Version:      1.0.8
 # Release:      1
 # License:      CC-BA (Creative Commons By Attribution)
 #               http://creativecommons.org/licenses/by/4.0/legalcode
@@ -90,6 +90,8 @@ DO_INSTALL_REQUIRED_PACKAGES="false"
 DO_INSTALL_ISO_NETWORK_UPDATES="false"
 DO_INSTALL_ISO_PACKAGES="false"
 DO_INSTALL_ISO_DRIVERS="false"
+DO_ISO_AUTO_UPGRADES="false"
+DO_ISO_APT_NEWS="false"
 DO_GET_BASE_ISO="false"
 DO_CHECK_WORK_DIR="false"
 DO_PREPARE_AUTOINSTALL_ISO_ONLY="false"
@@ -248,6 +250,7 @@ print_usage () {
   bios:                   Create BIOS based ISO
   verbose:                Verbose output
   interactive:            Interactively ask questions
+  autoupgrades:           Allow autoupgrades
 
   postinstall
   -----------
@@ -314,7 +317,7 @@ print_help () {
     -T|--timezone:           Timezone (default: $DEFAULT_ISO_TIMEZONE)
     -t|--serialportaddress:  Serial Port Address (default: $DEFAULT_ISO_SERIAL_PORT_ADDRESS)
     -U|--username:           Username (default: $DEFAULT_ISO_USERNAME)
-    -u|--postinstall:        Postinstall action (e.g. installpackages, upgrade, distupgrade, installdrivers, all)
+    -u|--postinstall:        Postinstall action (e.g. installpackages, upgrade, distupgrade, installdrivers, all, autoupgrades)
     -V|--version             Display Script Version
     -v|--serialport          Serial Port (default: $DEFAULT_ISO_SERIAL_PORT)
     -W|--workdir:            Work directory (default: $MASKED_DEFAULT_WORK_DIR)
@@ -1779,16 +1782,18 @@ prepare_autoinstall_iso () {
         handle_output "echo \"    - \\\"echo 'GRUB_CMDLINE_LINUX=\\\\\\\"console=tty0 console=$ISO_SERIAL_PORT,$ISO_SERIAL_PORT_SPEED $ISO_KERNEL_ARGS\\\\\\\"' >> $ISO_TARGET_MOUNT/etc/default/grub\\\"\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
         handle_output "echo \"    - \\\"echo 'GRUB_TIMEOUT=\\\\\\\"$ISO_GRUB_TIMEOUT\\\\\\\"' >> $ISO_TARGET_MOUNT/etc/default/grub\\\"\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
         handle_output "echo \"    - \\\"echo '$ISO_USERNAME ALL=(ALL) NOPASSWD: ALL' >> $ISO_TARGET_MOUNT/etc/sudoers.d/$ISO_USERNAME\\\"\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
+        if [ "$DO_ISO_AUTO_UPGRADES" = "false" ]; then
+          handle_output "echo \"    - \\\"echo 'APT::Periodic::Update-Package-List \\\\\\\"0\\\\\\\";' >> $ISO_TARGET_MOUNT/etc/apt/apt.conf.d/20auto-upgrades\\\"\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
+          handle_output "echo \"    - \\\"echo 'APT::Periodic::Download-Upgradeable-Packages \\\\\\\"0\\\\\\\";' >> $ISO_TARGET_MOUNT/etc/apt/apt.conf.d/20auto-upgrades\\\"\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
+          handle_output "echo \"    - \\\"echo 'APT::Periodic::AutocleanInterval \\\\\\\"0\\\\\\\";' >> $ISO_TARGET_MOUNT/etc/apt/apt.conf.d/20auto-upgrades\\\"\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
+          handle_output "echo \"    - \\\"echo 'APT::Periodic::Unattended-Upgrade \\\\\\\"0\\\\\\\";' >> $ISO_TARGET_MOUNT/etc/apt/apt.conf.d/20auto-upgrades\\\"\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
+        fi
         handle_output "echo \"    - \\\"curtin in-target --target=$ISO_TARGET_MOUNT -- systemctl enable serial-getty@ttyS0.service\\\"\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
         handle_output "echo \"    - \\\"curtin in-target --target=$ISO_TARGET_MOUNT -- systemctl start serial-getty@ttyS0.service\\\"\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
         handle_output "echo \"    - \\\"curtin in-target --target=$ISO_TARGET_MOUNT -- /usr/sbin/update-grub\\\"\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
         if [ "$DO_INSTALL_ISO_NETWORK_UPDATES" = "true" ]; then
           if [ "$DO_INSTALL_ISO_UPDATE" = "true" ] || [ "$DO_INSTALL_ISO_DIST_UPGRADE" = "true" ]; then
             handle_output "echo \"    - \\\"curtin in-target --target=$ISO_TARGET_MOUNT -- apt update\\\"\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
-            if [ "$ISO_MAJOR_REL" = "22" ]; then
-              handle_output "echo \"    - \\\"curtin in-target --target=$ISO_TARGET_MOUNT -- apt-get install ubuntu-advantage-tools\\\"\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
-              handle_output "echo \"    - \\\"curtin in-target --target=$ISO_TARGET_MOUNT -- pro config set apt_news=false\\\"\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
-            fi
           fi
           if [ "$DO_INSTALL_ISO_UPGRADE" = "true" ]; then
             handle_output "echo \"    - \\\"curtin in-target --target=$ISO_TARGET_MOUNT -- apt upgrade -y\\\"\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
@@ -1798,6 +1803,11 @@ prepare_autoinstall_iso () {
           fi
           if [ "$DO_INSTALL_ISO_PACKAGES" = "true" ]; then
             handle_output "echo \"    - \\\"curtin in-target --target=$ISO_TARGET_MOUNT -- apt install -y $ISO_INSTALL_PACKAGES\\\"\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
+          fi
+        fi
+        if [ "$ISO_MAJOR_REL" = "22" ]; then
+          if [ "$DO_ISO_APT_NEWS" = "false" ]; then
+            handle_output "echo \"    - \\\"curtin in-target --target=$ISO_TARGET_MOUNT -- pro config set apt_news=false\\\"\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
           fi
         fi
         handle_output "echo \"  version: 1\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
@@ -1946,16 +1956,18 @@ prepare_autoinstall_iso () {
           echo "    - \"echo 'GRUB_CMDLINE_LINUX=\\\"$ISO_KERNEL_ARGS console=tty0 console=$ISO_SERIAL_PORT,$ISO_SERIAL_PORT_SPEED\\\"' >> $ISO_TARGET_MOUNT/etc/default/grub\"" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
           echo "    - \"echo 'GRUB_TIMEOUT=\\\"$ISO_GRUB_TIMEOUT\\\"' >> $ISO_TARGET_MOUNT/etc/default/grub\"" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
           echo "    - \"echo '$ISO_USERNAME ALL=(ALL) NOPASSWD: ALL' >> $ISO_TARGET_MOUNT/etc/sudoers.d/$ISO_USERNAME\"" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
+          if [ "$DO_ISO_AUTO_UPGRADES" = "false" ]; then
+            echo "    - \"echo 'APT::Periodic::Update-Package-Lists \\\"0\\\";' >> $ISO_TARGET_MOUNT/etc/apt/apt.conf.d/20auto-upgrades\"" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
+            echo "    - \"echo 'APT::Periodic::Download-Upgradeable-Packages \\\"0\\\";' >> $ISO_TARGET_MOUNT/etc/apt/apt.conf.d/20auto-upgrades\"" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
+            echo "    - \"echo 'APT::Periodic::AutocleanInterval \\\"0\\\";' >> $ISO_TARGET_MOUNT/etc/apt/apt.conf.d/20auto-upgrades\"" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
+            echo "    - \"echo 'APT::Periodic::Unattended-Upgrade \\\"0\\\";' >> $ISO_TARGET_MOUNT/etc/apt/apt.conf.d/20auto-upgrades\"" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
+          fi
           echo "    - \"curtin in-target --target=$ISO_TARGET_MOUNT -- systemctl enable serial-getty@ttyS0.service\"" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
           echo "    - \"curtin in-target --target=$ISO_TARGET_MOUNT -- systemctl start serial-getty@ttyS0.service\"" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
           echo "    - \"curtin in-target --target=$ISO_TARGET_MOUNT -- update-grub\"" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
           if [ "$DO_INSTALL_ISO_NETWORK_UPDATES" = "true" ]; then
             if [ "$DO_INSTALL_ISO_UPDATE" = "true" ] || [ "$DO_INSTALL_ISO_DIST_UPGRADE" = "true" ]; then
               echo "    - \"curtin in-target --target=$ISO_TARGET_MOUNT -- apt update\"" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
-              if [ "$ISO_MAJOR_REL" = "22" ]; then
-                echo "    - \"curtin in-target --target=$ISO_TARGET_MOUNT -- apt-get install ubuntu-advantage-tools\"" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
-                echo "    - \"curtin in-target --target=$ISO_TARGET_MOUNT -- pro config set apt_news=false\"" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
-              fi
             fi
             if [ "$DO_INSTALL_ISO_UPGRADE" = "true" ]; then
               echo "    - \"curtin in-target --target=$ISO_TARGET_MOUNT -- apt upgrade -y\"" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
@@ -1965,6 +1977,11 @@ prepare_autoinstall_iso () {
             fi
             if [ "$DO_INSTALL_ISO_PACKAGES" = "true" ]; then
               echo "    - \"curtin in-target --target=$ISO_TARGET_MOUNT -- apt install -y $ISO_INSTALL_PACKAGES\"" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
+            fi
+          fi
+          if [ "$ISO_MAJOR_REL" = "22" ]; then
+            if [ "$DO_ISO_APT_NEWS" = "false" ]; then
+              echo "    - \"curtin in-target --target=$ISO_TARGET_MOUNT -- pro config set apt_news=false\"" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
             fi
           fi
           echo "  version: 1" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
@@ -2239,10 +2256,20 @@ if [[ "$OPTIONS" =~ "verbose" ]]; then
 else
   VERBOSE_MODE="false";
 fi
+if [[ "$OPTIONS" =~ "autoupgrades" ]]; then
+  DO_ISO_AUTO_UPGRADES="true";
+else
+  DO_ISO_AUTO_UPGRADES="false";
+fi
 if [[ "$OPTIONS" =~ "interactive" ]]; then
   INTERACTIVE_MODE="true";
 else
   INTERACTIVE_MODE="false";
+fi
+if [[ "$OPTIONS" =~ "aptnews" ]]; then
+  DO_ISO_APT_NEWS="true";
+else
+  DO_ISO_APT_NEWS="false";
 fi
 
 # Process action switch
@@ -2357,31 +2384,28 @@ fi
 
 # Process postinstall switch
 
-case $ISO_POSTINSTALL in
-  "distupgrade"|"dist-upgrade")
-    DO_INSTALL_ISO_NETWORK_UPDATES="true"
-    DO_INSTALL_ISO_DIST_UPGRADE="true"
-    ;;
-  "packages")
-    DO_INSTALL_ISO_NETWORK_UPDATES="true"
-    DO_INSTALL_ISO_PACKAGES="true"
-    ;;
-  "updates"|"upgrades")
-    DO_INSTALL_ISO_NETWORK_UPDATES="true"
-    DO_INSTALL_ISO_UPDATE="true"
-    DO_INSTALL_ISO_UPGRADE="true"
-    ;;
-  "all")
-    DO_INSTALL_ISO_NETWORK_UPDATES="true"
-    DO_INSTALL_ISO_UPDATE="true"
-    DO_INSTALL_ISO_UPGRADE="true"
-    DO_INSTALL_ISO_DIST_UPGRADE="true"
-    DO_INSTALL_ISO_PACKAGES="true"
-    ;;
-  *)
-    DO_INSTALL_ISO_NETWORK_UPDATES="false"
-    ;;
-esac
+if [[ "$ISO_POSTINSTALL" =~ "dist" ]]; then
+  DO_INSTALL_ISO_NETWORK_UPDATES="true"
+  DO_INSTALL_ISO_DIST_UPGRADE="true"
+fi
+if [[ "$ISO_POSTINSTALL" =~ "packages" ]]; then
+  DO_INSTALL_ISO_NETWORK_UPDATES="true"
+  DO_INSTALL_ISO_PACKAGES="true"
+if [[ "$ISO_POSTINSTALL" =~ "updates" ]]; then
+  DO_INSTALL_ISO_NETWORK_UPDATES="true"
+  DO_INSTALL_ISO_UPDATE="true"
+  DO_INSTALL_ISO_UPGRADE="true"
+fi
+if [[ "$ISO_POSTINSTALL" =~ "autoupgrades" ]]; then
+  DO_ISO_AUTO_UPGRADES="true"
+fi
+if [[ "$ISO_POSTINSTALL" =~ "all" ]]; then
+  DO_INSTALL_ISO_NETWORK_UPDATES="true"
+  DO_INSTALL_ISO_UPDATE="true"
+  DO_INSTALL_ISO_UPGRADE="true"
+  DO_INSTALL_ISO_DIST_UPGRADE="true"
+  DO_INSTALL_ISO_PACKAGES="true"
+fi
 
 # Delete files
 
@@ -2682,6 +2706,12 @@ esac
 
 if [ "$ISO_BOOT_TYPE" = "efi" ]; then
   $ISO_PACKAGES="$ISO_PACKAGES grub-efi"
+fi
+
+# Ubuntu Pro Apt News
+
+if [ "$ISO_MAJOR_REL" = "22" ]; then
+  ISO_PACKAGES="$ISO_PACKAGES ubuntu-advantage-tools"
 fi
 
 # Output variables
