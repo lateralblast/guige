@@ -2567,6 +2567,9 @@ fi
 if [ "$ISO_AUTOINSTALL_DIR" = "" ]; then
   ISO_AUTOINSTALL_DIR="$DEFAULT_ISO_AUTOINSTALL_DIR"
 fi
+if [ "$ISO_OS_NAME" = "" ]; then
+  ISO_OS_NAME="$DEFAULT_ISO_OS_NAME"
+fi
 if [ "$WORK_DIR" = "" ]; then 
   if [ "$DO_DAILY_ISO" = "true" ]; then
     WORK_DIR="$HOME/$SCRIPT_NAME/$ISO_OS_NAME/$ISO_CODENAME"
@@ -2583,9 +2586,6 @@ else
 fi
 if [ "$ISO_BUILD_TYPE" = "" ]; then
   ISO_BUILD_TYPE="$DEFAULT_ISO_BUILD_TYPE"
-fi
-if [ "$ISO_OS_NAME" = "" ]; then
-  ISO_OS_NAME="$DEFAULT_ISO_OS_NAME"
 fi
 if [ "$ISO_VOLID" = "" ]; then
   case $ISO_BUILD_TYPE in
