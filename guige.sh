@@ -2391,6 +2391,7 @@ fi
 if [[ "$ISO_POSTINSTALL" =~ "packages" ]]; then
   DO_INSTALL_ISO_NETWORK_UPDATES="true"
   DO_INSTALL_ISO_PACKAGES="true"
+fi
 if [[ "$ISO_POSTINSTALL" =~ "updates" ]]; then
   DO_INSTALL_ISO_NETWORK_UPDATES="true"
   DO_INSTALL_ISO_UPDATE="true"
