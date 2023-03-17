@@ -223,3 +223,7 @@
 # Bug fixes
 # 1.1.2: Fri 10 Mar 2023 15:12:00 AEDT
 # Fixed post install package installation
+# 1.1.3: Thu 16 Mar 2023 18:24:09 AEDT
+# Code cleanup
+# 1.1.4: Fri 17 Mar 2023 16:01:14 AEDT
+# Added serial arguments to default kernel parameters
