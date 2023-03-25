@@ -227,3 +227,5 @@
 # Code cleanup
 # 1.1.4: Fri 17 Mar 2023 16:01:14 AEDT
 # Added serial arguments to default kernel parameters
+# 1.1.5: Sat 25 Mar 2023 14:35:17 AEDT
+# Added code to set timezone to post install
