@@ -233,3 +233,5 @@
 # Removed HWE support
 # 1.1.7: Sun  2 Apr 2023 13:50:24 AEST
 # Improved boot directory handling
+# 1.1.8: Sun  2 Apr 2023 16:07:15 AEST
+# Fixed localtime symlink
