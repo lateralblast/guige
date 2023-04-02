@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Name:         guige (Generic Ubuntu ISO Generation Engine)
-# Version:      1.1.9
+# Version:      1.2.0
 # Release:      1
 # License:      CC-BA (Creative Commons By Attribution)
 #               http://creativecommons.org/licenses/by/4.0/legalcode
@@ -239,6 +239,7 @@ print_usage () {
   options
   -------
 
+  sshkey                  Add SSH key from ~/.ssh if present
   biosdevname:            Enable biosdevname kernel parameters
   nounmount:              Don't unmount filesystems (useful for troubleshooting)
   testmode:               Don't execute commands (useful for testing and generating a script)
@@ -2231,6 +2232,9 @@ done
 
 # Process option switch
 
+if [[ "$OPTIONS" =~ "sshkey" ]]; then
+  DO_ISO_SSH_KEY="true"
+fi
 if [[ "$OPTIONS" =~ "biosdevname" ]]; then
   ISO_USE_BIOSDEVNAME="true"
 else
@@ -2727,6 +2731,16 @@ if [ "$DO_PRINT_ENV" ] || [ "$INTERACTIVE_MODE" = "true" ]; then
   TEMP_VERBOSE_MODE="true"
 fi
 
+# Get SSH key
+
+if [ "$DO_ISO_SSH_KEY" = "true" ]; then
+  if ! [ -f "$ISO_SSH_KEY_FILE" ]; then
+    echo "SSH Key file ($ISO_SSH_KEY_FILE) does not exist"
+  else
+    ISO_SSH_KEY=$(<"$ISO_SSH_KEY_FILE")
+  fi
+fi
+
 # Get Password Crypt
 
 get_password_crypt "$ISO_PASSWORD"
@@ -2746,6 +2760,10 @@ handle_output "# Username:                    $ISO_USERNAME" TEXT
 handle_output "# Realname:                    $ISO_REALNAME" TEXT
 handle_output "# Password:                    $ISO_PASSWORD" TEXT
 handle_output "# Password Hash:               $ISO_PASSWORD_CRYPT" TEXT
+if [ "$DO_ISO_SSH_KEY" =  "true" ]; then
+  handle_output "# SSH Key file:                $ISO_SSH_KEY_FILE" TEXT
+  handle_output "# SSH Key:                     $ISO_SSH_KEY" TEXT
+fi
 handle_output "# Timezone:                    $ISO_TIMEZONE" TEXT
 if [ -n "$ISO_SSH_KEY_FILE" ]; then
   handle_output "# SSH Key file:                $ISO_SSH_KEY_FILE" TEXT
@@ -3013,16 +3031,6 @@ if [ "$DO_DOCKER" = "true" ] || [ "$DO_CHECK_DOCKER" = "true" ]; then
     fi
   fi
   DO_PRINT_HELP="false"
-fi
-
-# Get SSH key
-
-if [ "$DO_ISO_SSH_KEY" = "true" ]; then
-  if ! [ -f "$ISO_SSH_KEY_FILE" ]; then
-    echo "SSH Key file ($ISO_SSH_KEY_FILE) does not exist"
-  else
-    ISO_SSH_KEY=$(<"$ISO_SSH_KEY_FILE")
-  fi
 fi
 
 # Handle specific functions
