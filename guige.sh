@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Name:         guige (Generic Ubuntu ISO Generation Engine)
-# Version:      1.1.8
+# Version:      1.1.9
 # Release:      1
 # License:      CC-BA (Creative Commons By Attribution)
 #               http://creativecommons.org/licenses/by/4.0/legalcode
@@ -723,6 +723,9 @@ unmount_squashfs () {
 # rsync -av ./isomount/ ./isonew/cd
 
 copy_iso () {
+  if [ ! -f "/usr/bin/rsync" ]; then
+    install_required_packages
+  fi
   if [ "$VERBOSE_MODE" = "true" ]; then
     handle_output "rsync -av \"$ISO_MOUNT_DIR/\" \"$ISO_NEW_DIR/cd\""
     if [ "$TEST_MODE" = "false" ]; then
@@ -1044,6 +1047,9 @@ create_export () {
 # sudo cp /etc/resolv.conf /etc/hosts ./isonew/custom/etc/
 
 copy_squashfs () {
+  if [ ! -f "/usr/bin/rsync" ]; then
+    install_required_packages
+  fi
   handle_output "sudo mount -t squashfs -o loop \"$ISO_SQUASHFS_FILE\" \"$ISO_NEW_DIR/squashfs\""
   if [ "$TEST_MODE" = "false" ]; then
     sudo mount -t squashfs -o loop "$ISO_SQUASHFS_FILE" "$ISO_NEW_DIR/squashfs"
@@ -1159,6 +1165,9 @@ create_chroot_script () {
 
 get_password_crypt () {
   ISO_PASSWORD=$1
+  if [ ! -f "/usr/bin/mkpasswd" ]; then
+    install_required_packages  
+  fi
   handle_output "export PASSWORD_CRYPT=\$(echo \"$ISO_PASSWORD\" |mkpasswd --method=SHA-512 --stdin)"
   if [ "$TEST_MODE" = "false" ]; then
     ISO_PASSWORD_CRYPT=$( echo "$ISO_PASSWORD" |mkpasswd --method=SHA-512 --stdin )
@@ -1377,6 +1386,9 @@ get_password_crypt () {
 # -appended_part_as_gpt -iso_mbr_part_type $ISO_MBR_PART_TYPE -c '/boot/boot.cat' -e '--interval:appended_partition_2:::' -no-emul-boot
 
 create_autoinstall_iso () {
+  if [ ! -f "/usr/bin/xorriso" ]; then
+    install_required_packages
+  fi
   handle_output "# Create ISO"
   handle_output "export ISO_MBR_PART_TYPE=\$( xorriso -indev \"$INPUT_FILE\" -report_el_torito as_mkisofs |grep iso_mbr_part_type |tail -1 |awk '{print \$2}' 2>&1 )"
   handle_output "export BOOT_CATALOG=\$( xorriso -indev \"$INPUT_FILE\" -report_el_torito as_mkisofs |grep '^-c '|tail -1 |awk '{print \$2}' |cut -f2 -d\"'\" 2>&1 )"
@@ -1432,8 +1444,10 @@ create_autoinstall_iso () {
 }
 
 prepare_autoinstall_iso () {
+  if [ -f "/usr/bin/7z" ]; then
+    install_required_packages
+  fi
   handle_output "# Create autoinstall files"
-  get_password_crypt "$ISO_PASSWORD"
   PACKAGE_DIR="$ISO_SOURCE_DIR/$ISO_AUTOINSTALL_DIR/packages"
   SCRIPT_DIR="$ISO_SOURCE_DIR/$ISO_AUTOINSTALL_DIR/scripts"
   CONFIG_DIR="$ISO_SOURCE_DIR/$ISO_AUTOINSTALL_DIR/configs"
@@ -1921,7 +1935,6 @@ prepare_autoinstall_iso () {
             echo "      type: mount" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
             echo "      id: mount-disk1p2fs1" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
             echo "    swap:" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
-
             echo "      swap: $ISO_SWAPSIZE" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
           fi
           if [ "$ISO_VOLMGR" = "lvm" ]; then
@@ -2714,6 +2727,10 @@ if [ "$DO_PRINT_ENV" ] || [ "$INTERACTIVE_MODE" = "true" ]; then
   TEMP_VERBOSE_MODE="true"
 fi
 
+# Get Password Crypt
+
+get_password_crypt "$ISO_PASSWORD"
+
 handle_output "# Setting Variables" TEXT
 handle_output "# Release:                     $ISO_RELEASE" TEXT
 handle_output "# Codename:                    $ISO_CODENAME" TEXT
@@ -2727,6 +2744,8 @@ handle_output "# ISO Volume ID:               $ISO_VOLID" TEXT
 handle_output "# Hostname:                    $ISO_HOSTNAME" TEXT
 handle_output "# Username:                    $ISO_USERNAME" TEXT
 handle_output "# Realname:                    $ISO_REALNAME" TEXT
+handle_output "# Password:                    $ISO_PASSWORD" TEXT
+handle_output "# Password Hash:               $ISO_PASSWORD_CRYPT" TEXT
 handle_output "# Timezone:                    $ISO_TIMEZONE" TEXT
 if [ -n "$ISO_SSH_KEY_FILE" ]; then
   handle_output "# SSH Key file:                $ISO_SSH_KEY_FILE" TEXT
@@ -2771,7 +2790,7 @@ fi
 handle_output "# Serial Port:                 $ISO_SERIAL_PORT" TEXT
 handle_output "# Serial Port Address:         $ISO_SERIAL_PORT_ADDRESS" TEXT
 handle_output "# Serial Port Speed:           $ISO_SERIAL_PORT_SPEED" TEXT
-handle_output "# Use biosdevnames parameter:  $ISO_USE_BIOSDEVNAME"
+handle_output "# Use biosdevnames parameter:  $ISO_USE_BIOSDEVNAME" TEXT
 
 if [ "$DO_PRINT_ENV" = "true" ] || [ "$INTERACTIVE_MODE" = "true" ]; then
   TEMP_VERBOSE_MODE="false"

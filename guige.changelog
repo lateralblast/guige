@@ -235,3 +235,5 @@
 # Improved boot directory handling
 # 1.1.8: Sun  2 Apr 2023 16:07:15 AEST
 # Fixed localtime symlink
+# 1.1.9: Sun  2 Apr 2023 21:01:41 AEST
+# Added checks for required packages
