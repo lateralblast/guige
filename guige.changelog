@@ -229,5 +229,7 @@
 # Added serial arguments to default kernel parameters
 # 1.1.5: Sat 25 Mar 2023 14:35:17 AEDT
 # Added code to set timezone to post install
-# 1.1.5: Sun  2 Apr 2023 13:43:50 AEST
+# 1.1.6: Sun  2 Apr 2023 13:43:50 AEST
 # Removed HWE support
+# 1.1.7: Sun  2 Apr 2023 13:50:24 AEST
+# Improved boot directory handling

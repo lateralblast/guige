@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Name:         guige (Generic Ubuntu ISO Generation Engine)
-# Version:      1.1.6
+# Version:      1.1.7
 # Release:      1
 # License:      CC-BA (Creative Commons By Attribution)
 #               http://creativecommons.org/licenses/by/4.0/legalcode
@@ -1469,12 +1469,18 @@ prepare_autoinstall_iso () {
     if [ "$TEST_MODE" = "false" ]; then
       if [ "$FORCE_MODE" = "true" ]; then
         rm -rf "$WORK_DIR/BOOT"
-        mv "$ISO_SOURCE_DIR/[BOOT]" "$WORK_DIR/BOOT"
       fi
+      mkdir "$WORK_DIR/BOOT"
+      mkdir "$ISO_SOURCE_DIR/BOOT"
+      cp -r "$ISO_SOURCE_DIR/[BOOT]"/* "$WORK_DIR/BOOT"/
+      cp -r "$ISO_SOURCE_DIR/[BOOT]"/* "$ISO_SOURCE_DIR/BOOT"/
     fi
   else
     if [ "$TEST_MODE" = "false" ]; then
-      mv "$ISO_SOURCE_DIR/[BOOT]" "$WORK_DIR/BOOT"
+      mkdir "$WORK_DIR/BOOT"
+      mkdir "$ISO_SOURCE_DIR/BOOT"
+      cp -r "$ISO_SOURCE_DIR/[BOOT]"/* "$WORK_DIR/BOOT"/
+      cp -r "$ISO_SOURCE_DIR/[BOOT]"/* "$ISO_SOURCE_DIR/BOOT"/
     fi
   fi
   if [ -f "$WORK_DIR/grub.cfg" ]; then

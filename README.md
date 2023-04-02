@@ -11,7 +11,7 @@ used to hang a shield on the shoulder or neck when not in use.
 Version
 -------
 
-Current version: 1.1.5
+Current version: 1.1.7
 
 Prerequisites
 -------------
@@ -150,7 +150,7 @@ You can get help using the -h or --help switch:
     -x|--grubtimeout:        Grub timeout (default: 10)
     -Y|--allowpassword       Allow password access via SSH (default: false)
     -y|--bmcpassword:        BMC/iDRAC password (default: calvin)
-    -Z|--options:            Options (e.g. hwe, nounmount, testmode, bios, efi, verbose, interactive)
+    -Z|--options:            Options (e.g. nounmount, testmode, bios, efi, verbose, interactive)
     -z|--volumemanager:      Volume Managers (defauls: zfs lvm)
 ```
 
@@ -185,7 +185,6 @@ You can get more usage information by using the usage tag with the action switch
   options
   -------
 
-  hwe:                    Install HWE kernel
   biosdevname:            Enable biosdevname kernel parameters
   nounmount:              Don't unmount filesystems (useful for troubleshooting)
   testmode:               Don't execute commands (useful for testing and generating a script)
