@@ -245,3 +245,5 @@
 # Added fix for squashfs filename one Ubuntu 22.04 and later
 # 1.2.3: Fri  7 Apr 2023 00:56:54 AEST
 # Added fix for debconf TERM not set error 
+# 1.2.4: Fri 07 Apr 2023 01:04:42 AEST
+# Timezone fix
