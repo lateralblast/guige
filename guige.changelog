@@ -243,3 +243,5 @@
 # Added support for using openssl to create password hash on MacOS
 # 1.2.2: Fri  7 Apr 2023 00:31:58 AEST
 # Added fix for squashfs filename one Ubuntu 22.04 and later
+# 1.2.3: Fri  7 Apr 2023 00:56:54 AEST
+# Added fix for debconf TERM not set error 
