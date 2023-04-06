@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Name:         guige (Generic Ubuntu ISO Generation Engine)
-# Version:      1.2.0
+# Version:      1.2.1
 # Release:      1
 # License:      CC-BA (Creative Commons By Attribution)
 #               http://creativecommons.org/licenses/by/4.0/legalcode
@@ -1166,12 +1166,19 @@ create_chroot_script () {
 
 get_password_crypt () {
   ISO_PASSWORD=$1
-  if [ ! -f "/usr/bin/mkpasswd" ]; then
-    install_required_packages  
-  fi
-  handle_output "export PASSWORD_CRYPT=\$(echo \"$ISO_PASSWORD\" |mkpasswd --method=SHA-512 --stdin)"
-  if [ "$TEST_MODE" = "false" ]; then
-    ISO_PASSWORD_CRYPT=$( echo "$ISO_PASSWORD" |mkpasswd --method=SHA-512 --stdin )
+  if [ "$OS_NAME" = "Darwin" ]; then
+    handle_output "export PASSWORD_CRYPT=\$(echo -n \"$ISO_PASSWORD\" |openssl sha512)"
+    if [ "$TEST_MODE" = "false" ]; then
+      ISO_PASSWORD_CRYPT=$( echo -n "$ISO_PASSWORD" |openssl sha512 )
+    fi
+  else
+    if [ ! -f "/usr/bin/mkpasswd" ]; then
+      install_required_packages  
+    fi
+    handle_output "export PASSWORD_CRYPT=\$(echo \"$ISO_PASSWORD\" |mkpasswd --method=SHA-512 --stdin)"
+    if [ "$TEST_MODE" = "false" ]; then
+      ISO_PASSWORD_CRYPT=$( echo "$ISO_PASSWORD" |mkpasswd --method=SHA-512 --stdin )
+    fi
   fi
 }
 

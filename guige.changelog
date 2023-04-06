@@ -239,3 +239,5 @@
 # Added checks for required packages
 # 1.2.0: Sun  2 Apr 2023 21:19:21 AEST
 # Added default SSH key option
+# 1.2.1: Thu  6 Apr 2023 23:03:47 AEST
+# Added support for using openssl to create password hash on MacOS
