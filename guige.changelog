@@ -241,3 +241,5 @@
 # Added default SSH key option
 # 1.2.1: Thu  6 Apr 2023 23:03:47 AEST
 # Added support for using openssl to create password hash on MacOS
+# 1.2.2: Fri  7 Apr 2023 00:31:58 AEST
+# Added fix for squashfs filename one Ubuntu 22.04 and later

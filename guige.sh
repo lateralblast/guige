@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Name:         guige (Generic Ubuntu ISO Generation Engine)
-# Version:      1.2.1
+# Version:      1.2.2
 # Release:      1
 # License:      CC-BA (Creative Commons By Attribution)
 #               http://creativecommons.org/licenses/by/4.0/legalcode
@@ -2679,7 +2679,7 @@ ISO_SOURCE_DIR="$WORK_DIR/source-files"
 
 ISO_GRUB_FILE="$WORK_DIR/grub.cfg"
 
-if [ "$ISO_MAJOR_REL" = "22" ]; then
+if [ "$ISO_MAJOR_REL" -ge "22" ]; then
   ISO_SQUASHFS_FILE="$ISO_MOUNT_DIR/casper/ubuntu-server-minimal.squashfs"
   NEW_SQUASHFS_FILE="$ISO_SOURCE_DIR/casper/ubuntu-server-minimal.squashfs"
 else
@@ -2762,6 +2762,8 @@ handle_output "# ISO input file:              $INPUT_FILE" TEXT
 handle_output "# ISO output file:             $OUTPUT_FILE" TEXT
 handle_output "# ISO URL:                     $ISO_URL" TEXT
 handle_output "# ISO Volume ID:               $ISO_VOLID" TEXT
+handle_output "# ISO mount directory:         $ISO_MOUNT_DIR" TEXT
+handle_output "# ISO squashfs file:           $ISO_SQUASHFS_FILE" TEXT
 handle_output "# Hostname:                    $ISO_HOSTNAME" TEXT
 handle_output "# Username:                    $ISO_USERNAME" TEXT
 handle_output "# Realname:                    $ISO_REALNAME" TEXT
