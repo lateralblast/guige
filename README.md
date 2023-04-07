@@ -21,7 +21,7 @@ The Following packages are required on Linux (or in the Docker container when bu
 - p7zip-full (created to extract ISO contents)
 - wget (required to fetch file)
 - xorriso (required to create ISO)
-- whois (required for mkpasswd to create password hashes)
+- whois (required for mkpasswd to create password hashes - MacOS will use openssl)
 - squashfs-tools (required for copying/manipulating root filesystem on ISO)
 - sudo (required for mounting loop back filesystems e.g. ISO and squashfs)
 - file (required to check files have downloaded correctly)
@@ -302,6 +302,12 @@ Deploy ISO to Dell Server using racadm:
 
 ```
 ./guige.sh --action runracadm --bmcip 192.168.11.238 --bmcusername root --bmcpassword XXXXXXXX --arch amd64 --bootserverip 192.168.11.5
+```
+
+Create an Ubuntu 23.04 ISO, using the daily-live server image as a basis, set the default username and password, and copy the local SSH keys into the cloud-init configuration if present:
+
+```
+./guige.sh --action createiso --release 23.04 --options verbose,sshkeys --build daily-live --username uadmin --password uadmin
 ```
 
 Process
