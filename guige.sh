@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Name:         guige (Generic Ubuntu ISO Generation Engine)
-# Version:      1.2.4
+# Version:      1.2.5
 # Release:      1
 # License:      CC-BA (Creative Commons By Attribution)
 #               http://creativecommons.org/licenses/by/4.0/legalcode
@@ -110,7 +110,6 @@ DO_CREATE_EXPORT="false"
 DO_CREATE_ANSIBLE="false"
 DO_CHECK_RACADM="false"
 DO_EXECUTE_RACADM="false"
-
 
 # Get OS name
 
@@ -1795,6 +1794,8 @@ prepare_autoinstall_iso () {
         handle_output "echo \"    - \\\"curtin in-target --target=$ISO_TARGET_MOUNT -- systemctl start serial-getty@ttyS0.service\\\"\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
         handle_output "echo \"    - \\\"curtin in-target --target=$ISO_TARGET_MOUNT -- systemctl enable serial-getty@ttyS1.service\\\"\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
         handle_output "echo \"    - \\\"curtin in-target --target=$ISO_TARGET_MOUNT -- systemctl start serial-getty@ttyS1.service\\\"\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
+        handle_output "echo \"    - \\\"curtin in-target --target=$ISO_TARGET_MOUNT -- systemctl enable serial-getty@ttyS4.service\\\"\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
+        handle_output "echo \"    - \\\"curtin in-target --target=$ISO_TARGET_MOUNT -- systemctl start serial-getty@ttyS4.service\\\"\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
         handle_output "echo \"    - \\\"curtin in-target --target=$ISO_TARGET_MOUNT -- /usr/sbin/update-grub\\\"\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
         if [ "$DO_INSTALL_ISO_NETWORK_UPDATES" = "true" ]; then
           if [ "$DO_INSTALL_ISO_UPDATE" = "true" ] || [ "$DO_INSTALL_ISO_DIST_UPGRADE" = "true" ]; then
@@ -1979,6 +1980,8 @@ prepare_autoinstall_iso () {
           echo "    - \"curtin in-target --target=$ISO_TARGET_MOUNT -- systemctl start serial-getty@ttyS0.service\"" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
           echo "    - \"curtin in-target --target=$ISO_TARGET_MOUNT -- systemctl enable serial-getty@ttyS1.service\"" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
           echo "    - \"curtin in-target --target=$ISO_TARGET_MOUNT -- systemctl start serial-getty@ttyS1.service\"" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
+          echo "    - \"curtin in-target --target=$ISO_TARGET_MOUNT -- systemctl enable serial-getty@ttyS4.service\"" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
+          echo "    - \"curtin in-target --target=$ISO_TARGET_MOUNT -- systemctl start serial-getty@ttyS4.service\"" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
           echo "    - \"curtin in-target --target=$ISO_TARGET_MOUNT -- update-grub\"" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
           if [ "$DO_INSTALL_ISO_NETWORK_UPDATES" = "true" ]; then
             if [ "$DO_INSTALL_ISO_UPDATE" = "true" ] || [ "$DO_INSTALL_ISO_DIST_UPGRADE" = "true" ]; then

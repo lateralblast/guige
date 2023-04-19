@@ -247,3 +247,5 @@
 # Added fix for debconf TERM not set error 
 # 1.2.4: Fri 07 Apr 2023 01:04:42 AEST
 # Timezone fix
+# 1.2.5: Wed 19 Apr 2023 18:21:13 AEST
+# Added ttyS4 to serial enablement for Intel IME/AMT
