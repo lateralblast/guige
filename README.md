@@ -11,7 +11,7 @@ used to hang a shield on the shoulder or neck when not in use.
 Version
 -------
 
-Current version: 1.2.5
+Current version: 1.2.7
 
 Prerequisites
 -------------
@@ -100,6 +100,8 @@ You can get help using the -h or --help switch:
 
 ```
   Usage: guige.sh [OPTIONS...]
+    -1|--country             Country (used for sources.list mirror - default: us)
+    -2|--isourl              Specify ISO URL
     -A|--codename            Linux release codename (default: jammy)
     -a|--action:             Action to perform (e.g. createiso, justiso, runchrootscript, checkdocker, installrequired)
     -B|--layout              Layout (default: us)
@@ -121,7 +123,7 @@ You can get help using the -h or --help switch:
     -J|--grubfile            GRUB file (default: grub.cfg)
     -j|--autoinstalldir      Directory where autoinstall config files are stored on ISO (default: autoinstall)
     -K|--kernel:             Kernel package (default: linux-generic)
-    -k|--kernelargs:         Kernel arguments (default: )
+    -k|--kernelargs:         Kernel arguments (default: console=tty0 console=vt0 console=ttyS1,115200)
     -L|--release:            LSB release (default: 22.04.2)
     -l|--bmcip:              BMC/iDRAC IP (default: 192.168.1.3)
     -M|--installtarget:      Where the install mounts the target filesystem (default: /target)
@@ -141,7 +143,7 @@ You can get help using the -h or --help switch:
     -T|--timezone:           Timezone (default: Australia/Melbourne)
     -t|--serialportaddress:  Serial Port Address (default: 0x02f8)
     -U|--username:           Username (default: ubuntu)
-    -u|--postinstall:        Postinstall action (e.g. installpackages, upgrade, distupgrade, installdrivers, all)
+    -u|--postinstall:        Postinstall action (e.g. installpackages, upgrade, distupgrade, installdrivers, all, autoupgrades)
     -V|--version             Display Script Version
     -v|--serialport          Serial Port (default: ttyS1)
     -W|--workdir:            Work directory (default: ~/guige/ubuntu/22.04.2)

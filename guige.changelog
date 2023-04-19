@@ -249,3 +249,7 @@
 # Timezone fix
 # 1.2.5: Wed 19 Apr 2023 18:21:13 AEST
 # Added ttyS4 to serial enablement for Intel IME/AMT
+# 1.2.6: Wed 19 Apr 2023 20:50:56 AEST
+# Added isourl switch
+# 1.2.7: Wed Apr 19 09:05:42 PM AEST 2023
+# Added country switch and code for updating sources.list mirror URL for chroot and ISO

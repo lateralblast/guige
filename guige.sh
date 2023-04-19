@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Name:         guige (Generic Ubuntu ISO Generation Engine)
-# Version:      1.2.5
+# Version:      1.2.7
 # Release:      1
 # License:      CC-BA (Creative Commons By Attribution)
 #               http://creativecommons.org/licenses/by/4.0/legalcode
@@ -51,6 +51,7 @@ DEFAULT_ISO_GRUB_TIMEOUT="10"
 DEFAULT_ISO_LOCALE="en_US.UTF-8"
 DEFAULT_ISO_LC_ALL="en_US"
 DEFAULT_ISO_LAYOUT="us"
+DEFAULT_ISO_COUNTRY="us"
 DEFAULT_ISO_BUILD_TYPE="live-server"
 DEFAULT_ISO_BOOT_TYPE="efi"
 DEFAULT_ISO_SERIAL_PORT="ttyS1"
@@ -272,6 +273,8 @@ print_help () {
   cat <<-HELP
 
   Usage: ${0##*/} [OPTIONS...]
+    -1|--country             Country (used for sources.list mirror - default: $DEFAULT_ISO_COUNTRY)
+    -2|--isourl              Specify ISO URL
     -A|--codename            Linux release codename (default: $DEFAULT_ISO_CODENAME)
     -a|--action:             Action to perform (e.g. createiso, justiso, runchrootscript, checkdocker, installrequired)
     -B|--layout              Layout (default: $DEFAULT_ISO_LAYOUT)
@@ -1131,6 +1134,9 @@ create_chroot_script () {
   handle_output "echo \"mount -t sysfs none /sys/\" >> \"$ORIG_SCRIPT\""
   handle_output "echo \"mount -t devpts none /dev/pts\" >> \"$ORIG_SCRIPT\""
   handle_output "echo \"export DEBIAN_FRONTEND=noninteractive\" >> \"$ORIG_SCRIPT\""
+  if [ ! "$ISO_COUNTRY" = "us" ]; then
+    handle_output "echo \"sudo sed -i \\\"s/\\/archive/\\/au.archive/g\\\" /etc/apt/sources.list\" >> \"$ORIG_SCRIPT\""
+  fi
   handle_output "echo \"apt update\" >> \"$ORIG_SCRIPT\""
   handle_output "echo \"export LC_ALL=C ; apt install -y --download-only $ISO_CHROOT_PACKAGES\" >> \"$ORIG_SCRIPT\""
   handle_output "echo \"export LC_ALL=C ; apt install -y $ISO_CHROOT_PACKAGES\" >> \"$ORIG_SCRIPT\""
@@ -1147,6 +1153,7 @@ create_chroot_script () {
     echo "mount -t devpts none /dev/pts" >> "$ORIG_SCRIPT"
     echo "export HOME=/root" >> "$ORIG_SCRIPT"
     echo "export DEBIAN_FRONTEND=noninteractive" >> "$ORIG_SCRIPT"
+    echo "sudo sed -i \"s/\\/archive/\\/au.archive/g\" /etc/apt/sources.list" >> "$ORIG_SCRIPT"
     echo "apt update" >> "$ORIG_SCRIPT"
     echo "export LC_ALL=C ; apt install -y --download-only $ISO_CHROOT_PACKAGES" >> "$ORIG_SCRIPT"
     echo "export LC_ALL=C ; apt install -y $ISO_CHROOT_PACKAGES" >> "$ORIG_SCRIPT"
@@ -1777,6 +1784,9 @@ prepare_autoinstall_iso () {
         handle_output "echo \"    - \\\"echo '$ISO_TIMEZONE' > $ISO_TARGET_MOUNT/etc/timezone\\\"\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
         handle_output "echo \"    - \\\"rm $ISO_TARGET_MOUNT/etc/localtime\\\"\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
         handle_output "echo \"    - \\\"curtin in-target --target=$ISO_TARGET_MOUNT -- ln -s /usr/share/zoneinfo/$ISO_TIMEZONE /etc/localtime\\\"\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
+        if [ ! "$ISO_COUNTRY" = "us" ]; then
+          handle_output "echo \"    - \\\"curtin in-target --target=$ISO_TARGET_MOUNT -- sed -i \\\\\"s/\\/archive/\\/$ISO_COUNTRY.archive/g\\\\\" /etc/apt/sources.list \\\"\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
+        fi
         handle_output "echo \"    - \\\"chmod +x $ISO_TARGET_MOUNT/tmp/post.sh\\\"\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
         handle_output "echo \"    - \\\"curtin in-target --target=$ISO_TARGET_MOUNT -- /tmp/post.sh\\\"\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
         handle_output "echo \"    - \\\"echo 'GRUB_TERMINAL=\\\\\\\"serial console\\\\\\\"' >> $ISO_TARGET_MOUNT/etc/default/grub\\\"\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
@@ -1964,6 +1974,9 @@ prepare_autoinstall_iso () {
           echo "    - \"echo '$ISO_TIMEZONE' > $ISO_TARGET_MOUNT/etc/timezone\"" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
           echo "    - \"rm $ISO_TARGET_MOUNT/etc/localtime\"" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
           echo "    - \"curtin in-target --target=$ISO_TARGET_MOUNT -- ln -s /usr/share/zoneinfo/$ISO_TIMEZONE /etc/localtime\"" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
+          if [ ! "$ISO_COUNTRY" = "us" ]; then
+            echo "    - \"curtin in-target --target=$ISO_TARGET_MOUNT -- sed -i \\\"s/\\/archive/\\/$ISO_COUNTRY.archive/g\\\" /etc/apt/sources.list\"" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
+          fi
           echo "    - \"curtin in-target --target=$ISO_TARGET_MOUNT -- /tmp/post.sh\"" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
           echo "    - \"echo 'GRUB_TERMINAL=\\\"serial console\\\"' >> $ISO_TARGET_MOUNT/etc/default/grub\"" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
           echo "    - \"echo 'GRUB_SERIAL_COMMAND=\\\"serial --speed=$ISO_SERIAL_PORT_SPEED --port=$ISO_SERIAL_PORT_ADDRESS\\\"' >> $ISO_TARGET_MOUNT/etc/default/grub\"" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
@@ -2018,6 +2031,14 @@ fi
 while test $# -gt 0
 do
   case $1 in
+    -1|--country)
+      ISO_COUNTRY="$2"
+      shift 2
+      ;;
+    -2|--isourl)
+      ISO_URL="$2"
+      shift 2
+      ;;
     -A|--codename)
       ISO_CODENAME="$2"
       shift 2
@@ -2437,6 +2458,9 @@ case $DELETE in
     FULL_FORCE_MODE="false"
 esac
 
+if [ "$ISO_COUNTRY" = "" ]; then
+  ISO_COUNTRY="$DEFAULT_ISO_COUNTRY"
+fi
 if [ "$ISO_SERIAL_PORT" = "" ]; then
   ISO_SERIAL_PORT="$DEFAULT_ISO_SERIAL_PORT"
 fi
