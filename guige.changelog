@@ -253,3 +253,7 @@
 # Added isourl switch
 # 1.2.7: Wed Apr 19 09:05:42 PM AEST 2023
 # Added country switch and code for updating sources.list mirror URL for chroot and ISO
+# 1.2.8: Thu 27 Apr 2023 13:32:16 AEST
+# Added cluster option to install cluster packages
+# 1.2.9: Thu 27 Apr 2023 16:34:06 AEST
+# Added kvm options to install kvm packages

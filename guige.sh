@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Name:         guige (Generic Ubuntu ISO Generation Engine)
-# Version:      1.2.7
+# Version:      1.2.9
 # Release:      1
 # License:      CC-BA (Creative Commons By Attribution)
 #               http://creativecommons.org/licenses/by/4.0/legalcode
@@ -239,6 +239,8 @@ print_usage () {
   options
   -------
 
+  cluster                 Install cluster related packages (pcs, gluster, etc)
+  kvm                     Install KVM related packages (virt-manager, cloud-image-utils, etc)
   sshkey                  Add SSH key from ~/.ssh if present
   biosdevname:            Enable biosdevname kernel parameters
   nounmount:              Don't unmount filesystems (useful for troubleshooting)
@@ -2263,6 +2265,12 @@ done
 
 # Process option switch
 
+if [[ "$OPTIONS" =~ "cluster" ]]; then
+  DEFAULT_ISO_INSTALL_PACKAGES="$DEFAULT_ISO_INSTALL_PACKAGES pcs pacemaker cockpit cockpit-machines resource-agents-extra resource-agents-common resource-agents-base glusterfs-server"
+fi
+if [[ "$OPTIONS" =~ "kvm" ]]; then
+  DEFAULT_ISO_INSTALL_PACKAGES="$DEFAULT_ISO_INSTALL_PACKAGES cpu-checker qemu-kvm libvirt-daemon-system libvirt-clients bridge-utils virt-manager cloud-image-utils"
+fi
 if [[ "$OPTIONS" =~ "sshkey" ]]; then
   DO_ISO_SSH_KEY="true"
 fi
