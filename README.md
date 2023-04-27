@@ -11,7 +11,7 @@ used to hang a shield on the shoulder or neck when not in use.
 Version
 -------
 
-Current version: 1.2.9
+Current version: 1.3.0
 
 Prerequisites
 -------------
@@ -102,6 +102,8 @@ You can get help using the -h or --help switch:
   Usage: guige.sh [OPTIONS...]
     -1|--country             Country (used for sources.list mirror - default: us)
     -2|--isourl              Specify ISO URL
+    -3|--prefix              Prefix to add to ISO name
+    -4|--suffix              Suffix to add to ISO name
     -A|--codename            Linux release codename (default: jammy)
     -a|--action:             Action to perform (e.g. createiso, justiso, runchrootscript, checkdocker, installrequired)
     -B|--layout              Layout (default: us)
@@ -187,6 +189,8 @@ You can get more usage information by using the usage tag with the action switch
   options
   -------
 
+  cluster                 Install cluster related packages (pcs, gluster, etc)
+  kvm                     Install KVM related packages (virt-manager, cloud-image-utils, etc)
   biosdevname:            Enable biosdevname kernel parameters
   nounmount:              Don't unmount filesystems (useful for troubleshooting)
   testmode:               Don't execute commands (useful for testing and generating a script)

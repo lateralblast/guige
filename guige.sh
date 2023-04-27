@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Name:         guige (Generic Ubuntu ISO Generation Engine)
-# Version:      1.2.9
+# Version:      1.3.0
 # Release:      1
 # License:      CC-BA (Creative Commons By Attribution)
 #               http://creativecommons.org/licenses/by/4.0/legalcode
@@ -82,6 +82,8 @@ DO_DAILY_ISO="false"
 DO_CHECK_DOCKER="false"
 DO_CUSTOM_BOOT_SERVER_FILE="false"
 ISO_USE_BIOSDEVNAME="false"
+ISO_PREFIX=""
+ISO_SUFFIX=""
 
 # Set function variables
 
@@ -277,6 +279,8 @@ print_help () {
   Usage: ${0##*/} [OPTIONS...]
     -1|--country             Country (used for sources.list mirror - default: $DEFAULT_ISO_COUNTRY)
     -2|--isourl              Specify ISO URL
+    -3|--prefix              Prefix to add to ISO name
+    -4|--suffix              Suffix to add to ISO name
     -A|--codename            Linux release codename (default: $DEFAULT_ISO_CODENAME)
     -a|--action:             Action to perform (e.g. createiso, justiso, runchrootscript, checkdocker, installrequired)
     -B|--layout              Layout (default: $DEFAULT_ISO_LAYOUT)
@@ -2041,6 +2045,14 @@ do
       ISO_URL="$2"
       shift 2
       ;;
+    -3|--prefix)
+      ISO_PREFIX="$2"
+      shift 2
+      ;;
+    -4|--suffix)
+      ISO_SUFFIX="$2"
+      shift 2
+      ;;
     -A|--codename)
       ISO_CODENAME="$2"
       shift 2
@@ -2702,6 +2714,36 @@ if ! [ "$ISO_USERNAME" = "$DEFAULT_ISO_USERNAME" ]; then
   TEMP_DIR_NAME=$( dirname "$OUTPUT_FILE" )
   TEMP_FILE_NAME=$( basename "$OUTPUT_FILE" .iso )
   OUTPUT_FILE="$TEMP_DIR_NAME/$TEMP_FILE_NAME-$ISO_USERNAME.iso"
+fi
+if ! [ "$ISO_PREFIX" = "" ]; then
+  TEMP_DIR_NAME=$( dirname "$OUTPUT_FILE" )
+  TEMP_FILE_NAME=$( basename "$OUTPUT_FILE" .iso )
+  OUTPUT_FILE="$TEMP_DIR_NAME/$ISO_PREFIX-$TEMP_FILE_NAME-$ISO_USERNAME.iso"
+fi
+if ! [ "$ISO_SUFFIX" = "" ]; then
+  TEMP_DIR_NAME=$( dirname "$OUTPUT_FILE" )
+  TEMP_FILE_NAME=$( basename "$OUTPUT_FILE" .iso )
+  OUTPUT_FILE="$TEMP_DIR_NAME/$TEMP_FILE_NAME-$ISO_USERNAME-$ISO_SUFFIX.iso"
+fi
+if [[ "$OPTIONS" =~ "cluster" ]]; then
+  TEMP_DIR_NAME=$( dirname "$OUTPUT_FILE" )
+  TEMP_FILE_NAME=$( basename "$OUTPUT_FILE" .iso )
+  OUTPUT_FILE="$TEMP_DIR_NAME/$TEMP_FILE_NAME-$ISO_USERNAME-cluster.iso"
+fi
+if [[ "$OPTIONS" =~ "kvm" ]]; then
+  TEMP_DIR_NAME=$( dirname "$OUTPUT_FILE" )
+  TEMP_FILE_NAME=$( basename "$OUTPUT_FILE" .iso )
+  OUTPUT_FILE="$TEMP_DIR_NAME/$TEMP_FILE_NAME-$ISO_USERNAME-kvm.iso"
+fi
+if [[ "$OPTIONS" =~ "biosdevname" ]]; then
+  TEMP_DIR_NAME=$( dirname "$OUTPUT_FILE" )
+  TEMP_FILE_NAME=$( basename "$OUTPUT_FILE" .iso )
+  OUTPUT_FILE="$TEMP_DIR_NAME/$TEMP_FILE_NAME-$ISO_USERNAME-biosdevname.iso"
+fi
+if ! [ "$ISO_NIC" = "$DEFAULT_ISO_NIC" ]; then
+  TEMP_DIR_NAME=$( dirname "$OUTPUT_FILE" )
+  TEMP_FILE_NAME=$( basename "$OUTPUT_FILE" .iso )
+  OUTPUT_FILE="$TEMP_DIR_NAME/$TEMP_FILE_NAME-$ISO_USERNAME-$ISO_NIC.iso"
 fi
 
 # Update Default work directories
