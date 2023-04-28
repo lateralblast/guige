@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Name:         guige (Generic Ubuntu ISO Generation Engine)
-# Version:      1.3.3
+# Version:      1.3.8
 # Release:      1
 # License:      CC-BA (Creative Commons By Attribution)
 #               http://creativecommons.org/licenses/by/4.0/legalcode
@@ -38,13 +38,13 @@ DEFAULT_ISO_USERNAME="ubuntu"
 DEFAULT_ISO_TIMEZONE="Australia/Melbourne"
 DEFAULT_ISO_PASSWORD="ubuntu"
 DEFAULT_ISO_KERNEL="linux-generic"
-DEFAULT_ISO_NIC="eth0"
+DEFAULT_ISO_NIC="first-net"
 DEFAULT_ISO_IP="192.168.1.2"
 DEFAULT_ISO_DNS="8.8.8.8"
 DEFAULT_ISO_CIDR="24"
 DEFAULT_ISO_GATEWAY="192.168.1.254"
 DEFAULT_ISO_SWAPSIZE="2G"
-DEFAULT_ISO_DEVICES="ROOT_DEV"
+DEFAULT_ISO_DEVICES="first-disk"
 DEFAULT_ISO_VOLMGRS="zfs lvm"
 DEFAULT_ISO_GRUB_MENU="0"
 DEFAULT_ISO_GRUB_TIMEOUT="10"
@@ -625,10 +625,10 @@ install_required_packages () {
   for PACKAGE in $REQUIRED_PACKAGES; do
     if [ "$OS_NAME" = "Darwin" ]; then
       PACKAGE_VERSION=$( brew list |grep "$PACKAGE" )
-      COMMAND="brew install $PACKAGE"
+      COMMAND="brew update ; brew install $PACKAGE"
     else
       PACKAGE_VERSION=$( apt show "$PACKAGE" 2>&1 |grep Version )
-      COMMAND="sudo apt install -y $PACKAGE"
+      COMMAND="sudo apt update ; sudo apt install -y $PACKAGE"
     fi
     if [ -z "$PACKAGE_VERSION" ]; then
       handle_output "$COMMAND"
@@ -1141,8 +1141,9 @@ create_chroot_script () {
   handle_output "echo \"mount -t devpts none /dev/pts\" >> \"$ORIG_SCRIPT\""
   handle_output "echo \"export DEBIAN_FRONTEND=noninteractive\" >> \"$ORIG_SCRIPT\""
   if [ ! "$ISO_COUNTRY" = "us" ]; then
-    handle_output "echo \"sudo sed -i \\\"s/\\/archive/\\/au.archive/g\\\" /etc/apt/sources.list\" >> \"$ORIG_SCRIPT\""
+    handle_output "echo \"sed -i \\\"s/\\/archive/\\/au.archive/g\\\" /etc/apt/sources.list\" >> \"$ORIG_SCRIPT\""
   fi
+  handle_output "echo \"rm /var/cache/apt/archives/*.deb\" >> \"$ORIG_SCRIPT\""
   handle_output "echo \"apt update\" >> \"$ORIG_SCRIPT\""
   handle_output "echo \"export LC_ALL=C ; apt install -y --download-only $ISO_CHROOT_PACKAGES\" >> \"$ORIG_SCRIPT\""
   handle_output "echo \"export LC_ALL=C ; apt install -y $ISO_CHROOT_PACKAGES\" >> \"$ORIG_SCRIPT\""
@@ -1159,7 +1160,8 @@ create_chroot_script () {
     echo "mount -t devpts none /dev/pts" >> "$ORIG_SCRIPT"
     echo "export HOME=/root" >> "$ORIG_SCRIPT"
     echo "export DEBIAN_FRONTEND=noninteractive" >> "$ORIG_SCRIPT"
-    echo "sudo sed -i \"s/\\/archive/\\/au.archive/g\" /etc/apt/sources.list" >> "$ORIG_SCRIPT"
+    echo "sed -i \"s/\\/archive/\\/au.archive/g\" /etc/apt/sources.list" >> "$ORIG_SCRIPT"
+    echo "rm /var/cache/apt/archives/*.deb" >> "$ORIG_SCRIPT"
     echo "apt update" >> "$ORIG_SCRIPT"
     echo "export LC_ALL=C ; apt install -y --download-only $ISO_CHROOT_PACKAGES" >> "$ORIG_SCRIPT"
     echo "export LC_ALL=C ; apt install -y $ISO_CHROOT_PACKAGES" >> "$ORIG_SCRIPT"
@@ -1191,6 +1193,10 @@ get_password_crypt () {
     if [ "$TEST_MODE" = "false" ]; then
       ISO_PASSWORD_CRYPT=$( echo "$ISO_PASSWORD" |mkpasswd --method=SHA-512 --stdin )
     fi
+  fi
+  if [ "$ISO_PASSWORD_CRYPT" = "" ]; then
+    echo "Warning: No Password Hash/Crypt created"
+    exit
   fi
 }
 
@@ -1475,6 +1481,7 @@ prepare_autoinstall_iso () {
   handle_output "7z -y x \"$WORK_DIR/files/$BASE_INPUT_FILE\" -o\"$ISO_SOURCE_DIR\""
   handle_output "rm -rf \"$WORK_DIR/BOOT\""
   handle_output "mkdir -p \"$PACKAGE_DIR\""
+  handle_output "sudo rm \"$PACKAGE_DIR\"/*.deb"
   handle_output "mkdir -p \"$SCRIPT_DIR\""
   handle_output "cp \"$ISO_NEW_DIR\"/custom/var/cache/apt/archives/*.deb \"$PACKAGE_DIR\""
   for ISO_DEVICE in $ISO_DEVICES; do
@@ -1493,6 +1500,7 @@ prepare_autoinstall_iso () {
         touch "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/meta-data"
       done
     done
+    sudo rm "$PACKAGE_DIR"/*.deb
     if [ "$VERBOSE_MODE" = "true" ]; then
       sudo cp -v "$ISO_NEW_DIR"/custom/var/cache/apt/archives/*.deb "$PACKAGE_DIR"
     else
@@ -1539,11 +1547,7 @@ prepare_autoinstall_iso () {
     handle_output "echo \"set menu_color_highlight=black/light-gray\" >> \"$ISO_SOURCE_DIR/boot/grub/grub.cfg\""
     for ISO_DEVICE in $ISO_DEVICES; do
       for ISO_VOLMGR in $ISO_VOLMGRS; do
-        if [ "$ISO_DEVICE" = "ROOT_DEV" ]; then
-          handle_output "echo \"menuentry '$ISO_VOLID - $ISO_VOLMGR on first disk - $ISO_KERNEL_ARGS' {\" >> \"$ISO_SOURCE_DIR/boot/grub/grub.cfg\""
-        else
-          handle_output "echo \"menuentry '$ISO_VOLID - $ISO_VOLMGR on $ISO_DEVICE - $ISO_KERNEL_ARGS' {\" >> \"$ISO_SOURCE_DIR/boot/grub/grub.cfg\""
-        fi
+        handle_output "echo \"menuentry '$ISO_VOLID:$ISO_VOLMGR:$ISO_DEVICE:$ISO_NIC ($ISO_KERNEL_ARGS)' {\" >> \"$ISO_SOURCE_DIR/boot/grub/grub.cfg\""
         handle_output "echo \"  set gfxpayload=keep\" >> \"$ISO_SOURCE_DIR/boot/grub/grub.cfg\""
         handle_output "echo \"  linux   /casper/vmlinuz $ISO_KERNEL_ARGS quiet autoinstall ds=nocloud\;s=/$ISO_INSTALL_MOUNT/$ISO_AUTOINSTALL_DIR/configs/$ISO_VOLMGR/$ISO_DEVICE/  ---\" >> \"$ISO_SOURCE_DIR/boot/grub/grub.cfg\""
         handle_output "echo \"  initrd  /casper/initrd\" >> \"$ISO_SOURCE_DIR/boot/grub/grub.cfg\""
@@ -1567,11 +1571,7 @@ prepare_autoinstall_iso () {
       for ISO_DEVICE in $ISO_DEVICES; do
         for ISO_VOLMGR in $ISO_VOLMGRS; do
           handle_output "echo \"label $COUNTER\" >> \"$ISO_SOURCE_DIR/isolinux/txt.cfg\""
-          if [ "$ISO_DEVICE" = "ROOT_DEV" ]; then
-            handle_output "echo \"  menu label ^$ISO_VOLID - $ISO_VOLMGR on first disk - $ISO_KERNEL_ARGS\" >> \"$ISO_SOURCE_DIR/isolinux/txt.cfg\""
-          else
-            handle_output "echo \"  menu label ^$ISO_VOLID - $ISO_VOLMGR on $ISO_DEVICE - $ISO_KERNEL_ARGS\" >> \"$ISO_SOURCE_DIR/isolinux/txt.cfg\""
-          fi
+          handle_output "echo \"  menu label ^$ISO_VOLID:$ISO_VOLMGR:$ISO_DEVICE:$ISO_NIC ($ISO_KERNEL_ARGS)\" >> \"$ISO_SOURCE_DIR/isolinux/txt.cfg\""
           handle_output "echo \"  kernel /casper/vmlinuz\" >> \"$ISO_SOURCE_DIR/isolinux/txt.cfg\""
           handle_output "echo \"  append  initrd=/casper/initrd $ISO_KERNEL_ARGS quiet autoinstall fsck.mode=skip ds=nocloud;s=$ISO_INSTALL_MOUNT/$ISO_AUTOINSTALL_DIR/configs/$ISO_VOLMGR/$ISO_DEVICE/  ---\" >> \"$ISO_SOURCE_DIR/isolinux/txt.cfg\""
           COUNTER=$(( $COUNTER+1 ))
@@ -1589,11 +1589,7 @@ prepare_autoinstall_iso () {
         for ISO_DEVICE in $ISO_DEVICES; do
           for ISO_VOLMGR in $ISO_VOLMGRS; do
             echo "label $COUNTER" >> "$ISO_SOURCE_DIR/isolinux/txt.cfg"
-            if [ "$ISO_DEVICE" = "ROOT_DEV" ]; then
-              echo "  menu label ^$ISO_VOLID - $ISO_VOLMGR on first disk - $ISO_KERNEL_ARGS" >> "$ISO_SOURCE_DIR/isolinux/txt.cfg"
-            else
-              echo "  menu label ^$ISO_VOLID - $ISO_VOLMGR on $ISO_DEVICE - $ISO_KERNEL_ARGS" >> "$ISO_SOURCE_DIR/isolinux/txt.cfg"
-            fi
+            echo "  menu label ^$ISO_VOLID:$ISO_VOLMGR:$ISO_DEVICE:$ISO_NIC ($ISO_KERNEL_ARGS)" >> "$ISO_SOURCE_DIR/isolinux/txt.cfg"
             echo "  kernel /casper/vmlinuz" >> "$ISO_SOURCE_DIR/isolinux/txt.cfg"
             echo "  append  initrd=/casper/initrd $ISO_KERNEL_ARGS quiet autoinstall fsck.mode=skip ds=nocloud;s=$ISO_INSTALL_MOUNT/$ISO_AUTOINSTALL_DIR/configs/$ISO_VOLMGR/$ISO_DEVICE/  ---" >> "$ISO_SOURCE_DIR/isolinux/txt.cfg"
             COUNTER=$(( $COUNTER+1 ))
@@ -1613,11 +1609,7 @@ prepare_autoinstall_iso () {
       echo "loadfont unicode" >> "$ISO_SOURCE_DIR/boot/grub/grub.cfg"
       for ISO_DEVICE in $ISO_DEVICES; do
         for ISO_VOLMGR in $ISO_VOLMGRS; do
-          if [ "$ISO_DEVICE" = "ROOT_DEV" ]; then
-            echo "menuentry '$ISO_VOLID - $ISO_VOLMGR on first disk - $ISO_KERNEL_ARGS' {" >> "$ISO_SOURCE_DIR/boot/grub/grub.cfg"
-          else
-            echo "menuentry '$ISO_VOLID - $ISO_VOLMGR on $ISO_DEVICE - $ISO_KERNEL_ARGS' {" >> "$ISO_SOURCE_DIR/boot/grub/grub.cfg"
-          fi
+          echo "menuentry '$ISO_VOLID:$ISO_VOLMGR:$ISO_DEVICE:$ISO_NIC ($ISO_KERNEL_ARGS)' {" >> "$ISO_SOURCE_DIR/boot/grub/grub.cfg"
           echo "  set gfxpayload=keep" >> "$ISO_SOURCE_DIR/boot/grub/grub.cfg"
           echo "  linux   /casper/vmlinuz $ISO_KERNEL_ARGS quiet autoinstall fsck.mode=skip ds=nocloud\;s=$ISO_INSTALL_MOUNT/$ISO_AUTOINSTALL_DIR/configs/$ISO_VOLMGR/$ISO_DEVICE/  ---" >> "$ISO_SOURCE_DIR/boot/grub/grub.cfg"
           echo "  initrd  /casper/initrd" >> "$ISO_SOURCE_DIR/boot/grub/grub.cfg"
@@ -1779,8 +1771,11 @@ prepare_autoinstall_iso () {
         fi
         handle_output "echo \"  early-commands:\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
         handle_output "echo \"    - \\\"export DEBIAN_FRONTEND=\\\\\"noninteractive\\\\\" && dpkg --auto-deconfigure --force-depends -i $ISO_INSTALL_MOUNT/$ISO_AUTOINSTALL_DIR/packages/*.deb\\\"\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
-        if [ "$ISO_VOLMGR" = "zfs" ] && [ "$ISO_DEVICE" = "ROOT_DEV" ]; then
-          handle_output "echo \"    - \\\"sed -i \\\\\"s/ROOT_DEV/\$(lsblk -x TYPE|grep disk |sort |head -1 |awk '{print \$1}')/g\\\\\" /autoinstall.yaml\\\"\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
+        if [ "$ISO_VOLMGR" = "zfs" ] && [ "$ISO_DEVICE" = "first-disk" ]; then
+          handle_output "echo \"    - \\\"sed -i \\\\\"s/first-disk/\$(lsblk -x TYPE|grep disk |sort |head -1 |awk '{print \$1}')/g\\\\\" /autoinstall.yaml\\\"\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
+        fi
+        if [ "$ISO_NIC" = "first-net" ]; then
+          handle_output "echo \"    - \\\"sed -i \\\\\"s/first-net/\$(lshw -class network -short |grep Ethernet |awk '{print \$2}' |head -1)/g\\\\\" /autoinstall.yaml\\\"\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
         fi
         handle_output "echo \"  late-commands:\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
         handle_output "echo \"    - \\\"mkdir -p $ISO_TARGET_MOUNT/var/postinstall/package\\\"\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
@@ -1967,8 +1962,11 @@ prepare_autoinstall_iso () {
             echo "      name: lvm" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
           fi
           echo "  early-commands:" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
-          if [ "$ISO_VOLMGR" = "zfs" ] && [ "$ISO_DEVICE" = "ROOT_DEV" ]; then
-            echo "    - \"sed -i \\\"s/ROOT_DEV/\$(lsblk -x TYPE|grep disk |sort |head -1 |awk '{print \$1}')/g\\\" /autoinstall.yaml\"" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
+          if [ "$ISO_VOLMGR" = "zfs" ] && [ "$ISO_DEVICE" = "first-disk" ]; then
+            echo "    - \"sed -i \\\"s/first-disk/\$(lsblk -x TYPE|grep disk |sort |head -1 |awk '{print \$1}')/g\\\" /autoinstall.yaml\"" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
+          fi
+          if [ "$ISO_NIC" = "first-net" ]; then
+            echo "    - \"sed -i \\\"s/first-net/\$(lshw -class network -short |grep Ethernet |awk '{print \$2}' |head -1)/g\\\" /autoinstall.yaml\"" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
           fi
           echo "    - \"export DEBIAN_FRONTEND=\\\"noninteractive\\\" && dpkg --auto-deconfigure --force-depends -i $ISO_INSTALL_MOUNT/$ISO_AUTOINSTALL_DIR/packages/*.deb\"" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
           echo "  late-commands:" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
@@ -1981,7 +1979,7 @@ prepare_autoinstall_iso () {
           echo "    - \"rm $ISO_TARGET_MOUNT/etc/localtime\"" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
           echo "    - \"curtin in-target --target=$ISO_TARGET_MOUNT -- ln -s /usr/share/zoneinfo/$ISO_TIMEZONE /etc/localtime\"" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
           if [ ! "$ISO_COUNTRY" = "us" ]; then
-            echo "    - \"curtin in-target --target=$ISO_TARGET_MOUNT -- sed -i \\\"s/\\/archive/\\/$ISO_COUNTRY.archive/g\\\" /etc/apt/sources.list\"" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
+            echo "    - \"curtin in-target --target=$ISO_TARGET_MOUNT -- sed -i \\\"s/\\\/archive/\\\/$ISO_COUNTRY.archive/g\\\" /etc/apt/sources.list\"" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
           fi
           echo "    - \"curtin in-target --target=$ISO_TARGET_MOUNT -- /tmp/post.sh\"" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
           echo "    - \"echo 'GRUB_TERMINAL=\\\"serial console\\\"' >> $ISO_TARGET_MOUNT/etc/default/grub\"" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
@@ -2754,10 +2752,6 @@ if [ "$ISO_DHCP" = "true" ]; then
   TEMP_DIR_NAME=$( dirname "$OUTPUT_FILE" )
   TEMP_FILE_NAME=$( basename "$OUTPUT_FILE" .iso )
   OUTPUT_FILE="$TEMP_DIR_NAME/$TEMP_FILE_NAME-dhcp.iso"
-else
-  TEMP_DIR_NAME=$( dirname "$OUTPUT_FILE" )
-  TEMP_FILE_NAME=$( basename "$OUTPUT_FILE" .iso )
-  OUTPUT_FILE="$TEMP_DIR_NAME/$TEMP_FILE_NAME-$ISO_IP.iso"
 fi
 
 # Update Default work directories
