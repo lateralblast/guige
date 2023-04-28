@@ -259,3 +259,9 @@
 # Added kvm options to install kvm packages
 # 1.3.0: Thu 27 Apr 2023 20:46:19 AEST
 # Added prefix and suffix switches
+# 1.3.1: Thu 27 Apr 2023 21:32:39 AEST
+# Added NIC and biosdevnames tags to output file name
+# 1.3.2: Thu 27 Apr 2023 21:32:39 AEST
+# Added ansible to default packages
+# 1.3.3: Fri 28 Apr 2023 09:31:37 AEST
+# Added additional tags to output filename

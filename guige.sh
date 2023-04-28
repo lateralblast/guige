@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Name:         guige (Generic Ubuntu ISO Generation Engine)
-# Version:      1.3.0
+# Version:      1.3.3
 # Release:      1
 # License:      CC-BA (Creative Commons By Attribution)
 #               http://creativecommons.org/licenses/by/4.0/legalcode
@@ -57,7 +57,7 @@ DEFAULT_ISO_BOOT_TYPE="efi"
 DEFAULT_ISO_SERIAL_PORT="ttyS1"
 DEFAULT_ISO_SERIAL_PORT_ADDRESS="0x02f8"
 DEFAULT_ISO_SERIAL_PORT_SPEED="115200"
-DEFAULT_ISO_INSTALL_PACKAGES="zfsutils-linux zfs-initramfs net-tools curl wget sudo file rsync dialog setserial"
+DEFAULT_ISO_INSTALL_PACKAGES="zfsutils-linux zfs-initramfs net-tools curl wget sudo file rsync dialog setserial ansible"
 REQUIRED_PACKAGES="p7zip-full wget xorriso whois squashfs-tools sudo file rsync net-tools nfs-kernel-server ansible dialog"
 DEFAULT_DOCKER_ARCH="amd64 arm64"
 DEFAULT_ISO_SSH_KEY_FILE="$HOME/.ssh/id_rsa.pub"
@@ -2718,32 +2718,46 @@ fi
 if ! [ "$ISO_PREFIX" = "" ]; then
   TEMP_DIR_NAME=$( dirname "$OUTPUT_FILE" )
   TEMP_FILE_NAME=$( basename "$OUTPUT_FILE" .iso )
-  OUTPUT_FILE="$TEMP_DIR_NAME/$ISO_PREFIX-$TEMP_FILE_NAME-$ISO_USERNAME.iso"
+  OUTPUT_FILE="$TEMP_DIR_NAME/$ISO_PREFIX-$TEMP_FILE_NAME.iso"
 fi
 if ! [ "$ISO_SUFFIX" = "" ]; then
   TEMP_DIR_NAME=$( dirname "$OUTPUT_FILE" )
   TEMP_FILE_NAME=$( basename "$OUTPUT_FILE" .iso )
-  OUTPUT_FILE="$TEMP_DIR_NAME/$TEMP_FILE_NAME-$ISO_USERNAME-$ISO_SUFFIX.iso"
+  OUTPUT_FILE="$TEMP_DIR_NAME/$TEMP_FILE_NAME-$ISO_SUFFIX.iso"
 fi
 if [[ "$OPTIONS" =~ "cluster" ]]; then
   TEMP_DIR_NAME=$( dirname "$OUTPUT_FILE" )
   TEMP_FILE_NAME=$( basename "$OUTPUT_FILE" .iso )
-  OUTPUT_FILE="$TEMP_DIR_NAME/$TEMP_FILE_NAME-$ISO_USERNAME-cluster.iso"
+  OUTPUT_FILE="$TEMP_DIR_NAME/$TEMP_FILE_NAME-cluster.iso"
 fi
 if [[ "$OPTIONS" =~ "kvm" ]]; then
   TEMP_DIR_NAME=$( dirname "$OUTPUT_FILE" )
   TEMP_FILE_NAME=$( basename "$OUTPUT_FILE" .iso )
-  OUTPUT_FILE="$TEMP_DIR_NAME/$TEMP_FILE_NAME-$ISO_USERNAME-kvm.iso"
+  OUTPUT_FILE="$TEMP_DIR_NAME/$TEMP_FILE_NAME-kvm.iso"
 fi
 if [[ "$OPTIONS" =~ "biosdevname" ]]; then
   TEMP_DIR_NAME=$( dirname "$OUTPUT_FILE" )
   TEMP_FILE_NAME=$( basename "$OUTPUT_FILE" .iso )
-  OUTPUT_FILE="$TEMP_DIR_NAME/$TEMP_FILE_NAME-$ISO_USERNAME-biosdevname.iso"
+  OUTPUT_FILE="$TEMP_DIR_NAME/$TEMP_FILE_NAME-biosdevname.iso"
 fi
 if ! [ "$ISO_NIC" = "$DEFAULT_ISO_NIC" ]; then
   TEMP_DIR_NAME=$( dirname "$OUTPUT_FILE" )
   TEMP_FILE_NAME=$( basename "$OUTPUT_FILE" .iso )
-  OUTPUT_FILE="$TEMP_DIR_NAME/$TEMP_FILE_NAME-$ISO_USERNAME-$ISO_NIC.iso"
+  OUTPUT_FILE="$TEMP_DIR_NAME/$TEMP_FILE_NAME-$ISO_NIC.iso"
+fi
+if ! [ "$ISO_HOSTNAME" = "$DEFAULT_ISO_HOSTNAME" ]; then
+  TEMP_DIR_NAME=$( dirname "$OUTPUT_FILE" )
+  TEMP_FILE_NAME=$( basename "$OUTPUT_FILE" .iso )
+  OUTPUT_FILE="$TEMP_DIR_NAME/$TEMP_FILE_NAME-$ISO_HOSTNAME.iso"
+fi
+if [ "$ISO_DHCP" = "true" ]; then
+  TEMP_DIR_NAME=$( dirname "$OUTPUT_FILE" )
+  TEMP_FILE_NAME=$( basename "$OUTPUT_FILE" .iso )
+  OUTPUT_FILE="$TEMP_DIR_NAME/$TEMP_FILE_NAME-dhcp.iso"
+else
+  TEMP_DIR_NAME=$( dirname "$OUTPUT_FILE" )
+  TEMP_FILE_NAME=$( basename "$OUTPUT_FILE" .iso )
+  OUTPUT_FILE="$TEMP_DIR_NAME/$TEMP_FILE_NAME-$ISO_IP.iso"
 fi
 
 # Update Default work directories
