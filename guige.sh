@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Name:         guige (Generic Ubuntu ISO Generation Engine)
-# Version:      1.3.8
+# Version:      1.4.1
 # Release:      1
 # License:      CC-BA (Creative Commons By Attribution)
 #               http://creativecommons.org/licenses/by/4.0/legalcode
@@ -1144,6 +1144,8 @@ create_chroot_script () {
     handle_output "echo \"sed -i \\\"s/\\/archive/\\/au.archive/g\\\" /etc/apt/sources.list\" >> \"$ORIG_SCRIPT\""
   fi
   handle_output "echo \"rm /var/cache/apt/archives/*.deb\" >> \"$ORIG_SCRIPT\""
+  handle_output "echo \"rm /etc/update-motd.d/91-contract-ua-esm-status\" >> \"$ORIG_SCRIPT\""
+  handle_output "echo \"rm /etc/apt/apt.conf.d/20apt-esm-hook.conf\" >> \"$ORIG_SCRIPT\""
   handle_output "echo \"apt update\" >> \"$ORIG_SCRIPT\""
   handle_output "echo \"export LC_ALL=C ; apt install -y --download-only $ISO_CHROOT_PACKAGES\" >> \"$ORIG_SCRIPT\""
   handle_output "echo \"export LC_ALL=C ; apt install -y $ISO_CHROOT_PACKAGES\" >> \"$ORIG_SCRIPT\""
@@ -1162,6 +1164,8 @@ create_chroot_script () {
     echo "export DEBIAN_FRONTEND=noninteractive" >> "$ORIG_SCRIPT"
     echo "sed -i \"s/\\/archive/\\/au.archive/g\" /etc/apt/sources.list" >> "$ORIG_SCRIPT"
     echo "rm /var/cache/apt/archives/*.deb" >> "$ORIG_SCRIPT"
+    echo "rm /etc/apt/apt.conf.d/20apt-esm-hook.conf" >> "$ORIG_SCRIPT"
+    echo "rm /etc/update-motd.d/91-contract-ua-esm-status" >> "$ORIG_SCRIPT"
     echo "apt update" >> "$ORIG_SCRIPT"
     echo "export LC_ALL=C ; apt install -y --download-only $ISO_CHROOT_PACKAGES" >> "$ORIG_SCRIPT"
     echo "export LC_ALL=C ; apt install -y $ISO_CHROOT_PACKAGES" >> "$ORIG_SCRIPT"
@@ -2103,6 +2107,7 @@ do
     -G|--gateway)
       ISO_GATEWAY="$2"
       shift 2
+      ISO_DHCP="false"
       ;;
     -g|--grubmenu)
       ISO_GRUB_MENU="$2"
@@ -2118,6 +2123,7 @@ do
     -I|--ip)
       ISO_IP="$2"
       shift 2
+      ISO_DHCP="false"
       ;;
     -i|--inputiso)
       INPUT_FILE="$2"
@@ -2702,11 +2708,22 @@ if ! [ "$ISO_HOSTNAME" = "$DEFAULT_ISO_HOSTNAME" ]; then
   TEMP_FILE_NAME=$( basename "$OUTPUT_FILE" .iso )
   OUTPUT_FILE="$TEMP_DIR_NAME/$TEMP_FILE_NAME-$ISO_HOSTNAME.iso"
 fi
-if ! [ "$ISO_IP" = "$DEFAULT_ISO_IP" ]; then
-  ISO_DHCP="false"
+if ! [ "$ISO_NIC" = "$DEFAULT_ISO_NIC" ]; then
   TEMP_DIR_NAME=$( dirname "$OUTPUT_FILE" )
   TEMP_FILE_NAME=$( basename "$OUTPUT_FILE" .iso )
-  OUTPUT_FILE="$TEMP_DIR_NAME/$TEMP_FILE_NAME-$ISO_IP.iso"
+  OUTPUT_FILE="$TEMP_DIR_NAME/$TEMP_FILE_NAME-$ISO_NIC.iso"
+fi
+if [ "$ISO_DHCP" = "false" ]; then
+  if ! [ "$ISO_IP" = "$DEFAULT_ISO_IP" ]; then
+    TEMP_DIR_NAME=$( dirname "$OUTPUT_FILE" )
+    TEMP_FILE_NAME=$( basename "$OUTPUT_FILE" .iso )
+    OUTPUT_FILE="$TEMP_DIR_NAME/$TEMP_FILE_NAME-$ISO_IP.iso"
+  fi
+  if ! [ "$ISO_GATEWAY" = "$DEFAULT_ISO_GATEWAY" ]; then
+    TEMP_DIR_NAME=$( dirname "$OUTPUT_FILE" )
+    TEMP_FILE_NAME=$( basename "$OUTPUT_FILE" .iso )
+    OUTPUT_FILE="$TEMP_DIR_NAME/$TEMP_FILE_NAME-$ISO_GATEWAY.iso"
+  fi
 fi
 if ! [ "$ISO_USERNAME" = "$DEFAULT_ISO_USERNAME" ]; then
   TEMP_DIR_NAME=$( dirname "$OUTPUT_FILE" )
@@ -2737,16 +2754,6 @@ if [[ "$OPTIONS" =~ "biosdevname" ]]; then
   TEMP_DIR_NAME=$( dirname "$OUTPUT_FILE" )
   TEMP_FILE_NAME=$( basename "$OUTPUT_FILE" .iso )
   OUTPUT_FILE="$TEMP_DIR_NAME/$TEMP_FILE_NAME-biosdevname.iso"
-fi
-if ! [ "$ISO_NIC" = "$DEFAULT_ISO_NIC" ]; then
-  TEMP_DIR_NAME=$( dirname "$OUTPUT_FILE" )
-  TEMP_FILE_NAME=$( basename "$OUTPUT_FILE" .iso )
-  OUTPUT_FILE="$TEMP_DIR_NAME/$TEMP_FILE_NAME-$ISO_NIC.iso"
-fi
-if ! [ "$ISO_HOSTNAME" = "$DEFAULT_ISO_HOSTNAME" ]; then
-  TEMP_DIR_NAME=$( dirname "$OUTPUT_FILE" )
-  TEMP_FILE_NAME=$( basename "$OUTPUT_FILE" .iso )
-  OUTPUT_FILE="$TEMP_DIR_NAME/$TEMP_FILE_NAME-$ISO_HOSTNAME.iso"
 fi
 if [ "$ISO_DHCP" = "true" ]; then
   TEMP_DIR_NAME=$( dirname "$OUTPUT_FILE" )
