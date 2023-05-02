@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Name:         guige (Generic Ubuntu ISO Generation Engine)
-# Version:      1.4.1
+# Version:      1.4.2
 # Release:      1
 # License:      CC-BA (Creative Commons By Attribution)
 #               http://creativecommons.org/licenses/by/4.0/legalcode
@@ -42,6 +42,7 @@ DEFAULT_ISO_NIC="first-net"
 DEFAULT_ISO_IP="192.168.1.2"
 DEFAULT_ISO_DNS="8.8.8.8"
 DEFAULT_ISO_CIDR="24"
+DEFAULT_ISO_BLACKLIST="md_multipath"
 DEFAULT_ISO_GATEWAY="192.168.1.254"
 DEFAULT_ISO_SWAPSIZE="2G"
 DEFAULT_ISO_DEVICES="first-disk"
@@ -281,6 +282,7 @@ print_help () {
     -2|--isourl              Specify ISO URL
     -3|--prefix              Prefix to add to ISO name
     -4|--suffix              Suffix to add to ISO name
+    -5|--blacklist           Block kernel module(s) (default: $DEFAULT_ISO_BLACKLIST)
     -A|--codename            Linux release codename (default: $DEFAULT_ISO_CODENAME)
     -a|--action:             Action to perform (e.g. createiso, justiso, runchrootscript, checkdocker, installrequired)
     -B|--layout              Layout (default: $DEFAULT_ISO_LAYOUT)
@@ -1774,6 +1776,17 @@ prepare_autoinstall_iso () {
             handle_output "echo \"      name: lvm\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
         fi
         handle_output "echo \"  early-commands:\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
+        if ! [ "$ISO_BLACKLIST" = "" ]; then 
+          if [[ "$ISO_BLACKLIST" =~ "," ]]; then
+            for MODULE in $(${ISO_BLACKLIST//,/ }); do
+              handle_output "echo \"    - \\\"echo 'blacklist $MODULE' > /etc/modprobe.d/$MODULE.conf\\\"\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
+              handle_output "echo \"    - \\\"modprobe -r $MODULE\\\"\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
+            done
+          else
+            handle_output "echo \"    - \\\"echo 'blacklist $ISO_BLACKLIST' > /etc/modprobe.d/$ISO_BLACKLIST.conf\\\"\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
+            handle_output "echo \"    - \\\"modprobe -r $ISO_BLACKLIST\\\"\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
+          fi
+        fi
         handle_output "echo \"    - \\\"export DEBIAN_FRONTEND=\\\\\"noninteractive\\\\\" && dpkg --auto-deconfigure --force-depends -i $ISO_INSTALL_MOUNT/$ISO_AUTOINSTALL_DIR/packages/*.deb\\\"\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
         if [ "$ISO_VOLMGR" = "zfs" ] && [ "$ISO_DEVICE" = "first-disk" ]; then
           handle_output "echo \"    - \\\"sed -i \\\\\"s/first-disk/\$(lsblk -x TYPE|grep disk |sort |head -1 |awk '{print \$1}')/g\\\\\" /autoinstall.yaml\\\"\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
@@ -1831,7 +1844,7 @@ prepare_autoinstall_iso () {
             handle_output "echo \"    - \\\"curtin in-target --target=$ISO_TARGET_MOUNT -- pro config set apt_news=false\\\"\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
           fi
         fi
-        handle_output "echo \"  version: 1\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
+        handle_output "echo \"  version: 1\" >> \"$CONFIG_DIR/$rISO_VOLMGR/$ISO_DEVICE/user-data\""
         if [ "$TEST_MODE" = "false" ]; then
           echo "#cloud-config" > "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
           echo "autoinstall:" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
@@ -1966,6 +1979,17 @@ prepare_autoinstall_iso () {
             echo "      name: lvm" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
           fi
           echo "  early-commands:" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
+          if ! [ "$ISO_BLACKLIST" = "" ]; then 
+            if [[ "$ISO_BLACKLIST" =~ "," ]]; then
+              for MODULE in $(${ISO_BLACKLIST//,/ }); do
+                echo "    - \"echo 'blacklist $MODULE' > /etc/modprobe.d/$MODULE.conf\"" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
+                echo "    - \"modprobe -r $MODULE\"" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
+              done
+            else
+              echo "    - \"echo 'blacklist $ISO_BLACKLIST' > /etc/modprobe.d/$ISO_BLACKLIST.conf\"" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
+              echo "    - \"modprobe -r $ISO_BLACKLIST\"" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
+            fi
+          fi
           if [ "$ISO_VOLMGR" = "zfs" ] && [ "$ISO_DEVICE" = "first-disk" ]; then
             echo "    - \"sed -i \\\"s/first-disk/\$(lsblk -x TYPE|grep disk |sort |head -1 |awk '{print \$1}')/g\\\" /autoinstall.yaml\"" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
           fi
@@ -2053,6 +2077,10 @@ do
       ;;
     -4|--suffix)
       ISO_SUFFIX="$2"
+      shift 2
+      ;;
+    -5|--blacklist)
+      ISO_BLACKLIST="$2"
       shift 2
       ;;
     -A|--codename)
@@ -2482,6 +2510,9 @@ case $DELETE in
     FULL_FORCE_MODE="false"
 esac
 
+if [ "$ISO_BLACKLIST" = "" ]; then
+  ISO_BLACKLIST="$DEFAULT_ISO_BLACKLIST"
+fi
 if [ "$ISO_COUNTRY" = "" ]; then
   ISO_COUNTRY="$DEFAULT_ISO_COUNTRY"
 fi

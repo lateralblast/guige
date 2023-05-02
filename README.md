@@ -11,7 +11,7 @@ used to hang a shield on the shoulder or neck when not in use.
 Version
 -------
 
-Current version: 1.4.1
+Current version: 1.4.2
 
 Prerequisites
 -------------
@@ -104,14 +104,15 @@ You can get help using the -h or --help switch:
     -2|--isourl              Specify ISO URL
     -3|--prefix              Prefix to add to ISO name
     -4|--suffix              Suffix to add to ISO name
+    -5|--blacklist           Block kernel module(s) (default: md_multipath)
     -A|--codename            Linux release codename (default: jammy)
     -a|--action:             Action to perform (e.g. createiso, justiso, runchrootscript, checkdocker, installrequired)
     -B|--layout              Layout (default: us)
-    -b|--bootserverip:       NFS/Bootserver IP (default: 192.168.1.43)
+    -b|--bootserverip:       NFS/Bootserver IP (default: 192.168.11.67)
     -C|--cidr:               CIDR (default: 24)
     -c|--sshkeyfile:         SSH key file to use as SSH key (default: ~/.ssh/id_rsa.pub)
     -D|--dns:                DNS Server (ddefault: 8.8.8.8)
-    -d|--bootdisk:           Boot Disk devices (default: ROOT_DEV)
+    -d|--bootdisk:           Boot Disk devices (default: first-disk)
     -E|--locale:             LANGUAGE (default: en_US.UTF-8)
     -e|--lcall:              LC_ALL (default: en_US)
     -F|--bmcusername:        BMC/iDRAC User (default: root)
@@ -121,7 +122,7 @@ You can get help using the -h or --help switch:
     -H|--hostname:           Hostname (default: ubuntu)
     -h|--help                Help/Usage Information
     -I|--ip:                 IP Address (default: 192.168.1.2)
-    -i|--inputiso:           Input/base ISO file (default: ubuntu-22.04.2-live-server-arm64.iso)
+    -i|--inputiso:           Input/base ISO file (default: ubuntu-22.04.2-live-server-amd64.iso)
     -J|--grubfile            GRUB file (default: grub.cfg)
     -j|--autoinstalldir      Directory where autoinstall config files are stored on ISO (default: autoinstall)
     -K|--kernel:             Kernel package (default: linux-generic)
@@ -130,14 +131,14 @@ You can get help using the -h or --help switch:
     -l|--bmcip:              BMC/iDRAC IP (default: 192.168.1.3)
     -M|--installtarget:      Where the install mounts the target filesystem (default: /target)
     -m|--installmount:       Where the install mounts the CD during install (default: /cdrom)
-    -N|--bootserverfile      Boot sever file (default: ubuntu-22.04.2-live-server-arm64-efi-autoinstall.iso)
-    -n|--nic:                Network device (default: eth0)
-    -O|--isopackages:        List of packages to install (default: zfsutils-linux zfs-initramfs net-tools curl wget sudo file rsync dialog setserial)
-    -o|--outputiso:          Output ISO file (default: ubuntu-22.04.2-live-server-arm64-efi-autoinstall.iso)
+    -N|--bootserverfile      Boot sever file (default: ubuntu-22.04.2-live-server-amd64-efi-autoinstall.iso)
+    -n|--nic:                Network device (default: first-net)
+    -O|--isopackages:        List of packages to install (default: zfsutils-linux zfs-initramfs net-tools curl wget sudo file rsync dialog setserial ansible)
+    -o|--outputiso:          Output ISO file (default: ubuntu-22.04.2-live-server-amd64-efi-autoinstall.iso)
     -P|--password:           Password (default: ubuntu)
     -p|--chrootpackages:     List of packages to add to ISO (default: )
     -Q|--build:              Type of ISO to build (default: live-server)
-    -q|--arch:               Architecture (default: arm64)
+    -q|--arch:               Architecture (default: amd64)
     -R|--realname:           Realname (default Ubuntu)
     -r|--serialportspeed:    Serial Port Speed (default: 115200)
     -S|--swapsize:           Swap size (default 2G)
@@ -148,9 +149,9 @@ You can get help using the -h or --help switch:
     -u|--postinstall:        Postinstall action (e.g. installpackages, upgrade, distupgrade, installdrivers, all, autoupgrades)
     -V|--version             Display Script Version
     -v|--serialport          Serial Port (default: ttyS1)
-    -W|--workdir:            Work directory (default: ~/guige/ubuntu/22.04.2)
+    -W|--workdir:            Work directory (default: ~/guige/Ubuntu/22.04.2)
     -w|--oldworkdir:         Docker work directory (used internally)
-    -X|--isovolid:           ISO Volume ID (default: ubuntu 22.04.2 Server)
+    -X|--isovolid:           ISO Volume ID (default: Ubuntu 22.04.2 Server)
     -x|--grubtimeout:        Grub timeout (default: 10)
     -Y|--allowpassword       Allow password access via SSH (default: false)
     -y|--bmcpassword:        BMC/iDRAC password (default: calvin)
