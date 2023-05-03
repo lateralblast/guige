@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Name:         guige (Generic Ubuntu ISO Generation Engine)
-# Version:      1.4.2
+# Version:      1.4.3
 # Release:      1
 # License:      CC-BA (Creative Commons By Attribution)
 #               http://creativecommons.org/licenses/by/4.0/legalcode
@@ -42,7 +42,8 @@ DEFAULT_ISO_NIC="first-net"
 DEFAULT_ISO_IP="192.168.1.2"
 DEFAULT_ISO_DNS="8.8.8.8"
 DEFAULT_ISO_CIDR="24"
-DEFAULT_ISO_BLACKLIST="md_multipath"
+DEFAULT_ISO_BLOCKLIST="md_multipath"
+DEFAULT_ISO_ALLOWLIST=""
 DEFAULT_ISO_GATEWAY="192.168.1.254"
 DEFAULT_ISO_SWAPSIZE="2G"
 DEFAULT_ISO_DEVICES="first-disk"
@@ -282,7 +283,8 @@ print_help () {
     -2|--isourl              Specify ISO URL
     -3|--prefix              Prefix to add to ISO name
     -4|--suffix              Suffix to add to ISO name
-    -5|--blacklist           Block kernel module(s) (default: $DEFAULT_ISO_BLACKLIST)
+    -5|--block               Block kernel module(s) (default: $DEFAULT_ISO_BLOCKLIST)
+    -6|--allow               Load additional kernel modules(s)
     -A|--codename            Linux release codename (default: $DEFAULT_ISO_CODENAME)
     -a|--action:             Action to perform (e.g. createiso, justiso, runchrootscript, checkdocker, installrequired)
     -B|--layout              Layout (default: $DEFAULT_ISO_LAYOUT)
@@ -1776,15 +1778,17 @@ prepare_autoinstall_iso () {
             handle_output "echo \"      name: lvm\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
         fi
         handle_output "echo \"  early-commands:\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
-        if ! [ "$ISO_BLACKLIST" = "" ]; then 
-          if [[ "$ISO_BLACKLIST" =~ "," ]]; then
-            for MODULE in $(${ISO_BLACKLIST//,/ }); do
-              handle_output "echo \"    - \\\"echo 'blacklist $MODULE' > /etc/modprobe.d/$MODULE.conf\\\"\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
-              handle_output "echo \"    - \\\"modprobe -r $MODULE\\\"\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
+        if ! [ "$ISO_ALLOWLIST" = "" ]; then 
+          if [[ "$ISO_ALLOWLIST" =~ "," ]]; then
+            for MODULE in $(${ISO_BLOCKLIST//,/ }); do
+              handle_output "echo \"    - \\\"echo '$MODULE' > /etc/modules-load.d/$MODULE.conf\\\"\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
+              handle_output "echo \"    - \\\"echo '$MODULE' > $ISO_TARGET_MOUNT/etc/modules-load.d/$MODULE.conf\\\"\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
+              handle_output "echo \"    - \\\"modprobe $MODULE\\\"\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
             done
           else
-            handle_output "echo \"    - \\\"echo 'blacklist $ISO_BLACKLIST' > /etc/modprobe.d/$ISO_BLACKLIST.conf\\\"\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
-            handle_output "echo \"    - \\\"modprobe -r $ISO_BLACKLIST\\\"\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
+            handle_output "echo \"    - \\\"echo '$ISO_ALLOWLIST' > /etc/modules-load.d/$ISO_BLOCKLIST.conf\\\"\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
+            handle_output "echo \"    - \\\"echo '$ISO_ALLOWLIST' > $ISO_TARGET_MOUNT/etc/modules-load.d/$ISO_BLOCKLIST.conf\\\"\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
+            handle_output "echo \"    - \\\"modprobe $ISO_ALLOWLIST\\\"\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
           fi
         fi
         handle_output "echo \"    - \\\"export DEBIAN_FRONTEND=\\\\\"noninteractive\\\\\" && dpkg --auto-deconfigure --force-depends -i $ISO_INSTALL_MOUNT/$ISO_AUTOINSTALL_DIR/packages/*.deb\\\"\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
@@ -1793,6 +1797,19 @@ prepare_autoinstall_iso () {
         fi
         if [ "$ISO_NIC" = "first-net" ]; then
           handle_output "echo \"    - \\\"sed -i \\\\\"s/first-net/\$(lshw -class network -short |grep Ethernet |awk '{print \$2}' |head -1)/g\\\\\" /autoinstall.yaml\\\"\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
+        fi
+        if ! [ "$ISO_BLOCKLIST" = "" ]; then 
+          if [[ "$ISO_BLOCKLIST" =~ "," ]]; then
+            for MODULE in $(${ISO_BLOCKLIST//,/ }); do
+              handle_output "echo \"    - \\\"echo 'blacklist $MODULE' > /etc/modprobe.d/$MODULE.conf\\\"\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
+              handle_output "echo \"    - \\\"echo 'blacklist $MODULE' > $ISO_TARGET_MOUNT/etc/modprobe.d/$MODULE.conf\\\"\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
+              handle_output "echo \"    - \\\"modprobe -r $MODULE --remove-holders\\\"\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
+            done
+          else
+            handle_output "echo \"    - \\\"echo 'blacklist $ISO_BLOCKLIST' > /etc/modprobe.d/$ISO_BLOCKLIST.conf\\\"\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
+            handle_output "echo \"    - \\\"echo 'blacklist $ISO_BLOCKLIST' > $ISO_TARGET_MOUNT/etc/modprobe.d/$ISO_BLOCKLIST.conf\\\"\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
+            handle_output "echo \"    - \\\"modprobe -r $ISO_BLOCKLIST --remove-holders\\\"\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
+          fi
         fi
         handle_output "echo \"  late-commands:\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
         handle_output "echo \"    - \\\"mkdir -p $ISO_TARGET_MOUNT/var/postinstall/package\\\"\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
@@ -1979,15 +1996,17 @@ prepare_autoinstall_iso () {
             echo "      name: lvm" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
           fi
           echo "  early-commands:" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
-          if ! [ "$ISO_BLACKLIST" = "" ]; then 
-            if [[ "$ISO_BLACKLIST" =~ "," ]]; then
-              for MODULE in $(${ISO_BLACKLIST//,/ }); do
-                echo "    - \"echo 'blacklist $MODULE' > /etc/modprobe.d/$MODULE.conf\"" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
-                echo "    - \"modprobe -r $MODULE\"" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
+          if ! [ "$ISO_ALLOWLIST" = "" ]; then 
+            if [[ "$ISO_ALLOWLIST" =~ "," ]]; then
+              for MODULE in $(${ISO_ALLOWLIST//,/ }); do
+                echo "    - \"echo '$MODULE' > /etc/modules-load.d/$MODULE.conf\"" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
+                echo "    - \"echo '$MODULE' > $ISO_TARGET_MOUNT/etc/modules-load.d/$MODULE.conf\"" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
+                echo "    - \"modprobe $MODULE\"" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
               done
             else
-              echo "    - \"echo 'blacklist $ISO_BLACKLIST' > /etc/modprobe.d/$ISO_BLACKLIST.conf\"" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
-              echo "    - \"modprobe -r $ISO_BLACKLIST\"" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
+              echo "    - \"echo '$ISO_ALLOWKLIST' > /etc/modules-load.d/$ISO_BLOCKLIST.conf\"" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
+              echo "    - \"echo '$ISO_ALLOWLIST' > $ISO_TARGET_MOUNT/etc/modules-load.d/$ISO_BLOCKLIST.conf\"" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
+              echo "    - \"modprobe $ISO_ALLOWLIST\"" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
             fi
           fi
           if [ "$ISO_VOLMGR" = "zfs" ] && [ "$ISO_DEVICE" = "first-disk" ]; then
@@ -1997,6 +2016,19 @@ prepare_autoinstall_iso () {
             echo "    - \"sed -i \\\"s/first-net/\$(lshw -class network -short |grep Ethernet |awk '{print \$2}' |head -1)/g\\\" /autoinstall.yaml\"" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
           fi
           echo "    - \"export DEBIAN_FRONTEND=\\\"noninteractive\\\" && dpkg --auto-deconfigure --force-depends -i $ISO_INSTALL_MOUNT/$ISO_AUTOINSTALL_DIR/packages/*.deb\"" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
+          if ! [ "$ISO_BLOCKLIST" = "" ]; then 
+            if [[ "$ISO_BLOCKLIST" =~ "," ]]; then
+              for MODULE in $(${ISO_BLOCKLIST//,/ }); do
+                echo "    - \"echo 'blacklist $MODULE' > /etc/modprobe.d/$MODULE.conf\"" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
+                echo "    - \"echo 'blacklist $MODULE' > $ISO_TARGET_MOUNT/etc/modprobe.d/$MODULE.conf\"" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
+                echo "    - \"modprobe -r $MODULE --remove-holders\"" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
+              done
+            else
+              echo "    - \"echo 'blacklist $ISO_BLOCKLIST' > /etc/modprobe.d/$ISO_BLOCKLIST.conf\"" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
+              echo "    - \"echo 'blacklist $ISO_BLOCKLIST' > $ISO_TARGET_MOUNT/etc/modprobe.d/$ISO_BLOCKLIST.conf\"" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
+              echo "    - \"modprobe -r $ISO_BLOCKLIST --remove-holders\"" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
+            fi
+          fi
           echo "  late-commands:" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
           echo "    - \"mkdir -p $ISO_TARGET_MOUNT/var/postinstall/packages\"" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
           echo "    - \"cp $ISO_INSTALL_MOUNT/$ISO_AUTOINSTALL_DIR/packages/*.deb $ISO_TARGET_MOUNT/var/postinstall/packages/\"" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
@@ -2079,8 +2111,12 @@ do
       ISO_SUFFIX="$2"
       shift 2
       ;;
-    -5|--blacklist)
-      ISO_BLACKLIST="$2"
+    -5|--block)
+      ISO_BLOCKLIST="$2"
+      shift 2
+      ;;
+    -6|--allow)
+      ISO_ALLOWLIST="$2"
       shift 2
       ;;
     -A|--codename)
@@ -2510,8 +2546,11 @@ case $DELETE in
     FULL_FORCE_MODE="false"
 esac
 
-if [ "$ISO_BLACKLIST" = "" ]; then
-  ISO_BLACKLIST="$DEFAULT_ISO_BLACKLIST"
+if [ "$ISO_BLOCKLIST" = "" ]; then
+  ISO_BLOCKLIST="$DEFAULT_ISO_BLOCKLIST"
+fi
+if [ "$ISO_ALLOWLIST" = "" ]; then
+  ISO_ALLOWLIST="$DEFAULT_ISO_ALLOWLIST"
 fi
 if [ "$ISO_COUNTRY" = "" ]; then
   ISO_COUNTRY="$DEFAULT_ISO_COUNTRY"
@@ -2909,6 +2948,8 @@ if [ "$ISO_DHCP" = "false" ]; then
 fi
 handle_output "# Kernel:                      $ISO_KERNEL" TEXT
 handle_output "# Kernel arguments:            $ISO_KERNEL_ARGS" TEXT
+handle_output "# Block kernel modules:        $ISO_BLOCKLIST" TEXT
+handle_output "# Allow kernel modules:        $ISO_ALLOWLIST" TEXT
 handle_output "# Keyboard Layout:             $ISO_LAYOUT" TEXT
 handle_output "# Locale:                      $ISO_LOCALE" TEXT
 handle_output "# LC_ALL:                      $ISO_LC_ALL" TEXT

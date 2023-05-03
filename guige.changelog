@@ -282,4 +282,6 @@
 # 1.4.1: Tue 02 May 2023 19:14:54 AEST
 # More improvements to ISO naming
 # 1.4.2: Tue  2 May 2023 23:00:36 AEST
-# Added blacklist switch to blacklist kernel modules
+# Added block switch to blacklist kernel modules
+# 1.4.3: Wed 03 May 2023 15:30:05 AEST
+# Added allow switch to load additional kernel modules
