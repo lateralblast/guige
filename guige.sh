@@ -1782,12 +1782,10 @@ prepare_autoinstall_iso () {
           if [[ "$ISO_ALLOWLIST" =~ "," ]]; then
             for MODULE in $(${ISO_BLOCKLIST//,/ }); do
               handle_output "echo \"    - \\\"echo '$MODULE' > /etc/modules-load.d/$MODULE.conf\\\"\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
-              handle_output "echo \"    - \\\"echo '$MODULE' > $ISO_TARGET_MOUNT/etc/modules-load.d/$MODULE.conf\\\"\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
               handle_output "echo \"    - \\\"modprobe $MODULE\\\"\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
             done
           else
             handle_output "echo \"    - \\\"echo '$ISO_ALLOWLIST' > /etc/modules-load.d/$ISO_BLOCKLIST.conf\\\"\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
-            handle_output "echo \"    - \\\"echo '$ISO_ALLOWLIST' > $ISO_TARGET_MOUNT/etc/modules-load.d/$ISO_BLOCKLIST.conf\\\"\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
             handle_output "echo \"    - \\\"modprobe $ISO_ALLOWLIST\\\"\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
           fi
         fi
@@ -1802,12 +1800,10 @@ prepare_autoinstall_iso () {
           if [[ "$ISO_BLOCKLIST" =~ "," ]]; then
             for MODULE in $(${ISO_BLOCKLIST//,/ }); do
               handle_output "echo \"    - \\\"echo 'blacklist $MODULE' > /etc/modprobe.d/$MODULE.conf\\\"\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
-              handle_output "echo \"    - \\\"echo 'blacklist $MODULE' > $ISO_TARGET_MOUNT/etc/modprobe.d/$MODULE.conf\\\"\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
               handle_output "echo \"    - \\\"modprobe -r $MODULE --remove-holders\\\"\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
             done
           else
             handle_output "echo \"    - \\\"echo 'blacklist $ISO_BLOCKLIST' > /etc/modprobe.d/$ISO_BLOCKLIST.conf\\\"\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
-            handle_output "echo \"    - \\\"echo 'blacklist $ISO_BLOCKLIST' > $ISO_TARGET_MOUNT/etc/modprobe.d/$ISO_BLOCKLIST.conf\\\"\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
             handle_output "echo \"    - \\\"modprobe -r $ISO_BLOCKLIST --remove-holders\\\"\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
           fi
         fi
@@ -2000,12 +1996,10 @@ prepare_autoinstall_iso () {
             if [[ "$ISO_ALLOWLIST" =~ "," ]]; then
               for MODULE in $(${ISO_ALLOWLIST//,/ }); do
                 echo "    - \"echo '$MODULE' > /etc/modules-load.d/$MODULE.conf\"" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
-                echo "    - \"echo '$MODULE' > $ISO_TARGET_MOUNT/etc/modules-load.d/$MODULE.conf\"" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
                 echo "    - \"modprobe $MODULE\"" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
               done
             else
               echo "    - \"echo '$ISO_ALLOWKLIST' > /etc/modules-load.d/$ISO_BLOCKLIST.conf\"" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
-              echo "    - \"echo '$ISO_ALLOWLIST' > $ISO_TARGET_MOUNT/etc/modules-load.d/$ISO_BLOCKLIST.conf\"" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
               echo "    - \"modprobe $ISO_ALLOWLIST\"" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
             fi
           fi
@@ -2020,12 +2014,10 @@ prepare_autoinstall_iso () {
             if [[ "$ISO_BLOCKLIST" =~ "," ]]; then
               for MODULE in $(${ISO_BLOCKLIST//,/ }); do
                 echo "    - \"echo 'blacklist $MODULE' > /etc/modprobe.d/$MODULE.conf\"" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
-                echo "    - \"echo 'blacklist $MODULE' > $ISO_TARGET_MOUNT/etc/modprobe.d/$MODULE.conf\"" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
                 echo "    - \"modprobe -r $MODULE --remove-holders\"" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
               done
             else
               echo "    - \"echo 'blacklist $ISO_BLOCKLIST' > /etc/modprobe.d/$ISO_BLOCKLIST.conf\"" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
-              echo "    - \"echo 'blacklist $ISO_BLOCKLIST' > $ISO_TARGET_MOUNT/etc/modprobe.d/$ISO_BLOCKLIST.conf\"" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
               echo "    - \"modprobe -r $ISO_BLOCKLIST --remove-holders\"" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
             fi
           fi
