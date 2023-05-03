@@ -1857,7 +1857,7 @@ prepare_autoinstall_iso () {
             handle_output "echo \"    - \\\"curtin in-target --target=$ISO_TARGET_MOUNT -- pro config set apt_news=false\\\"\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
           fi
         fi
-        handle_output "echo \"  version: 1\" >> \"$CONFIG_DIR/$rISO_VOLMGR/$ISO_DEVICE/user-data\""
+        handle_output "echo \"  version: 1\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
         if [ "$TEST_MODE" = "false" ]; then
           echo "#cloud-config" > "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
           echo "autoinstall:" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
