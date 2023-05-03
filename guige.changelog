@@ -285,3 +285,5 @@
 # Added block switch to blacklist kernel modules
 # 1.4.3: Wed 03 May 2023 15:30:05 AEST
 # Added allow switch to load additional kernel modules
+# 1.4.4: Wed 03 May 2023 17:20:26 AEST
+# Fixed bug with package_update
