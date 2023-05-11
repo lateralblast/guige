@@ -287,3 +287,9 @@
 # Added allow switch to load additional kernel modules
 # 1.4.4: Wed 03 May 2023 17:20:26 AEST
 # Fixed bug with package_update
+# 1.4.5: Thu 11 May 2023 20:59:54 AEST
+# Fixed bug with docker ISO creation
+# 1.4.6: Thu 11 May 2023 21:21:32 AEST
+# Added support for Ubuntu 23.10
+# 1.4.7: Thu 11 May 2023 22:27:19 AEST
+# Fixed NIC device detection

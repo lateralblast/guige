@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Name:         guige (Generic Ubuntu ISO Generation Engine)
-# Version:      1.4.4
+# Version:      1.4.7
 # Release:      1
 # License:      CC-BA (Creative Commons By Attribution)
 #               http://creativecommons.org/licenses/by/4.0/legalcode
@@ -119,7 +119,7 @@ DO_EXECUTE_RACADM="false"
 # Get OS name
 
 if [ -f "/usr/bin/lsb_release" ]; then
-  DEFAULT_ISO_OS_NAME=$( lsb_release -d |awk '{print $2}' )
+  DEFAULT_ISO_OS_NAME=$( lsb_release -d |awk '{print $2}' |tr '[:upper:]' '[:lower:]' )
 else
   DEFAULT_ISO_OS_NAME="$CURRENT_ISO_OS_NAME"
 fi
@@ -471,6 +471,9 @@ get_code_name() {
       ;;
     "23.04")
       ISO_CODENAME="lunar"
+      ;;
+    "23.10")
+      ISO_CODENAME="mantic"
       ;;
   esac
 
@@ -1794,7 +1797,7 @@ prepare_autoinstall_iso () {
           handle_output "echo \"    - \\\"sed -i \\\\\"s/first-disk/\$(lsblk -x TYPE|grep disk |sort |head -1 |awk '{print \$1}')/g\\\\\" /autoinstall.yaml\\\"\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
         fi
         if [ "$ISO_NIC" = "first-net" ]; then
-          handle_output "echo \"    - \\\"sed -i \\\\\"s/first-net/\$(lshw -class network -short |grep Ethernet |awk '{print \$2}' |head -1)/g\\\\\" /autoinstall.yaml\\\"\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
+          handle_output "echo \"    - \\\"sed -i \\\\\"s/first-net/\$(lshw -class network -short |awk '{print \$2}' |grep ^e |head -1)/g\\\\\" /autoinstall.yaml\\\"\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
         fi
         if ! [ "$ISO_BLOCKLIST" = "" ]; then 
           if [[ "$ISO_BLOCKLIST" =~ "," ]]; then
@@ -2007,7 +2010,7 @@ prepare_autoinstall_iso () {
             echo "    - \"sed -i \\\"s/first-disk/\$(lsblk -x TYPE|grep disk |sort |head -1 |awk '{print \$1}')/g\\\" /autoinstall.yaml\"" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
           fi
           if [ "$ISO_NIC" = "first-net" ]; then
-            echo "    - \"sed -i \\\"s/first-net/\$(lshw -class network -short |grep Ethernet |awk '{print \$2}' |head -1)/g\\\" /autoinstall.yaml\"" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
+            echo "    - \"sed -i \\\"s/first-net/\$(lshw -class network -short |awk '{print \$2}' |grep ^e |head -1)/g\\\" /autoinstall.yaml\"" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
           fi
           echo "    - \"export DEBIAN_FRONTEND=\\\"noninteractive\\\" && dpkg --auto-deconfigure --force-depends -i $ISO_INSTALL_MOUNT/$ISO_AUTOINSTALL_DIR/packages/*.deb\"" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
           if ! [ "$ISO_BLOCKLIST" = "" ]; then 
@@ -2846,7 +2849,7 @@ fi
 BASE_INPUT_FILE=$( basename "$INPUT_FILE" )
 case $ISO_BUILD_TYPE in 
   "daily-live"|"daily-live-server")
-    if [ "$ISO_RELEASE" = "23.04" ]; then
+    if [ "$ISO_RELEASE" = "23.10" ]; then
       ISO_URL="https://cdimage.ubuntu.com/ubuntu-server/daily-live/current/$ISO_CODENAME-live-server-$ISO_ARCH.iso"
     else
       ISO_URL="https://cdimage.ubuntu.com/ubuntu-server/$ISO_CODENAME/daily-live/current/$BASE_INPUT_FILE"
