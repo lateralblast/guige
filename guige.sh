@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Name:         guige (Generic Ubuntu ISO Generation Engine)
-# Version:      1.4.7
+# Version:      1.4.8
 # Release:      1
 # License:      CC-BA (Creative Commons By Attribution)
 #               http://creativecommons.org/licenses/by/4.0/legalcode
@@ -70,6 +70,7 @@ DEFAULT_BMC_USERNAME="root"
 DEFAULT_BMC_PASSWORD="calvin"
 DEFAULT_BMC_IP="192.168.1.3"
 DEFAULT_ISO_KERNEL_ARGS="console=tty0 console=vt0 console=$DEFAULT_ISO_SERIAL_PORT,$DEFAULT_ISO_SERIAL_PORT_SPEED"
+DEFAULT_ISO_SEARCH=""
 
 # Default flags
 
@@ -115,6 +116,8 @@ DO_CREATE_EXPORT="false"
 DO_CREATE_ANSIBLE="false"
 DO_CHECK_RACADM="false"
 DO_EXECUTE_RACADM="false"
+DO_LIST_ISOS="false"    
+DO_SCP_HEADER="false"
 
 # Get OS name
 
@@ -239,6 +242,8 @@ print_usage () {
   dockeriso:              Use Docker to create ISO
   dockerisoandsquashfs:   Use Docker to create ISO
   queryiso:               Query ISO for information                  
+  listalliso:             List all ISOs
+  listiso:                List ISOs
 
   options
   -------
@@ -285,6 +290,7 @@ print_help () {
     -4|--suffix              Suffix to add to ISO name
     -5|--block               Block kernel module(s) (default: $DEFAULT_ISO_BLOCKLIST)
     -6|--allow               Load additional kernel modules(s)
+    -9|--search              Search output for value (eg --action listallisos --search efi)
     -A|--codename            Linux release codename (default: $DEFAULT_ISO_CODENAME)
     -a|--action:             Action to perform (e.g. createiso, justiso, runchrootscript, checkdocker, installrequired)
     -B|--layout              Layout (default: $DEFAULT_ISO_LAYOUT)
@@ -538,6 +544,35 @@ get_info_from_iso () {
   handle_output "# Codename:      $ISO_CODENAME" TEXT
   handle_output "# Architecture:  $ISO_ARCH" TEXT
   handle_output "# Output ISO:    $OUTPUT_FILE" TEXT
+  TEMP_VERBOSE_MODE="false"
+}
+
+# Get my IP
+
+get_my_ip () {
+  if [ "$OS_NAME" = "Darwin" ]; then
+    MY_IP=$(ifconfig | grep "inet " | grep -v 127.0.0.1 |head -1 |awk '{print $2}')
+  else
+    MY_IP=$(hostname -I)
+  fi
+}
+
+# Function: List ISOs
+
+list_isos () {
+  TEMP_VERBOSE_MODE="true"
+  if [ "$ISO_SEARCH" = "" ]; then
+    FILE_LIST=$(find $WORK_DIR -name "*.iso" 2> /dev/null)
+  else
+    FILE_LIST=$(find $WORK_DIR -name "*.iso" 2> /dev/null |grep "$ISO_SEARCH" )
+  fi
+  for FILE_NAME in $FILE_LIST; do
+    if [ "$DO_SCP_HEADER" = "true" ]; then
+      handle_output "$MY_USERNAME@$MY_IP:$FILE_NAME" TEXT
+    else
+      handle_output "$FILE_NAME" TEXT
+    fi
+  done
   TEMP_VERBOSE_MODE="false"
 }
 
@@ -2114,6 +2149,10 @@ do
       ISO_ALLOWLIST="$2"
       shift 2
       ;;
+    -9|--search)
+      ISO_SEARCH="$2"
+      shift 2
+      ;;
     -A|--codename)
       ISO_CODENAME="$2"
       shift 2
@@ -2340,6 +2379,9 @@ done
 
 # Process option switch
 
+if [[ "$OPTIONS" =~ "scp" ]]; then
+  DO_SCP_HEADER="true"
+fi
 if [[ "$OPTIONS" =~ "cluster" ]]; then
   DEFAULT_ISO_INSTALL_PACKAGES="$DEFAULT_ISO_INSTALL_PACKAGES pcs pacemaker cockpit cockpit-machines resource-agents-extra resource-agents-common resource-agents-base glusterfs-server"
 fi
@@ -2487,6 +2529,12 @@ case $ACTION in
   "unmount")
     DO_UMOUNT_ISO="true"
     ;;
+  "listallisos"|"listisos")
+    if [[ "$ACTION" =~ "listalliso" ]]; then
+      LIST_ALL_ISOS="true"
+    fi
+    DO_LIST_ISOS="true"    
+    ;;
   *)
     handle_output "Action: $ACTION is not a valid action"
     exit
@@ -2541,6 +2589,9 @@ case $DELETE in
     FULL_FORCE_MODE="false"
 esac
 
+if [ "$ISO_SEARCH" = "" ]; then
+  ISO_SEARCH="$DEFAULT_ISO_SEARCH"
+fi
 if [ "$ISO_BLOCKLIST" = "" ]; then
   ISO_BLOCKLIST="$DEFAULT_ISO_BLOCKLIST"
 fi
@@ -2891,7 +2942,7 @@ fi
 
 # Output variables
 
-if [ "$DO_PRINT_ENV" ] || [ "$INTERACTIVE_MODE" = "true" ]; then
+if [ "$DO_PRINT_ENV" = "true" ] || [ "$INTERACTIVE_MODE" = "true" ]; then
   TEMP_VERBOSE_MODE="true"
 fi
 
@@ -2905,6 +2956,14 @@ if [ "$DO_ISO_SSH_KEY" = "true" ]; then
   fi
 fi
 
+# get IP
+
+get_my_ip
+
+# get my username
+
+MY_USERNAME=$(whoami)
+
 # Get Password Crypt
 
 get_password_crypt "$ISO_PASSWORD"
@@ -2917,6 +2976,8 @@ handle_output "# Work directory:              $WORK_DIR" TEXT
 handle_output "# Required packages:           $REQUIRED_PACKAGES" TEXT
 handle_output "# ISO input file:              $INPUT_FILE" TEXT
 handle_output "# ISO output file:             $OUTPUT_FILE" TEXT
+handle_output "# SCP command:                 $MY_USERNAME@$MY_IP:$OUTPUT_FILE" TEXT
+handle_output "# SCP command:                 $MY_USERNAME@$MY_IP:$OUTPUT_FILE" TEXT
 handle_output "# ISO URL:                     $ISO_URL" TEXT
 handle_output "# ISO Volume ID:               $ISO_VOLID" TEXT
 handle_output "# ISO mount directory:         $ISO_MOUNT_DIR" TEXT
@@ -3282,6 +3343,10 @@ else
     unmount_iso
     unmount_squashfs
   fi
+fi
+if [ "$DO_LIST_ISOS" = "true" ]; then
+  list_isos
+  exit
 fi
 
 if [ "$DO_PRINT_HELP" = "true" ]; then

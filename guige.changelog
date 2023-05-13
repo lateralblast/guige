@@ -293,3 +293,5 @@
 # Added support for Ubuntu 23.10
 # 1.4.7: Thu 11 May 2023 22:27:19 AEST
 # Fixed NIC device detection
+# 1.4.8: Sat 13 May 2023 18:45:09 AEST
+# Added initial list and search functionality for ISOs

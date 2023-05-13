@@ -11,7 +11,7 @@ used to hang a shield on the shoulder or neck when not in use.
 Version
 -------
 
-Current version: 1.4.7
+Current version: 1.4.8
 
 Prerequisites
 -------------
@@ -106,6 +106,7 @@ You can get help using the -h or --help switch:
     -4|--suffix              Suffix to add to ISO name
     -5|--block               Block kernel module(s) (default: md_multipath)
     -6|--allow               Load additional kernel modules(s)
+    -9|--search              Search output for value (eg --action listallisos --search efi)
     -A|--codename            Linux release codename (default: jammy)
     -a|--action:             Action to perform (e.g. createiso, justiso, runchrootscript, checkdocker, installrequired)
     -B|--layout              Layout (default: us)
@@ -187,6 +188,8 @@ You can get more usage information by using the usage tag with the action switch
   dockeriso:              Use Docker to create ISO
   dockerisoandsquashfs:   Use Docker to create ISO
   queryiso:               Query ISO for information
+  listalliso:             List all ISOs
+  listiso:                List ISOs
 
   options
   -------
@@ -316,6 +319,12 @@ Create an Ubuntu 23.04 ISO, using the daily-live server image as a basis, set th
 
 ```
 ./guige.sh --action createiso --release 23.04 --options verbose,sshkeys --build daily-live --username uadmin --password uadmin
+```
+
+List ISOs with efi in name:
+
+```
+./guige.sh --action listallisos --search efi
 ```
 
 Process
