@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Name:         guige (Generic Ubuntu ISO Generation Engine)
-# Version:      1.4.8
+# Version:      1.4.9
 # Release:      1
 # License:      CC-BA (Creative Commons By Attribution)
 #               http://creativecommons.org/licenses/by/4.0/legalcode
@@ -553,7 +553,7 @@ get_my_ip () {
   if [ "$OS_NAME" = "Darwin" ]; then
     MY_IP=$(ifconfig | grep "inet " | grep -v 127.0.0.1 |head -1 |awk '{print $2}')
   else
-    MY_IP=$(hostname -I)
+    MY_IP=$(hostname -I |awk '{print $1}')
   fi
 }
 
@@ -2976,7 +2976,6 @@ handle_output "# Work directory:              $WORK_DIR" TEXT
 handle_output "# Required packages:           $REQUIRED_PACKAGES" TEXT
 handle_output "# ISO input file:              $INPUT_FILE" TEXT
 handle_output "# ISO output file:             $OUTPUT_FILE" TEXT
-handle_output "# SCP command:                 $MY_USERNAME@$MY_IP:$OUTPUT_FILE" TEXT
 handle_output "# SCP command:                 $MY_USERNAME@$MY_IP:$OUTPUT_FILE" TEXT
 handle_output "# ISO URL:                     $ISO_URL" TEXT
 handle_output "# ISO Volume ID:               $ISO_VOLID" TEXT

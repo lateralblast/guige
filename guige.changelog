@@ -295,3 +295,5 @@
 # Fixed NIC device detection
 # 1.4.8: Sat 13 May 2023 18:45:09 AEST
 # Added initial list and search functionality for ISOs
+# 1.4.9: Sat May 13 07:54:58 PM AEST 2023
+# Bugfix for IP determination
