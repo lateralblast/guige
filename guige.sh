@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Name:         guige (Generic Ubuntu ISO Generation Engine)
-# Version:      1.5.2
+# Version:      1.5.3
 # Release:      1
 # License:      CC-BA (Creative Commons By Attribution)
 #               http://creativecommons.org/licenses/by/4.0/legalcode
@@ -48,7 +48,7 @@ DEFAULT_ISO_NIC="first-net"
 DEFAULT_ISO_IP="192.168.1.2"
 DEFAULT_ISO_DNS="8.8.8.8"
 DEFAULT_ISO_CIDR="24"
-DEFAULT_ISO_BLOCKLIST="md_multipath"
+DEFAULT_ISO_BLOCKLIST=""
 DEFAULT_ISO_ALLOWLIST=""
 DEFAULT_ISO_GATEWAY="192.168.1.254"
 DEFAULT_ISO_SWAPSIZE="2G"
@@ -1844,11 +1844,11 @@ prepare_autoinstall_iso () {
           if [[ "$ISO_BLOCKLIST" =~ "," ]]; then
             for MODULE in $(${ISO_BLOCKLIST//,/ }); do
               handle_output "echo \"    - \\\"echo 'blacklist $MODULE' > /etc/modprobe.d/$MODULE.conf\\\"\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
-              handle_output "echo \"    - \\\"modprobe -r $MODULE --remove-holders\\\"\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
+              handle_output "echo \"    - \\\"modprobe -r $MODULE --remove-dependencies\\\"\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
             done
           else
             handle_output "echo \"    - \\\"echo 'blacklist $ISO_BLOCKLIST' > /etc/modprobe.d/$ISO_BLOCKLIST.conf\\\"\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
-            handle_output "echo \"    - \\\"modprobe -r $ISO_BLOCKLIST --remove-holders\\\"\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
+            handle_output "echo \"    - \\\"modprobe -r $ISO_BLOCKLIST --remove-dependencies\\\"\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
           fi
         fi
         handle_output "echo \"  late-commands:\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
@@ -2058,11 +2058,11 @@ prepare_autoinstall_iso () {
             if [[ "$ISO_BLOCKLIST" =~ "," ]]; then
               for MODULE in $(${ISO_BLOCKLIST//,/ }); do
                 echo "    - \"echo 'blacklist $MODULE' > /etc/modprobe.d/$MODULE.conf\"" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
-                echo "    - \"modprobe -r $MODULE --remove-holders\"" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
+                echo "    - \"modprobe -r $MODULE --remove-dependencies\"" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
               done
             else
               echo "    - \"echo 'blacklist $ISO_BLOCKLIST' > /etc/modprobe.d/$ISO_BLOCKLIST.conf\"" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
-              echo "    - \"modprobe -r $ISO_BLOCKLIST --remove-holders\"" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
+              echo "    - \"modprobe -r $ISO_BLOCKLIST --remove-dependencies\"" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
             fi
           fi
           echo "  late-commands:" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
@@ -2399,6 +2399,13 @@ done
 
 if [[ "$OPTIONS" =~ "scp" ]]; then
   DO_SCP_HEADER="true"
+fi
+if [[ "$OPTIONS" =~ "nomultipath" ]]; then
+  if [ "$ISO_BLOCKLIST" = "" ]; then
+    ISO_BLOCKLIST="md_multipath"
+  else
+    ISO_BLOCKLIST="$ISO_BLOCKLIST,md_multipath"
+  fi
 fi
 if [[ "$OPTIONS" =~ "cluster" ]]; then
   DEFAULT_ISO_INSTALL_PACKAGES="$DEFAULT_ISO_INSTALL_PACKAGES pcs pacemaker cockpit cockpit-machines resource-agents-extra resource-agents-common resource-agents-base glusterfs-server"

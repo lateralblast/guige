@@ -303,3 +303,5 @@
 # Added more handling for latest development release
 # 1.5.2: Thu 24 Aug 2023 10:42:14 AEST
 # Updated release information
+# 1.5.3: Thu 24 Aug 2023 16:34:30 AEST
+# Fixed modprobe bug
