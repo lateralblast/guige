@@ -305,3 +305,7 @@
 # Updated release information
 # 1.5.3: Thu 24 Aug 2023 16:34:30 AEST
 # Fixed modprobe bug
+# 1.5.4: Thu 24 Aug 2023 17:16:59 AEST
+# Added option to disable serial
+# 1.5.5: Thu 24 Aug 2023 17:24:47 AEST
+# Added noserial option
