@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Name:         guige (Generic Ubuntu ISO Generation Engine)
-# Version:      1.4.9
+# Version:      1.5.2
 # Release:      1
 # License:      CC-BA (Creative Commons By Attribution)
 #               http://creativecommons.org/licenses/by/4.0/legalcode
@@ -27,8 +27,14 @@ BMC_EXPOSE_DURATION="180"
 # Default variables
 
 SCRIPT_NAME="guige"
+CURRENT_ISO_RELEASE_1404="14.04.6"
+CURRENT_ISO_RELEASE_1604="16.04.7"
+CURRENT_ISO_RELEASE_1804="18.04.6"
+CURRENT_ISO_RELEASE_2004="20.04.6"
+CURRENT_ISO_RELEASE_2204="22.04.3"
+CURRENT_ISO_RELEASE="22.04.3"
+CURRENT_ISO_DEV_RELEASE="23.10"
 CURRENT_ISO_OS_NAME="ubuntu"
-CURRENT_ISO_RELEASE="22.04.2"
 CURRENT_DOCKER_UBUNTU_RELEASE="22.04"
 CURRENT_ISO_CODENAME="jammy"
 CURRENT_ISO_ARCH="amd64"
@@ -2246,6 +2252,14 @@ do
     -L|--release)
       ISO_RELEASE="$2"
       shift 2
+      case $ISO_RELEASE in
+        "$CURRENT_ISO_DEV_RELEASE")
+          if [ "$ISO_BUILD_TYPE" = "" ]; then
+            ISO_BUILD_TYPE="daily-live"
+            DO_DAILY_ISO="true"
+          fi
+          ;;
+      esac
       ;;
     -l|--bmcip)
       BMC_IP="$2"
@@ -2285,8 +2299,12 @@ do
       shift 2
       ;;
     -Q|--build)
-      DO_DAILY_ISO="true"
       ISO_BUILD_TYPE="$2"
+      case "$ISO_BUILD_TYPE" in
+        "daily")
+          DO_DAILY_ISO="true"
+          ;;
+      esac
       shift 2
       ;;
     -q|--arch)
@@ -2645,15 +2663,21 @@ fi
 if [ "$ISO_RELEASE" = "" ]; then
   ISO_RELEASE="$DEFAULT_ISO_RELEASE"
 else
-  case $ISO_RELEASE in
+  case "$ISO_RELEASE" in
     "22.04")
-      ISO_RELEASE="22.04.2"
+      ISO_RELEASE="$CURRENT_ISO_RELEASE_2204"
       ;;
     "20.04")
-      ISO_RELEASE="20.04.5"
+      ISO_RELEASE="$CURRENT_ISO_RELEASE_2004"
       ;;
     "18.04")
-      ISO_RELEASE="18.04.6"
+      ISO_RELEASE="$CURRENT_ISO_RELEASE_1804"
+      ;;
+    "16.04")
+      ISO_RELEASE="$CURRENT_ISO_RELEASE_1604"
+      ;;
+    "14.04")
+      ISO_RELEASE="$CURRENT_ISO_RELEASE_1404"
       ;;
   esac
 fi
@@ -2977,6 +3001,8 @@ handle_output "# Required packages:           $REQUIRED_PACKAGES" TEXT
 handle_output "# ISO input file:              $INPUT_FILE" TEXT
 handle_output "# ISO output file:             $OUTPUT_FILE" TEXT
 handle_output "# SCP command:                 $MY_USERNAME@$MY_IP:$OUTPUT_FILE" TEXT
+handle_output "# ISO Release:                 $ISO_RELEASE" TEXT
+handle_output "# ISO Build:                   $ISO_BUILD_TYPE" TEXT
 handle_output "# ISO URL:                     $ISO_URL" TEXT
 handle_output "# ISO Volume ID:               $ISO_VOLID" TEXT
 handle_output "# ISO mount directory:         $ISO_MOUNT_DIR" TEXT
