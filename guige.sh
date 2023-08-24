@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Name:         guige (Generic Ubuntu ISO Generation Engine)
-# Version:      1.5.5
+# Version:      1.5.6
 # Release:      1
 # License:      CC-BA (Creative Commons By Attribution)
 #               http://creativecommons.org/licenses/by/4.0/legalcode
@@ -424,7 +424,7 @@ check_docker_config () {
       handle_output "echo \"      - /docker/$SCRIPT_NAME-$DIR_ARCH/:/root/$SCRIPT_NAME/\" >> $WORK_DIR/$DIR_ARCH/docker-compose.yml"
       handle_output "# Create Docker config $WORK_DIR/$DIR_ARCH/Dockerfile" TEXT
       handle_output "echo \"FROM ubuntu:$CURRENT_DOCKER_UBUNTU_RELEASE\" > $WORK_DIR/$DIR_ARCH/Dockerfile"
-      handle_output "echo \"RUN apt-get update && apt-get install -y $REQUIRED_PACKAGES\" >> $WORK_DIR/$DIR_ARCH/Dockerfile"
+      handle_output "echo \"RUN apt-get update && apt-get -o Dpkg::Options::=\"--force-overwrite\" install -y $REQUIRED_PACKAGES\" >> $WORK_DIR/$DIR_ARCH/Dockerfile"
       handle_output "# Build docker"
       handle_output "cd $WORK_DIR/$DIR_ARCH ; docker build . --tag $SCRIPT_NAME-$DIR_ARCH --platform linux/$DIR_ARCH"
       DOCKER_IMAGE_CHECK=$( docker images |grep "^$SCRIPT_NAME-$DIR_ARCH" |awk '{print $1}' )
@@ -451,7 +451,7 @@ check_docker_config () {
           echo "    volumes:" >> "$WORK_DIR/$DIR_ARCH/docker-compose.yml"
           echo "      - /docker/$SCRIPT_NAME-$DIR_ARCH/:/root/$SCRIPT_NAME/" >> "$WORK_DIR/$DIR_ARCH/docker-compose.yml"
           echo "FROM ubuntu:$CURRENT_DOCKER_UBUNTU_RELEASE" > "$WORK_DIR/$DIR_ARCH/Dockerfile"
-          echo "RUN apt-get update && apt-get install -y $REQUIRED_PACKAGES" >> "$WORK_DIR/$DIR_ARCH/Dockerfile"
+          echo "RUN apt-get update && apt-get -o Dpkg::Options::=\"--force-overwrite\" install -y $REQUIRED_PACKAGES" >> "$WORK_DIR/$DIR_ARCH/Dockerfile"
           docker build "$WORK_DIR/$DIR_ARCH" --tag "$SCRIPT_NAME-$DIR_ARCH" --platform "linux/$DIR_ARCH"
         fi
       fi
@@ -1834,7 +1834,7 @@ prepare_autoinstall_iso () {
             handle_output "echo \"    - \\\"modprobe $ISO_ALLOWLIST\\\"\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
           fi
         fi
-        handle_output "echo \"    - \\\"export DEBIAN_FRONTEND=\\\\\"noninteractive\\\\\" && dpkg --auto-deconfigure --force-depends -i $ISO_INSTALL_MOUNT/$ISO_AUTOINSTALL_DIR/packages/*.deb\\\"\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
+        handle_output "echo \"    - \\\"export DEBIAN_FRONTEND=\\\\\"noninteractive\\\\\" && dpkg --force-overwrite --auto-deconfigure --force-depends -i $ISO_INSTALL_MOUNT/$ISO_AUTOINSTALL_DIR/packages/*.deb\\\"\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
         if [ "$ISO_VOLMGR" = "zfs" ] && [ "$ISO_DEVICE" = "first-disk" ]; then
           handle_output "echo \"    - \\\"sed -i \\\\\"s/first-disk/\$(lsblk -x TYPE|grep disk |sort |head -1 |awk '{print \$1}')/g\\\\\" /autoinstall.yaml\\\"\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
         fi
@@ -1856,7 +1856,7 @@ prepare_autoinstall_iso () {
         handle_output "echo \"    - \\\"mkdir -p $ISO_TARGET_MOUNT/var/postinstall/package\\\"\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
         handle_output "echo \"    - \\\"cp $ISO_INSTALL_MOUNT/$ISO_AUTOINSTALL_DIR/packages/*.deb $ISO_TARGET_MOUNT/var/postinstall/packages/\\\"\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
         handle_output "echo \"    - \\\"echo '#!/bin/bash' > $ISO_TARGET_MOUNT/tmp/post.sh\\\"\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
-        handle_output "echo \"    - \\\"echo 'export DEBIAN_FRONTEND=\\\\\\"noninteractive\\\\\\" && dpkg --auto-deconfigure --force-depends -i /var/postinstall/packages/*.deb' >> $ISO_TARGET_MOUNT/tmp/post.sh\\\"\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
+        handle_output "echo \"    - \\\"echo 'export DEBIAN_FRONTEND=\\\\\\"noninteractive\\\\\\" && dpkg --force-overwrite --auto-deconfigure --force-depends -i /var/postinstall/packages/*.deb' >> $ISO_TARGET_MOUNT/tmp/post.sh\\\"\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
         handle_output "echo \"    - \\\"echo '$ISO_TIMEZONE' > $ISO_TARGET_MOUNT/etc/timezone\\\"\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
         handle_output "echo \"    - \\\"rm $ISO_TARGET_MOUNT/etc/localtime\\\"\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
         handle_output "echo \"    - \\\"curtin in-target --target=$ISO_TARGET_MOUNT -- ln -s /usr/share/zoneinfo/$ISO_TIMEZONE /etc/localtime\\\"\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
@@ -2061,7 +2061,7 @@ prepare_autoinstall_iso () {
           if [ "$ISO_NIC" = "first-net" ]; then
             echo "    - \"sed -i \\\"s/first-net/\$(lshw -class network -short |awk '{print \$2}' |grep ^e |head -1)/g\\\" /autoinstall.yaml\"" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
           fi
-          echo "    - \"export DEBIAN_FRONTEND=\\\"noninteractive\\\" && dpkg --auto-deconfigure --force-depends -i $ISO_INSTALL_MOUNT/$ISO_AUTOINSTALL_DIR/packages/*.deb\"" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
+          echo "    - \"export DEBIAN_FRONTEND=\\\"noninteractive\\\" && dpkg --force-overwrite --auto-deconfigure --force-depends -i $ISO_INSTALL_MOUNT/$ISO_AUTOINSTALL_DIR/packages/*.deb\"" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
           if ! [ "$ISO_BLOCKLIST" = "" ]; then 
             if [[ "$ISO_BLOCKLIST" =~ "," ]]; then
               for MODULE in $(${ISO_BLOCKLIST//,/ }); do
@@ -2077,7 +2077,7 @@ prepare_autoinstall_iso () {
           echo "    - \"mkdir -p $ISO_TARGET_MOUNT/var/postinstall/packages\"" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
           echo "    - \"cp $ISO_INSTALL_MOUNT/$ISO_AUTOINSTALL_DIR/packages/*.deb $ISO_TARGET_MOUNT/var/postinstall/packages/\"" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
           echo "    - \"echo '#!/bin/bash' > $ISO_TARGET_MOUNT/tmp/post.sh\"" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
-          echo "    - \"echo 'export DEBIAN_FRONTEND=\\\"noninteractive\\\" && dpkg --auto-deconfigure --force-depends -i /var/postinstall/packages/*.deb' >> $ISO_TARGET_MOUNT/tmp/post.sh\"" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
+          echo "    - \"echo 'export DEBIAN_FRONTEND=\\\"noninteractive\\\" && dpkg --force-overwrite --auto-deconfigure --force-depends -i /var/postinstall/packages/*.deb' >> $ISO_TARGET_MOUNT/tmp/post.sh\"" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
           echo "    - \"chmod +x $ISO_TARGET_MOUNT/tmp/post.sh\"" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
           echo "    - \"echo '$ISO_TIMEZONE' > $ISO_TARGET_MOUNT/etc/timezone\"" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
           echo "    - \"rm $ISO_TARGET_MOUNT/etc/localtime\"" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
