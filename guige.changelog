@@ -311,3 +311,5 @@
 # Added noserial option
 # 1.5.6: Thu 24 Aug 2023 18:19:28 AEST
 # Added overwrite option to apt and dpkg
+# 1.5.7: Fri  1 Sep 2023 14:15:27 AEST
+# Added options for dpkg

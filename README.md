@@ -11,7 +11,7 @@ used to hang a shield on the shoulder or neck when not in use.
 Version
 -------
 
-Current version: 1.5.6
+Current version: 1.5.7
 
 Prerequisites
 -------------
@@ -19,7 +19,8 @@ Prerequisites
 The Following packages are required on Linux (or in the Docker container when building ISO on non Linux platforms):
 
 - p7zip-full (created to extract ISO contents)
-- wget (required to fetch file)
+- lftp (required to fetch files)
+- wget (required to fetch files)
 - xorriso (required to create ISO)
 - whois (required for mkpasswd to create password hashes - MacOS will use openssl)
 - squashfs-tools (required for copying/manipulating root filesystem on ISO)

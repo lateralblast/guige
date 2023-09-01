@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Name:         guige (Generic Ubuntu ISO Generation Engine)
-# Version:      1.5.6
+# Version:      1.5.7
 # Release:      1
 # License:      CC-BA (Creative Commons By Attribution)
 #               http://creativecommons.org/licenses/by/4.0/legalcode
@@ -65,8 +65,8 @@ DEFAULT_ISO_BOOT_TYPE="efi"
 DEFAULT_ISO_SERIAL_PORT="ttyS1"
 DEFAULT_ISO_SERIAL_PORT_ADDRESS="0x02f8"
 DEFAULT_ISO_SERIAL_PORT_SPEED="115200"
-DEFAULT_ISO_INSTALL_PACKAGES="zfsutils-linux zfs-initramfs net-tools curl wget sudo file rsync dialog setserial ansible"
-REQUIRED_PACKAGES="p7zip-full wget xorriso whois squashfs-tools sudo file rsync net-tools nfs-kernel-server ansible dialog"
+DEFAULT_ISO_INSTALL_PACKAGES="zfsutils-linux zfs-initramfs net-tools curl lftp wget sudo file rsync dialog setserial ansible"
+REQUIRED_PACKAGES="p7zip-full lftp wget xorriso whois squashfs-tools sudo file rsync net-tools nfs-kernel-server ansible dialog"
 DEFAULT_DOCKER_ARCH="amd64 arm64"
 DEFAULT_ISO_SSH_KEY_FILE="$HOME/.ssh/id_rsa.pub"
 MASKED_DEFAULT_ISO_SSH_KEY_FILE="~/.ssh/id_rsa.pub"
@@ -77,6 +77,9 @@ DEFAULT_BMC_PASSWORD="calvin"
 DEFAULT_BMC_IP="192.168.1.3"
 DEFAULT_ISO_KERNEL_ARGS="console=tty0 console=vt0 console=$DEFAULT_ISO_SERIAL_PORT,$DEFAULT_ISO_SERIAL_PORT_SPEED"
 DEFAULT_ISO_SEARCH=""
+DEFAULT_ISO_DPKG_CONF="--force-confnew"
+DEFAULT_ISO_DPKG_OVERWRITE="--force-overwrite"
+DEFAULT_ISO_DPKG_DEPENDS="--force-depends"
 
 # Default flags
 
@@ -89,6 +92,7 @@ TEMP_VERBOSE_MODE="false"
 INTERACTIVE_MODE="false"
 DO_DAILY_ISO="false"
 DO_CHECK_DOCKER="false"
+DO_CHECK_ISO="false"
 DO_CUSTOM_BOOT_SERVER_FILE="false"
 ISO_USE_BIOSDEVNAME="false"
 ISO_PREFIX=""
@@ -393,7 +397,7 @@ handle_output () {
 # Dockerfile
 #
 # FROM ubuntu:22.04
-# RUN apt-get update && apt-get install -y p7zip-full wget xorriso whois squashfs-tools
+# RUN apt-get update && apt-get install -y p7zip-full lftp wget xorriso whois squashfs-tools
 
 check_docker_config () {
   if ! [ -f "/.dockerenv" ]; then
@@ -667,7 +671,7 @@ check_racadm () {
 # Function: Install required packages
 #
 # Example:
-# sudo apt install -y p7zip-full wget xorriso
+# sudo apt install -y p7zip-full lftp wget xorriso
 
 install_required_packages () {
   handle_output "# Check required packages are installed" TEXT
@@ -734,10 +738,15 @@ get_base_iso () {
     fi
   fi
   check_base_iso_file
-  handle_output "wget $ISO_URL -O $WORK_DIR/files/$BASE_INPUT_FILE"
-  if ! [ -f "$WORK_DIR/files/$BASE_INPUT_FILE" ]; then
-    if [ "$TEST_MODE" = "false" ]; then
-      wget "$ISO_URL" -O "$WORK_DIR/files/$BASE_INPUT_FILE"
+  if [ "$DO_CHECK_ISO" = "true" ]; then
+    handle_output "cd $WORK_DIR/files/ ; lftp -c \"get -c $ISO_URL\""
+    cd "$WORK_DIR/files/" ; lftp -c "get -c $ISO_URL"
+  else
+    handle_output "wget $ISO_URL -O $WORK_DIR/files/$BASE_INPUT_FILE"
+    if ! [ -f "$WORK_DIR/files/$BASE_INPUT_FILE" ]; then
+      if [ "$TEST_MODE" = "false" ]; then
+        wget "$ISO_URL" -O "$WORK_DIR/files/$BASE_INPUT_FILE"
+      fi
     fi
   fi
 }
@@ -1174,8 +1183,8 @@ update_iso_squashfs () {
 # mount -t devpts none /dev/pts
 # export HOME=/root
 # sudo apt update
-# sudo apt install -y --download-only zfsutils-linux grub-efi zfs-initramfs net-tools curl wget
-# sudo apt install -y zfsutils-linux grub-efi zfs-initramfs net-tools curl wget
+# sudo apt install -y --download-only zfsutils-linux grub-efi zfs-initramfs net-tools curl wget lftp
+# sudo apt install -y zfsutils-linux grub-efi zfs-initramfs net-tools curl wget lftp
 # umount /proc/
 # umount /sys/
 # umount /dev/pts/
@@ -1197,7 +1206,7 @@ create_chroot_script () {
   handle_output "echo \"rm /etc/apt/apt.conf.d/20apt-esm-hook.conf\" >> \"$ORIG_SCRIPT\""
   handle_output "echo \"apt update\" >> \"$ORIG_SCRIPT\""
   handle_output "echo \"export LC_ALL=C ; apt install -y --download-only $ISO_CHROOT_PACKAGES\" >> \"$ORIG_SCRIPT\""
-  handle_output "echo \"export LC_ALL=C ; apt install -y $ISO_CHROOT_PACKAGES\" >> \"$ORIG_SCRIPT\""
+  handle_output "echo \"export LC_ALL=C ; apt install -y $ISO_CHROOT_PACKAGES --option=Dpkg::Options::=$ISO_DPKG_CONF\" >> \"$ORIG_SCRIPT\""
   handle_output "echo \"umount /proc/\" >> \"$ORIG_SCRIPT\""
   handle_output "echo \"umount /sys/\" >> \"$ORIG_SCRIPT\""
   handle_output "echo \"umount /dev/pts/\" >> \"$ORIG_SCRIPT\""
@@ -1217,7 +1226,7 @@ create_chroot_script () {
     echo "rm /etc/update-motd.d/91-contract-ua-esm-status" >> "$ORIG_SCRIPT"
     echo "apt update" >> "$ORIG_SCRIPT"
     echo "export LC_ALL=C ; apt install -y --download-only $ISO_CHROOT_PACKAGES" >> "$ORIG_SCRIPT"
-    echo "export LC_ALL=C ; apt install -y $ISO_CHROOT_PACKAGES" >> "$ORIG_SCRIPT"
+    echo "export LC_ALL=C ; apt install -y $ISO_CHROOT_PACKAGES --option=Dpkg::Options::=$ISO_DPKG_CONF" >> "$ORIG_SCRIPT"
     echo "umount /proc/" >> "$ORIG_SCRIPT"
     echo "umount /sys/" >> "$ORIG_SCRIPT"
     echo "umount /dev/pts/" >> "$ORIG_SCRIPT"
@@ -1834,7 +1843,7 @@ prepare_autoinstall_iso () {
             handle_output "echo \"    - \\\"modprobe $ISO_ALLOWLIST\\\"\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
           fi
         fi
-        handle_output "echo \"    - \\\"export DEBIAN_FRONTEND=\\\\\"noninteractive\\\\\" && dpkg --force-overwrite --auto-deconfigure --force-depends -i $ISO_INSTALL_MOUNT/$ISO_AUTOINSTALL_DIR/packages/*.deb\\\"\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
+        handle_output "echo \"    - \\\"export DEBIAN_FRONTEND=\\\\\"noninteractive\\\\\" && dpkg $ISO_DPKG_CONF $ISO_DPKG_OVERWRITE --auto-deconfigure $ISO_DPKG_DEPENDS -i $ISO_INSTALL_MOUNT/$ISO_AUTOINSTALL_DIR/packages/*.deb\\\"\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
         if [ "$ISO_VOLMGR" = "zfs" ] && [ "$ISO_DEVICE" = "first-disk" ]; then
           handle_output "echo \"    - \\\"sed -i \\\\\"s/first-disk/\$(lsblk -x TYPE|grep disk |sort |head -1 |awk '{print \$1}')/g\\\\\" /autoinstall.yaml\\\"\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
         fi
@@ -1856,7 +1865,7 @@ prepare_autoinstall_iso () {
         handle_output "echo \"    - \\\"mkdir -p $ISO_TARGET_MOUNT/var/postinstall/package\\\"\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
         handle_output "echo \"    - \\\"cp $ISO_INSTALL_MOUNT/$ISO_AUTOINSTALL_DIR/packages/*.deb $ISO_TARGET_MOUNT/var/postinstall/packages/\\\"\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
         handle_output "echo \"    - \\\"echo '#!/bin/bash' > $ISO_TARGET_MOUNT/tmp/post.sh\\\"\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
-        handle_output "echo \"    - \\\"echo 'export DEBIAN_FRONTEND=\\\\\\"noninteractive\\\\\\" && dpkg --force-overwrite --auto-deconfigure --force-depends -i /var/postinstall/packages/*.deb' >> $ISO_TARGET_MOUNT/tmp/post.sh\\\"\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
+        handle_output "echo \"    - \\\"echo 'export DEBIAN_FRONTEND=\\\\\\"noninteractive\\\\\\" && dpkg $ISO_DPKG_CONF $ISO_DPKG_OVERWRITE --auto-deconfigure $ISO_DPKG_DEPENDS -i /var/postinstall/packages/*.deb' >> $ISO_TARGET_MOUNT/tmp/post.sh\\\"\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
         handle_output "echo \"    - \\\"echo '$ISO_TIMEZONE' > $ISO_TARGET_MOUNT/etc/timezone\\\"\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
         handle_output "echo \"    - \\\"rm $ISO_TARGET_MOUNT/etc/localtime\\\"\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
         handle_output "echo \"    - \\\"curtin in-target --target=$ISO_TARGET_MOUNT -- ln -s /usr/share/zoneinfo/$ISO_TIMEZONE /etc/localtime\\\"\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
@@ -2061,7 +2070,7 @@ prepare_autoinstall_iso () {
           if [ "$ISO_NIC" = "first-net" ]; then
             echo "    - \"sed -i \\\"s/first-net/\$(lshw -class network -short |awk '{print \$2}' |grep ^e |head -1)/g\\\" /autoinstall.yaml\"" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
           fi
-          echo "    - \"export DEBIAN_FRONTEND=\\\"noninteractive\\\" && dpkg --force-overwrite --auto-deconfigure --force-depends -i $ISO_INSTALL_MOUNT/$ISO_AUTOINSTALL_DIR/packages/*.deb\"" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
+          echo "    - \"export DEBIAN_FRONTEND=\\\"noninteractive\\\" && dpkg $ISO_DPKG_CONF $ISO_DPKG_OVERWRITE --auto-deconfigure $ISO_DPKG_DEPENDS -i $ISO_INSTALL_MOUNT/$ISO_AUTOINSTALL_DIR/packages/*.deb\"" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
           if ! [ "$ISO_BLOCKLIST" = "" ]; then 
             if [[ "$ISO_BLOCKLIST" =~ "," ]]; then
               for MODULE in $(${ISO_BLOCKLIST//,/ }); do
@@ -2077,7 +2086,7 @@ prepare_autoinstall_iso () {
           echo "    - \"mkdir -p $ISO_TARGET_MOUNT/var/postinstall/packages\"" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
           echo "    - \"cp $ISO_INSTALL_MOUNT/$ISO_AUTOINSTALL_DIR/packages/*.deb $ISO_TARGET_MOUNT/var/postinstall/packages/\"" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
           echo "    - \"echo '#!/bin/bash' > $ISO_TARGET_MOUNT/tmp/post.sh\"" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
-          echo "    - \"echo 'export DEBIAN_FRONTEND=\\\"noninteractive\\\" && dpkg --force-overwrite --auto-deconfigure --force-depends -i /var/postinstall/packages/*.deb' >> $ISO_TARGET_MOUNT/tmp/post.sh\"" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
+          echo "    - \"echo 'export DEBIAN_FRONTEND=\\\"noninteractive\\\" && dpkg $ISO_DPKG_CONF $ISO_DPKG_OVERWRITE --auto-deconfigure $ISO_DPKG_DEPENDS -i /var/postinstall/packages/*.deb' >> $ISO_TARGET_MOUNT/tmp/post.sh\"" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
           echo "    - \"chmod +x $ISO_TARGET_MOUNT/tmp/post.sh\"" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
           echo "    - \"echo '$ISO_TIMEZONE' > $ISO_TARGET_MOUNT/etc/timezone\"" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
           echo "    - \"rm $ISO_TARGET_MOUNT/etc/localtime\"" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
@@ -2415,6 +2424,29 @@ done
 if [[ "$OPTIONS" =~ "scp" ]]; then
   DO_SCP_HEADER="true"
 fi
+if [[ "$OPTIONS" =~ "confdef" ]] || [[ "$OPTIONS" =~ "confnew" ]]; then
+  if [[ "$OPTIONS" =~ "confdef" ]]; then
+    ISO_DPKG_CONF="--force-confdef"
+  fi
+  if [[ "$OPTIONS" =~ "confnew" ]]; then
+    ISO_DPKG_CONF="--force-confnew"
+  fi
+else
+  ISO_DPKG_CONF="$DEFAULT_ISO_DPKG_CONF"
+fi
+if [[ "$OPTIONS" =~ "overwrite" ]]; then
+  ISO_DPKG_OVERWRITE="--force-overwrite"
+else
+  ISO_DPKG_OVERWRITE="$DEFAULT_ISO_DPKG_OVERWRITE"
+fi
+if [[ "$OPTIONS" =~ "depends" ]]; then
+  ISO_DPKG_DEPENDS="--force-depends"
+else
+  ISO_DPKG_DEPENDS="$DEFAULT_ISO_DPKG_DEPENDS"
+fi
+if [[ "$OPTIONS" =~ "latest" ]]; then
+  DO_CHECK_ISO="true"
+fi
 if [[ "$OPTIONS" =~ "noserial" ]]; then
   DO_SERIAL="false"
 fi
@@ -2588,7 +2620,7 @@ esac
 
 if [ "$OS_NAME" = "Darwin" ]; then
   if ! [[ "$ACTION" =~ "docker" ]]; then
-    REQUIRED_PACKAGES="p7zip wget xorriso ansible squashfs"
+    REQUIRED_PACKAGES="p7zip lftp wget xorriso ansible squashfs"
   fi
 fi
 
@@ -3032,6 +3064,7 @@ handle_output "# ISO URL:                     $ISO_URL" TEXT
 handle_output "# ISO Volume ID:               $ISO_VOLID" TEXT
 handle_output "# ISO mount directory:         $ISO_MOUNT_DIR" TEXT
 handle_output "# ISO squashfs file:           $ISO_SQUASHFS_FILE" TEXT
+handle_output "# Check for latest ISO:        $DO_CHECK_ISO" TEXT
 handle_output "# Hostname:                    $ISO_HOSTNAME" TEXT
 handle_output "# Username:                    $ISO_USERNAME" TEXT
 handle_output "# Realname:                    $ISO_REALNAME" TEXT
