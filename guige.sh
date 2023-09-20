@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Name:         guige (Generic Ubuntu ISO Generation Engine)
-# Version:      1.5.7
+# Version:      1.5.8
 # Release:      1
 # License:      CC-BA (Creative Commons By Attribution)
 #               http://creativecommons.org/licenses/by/4.0/legalcode
@@ -739,8 +739,10 @@ get_base_iso () {
   fi
   check_base_iso_file
   if [ "$DO_CHECK_ISO" = "true" ]; then
-    handle_output "cd $WORK_DIR/files/ ; lftp -c \"get -c $ISO_URL\""
-    cd "$WORK_DIR/files/" ; lftp -c "get -c $ISO_URL"
+    ISO_URL_DIR=$(dirname "$ISO_URL")
+    ISO_URL_ISO=$(basename "$ISO_URL")
+    handle_output "cd $WORK_DIR/files/ ; lftp -c \"open $ISO_URL_DIR ; mget -c $ISO_URL_ISO ; quit\""
+    cd "$WORK_DIR/files/" ; lftp -c "open $ISO_URL_DIR ; mget -c $ISO_URL_ISO ; quit"
   else
     handle_output "wget $ISO_URL -O $WORK_DIR/files/$BASE_INPUT_FILE"
     if ! [ -f "$WORK_DIR/files/$BASE_INPUT_FILE" ]; then

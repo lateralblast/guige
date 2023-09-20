@@ -313,3 +313,5 @@
 # Added overwrite option to apt and dpkg
 # 1.5.7: Fri  1 Sep 2023 14:15:27 AEST
 # Added options for dpkg
+# 1.5.8: Wed 20 Sep 2023 16:08:24 AEST
+# Initial fix for lftp
