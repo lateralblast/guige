@@ -739,12 +739,12 @@ get_base_iso () {
   fi
   check_base_iso_file
   if [ "$DO_CHECK_ISO" = "true" ]; then
-    handle_output "wget -N $ISO_URL -O $WORK_DIR/files/$BASE_INPUT_FILE"
+    handle_output "cd $WORK_DIR/files ; wget -N $ISO_URL"
   else
     handle_output "wget $ISO_URL -O $WORK_DIR/files/$BASE_INPUT_FILE"
   fi
   if [ "$DO_CHECK_ISO" = "true" ]; then
-    wget -N "$ISO_URL" -O "$WORK_DIR/files/$BASE_INPUT_FILE"
+    cd "$WORK_DIR/files" ; wget -N "$ISO_URL"
   else
     if ! [ -f "$WORK_DIR/files/$BASE_INPUT_FILE" ]; then
       if [ "$TEST_MODE" = "false" ]; then
