@@ -315,3 +315,5 @@
 # Added options for dpkg
 # 1.5.8: Wed 20 Sep 2023 16:08:24 AEST
 # Initial fix for lftp
+# 1.5.9: Mon 25 Sep 2023 08:54:06 AEST
+# Used wget -N for latest ISO check rather than lftp
