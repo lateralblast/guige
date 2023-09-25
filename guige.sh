@@ -743,11 +743,11 @@ get_base_iso () {
   else
     handle_output "wget $ISO_URL -O $WORK_DIR/files/$BASE_INPUT_FILE"
   fi
-  if ! [ -f "$WORK_DIR/files/$BASE_INPUT_FILE" ]; then
-    if [ "$TEST_MODE" = "false" ]; then
-      if [ "$DO_CHECK_ISO" = "true" ]; then
-        wget -N "$ISO_URL" -O "$WORK_DIR/files/$BASE_INPUT_FILE"
-      else
+  if [ "$DO_CHECK_ISO" = "true" ]; then
+    wget -N "$ISO_URL" -O "$WORK_DIR/files/$BASE_INPUT_FILE"
+  else
+    if ! [ -f "$WORK_DIR/files/$BASE_INPUT_FILE" ]; then
+      if [ "$TEST_MODE" = "false" ]; then
         wget "$ISO_URL" -O "$WORK_DIR/files/$BASE_INPUT_FILE"
       fi
     fi
