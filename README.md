@@ -18,6 +18,8 @@ Issues
 
 Current issues:
 
+- Scirpt may fail on first run using docker complaining it can't find the script
+  - This seems to be an issue with race condition with docker when creating volume and mounting it the first time
 - Currently does not work with Ubuntu 23.10 (waiting on updated installer, kernel and ZFS modules [1])
 - The noserial option seems to be required on 23.10 as the systemd serial start up fails in post script
 
