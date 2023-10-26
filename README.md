@@ -18,19 +18,12 @@ Issues
 
 Current issues:
 
-- Scirpt may fail on first run using docker complaining it can't find the script
-  - This seems to be an issue with race condition with docker when creating volume and mounting it the first time
 - Currently does not work with Ubuntu 23.10 (waiting on updated installer, kernel and ZFS modules [1])
+  - A workaround for this is to install 23.04 and upgrade to 23.10
 - The noserial option seems to be required on 23.10 as the systemd serial start up fails in post script
 
 [1] https://www.theregister.com/2023/09/19/ubuntu_2310_taking_shape/?td=rt-3a
 
-Todo
-----
-
-Items / Features to be addressed:
-
-- Improved network detection for inline cloudinit patching (find interface with link)
 
 Prerequisites
 -------------
@@ -75,6 +68,13 @@ This script provides a wrapper for the Ubuntu ISO creation process.
 I wrote this as I didn't want to have to fire up Cubic or a similar GUI tool to create an ISO.
 I wanted to be able to automate the process.
 
+By default this script creates a DHCP based install ISO with two additonal install options:
+- ZFS based install to the first non USB drive available using the first network device with link
+- LVM based install to the first non USB drive available using the first network device with link
+
+This can be customised as per examples section to use a custom drive, network device, 
+and many other options (e.g. username and password)
+
 This script also supports creating ISOs via docker for non Linux platforms.
 On Apple Silicon support for creating arm64 and amd64 is available by using the platform flag of docker.
 
@@ -85,24 +85,10 @@ Currently this is WIP and it works for ZFS (and LVM encapsulated EXT4) root only
 It is being converted from a set of shell commands.
 See the Todo section for some future plans/ideas.
 
-In particular this script provides support for creating autoinstall ISO with:
-
-- ZFS (or LVM encapsulated ETX4) root 
-- Adding packages to installation
-
 So that the additional packages added to the install do not require network access,
 the squashfs filesystem is mounted and the packages are installed into it with the download option,
 then the packages are copied to the ISO image that is created.
 Doing it this way also ensures packages dependencies are also handled.
-
-By default the script will create an autoinstall ISO that uses DHCP,
-and installs packages from the ISO rather than fetching them over the network.
-
-The current default install options in the grub menu are:
-- ZFS on first available disk (EFI mode)
-- LVM on first available disk (EFI and BIOS mode)
-
-These can be modified via command line arguments. If BIOS is chosen as 
 
 An example of the grub menu when booting from the ISO:
 
