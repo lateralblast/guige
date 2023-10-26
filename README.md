@@ -20,7 +20,6 @@ Current issues:
 
 - Currently does not work with Ubuntu 23.10 (waiting on updated installer, kernel and ZFS modules [1])
   - A workaround for this is to install 23.04 and upgrade to 23.10
-- The noserial option seems to be required on 23.10 as the systemd serial start up fails in post script
 
 [1] https://www.theregister.com/2023/09/19/ubuntu_2310_taking_shape/?td=rt-3a
 
