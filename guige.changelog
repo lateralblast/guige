@@ -325,3 +325,5 @@
 # Bug fixes
 # 1.6.3: Wed 25 Oct 2023 17:59:49 AEDT
 # Added permissions check
+# 1.6.4: Sat Nov  4 09:05:02 PM AEDT 2023
+# Initial support for Ubuntu 24.04

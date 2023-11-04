@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Name:         guige (Generic Ubuntu ISO Generation Engine)
-# Version:      1.6.3
+# Version:      1.6.4
 # Release:      1
 # License:      CC-BA (Creative Commons By Attribution)
 #               http://creativecommons.org/licenses/by/4.0/legalcode
@@ -32,8 +32,11 @@ CURRENT_ISO_RELEASE_1604="16.04.7"
 CURRENT_ISO_RELEASE_1804="18.04.6"
 CURRENT_ISO_RELEASE_2004="20.04.6"
 CURRENT_ISO_RELEASE_2204="22.04.3"
+CURRENT_ISO_RELEASE_2304="23.04"
+CURRENT_ISO_RELEASE_2310="23.04.1"
+CURRENT_ISO_RELEASE_2404="22.04"
 CURRENT_ISO_RELEASE="22.04.3"
-CURRENT_ISO_DEV_RELEASE="23.10"
+CURRENT_ISO_DEV_RELEASE="24.04"
 CURRENT_ISO_OS_NAME="ubuntu"
 CURRENT_DOCKER_UBUNTU_RELEASE="22.04"
 CURRENT_ISO_CODENAME="jammy"
@@ -492,6 +495,9 @@ get_code_name() {
     "23.10")
       ISO_CODENAME="mantic"
       ;;
+    "24.04")
+      ISO_CODENAME="noble"
+      ;;
   esac
 
 }
@@ -503,30 +509,31 @@ get_info_from_iso () {
   TEST_FILE=$( basename "$INPUT_FILE" )
   TEST_NAME=$( echo "$TEST_FILE" | cut -f1 -d- )
   TEST_TYPE=$( echo "$TEST_FILE" | cut -f2 -d- )
+  ISO_DISTRO="Ubuntu"
   case $TEST_NAME in
     "bionic")
-      ISO_RELEASE="18.04"
-      ISO_DISTRO="Ubuntu"
+      ISO_RELEASE="$CURRENT_ISO_RELEASE_1804"
       ;;
     "focal")
-      ISO_RELEASE="20.04.5"
-      ISO_DISTRO="Ubuntu"
+      ISO_RELEASE="$CURRENT_ISO_RELEASE_2004"
       ;;
     "jammy")
-      ISO_RELEASE="22.04.2"
-      ISO_DISTRO="Ubuntu"
+      ISO_RELEASE="$CURRENT_ISO_RELEASE_2204"
       ;;
     "kinetic")
-      ISO_RELEASE="22.10"
-      ISO_DISTRO="Ubuntu"
+      ISO_RELEASE="$CURRENT_ISO_RELEASE_2210"
       ;;
     "lunar")
-      ISO_RELEASE="23.04"
-      ISO_DISTRO="Ubuntu"
+      ISO_RELEASE="$CURRENT_ISO_RELEASE_2304"
+      ;;
+    "mantic")
+      ISO_RELEASE="$CURRENT_ISO_RELEASE_2310"
+      ;;
+    "nobile")
+      ISO_RELEASE="$CURRENT_ISO_RELEASE_2404"
       ;;
     "ubuntu")
       ISO_RELEASE=$(echo "$TEST_FILE" |cut -f2 -d- )
-      ISO_DISTRO="Ubuntu"
       ;;
     *)
       ISO_RELEASE="$DEFAULT_ISO_RELEASE"
@@ -1251,6 +1258,13 @@ create_chroot_script () {
     echo "umount /sys/" >> "$ORIG_SCRIPT"
     echo "umount /dev/pts/" >> "$ORIG_SCRIPT"
     echo "exit" >> "$ORIG_SCRIPT"
+    if [ -f "/.dockerenv" ]; then
+      sudo mkdir -p "$ISO_NEW_DIR/custom/tmp"
+    else
+      if ! [[ "$OPTIONS" =~ "docker" ]]; then
+        sudo mkdir -p "$ISO_NEW_DIR/custom/tmp"
+      fi
+    fi
     sudo cp "$ORIG_SCRIPT" "$ISO_CHROOT_SCRIPT"
     sudo chmod +x "$ISO_CHROOT_SCRIPT"
   fi
@@ -3002,7 +3016,7 @@ fi
 BASE_INPUT_FILE=$( basename "$INPUT_FILE" )
 case $ISO_BUILD_TYPE in 
   "daily-live"|"daily-live-server")
-    if [ "$ISO_RELEASE" = "23.10" ]; then
+    if [ "$ISO_RELEASE" = "$CURRENT_ISO_DEV_RELEASE" ]; then
       ISO_URL="https://cdimage.ubuntu.com/ubuntu-server/daily-live/current/$ISO_CODENAME-live-server-$ISO_ARCH.iso"
     else
       ISO_URL="https://cdimage.ubuntu.com/ubuntu-server/$ISO_CODENAME/daily-live/current/$BASE_INPUT_FILE"
