@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Name:         guige (Generic Ubuntu ISO Generation Engine)
-# Version:      1.6.4
+# Version:      1.6.5
 # Release:      1
 # License:      CC-BA (Creative Commons By Attribution)
 #               http://creativecommons.org/licenses/by/4.0/legalcode
@@ -68,8 +68,8 @@ DEFAULT_ISO_BOOT_TYPE="efi"
 DEFAULT_ISO_SERIAL_PORT="ttyS1"
 DEFAULT_ISO_SERIAL_PORT_ADDRESS="0x02f8"
 DEFAULT_ISO_SERIAL_PORT_SPEED="115200"
-DEFAULT_ISO_INSTALL_PACKAGES="zfsutils-linux zfs-initramfs net-tools curl lftp wget sudo file rsync dialog setserial ansible apt-utils"
-REQUIRED_PACKAGES="p7zip-full lftp wget xorriso whois squashfs-tools sudo file rsync net-tools nfs-kernel-server ansible dialog apt-utils"
+DEFAULT_ISO_INSTALL_PACKAGES="zfsutils-linux zfs-initramfs net-tools curl lftp wget sudo file rsync dialog setserial ansible apt-utils whois"
+REQUIRED_PACKAGES="p7zip-full lftp wget xorriso whois squashfs-tools sudo file rsync net-tools nfs-kernel-server ansible dialog apt-utils whois"
 DEFAULT_DOCKER_ARCH="amd64 arm64"
 DEFAULT_ISO_SSH_KEY_FILE="$HOME/.ssh/id_rsa.pub"
 MASKED_DEFAULT_ISO_SSH_KEY_FILE="~/.ssh/id_rsa.pub"
@@ -145,8 +145,12 @@ fi
 
 if [ -f "/usr/bin/uname" ]; then
   DEFAULT_ISO_ARCH=$( uname -m | sed "s/aarch64/arm64/g" |sed "s/x86_64/amd64/g" )
-  if [ "$OS_NAME" = "Ubuntu" ]; then
-    DEFAULT_BOOT_SERVER_IP=$( ip addr | grep "inet " | grep -v "127.0.0.1" |head -1 |awk '{print $2}' |cut -f1 -d/ )
+  if [ "$OS_NAME" = "Linux" ]; then
+    if [ "$( command -v ifconfig )" ]; then
+      DEFAULT_BOOT_SERVER_IP=$( ifconfig | grep "inet " | grep -v "127.0.0.1" |head -1 |awk '{print $2}' )
+    else
+      DEFAULT_BOOT_SERVER_IP=$( ip addr | grep "inet " | grep -v "127.0.0.1" |head -1 |awk '{print $2}' |cut -f1 -d/ )
+    fi
     if [ "$DEFAULT_ISO_ARCH" = "x86_64" ] || [ "$DEFAULT_ISO_ARCH" = "amd64" ]; then
       DEFAULT_ISO_ARCH="amd64"
     fi
@@ -154,7 +158,11 @@ if [ -f "/usr/bin/uname" ]; then
       DEFAULT_ISO_ARCH="arm64"
     fi
   else
-    DEFAULT_BOOT_SERVER_IP=$( ifconfig | grep "inet " | grep -v "127.0.0.1" |head -1 |awk '{print $2}' )
+    if [ "$( command -v ifconfig )" ]; then
+      DEFAULT_BOOT_SERVER_IP=$( ifconfig | grep "inet " | grep -v "127.0.0.1" |head -1 |awk '{print $2}' )
+    else
+      DEFAULT_BOOT_SERVER_IP=$( ip add | grep "inet " | grep -v "127.0.0.1" |head -1 |awk '{print $2}' |cut -f1 -d/ )
+    fi
   fi
 else
   DEFAULT_ISO_ARCH="$CURRENT_ISO_ARCH"
@@ -164,7 +172,7 @@ fi
 # Get default release
 
 if [ -f "/usr/bin/lsb_release" ]; then
-  if [ "$DEFAULT_OS_NAME" = "Ubuntu" ]; then
+  if [ "$DEFAULT_ISO_OS_NAME" = "Ubuntu" ]; then
     DEFAULT_ISO_RELEASE=$( lsb_release -d |awk '{print $3}' )
   else
     DEFAULT_ISO_RELEASE="$CURRENT_ISO_RELEASE"
@@ -683,17 +691,24 @@ check_racadm () {
 install_required_packages () {
   handle_output "# Check required packages are installed" TEXT
   for PACKAGE in $REQUIRED_PACKAGES; do
+    PACKAGE_VERSION=""
     if [ "$OS_NAME" = "Darwin" ]; then
       PACKAGE_VERSION=$( brew list |grep "$PACKAGE" )
-      COMMAND="brew update ; brew install $PACKAGE"
+      COMMAND="brew update && brew install $PACKAGE"
     else
-      PACKAGE_VERSION=$( apt show "$PACKAGE" 2>&1 |grep Version )
-      COMMAND="sudo apt update ; sudo apt install -y $PACKAGE"
+      PACKAGE_VERSION=$( sudo apt show "$PACKAGE" 2>&1 |grep Version )
+      COMMAND="sudo apt update && sudo apt install -y $PACKAGE"
     fi
     if [ -z "$PACKAGE_VERSION" ]; then
       handle_output "$COMMAND"
       if [ "$TEST_MODE" = "false" ]; then
-        $COMMAND
+        if [ "$OS_NAME" = "Darwin" ]; then
+          brew update
+          brew install $PACKAGE
+        else
+          sudo apt update
+          sudo apt install -y $PACKAGE
+        fi
       fi
     fi
   done
