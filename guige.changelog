@@ -329,3 +329,5 @@
 # Initial support for Ubuntu 24.04
 # 1.6.5: Sat Nov  4 10:13:53 PM AEDT 2023
 # Fixed required packages check
+# 1.6.6: Sat  4 Nov 2023 22:46:52 AEDT
+# More improvements to required packages check

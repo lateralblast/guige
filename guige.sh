@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Name:         guige (Generic Ubuntu ISO Generation Engine)
-# Version:      1.6.5
+# Version:      1.6.6
 # Release:      1
 # License:      CC-BA (Creative Commons By Attribution)
 #               http://creativecommons.org/licenses/by/4.0/legalcode
@@ -692,15 +692,18 @@ install_required_packages () {
   handle_output "# Check required packages are installed" TEXT
   for PACKAGE in $REQUIRED_PACKAGES; do
     PACKAGE_VERSION=""
+    if [ "$VERBOSE_MODE" = "true" ]; then
+      handle_output "Package: $PACKAGE" TEXT
+    fi
     if [ "$OS_NAME" = "Darwin" ]; then
-      PACKAGE_VERSION=$( brew list |grep "$PACKAGE" )
-      COMMAND="brew update && brew install $PACKAGE"
+      PACKAGE_VERSION=$( brew list "$PACKAGE" 2>&1 |head -1 |awk -F"/" '{print $6}' )
     else
-      PACKAGE_VERSION=$( sudo apt show "$PACKAGE" 2>&1 |grep Version )
-      COMMAND="sudo apt update && sudo apt install -y $PACKAGE"
+      PACKAGE_VERSION=$( sudo dpkg -l "$PACKAGE" 2>&1 |grep "^ii" |awk '{print $3}' )
+    fi
+    if [ "$VERBOSE_MODE" = "true" ]; then
+      handle_output "Version: $PACKAGE_VERSION" TEXT
     fi
     if [ -z "$PACKAGE_VERSION" ]; then
-      handle_output "$COMMAND"
       if [ "$TEST_MODE" = "false" ]; then
         if [ "$OS_NAME" = "Darwin" ]; then
           brew update
