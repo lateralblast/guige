@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Name:         guige (Generic Ubuntu ISO Generation Engine)
-# Version:      1.6.6
+# Version:      1.6.7
 # Release:      1
 # License:      CC-BA (Creative Commons By Attribution)
 #               http://creativecommons.org/licenses/by/4.0/legalcode
@@ -33,7 +33,7 @@ CURRENT_ISO_RELEASE_1804="18.04.6"
 CURRENT_ISO_RELEASE_2004="20.04.6"
 CURRENT_ISO_RELEASE_2204="22.04.3"
 CURRENT_ISO_RELEASE_2304="23.04"
-CURRENT_ISO_RELEASE_2310="23.04.1"
+CURRENT_ISO_RELEASE_2310="23.10.1"
 CURRENT_ISO_RELEASE_2404="22.04"
 CURRENT_ISO_RELEASE="22.04.3"
 CURRENT_ISO_DEV_RELEASE="24.04"
@@ -68,7 +68,7 @@ DEFAULT_ISO_BOOT_TYPE="efi"
 DEFAULT_ISO_SERIAL_PORT="ttyS1"
 DEFAULT_ISO_SERIAL_PORT_ADDRESS="0x02f8"
 DEFAULT_ISO_SERIAL_PORT_SPEED="115200"
-DEFAULT_ISO_INSTALL_PACKAGES="zfsutils-linux zfs-initramfs net-tools curl lftp wget sudo file rsync dialog setserial ansible apt-utils whois"
+DEFAULT_ISO_INSTALL_PACKAGES="zfsutils-linux zfs-initramfs net-tools curl lftp wget sudo file rsync dialog setserial ansible apt-utils whois squashfs-tools"
 REQUIRED_PACKAGES="p7zip-full lftp wget xorriso whois squashfs-tools sudo file rsync net-tools nfs-kernel-server ansible dialog apt-utils whois"
 DEFAULT_DOCKER_ARCH="amd64 arm64"
 DEFAULT_ISO_SSH_KEY_FILE="$HOME/.ssh/id_rsa.pub"
@@ -1134,7 +1134,7 @@ create_export () {
   fi
 }
 
-# Function: Mount squashfs and copy giles into it
+# Function: Mount squashfs and copy files into it
 #
 # Examples:
 # sudo mount -t squashfs -o loop ./isomount/casper/ubuntu-server-minimal.squashfs ./isonew/squashfs/
@@ -1145,19 +1145,28 @@ copy_squashfs () {
   if [ ! -f "/usr/bin/rsync" ]; then
     install_required_packages
   fi
-  handle_output "sudo mount -t squashfs -o loop \"$ISO_SQUASHFS_FILE\" \"$ISO_NEW_DIR/squashfs\""
-  if [ "$TEST_MODE" = "false" ]; then
-    sudo mount -t squashfs -o loop "$ISO_SQUASHFS_FILE" "$ISO_NEW_DIR/squashfs"
-  fi
-  if [ "$VERBOSE_MODE" = "true" ]; then
-    handle_output "sudo rsync -av \"$ISO_NEW_DIR/squashfs/\" $ISO_NEW_DIR/custom"
+  CURRENT_KERNEL=$( uname -r )
+  KERNEL_CONFIG="/boot/config-$CURRENT_KERNEL"
+  if [ -f "$CURRENT_KERNEL" ]; then
+    handle_output "sudo mount -t squashfs -o loop \"$ISO_SQUASHFS_FILE\" \"$ISO_NEW_DIR/squashfs\""
     if [ "$TEST_MODE" = "false" ]; then
-      sudo rsync -av "$ISO_NEW_DIR/squashfs/" "$ISO_NEW_DIR/custom"
+      sudo mount -t squashfs -o loop "$ISO_SQUASHFS_FILE" "$ISO_NEW_DIR/squashfs"
+    fi
+    if [ "$VERBOSE_MODE" = "true" ]; then
+      handle_output "sudo rsync -av \"$ISO_NEW_DIR/squashfs/\" $ISO_NEW_DIR/custom"
+      if [ "$TEST_MODE" = "false" ]; then
+        sudo rsync -av "$ISO_NEW_DIR/squashfs/" "$ISO_NEW_DIR/custom"
+      fi
+    else
+      handle_output "sudo rsync -a \"$ISO_NEW_DIR/squashfs/\" \"$ISO_NEW_DIR/custom\""
+      if [ "$TEST_MODE" = "false" ]; then
+        sudo rsync -a "$ISO_NEW_DIR/squashfs/" "$ISO_NEW_DIR/custom"
+      fi
     fi
   else
-    handle_output "sudo rsync -a \"$ISO_NEW_DIR/squashfs/\" \"$ISO_NEW_DIR/custom\""
+    handle_output "sudo unsquashfs -f -d \"$ISO_NEW_DIR/squashfs\" \"$ISO_SQUASHFS_FILE\"" 
     if [ "$TEST_MODE" = "false" ]; then
-      sudo rsync -a "$ISO_NEW_DIR/squashfs/" "$ISO_NEW_DIR/custom"
+      sudo unsquashfs -f -d "$ISO_NEW_DIR/custom" "$ISO_SQUASHFS_FILE"
     fi
   fi
   handle_output "sudo cp /etc/resolv.conf /etc/hosts $ISO_NEW_DIR/custom/etc/"

@@ -331,3 +331,5 @@
 # Fixed required packages check
 # 1.6.6: Sat  4 Nov 2023 22:46:52 AEDT
 # More improvements to required packages check
+# 1.6.7: Sun  5 Nov 2023 21:23:25 AEDT
+# Added functionality to deal with xz compressed squashfs
