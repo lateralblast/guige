@@ -333,3 +333,5 @@
 # More improvements to required packages check
 # 1.6.7: Sun  5 Nov 2023 21:23:25 AEDT
 # Added functionality to deal with xz compressed squashfs
+# 1.6.8: Mon 04 Dec 2023 11:30:23 AEDT
+# Added support for creating ISOs on Arch/Endeavour Linux

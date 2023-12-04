@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Name:         guige (Generic Ubuntu ISO Generation Engine)
-# Version:      1.6.7
+# Version:      1.6.8
 # Release:      1
 # License:      CC-BA (Creative Commons By Attribution)
 #               http://creativecommons.org/licenses/by/4.0/legalcode
@@ -69,7 +69,7 @@ DEFAULT_ISO_SERIAL_PORT="ttyS1"
 DEFAULT_ISO_SERIAL_PORT_ADDRESS="0x02f8"
 DEFAULT_ISO_SERIAL_PORT_SPEED="115200"
 DEFAULT_ISO_INSTALL_PACKAGES="zfsutils-linux zfs-initramfs net-tools curl lftp wget sudo file rsync dialog setserial ansible apt-utils whois squashfs-tools"
-REQUIRED_PACKAGES="p7zip-full lftp wget xorriso whois squashfs-tools sudo file rsync net-tools nfs-kernel-server ansible dialog apt-utils whois"
+REQUIRED_PACKAGES="p7zip-full lftp wget xorriso whois squashfs-tools sudo file rsync net-tools nfs-kernel-server ansible dialog apt-utils"
 DEFAULT_DOCKER_ARCH="amd64 arm64"
 DEFAULT_ISO_SSH_KEY_FILE="$HOME/.ssh/id_rsa.pub"
 MASKED_DEFAULT_ISO_SSH_KEY_FILE="~/.ssh/id_rsa.pub"
@@ -136,7 +136,15 @@ DO_SERIAL="true"
 # Get OS name
 
 if [ -f "/usr/bin/lsb_release" ]; then
-  DEFAULT_ISO_OS_NAME=$( lsb_release -d |awk '{print $2}' |tr '[:upper:]' '[:lower:]' )
+  LSB_RELEASE=$( lsb_release -s -a )
+  if [[ "$LSB_RELEASE" =~ "Ubuntu" ]]; then
+    DEFAULT_ISO_OS_NAME=$( lsb_release -d |awk '{print $2}' |tr '[:upper:]' '[:lower:]' )
+  else
+    DEFAULT_ISO_OS_NAME="$CURRENT_ISO_OS_NAME"
+    if [[ "$LSB_RELEASE" =~ "Arch" ]] || [[ "$LSB_RELEASE" =~ "Endeavour" ]]; then
+      REQUIRED_PACKAGES="p7zip lftp wget xorriso whois squashfs-tools sudo file rsync ansible dialog"
+    fi
+  fi
 else
   DEFAULT_ISO_OS_NAME="$CURRENT_ISO_OS_NAME"
 fi
@@ -698,7 +706,11 @@ install_required_packages () {
     if [ "$OS_NAME" = "Darwin" ]; then
       PACKAGE_VERSION=$( brew list "$PACKAGE" 2>&1 |head -1 |awk -F"/" '{print $6}' )
     else
-      PACKAGE_VERSION=$( sudo dpkg -l "$PACKAGE" 2>&1 |grep "^ii" |awk '{print $3}' )
+      if [[ "$LSB_RELEASE" =~ "Arch" ]] || [[ "$LSB_RELEASE" =~ "Endeavour" ]]; then
+        PACKAGE_VERSION=$( sudo pacman -Q "$PACKAGE" 2>&1 |awk '{print $2}' )
+      else
+        PACKAGE_VERSION=$( sudo dpkg -l "$PACKAGE" 2>&1 |grep "^ii" |awk '{print $3}' )
+      fi
     fi
     if [ "$VERBOSE_MODE" = "true" ]; then
       handle_output "Version: $PACKAGE_VERSION" TEXT
@@ -709,8 +721,13 @@ install_required_packages () {
           brew update
           brew install $PACKAGE
         else
-          sudo apt update
-          sudo apt install -y $PACKAGE
+          if [[ "$LSB_RELEASE" =~ "Arch" ]] || [[ "$LSB_RELEASE" =~ "Endeavour" ]]; then
+            sudo pacman -Sy
+            echo Y |sudo pacman -Sy $PACKAGE
+          else
+            sudo apt update
+            sudo apt install -y $PACKAGE
+          fi
         fi
       fi
     fi
