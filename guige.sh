@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Name:         guige (Generic Ubuntu ISO Generation Engine)
-# Version:      1.6.8
+# Version:      1.7.3
 # Release:      1
 # License:      CC-BA (Creative Commons By Attribution)
 #               http://creativecommons.org/licenses/by/4.0/legalcode
@@ -27,6 +27,7 @@ BMC_EXPOSE_DURATION="180"
 # Default variables
 
 SCRIPT_NAME="guige"
+DEFAULT_VM_NAME="guige-test-vm"
 CURRENT_ISO_RELEASE_1404="14.04.6"
 CURRENT_ISO_RELEASE_1604="16.04.7"
 CURRENT_ISO_RELEASE_1804="18.04.6"
@@ -65,9 +66,12 @@ DEFAULT_ISO_LAYOUT="us"
 DEFAULT_ISO_COUNTRY="us"
 DEFAULT_ISO_BUILD_TYPE="live-server"
 DEFAULT_ISO_BOOT_TYPE="efi"
-DEFAULT_ISO_SERIAL_PORT="ttyS1"
-DEFAULT_ISO_SERIAL_PORT_ADDRESS="0x02f8"
-DEFAULT_ISO_SERIAL_PORT_SPEED="115200"
+DEFAULT_ISO_SERIAL_PORT0="ttyS0"
+DEFAULT_ISO_SERIAL_PORT_ADDRESS0="0x03f8"
+DEFAULT_ISO_SERIAL_PORT_SPEED0="115200"
+DEFAULT_ISO_SERIAL_PORT1="ttyS1"
+DEFAULT_ISO_SERIAL_PORT_ADDRESS1="0x02f8"
+DEFAULT_ISO_SERIAL_PORT_SPEED1="115200"
 DEFAULT_ISO_INSTALL_PACKAGES="zfsutils-linux zfs-initramfs net-tools curl lftp wget sudo file rsync dialog setserial ansible apt-utils whois squashfs-tools"
 REQUIRED_PACKAGES="p7zip-full lftp wget xorriso whois squashfs-tools sudo file rsync net-tools nfs-kernel-server ansible dialog apt-utils"
 DEFAULT_DOCKER_ARCH="amd64 arm64"
@@ -78,14 +82,20 @@ DEFAULT_ISO_ALLOW_PASSWORD="false"
 DEFAULT_BMC_USERNAME="root"
 DEFAULT_BMC_PASSWORD="calvin"
 DEFAULT_BMC_IP="192.168.1.3"
-DEFAULT_ISO_KERNEL_ARGS="console=tty0 console=vt0 console=$DEFAULT_ISO_SERIAL_PORT,$DEFAULT_ISO_SERIAL_PORT_SPEED"
+DEFAULT_ISO_KERNEL_ARGS="console=tty0 console=vt0"
 DEFAULT_ISO_SEARCH=""
 DEFAULT_ISO_DPKG_CONF="--force-confnew"
 DEFAULT_ISO_DPKG_OVERWRITE="--force-overwrite"
 DEFAULT_ISO_DPKG_DEPENDS="--force-depends"
+DEFAULT_VM_TYPE="kvm"
+DEFAULT_VM_RAM="2048000"
+DEFAULT_VM_CPUS="2"
+DEFAULT_VM_SIZE="20G"
+DEFAULT_VM_NIC="default"
 
 # Default flags
 
+VM_EXISTS="false"
 ISO_DHCP="true"
 TEST_MODE="false"
 FORCE_MODE="false"
@@ -96,6 +106,8 @@ INTERACTIVE_MODE="false"
 DO_DAILY_ISO="false"
 DO_CHECK_DOCKER="false"
 DO_CHECK_ISO="false"
+DO_CREATE_VM="false"
+DO_DELETE_VM="false"
 DO_CUSTOM_BOOT_SERVER_FILE="false"
 ISO_USE_BIOSDEVNAME="false"
 ISO_PREFIX=""
@@ -274,6 +286,8 @@ print_usage () {
   queryiso:               Query ISO for information                  
   listalliso:             List all ISOs
   listiso:                List ISOs
+  createkvmvm:            Create KVM VM
+  deletekvmvm:            Delete KVM VM
 
   options
   -------
@@ -314,67 +328,113 @@ print_help () {
   cat <<-HELP
 
   Usage: ${0##*/} [OPTIONS...]
-    -1|--country             Country (used for sources.list mirror - default: $DEFAULT_ISO_COUNTRY)
-    -2|--isourl              Specify ISO URL
-    -3|--prefix              Prefix to add to ISO name
-    -4|--suffix              Suffix to add to ISO name
-    -5|--block               Block kernel module(s) (default: $DEFAULT_ISO_BLOCKLIST)
-    -6|--allow               Load additional kernel modules(s)
-    -9|--search              Search output for value (eg --action listallisos --search efi)
-    -A|--codename            Linux release codename (default: $DEFAULT_ISO_CODENAME)
-    -a|--action:             Action to perform (e.g. createiso, justiso, runchrootscript, checkdocker, installrequired)
-    -B|--layout              Layout (default: $DEFAULT_ISO_LAYOUT)
-    -b|--bootserverip:       NFS/Bootserver IP (default: $DEFAULT_BOOT_SERVER_IP)
-    -C|--cidr:               CIDR (default: $DEFAULT_ISO_CIDR)
-    -c|--sshkeyfile:         SSH key file to use as SSH key (default: $MASKED_DEFAULT_ISO_SSH_KEY_FILE)
-    -D|--dns:                DNS Server (ddefault: $DEFAULT_ISO_DNS)
-    -d|--bootdisk:           Boot Disk devices (default: $DEFAULT_ISO_DEVICES)
-    -E|--locale:             LANGUAGE (default: $DEFAULT_ISO_LOCALE)
-    -e|--lcall:              LC_ALL (default: $DEFAULT_ISO_LC_ALL)
-    -F|--bmcusername:        BMC/iDRAC User (default: $DEFAULT_BMC_USERNAME)
-    -f|--delete:             Remove previously created files (default: $FORCE_MODE)
-    -G|--gateway:            Gateway (default $DEFAULT_ISO_GATEWAY)
-    -g|--grubmenu:           Set default grub menu (default: $DEFAULT_ISO_GRUB_MENU)
-    -H|--hostname:           Hostname (default: $DEFAULT_ISO_HOSTNAME)
-    -h|--help                Help/Usage Information
-    -I|--ip:                 IP Address (default: $DEFAULT_ISO_IP)
-    -i|--inputiso:           Input/base ISO file (default: $DEFAULT_INPUT_FILE_BASE)
-    -J|--grubfile            GRUB file (default: $DEFAULT_ISO_GRUB_FILE_BASE)
-    -j|--autoinstalldir      Directory where autoinstall config files are stored on ISO (default: $DEFAULT_ISO_AUTOINSTALL_DIR)
-    -K|--kernel:             Kernel package (default: $DEFAULT_ISO_KERNEL)
-    -k|--kernelargs:         Kernel arguments (default: $DEFAULT_ISO_KERNEL_ARGS)
-    -L|--release:            LSB release (default: $DEFAULT_ISO_RELEASE)
-    -l|--bmcip:              BMC/iDRAC IP (default: $DEFAULT_BMC_IP)
-    -M|--installtarget:      Where the install mounts the target filesystem (default: $DEFAULT_ISO_TARGET_MOUNT)
-    -m|--installmount:       Where the install mounts the CD during install (default: $DEFAULT_ISO_INSTALL_MOUNT)
-    -N|--bootserverfile      Boot sever file (default: $DEFAULT_BOOT_SERVER_FILE_BASE)
-    -n|--nic:                Network device (default: $DEFAULT_ISO_NIC)
-    -O|--isopackages:        List of packages to install (default: $DEFAULT_ISO_INSTALL_PACKAGES)
-    -o|--outputiso:          Output ISO file (default: $DEFAULT_OUTPUT_FILE_BASE)
-    -P|--password:           Password (default: $DEFAULT_ISO_USERNAME)
-    -p|--chrootpackages:     List of packages to add to ISO (default: $DEFAULT_PACKAGES)
-    -Q|--build:              Type of ISO to build (default: $DEFAULT_ISO_BUILD_TYPE)
-    -q|--arch:               Architecture (default: $DEFAULT_ISO_ARCH)
-    -R|--realname:           Realname (default $DEFAULT_ISO_REALNAME)
-    -r|--serialportspeed:    Serial Port Speed (default: $DEFAULT_ISO_SERIAL_PORT_SPEED)
-    -S|--swapsize:           Swap size (default $DEFAULT_ISO_SWAPSIZE)
-    -s|--squashfsfile:       Squashfs file (default: $DEFAULT_ISO_SQUASHFS_FILE_BASE)
-    -T|--timezone:           Timezone (default: $DEFAULT_ISO_TIMEZONE)
-    -t|--serialportaddress:  Serial Port Address (default: $DEFAULT_ISO_SERIAL_PORT_ADDRESS)
-    -U|--username:           Username (default: $DEFAULT_ISO_USERNAME)
-    -u|--postinstall:        Postinstall action (e.g. installpackages, upgrade, distupgrade, installdrivers, all, autoupgrades)
-    -V|--version             Display Script Version
-    -v|--serialport          Serial Port (default: $DEFAULT_ISO_SERIAL_PORT)
-    -W|--workdir:            Work directory (default: $MASKED_DEFAULT_WORK_DIR)
-    -w|--oldworkdir:         Docker work directory (used internally)
-    -X|--isovolid:           ISO Volume ID (default: $DEFAULT_ISO_VOLID)
-    -x|--grubtimeout:        Grub timeout (default: $DEFAULT_ISO_GRUB_TIMEOUT)
-    -Y|--allowpassword       Allow password access via SSH (default: $DEFAULT_ISO_ALLOW_PASSWORD)
-    -y|--bmcpassword:        BMC/iDRAC password (default: $DEFAULT_BMC_PASSWORD)
-    -Z|--options:            Options (e.g. nounmount, testmode, bios, efi, verbose, interactive)
-    -z|--volumemanager:      Volume Managers (defauls: $DEFAULT_ISO_VOLMGRS)
+    -1|--country              Country (used for sources.list mirror - default: $DEFAULT_ISO_COUNTRY)
+    -2|--isourl               Specify ISO URL
+    -3|--prefix               Prefix to add to ISO name
+    -4|--suffix               Suffix to add to ISO name
+    -5|--block                Block kernel module(s) (default: $DEFAULT_ISO_BLOCKLIST)
+    -6|--allow                Load additional kernel modules(s)
+    -9|--search               Search output for value (eg --action listallisos --search efi)
+    -A|--codename             Linux release codename (default: $DEFAULT_ISO_CODENAME)
+    -a|--action:              Action to perform (e.g. createiso, justiso, runchrootscript, checkdocker, installrequired)
+    -B|--layout|--vmsize:     Layout or VM disk size (default: $DEFAULT_ISO_LAYOUT/$DEFAULT_VM_SIZE)
+    -b|--bootserverip:        NFS/Bootserver IP (default: $DEFAULT_BOOT_SERVER_IP)
+    -C|--cidr:                CIDR (default: $DEFAULT_ISO_CIDR)
+    -c|--sshkeyfile:          SSH key file to use as SSH key (default: $MASKED_DEFAULT_ISO_SSH_KEY_FILE)
+    -D|--dns:                 DNS Server (ddefault: $DEFAULT_ISO_DNS)
+    -d|--bootdisk:            Boot Disk devices (default: $DEFAULT_ISO_DEVICES)
+    -E|--locale:              LANGUAGE (default: $DEFAULT_ISO_LOCALE)
+    -e|--lcall:               LC_ALL (default: $DEFAULT_ISO_LC_ALL)
+    -F|--bmcusername:         BMC/iDRAC User (default: $DEFAULT_BMC_USERNAME)
+    -f|--delete:              Remove previously created files (default: $FORCE_MODE)
+    -G|--gateway:             Gateway (default $DEFAULT_ISO_GATEWAY)
+    -g|--grubmenu|--vmname:   Set default grub menu or VM name (default: $DEFAULT_ISO_GRUB_MENU/$DEFAULT_VM_NAME)
+    -H|--hostname|            Hostname (default: $DEFAULT_ISO_HOSTNAME)
+    -h|--help                 Help/Usage Information
+    -I|--ip:                  IP Address (default: $DEFAULT_ISO_IP)
+    -i|--inputiso|--vmiso:    Input/base ISO file (default: $DEFAULT_INPUT_FILE_BASE)
+    -J|--grubfile             GRUB file (default: $DEFAULT_ISO_GRUB_FILE_BASE)
+    -j|--autoinstalldir       Directory where autoinstall config files are stored on ISO (default: $DEFAULT_ISO_AUTOINSTALL_DIR)
+    -K|--kernel|--vmtype:     Kernel package or VM type (default: $DEFAULT_ISO_KERNEL/$DEFAULT_VM_TYPE)
+    -k|--kernelargs|--vmcpus: Kernel arguments (default: $DEFAULT_ISO_KERNEL_ARGS)
+    -L|--release:             LSB release (default: $DEFAULT_ISO_RELEASE)
+    -l|--bmcip:               BMC/iDRAC IP (default: $DEFAULT_BMC_IP)
+    -M|--installtarget:       Where the install mounts the target filesystem (default: $DEFAULT_ISO_TARGET_MOUNT)
+    -m|--installmount:        Where the install mounts the CD during install (default: $DEFAULT_ISO_INSTALL_MOUNT)
+    -N|--bootserverfile       Boot sever file (default: $DEFAULT_BOOT_SERVER_FILE_BASE)
+    -n|--nic|--vmnic:         Network device (default: $DEFAULT_ISO_NIC/$DEFAULT_VM_NIC)
+    -O|--isopackages:         List of packages to install (default: $DEFAULT_ISO_INSTALL_PACKAGES)
+    -o|--outputiso:           Output ISO file (default: $DEFAULT_OUTPUT_FILE_BASE)
+    -P|--password:            Password (default: $DEFAULT_ISO_USERNAME)
+    -p|--chrootpackages:      List of packages to add to ISO (default: $DEFAULT_PACKAGES)
+    -Q|--build:               Type of ISO to build (default: $DEFAULT_ISO_BUILD_TYPE)
+    -q|--arch:                Architecture (default: $DEFAULT_ISO_ARCH)
+    -R|--realname:            Realname (default $DEFAULT_ISO_REALNAME)
+    -r|--serialportspeed:     Serial Port Speed (default: $DEFAULT_ISO_SERIAL_PORT_SPEED0,$DEFAULT_ISO_SERIAL_PORT_SPEED1)
+    -S|--swapsize|--vmram:    Swap or VM memory size (default $DEFAULT_ISO_SWAPSIZE/$DEFAULT_VM_RAM)
+    -s|--squashfsfile:        Squashfs file (default: $DEFAULT_ISO_SQUASHFS_FILE_BASE)
+    -T|--timezone:            Timezone (default: $DEFAULT_ISO_TIMEZONE)
+    -t|--serialportaddress:   Serial Port Address (default: $DEFAULT_ISO_SERIAL_PORT_ADDRESS0,$DEFAULT_ISO_SERIAL_PORT_ADDRESS1)
+    -U|--username:            Username (default: $DEFAULT_ISO_USERNAME)
+    -u|--postinstall:         Postinstall action (e.g. installpackages, upgrade, distupgrade, installdrivers, all, autoupgrades)
+    -V|--version              Display Script Version
+    -v|--serialport:          Serial Port (default: $DEFAULT_ISO_SERIAL_PORT0,$DEFAULT_ISO_SERIAL_PORT1)
+    -W|--workdir:             Work directory (default: $MASKED_DEFAULT_WORK_DIR)
+    -w|--oldworkdir:          Docker work directory (used internally)
+    -X|--isovolid:            ISO Volume ID (default: $DEFAULT_ISO_VOLID)
+    -x|--grubtimeout:         Grub timeout (default: $DEFAULT_ISO_GRUB_TIMEOUT)
+    -Y|--allowpassword        Allow password access via SSH (default: $DEFAULT_ISO_ALLOW_PASSWORD)
+    -y|--bmcpassword:         BMC/iDRAC password (default: $DEFAULT_BMC_PASSWORD)
+    -Z|--options:             Options (e.g. nounmount, testmode, bios, efi, verbose, interactive)
+    -z|--volumemanager:       Volume Managers (defauls: $DEFAULT_ISO_VOLMGRS)
 HELP
   exit
+}
+
+# Function: Execute command
+
+execute_command () {
+  COMMAND="$1"
+  execution_message "$COMMAND"
+  if [ "$TEST_MODE" = "false" ]; then
+    $COMMAND
+  fi
+}
+
+# Function: Execute message
+
+execution_message () {
+  OUTPUT_TEXT=$1
+  OUTPUT_TYPE="COMMAND"
+  handle_output "$OUTPUT_TEXT" $OUTPUT_TYPE
+}
+
+# Function: Information message
+
+information_message () {
+  OUTPUT_TEXT=$1
+  OUTPUT_TYPE="TEXT"
+  handle_output "# Information: $OUTPUT_TEXT" $OUTPUT_TYPE
+}
+
+# Function: Verbose message
+
+verbose_message () {
+  OUTPUT_TEXT=$1
+  OUTPUT_TYPE="TEXT"
+  TEMP_VERBOSE_MODE="true"
+  handle_output "$OUTPUT_TEXT" $OUTPUT_TYPE
+  TEMP_VERBOSE_MODE="false"
+}
+
+# Function: Warning message
+
+warning_message () {
+  OUTPUT_TEXT=$1
+  OUTPUT_TYPE="TEXT"
+  TEMP_VERBOSE_MODE="true"
+  handle_output "# Warning: $OUTPUT_TEXT" $OUTPUT_TYPE
+  TEMP_VERBOSE_MODE="false"
 }
 
 # Function: Handle output
@@ -570,15 +630,14 @@ get_info_from_iso () {
       TEST_TYPE="live-server"
     fi
   fi
+  ISO_RELEASE_MAJOR=$(echo "$ISO_RELEASE" |awk -F. '{print $1"."$2}')
   OUTPUT_FILE="$WORK_DIR/files/$TEST_NAME-$ISO_RELEASE-$TEST_TYPE-$ISO_ARCH.iso"
-  TEMP_VERBOSE_MODE="true"
   handle_output "# Input ISO:     $INPUT_FILE" TEXT
   handle_output "# Distribution:  $ISO_DISTRO" TEXT
   handle_output "# Release:       $ISO_RELEASE" TEXT
   handle_output "# Codename:      $ISO_CODENAME" TEXT
   handle_output "# Architecture:  $ISO_ARCH" TEXT
   handle_output "# Output ISO:    $OUTPUT_FILE" TEXT
-  TEMP_VERBOSE_MODE="false"
 }
 
 # Get my IP
@@ -587,7 +646,11 @@ get_my_ip () {
   if [ "$OS_NAME" = "Darwin" ]; then
     MY_IP=$(ifconfig | grep "inet " | grep -v 127.0.0.1 |head -1 |awk '{print $2}')
   else
-    MY_IP=$(hostname -I |awk '{print $1}')
+    if [[ "$LSB_RELEASE" =~ "Arch" ]] || [[ "$LSB_RELEASE" =~ "Endeavour" ]]; then
+      MY_IP=$(ip addr |grep 'inet ' |grep -v 127 |head -1 |awk '{print $2}' |cut -f1 -d/)
+    else
+      MY_IP=$(hostname -I |awk '{print $1}')
+    fi
   fi
 }
 
@@ -701,7 +764,7 @@ install_required_packages () {
   for PACKAGE in $REQUIRED_PACKAGES; do
     PACKAGE_VERSION=""
     if [ "$VERBOSE_MODE" = "true" ]; then
-      handle_output "Package: $PACKAGE" TEXT
+      handle_output "# Package: $PACKAGE" TEXT
     fi
     if [ "$OS_NAME" = "Darwin" ]; then
       PACKAGE_VERSION=$( brew list "$PACKAGE" 2>&1 |head -1 |awk -F"/" '{print $6}' )
@@ -713,7 +776,7 @@ install_required_packages () {
       fi
     fi
     if [ "$VERBOSE_MODE" = "true" ]; then
-      handle_output "Version: $PACKAGE_VERSION" TEXT
+      handle_output "# Version: $PACKAGE_VERSION" TEXT
     fi
     if [ -z "$PACKAGE_VERSION" ]; then
       if [ "$TEST_MODE" = "false" ]; then
@@ -741,8 +804,7 @@ check_base_iso_file () {
     BASE_INPUT_FILE=$( basename "$INPUT_FILE" )
     FILE_TYPE=$( file "$WORK_DIR/files/$BASE_INPUT_FILE" |cut -f2 -d: |grep -E "MBR|ISO")
     if [ -z "$FILE_TYPE" ]; then
-      TEMP_VERBOSE_MODE="true"
-      handle_output "# Warning: $WORK_DIR/files/$BASE_INPUT_FILE is not a valid ISO file" TEXT
+      warning_message "$WORK_DIR/files/$BASE_INPUT_FILE is not a valid ISO file"
       exit
     fi
   fi
@@ -1335,7 +1397,7 @@ get_password_crypt () {
     fi
   fi
   if [ "$ISO_PASSWORD_CRYPT" = "" ]; then
-    echo "Warning: No Password Hash/Crypt created"
+    warning_message "No Password Hash/Crypt created"
     exit
   fi
 }
@@ -1954,12 +2016,11 @@ prepare_autoinstall_iso () {
       handle_output "echo \"    - \\\"curtin in-target --target=$ISO_TARGET_MOUNT -- /tmp/post.sh\\\"\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
       if [ "$DO_SERIAL" = "true" ]; then
         handle_output "echo \"    - \\\"echo 'GRUB_TERMINAL=\\\\\\\"serial console\\\\\\\"' >> $ISO_TARGET_MOUNT/etc/default/grub\\\"\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
-        handle_output "echo \"    - \\\"echo 'GRUB_SERIAL_COMMAND=\\\\\\\"serial --speed=$ISO_SERIAL_PORT_SPEED --port=$ISO_SERIAL_PORT_ADDRESS\\\\\\\"' >> $ISO_TARGET_MOUNT/etc/default/grub\\\"\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
-        handle_output "echo \"    - \\\"echo 'GRUB_CMDLINE_LINUX=\\\\\\\"console=tty0 console=$ISO_SERIAL_PORT,$ISO_SERIAL_PORT_SPEED $ISO_KERNEL_ARGS\\\\\\\"' >> $ISO_TARGET_MOUNT/etc/default/grub\\\"\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
+        handle_output "echo \"    - \\\"echo 'GRUB_SERIAL_COMMAND=\\\\\\\"serial --speed=$ISO_SERIAL_PORT_SPEED0 --port=$ISO_SERIAL_PORT_ADDRESS0\\\\\\\"' >> $ISO_TARGET_MOUNT/etc/default/grub\\\"\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
       else
         handle_output "echo \"    - \\\"echo 'GRUB_TERMINAL=\\\\\\\"console\\\\\\\"' >> $ISO_TARGET_MOUNT/etc/default/grub\\\"\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
-        handle_output "echo \"    - \\\"echo 'GRUB_CMDLINE_LINUX=\\\\\\\"console=tty0 $ISO_KERNEL_ARGS\\\\\\\"' >> $ISO_TARGET_MOUNT/etc/default/grub\\\"\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
       fi
+      handle_output "echo \"    - \\\"echo 'GRUB_CMDLINE_LINUX=\\\\\\\"console=tty0 $ISO_KERNEL_ARGS\\\\\\\"' >> $ISO_TARGET_MOUNT/etc/default/grub\\\"\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
       handle_output "echo \"    - \\\"echo 'GRUB_TIMEOUT=\\\\\\\"$ISO_GRUB_TIMEOUT\\\\\\\"' >> $ISO_TARGET_MOUNT/etc/default/grub\\\"\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
       handle_output "echo \"    - \\\"echo '$ISO_USERNAME ALL=(ALL) NOPASSWD: ALL' >> $ISO_TARGET_MOUNT/etc/sudoers.d/$ISO_USERNAME\\\"\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
       if [ "$DO_ISO_AUTO_UPGRADES" = "false" ]; then
@@ -2177,12 +2238,11 @@ prepare_autoinstall_iso () {
         echo "    - \"curtin in-target --target=$ISO_TARGET_MOUNT -- /tmp/post.sh\"" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
         if [ "$DO_SERIAL" = "true" ]; then
           echo "    - \"echo 'GRUB_TERMINAL=\\\"serial console\\\"' >> $ISO_TARGET_MOUNT/etc/default/grub\"" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
-          echo "    - \"echo 'GRUB_SERIAL_COMMAND=\\\"serial --speed=$ISO_SERIAL_PORT_SPEED --port=$ISO_SERIAL_PORT_ADDRESS\\\"' >> $ISO_TARGET_MOUNT/etc/default/grub\"" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
-          echo "    - \"echo 'GRUB_CMDLINE_LINUX=\\\"$ISO_KERNEL_ARGS console=tty0 console=$ISO_SERIAL_PORT,$ISO_SERIAL_PORT_SPEED\\\"' >> $ISO_TARGET_MOUNT/etc/default/grub\"" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
+          echo "    - \"echo 'GRUB_SERIAL_COMMAND=\\\"serial --speed=$ISO_SERIAL_PORT_SPEED0 --port=$ISO_SERIAL_PORT_ADDRESS0\\\"' >> $ISO_TARGET_MOUNT/etc/default/grub\"" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
         else
           echo "    - \"echo 'GRUB_TERMINAL=\\\"console\\\"' >> $ISO_TARGET_MOUNT/etc/default/grub\"" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
-          echo "    - \"echo 'GRUB_CMDLINE_LINUX=\\\"console=tty0 $ISO_KERNEL_ARGS\\\"' >> $ISO_TARGET_MOUNT/etc/default/grub\"" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
         fi
+        echo "    - \"echo 'GRUB_CMDLINE_LINUX=\\\"console=tty0 $ISO_KERNEL_ARGS\\\"' >> $ISO_TARGET_MOUNT/etc/default/grub\"" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
         echo "    - \"echo 'GRUB_TIMEOUT=\\\"$ISO_GRUB_TIMEOUT\\\"' >> $ISO_TARGET_MOUNT/etc/default/grub\"" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
         echo "    - \"echo '$ISO_USERNAME ALL=(ALL) NOPASSWD: ALL' >> $ISO_TARGET_MOUNT/etc/sudoers.d/$ISO_USERNAME\"" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
         if [ "$DO_ISO_AUTO_UPGRADES" = "false" ]; then
@@ -2225,7 +2285,280 @@ prepare_autoinstall_iso () {
   done
 }
 
-# Handle command line arguments
+# Check if KVM VM exists
+
+check_kvm_vm_exists () {
+  KVM_TEST=$(sudo virsh list --all |awk '{ print $2 }' |grep "^$VM_NAME")
+  if [ "$KVM_TEST" = "$VM_NAME" ]; then
+    warning_message "KVM VM $VM_NAME exists"
+    VM_EXISTS="true"
+  fi
+}
+
+# Create a KVM VM for testing an ISO
+
+create_kvm_vm () {
+  VIRT_DIR="/var/lib/libvirt"
+  QEMU_DIR="$VIRT_DIR/qemu"
+  NVRAM_DIR="$QEMU_DIR/nvram"
+  IMAGE_DIR="$VIRT_DIR/images"
+  NVRAM_FILE="$NVRAM_DIR/${VM_NAME}_VARS.fd"
+  VM_DISK="$IMAGE_DIR/$VM_NAME.qcow2"
+  BIOS_FILE="/usr/share/OVMF/OVMF_CODE.fd"
+  VARS_FILE="/usr/share/OVMF/OVMF_VARS.fd"
+  if ! [ -f "$BIOS_FILE" ]; then
+    BIOS_FILE="/usr/share/edk2/x64/OVMF_CODE.fd"
+    VARS_FILE="/usr/share/edk2/x64/OVMF_VARS.fd"
+  fi
+  if ! [ -f "$BIOS_FILE" ]; then
+    TEMP_VERBOSE_MODE="true"
+    warning_message "Could not find BIOS file"
+    exit
+  fi
+  information_message "Creating VM disk $VM_DISK"
+  execution_message "sudo qemu-img create -f qcow2 $VM_DISK $VM_SIZE"
+  if [ "$TEST_MODE" = "false" ]; then
+    sudo qemu-img create -f qcow2 $VM_DISK $VM_SIZE
+  fi
+  information_message "Generating VM config $XML_FILE"
+  XML_FILE="/tmp/$VM_NAME.xml"
+  echo "<domain type='kvm'>" > $XML_FILE
+  echo "  <name>$VM_NAME</name>" >> $XML_FILE
+  echo "  <metadata>" >> $XML_FILE
+  echo "    <libosinfo:libosinfo xmlns:libosinfo=\"http://libosinfo.org/xmlns/libvirt/domain/1.0\">" >> $XML_FILE
+  echo "      <libosinfo:os id=\"http://ubuntu.com/ubuntu/22.04\"/>" >> $XML_FILE
+  echo "    </libosinfo:libosinfo>" >> $XML_FILE
+  echo "  </metadata>" >> $XML_FILE
+  echo "  <memory unit='KiB'>$VM_RAM</memory>" >> $XML_FILE
+  echo "  <currentMemory unit='KiB'>$VM_RAM</currentMemory>" >> $XML_FILE
+  echo "  <vcpu placement='static'>$VM_CPUS</vcpu>" >> $XML_FILE
+  echo "  <os firmware='efi'>" >> $XML_FILE
+  echo "    <type arch='x86_64' machine='pc-q35-8.1'>hvm</type>" >> $XML_FILE
+  echo "    <firmware>" >> $XML_FILE
+  echo "      <feature enabled='no' name='enrolled-keys'/>" >> $XML_FILE
+  echo "      <feature enabled='no' name='secure-boot'/>" >> $XML_FILE
+  echo "    </firmware>" >> $XML_FILE
+  echo "    <loader readonly='yes' type='pflash'>$BIOS_FILE</loader>" >> $XML_FILE
+  echo "    <nvram template='$VARS_FILE'>$NVRAM_FILE</nvram>" >> $XML_FILE
+  echo "    <bootmenu enable='yes'/>" >> $XML_FILE
+  echo "  </os>" >> $XML_FILE
+  echo "  <features>" >> $XML_FILE
+  echo "    <acpi/>" >> $XML_FILE
+  echo "    <apic/>" >> $XML_FILE
+  echo "    <vmport state='off'/>" >> $XML_FILE
+  echo "  </features>" >> $XML_FILE
+  echo "  <cpu mode='host-passthrough' check='none' migratable='on'/>" >> $XML_FILE
+  echo "  <clock offset='utc'>" >> $XML_FILE
+  echo "    <timer name='rtc' tickpolicy='catchup'/>" >> $XML_FILE
+  echo "    <timer name='pit' tickpolicy='delay'/>" >> $XML_FILE
+  echo "    <timer name='hpet' present='no'/>" >> $XML_FILE
+  echo "  </clock>" >> $XML_FILE
+  echo "  <on_poweroff>destroy</on_poweroff>" >> $XML_FILE
+  echo "  <on_reboot>restart</on_reboot>" >> $XML_FILE
+  echo "  <on_crash>destroy</on_crash>" >> $XML_FILE
+  echo "  <pm>" >> $XML_FILE
+  echo "    <suspend-to-mem enabled='no'/>" >> $XML_FILE
+  echo "    <suspend-to-disk enabled='no'/>" >> $XML_FILE
+  echo "  </pm>" >> $XML_FILE
+  echo "  <devices>" >> $XML_FILE
+  echo "    <emulator>/usr/bin/qemu-system-x86_64</emulator>" >> $XML_FILE
+  echo "    <disk type='file' device='disk'>" >> $XML_FILE
+  echo "      <driver name='qemu' type='qcow2' discard='unmap'/>" >> $XML_FILE
+  echo "      <source file='$VM_DISK'/>" >> $XML_FILE
+  echo "      <target dev='vda' bus='virtio'/>" >> $XML_FILE
+  echo "      <boot order='2'/>" >> $XML_FILE
+  echo "      <address type='pci' domain='0x0000' bus='0x04' slot='0x00' function='0x0'/>" >> $XML_FILE
+  echo "    </disk>" >> $XML_FILE
+  echo "    <disk type='file' device='cdrom'>" >> $XML_FILE
+  echo "      <driver name='qemu' type='raw'/>" >> $XML_FILE
+  echo "      <source file='$VM_ISO'/>" >> $XML_FILE
+  echo "      <target dev='sda' bus='sata'/>" >> $XML_FILE
+  echo "      <readonly/>" >> $XML_FILE
+  echo "      <boot order='1'/>" >> $XML_FILE
+  echo "      <address type='drive' controller='0' bus='0' target='0' unit='0'/>" >> $XML_FILE
+  echo "    </disk>" >> $XML_FILE
+  echo "    <controller type='usb' index='0' model='qemu-xhci' ports='15'>" >> $XML_FILE
+  echo "      <address type='pci' domain='0x0000' bus='0x02' slot='0x00' function='0x0'/>" >> $XML_FILE
+  echo "    </controller>" >> $XML_FILE
+  echo "    <controller type='pci' index='0' model='pcie-root'/>" >> $XML_FILE
+  echo "    <controller type='pci' index='1' model='pcie-root-port'>" >> $XML_FILE
+  echo "      <model name='pcie-root-port'/>" >> $XML_FILE
+  echo "      <target chassis='1' port='0x10'/>" >> $XML_FILE
+  echo "      <address type='pci' domain='0x0000' bus='0x00' slot='0x02' function='0x0' multifunction='on'/>" >> $XML_FILE
+  echo "    </controller>" >> $XML_FILE
+  echo "    <controller type='pci' index='2' model='pcie-root-port'>" >> $XML_FILE
+  echo "      <model name='pcie-root-port'/>" >> $XML_FILE
+  echo "      <target chassis='2' port='0x11'/>" >> $XML_FILE
+  echo "      <address type='pci' domain='0x0000' bus='0x00' slot='0x02' function='0x1'/>" >> $XML_FILE
+  echo "    </controller>" >> $XML_FILE
+  echo "    <controller type='pci' index='3' model='pcie-root-port'>" >> $XML_FILE
+  echo "      <model name='pcie-root-port'/>" >> $XML_FILE
+  echo "      <target chassis='3' port='0x12'/>" >> $XML_FILE
+  echo "      <address type='pci' domain='0x0000' bus='0x00' slot='0x02' function='0x2'/>" >> $XML_FILE
+  echo "    </controller>" >> $XML_FILE
+  echo "    <controller type='pci' index='4' model='pcie-root-port'>" >> $XML_FILE
+  echo "      <model name='pcie-root-port'/>" >> $XML_FILE
+  echo "      <target chassis='4' port='0x13'/>" >> $XML_FILE
+  echo "      <address type='pci' domain='0x0000' bus='0x00' slot='0x02' function='0x3'/>" >> $XML_FILE
+  echo "    </controller>" >> $XML_FILE
+  echo "    <controller type='pci' index='5' model='pcie-root-port'>" >> $XML_FILE
+  echo "      <model name='pcie-root-port'/>" >> $XML_FILE
+  echo "      <target chassis='5' port='0x14'/>" >> $XML_FILE
+  echo "      <address type='pci' domain='0x0000' bus='0x00' slot='0x02' function='0x4'/>" >> $XML_FILE
+  echo "    </controller>" >> $XML_FILE
+  echo "    <controller type='pci' index='6' model='pcie-root-port'>" >> $XML_FILE
+  echo "      <model name='pcie-root-port'/>" >> $XML_FILE
+  echo "      <target chassis='6' port='0x15'/>" >> $XML_FILE
+  echo "      <address type='pci' domain='0x0000' bus='0x00' slot='0x02' function='0x5'/>" >> $XML_FILE
+  echo "    </controller>" >> $XML_FILE
+  echo "    <controller type='pci' index='7' model='pcie-root-port'>" >> $XML_FILE
+  echo "      <model name='pcie-root-port'/>" >> $XML_FILE
+  echo "      <target chassis='7' port='0x16'/>" >> $XML_FILE
+  echo "      <address type='pci' domain='0x0000' bus='0x00' slot='0x02' function='0x6'/>" >> $XML_FILE
+  echo "    </controller>" >> $XML_FILE
+  echo "    <controller type='pci' index='8' model='pcie-root-port'>" >> $XML_FILE
+  echo "      <model name='pcie-root-port'/>" >> $XML_FILE
+  echo "      <target chassis='8' port='0x17'/>" >> $XML_FILE
+  echo "      <address type='pci' domain='0x0000' bus='0x00' slot='0x02' function='0x7'/>" >> $XML_FILE
+  echo "    </controller>" >> $XML_FILE
+  echo "    <controller type='pci' index='9' model='pcie-root-port'>" >> $XML_FILE
+  echo "      <model name='pcie-root-port'/>" >> $XML_FILE
+  echo "      <target chassis='9' port='0x18'/>" >> $XML_FILE
+  echo "      <address type='pci' domain='0x0000' bus='0x00' slot='0x03' function='0x0' multifunction='on'/>" >> $XML_FILE
+  echo "    </controller>" >> $XML_FILE
+  echo "    <controller type='pci' index='10' model='pcie-root-port'>" >> $XML_FILE
+  echo "      <model name='pcie-root-port'/>" >> $XML_FILE
+  echo "      <target chassis='10' port='0x19'/>" >> $XML_FILE
+  echo "      <address type='pci' domain='0x0000' bus='0x00' slot='0x03' function='0x1'/>" >> $XML_FILE
+  echo "    </controller>" >> $XML_FILE
+  echo "    <controller type='pci' index='11' model='pcie-root-port'>" >> $XML_FILE
+  echo "      <model name='pcie-root-port'/>" >> $XML_FILE
+  echo "      <target chassis='11' port='0x1a'/>" >> $XML_FILE
+  echo "      <address type='pci' domain='0x0000' bus='0x00' slot='0x03' function='0x2'/>" >> $XML_FILE
+  echo "    </controller>" >> $XML_FILE
+  echo "    <controller type='pci' index='12' model='pcie-root-port'>" >> $XML_FILE
+  echo "      <model name='pcie-root-port'/>" >> $XML_FILE
+  echo "      <target chassis='12' port='0x1b'/>" >> $XML_FILE
+  echo "      <address type='pci' domain='0x0000' bus='0x00' slot='0x03' function='0x3'/>" >> $XML_FILE
+  echo "    </controller>" >> $XML_FILE
+  echo "    <controller type='pci' index='13' model='pcie-root-port'>" >> $XML_FILE
+  echo "      <model name='pcie-root-port'/>" >> $XML_FILE
+  echo "      <target chassis='13' port='0x1c'/>" >> $XML_FILE
+  echo "      <address type='pci' domain='0x0000' bus='0x00' slot='0x03' function='0x4'/>" >> $XML_FILE
+  echo "    </controller>" >> $XML_FILE
+  echo "    <controller type='pci' index='14' model='pcie-root-port'>" >> $XML_FILE
+  echo "      <model name='pcie-root-port'/>" >> $XML_FILE
+  echo "      <target chassis='14' port='0x1d'/>" >> $XML_FILE
+  echo "      <address type='pci' domain='0x0000' bus='0x00' slot='0x03' function='0x5'/>" >> $XML_FILE
+  echo "    </controller>" >> $XML_FILE
+  echo "    <controller type='sata' index='0'>" >> $XML_FILE
+  echo "      <address type='pci' domain='0x0000' bus='0x00' slot='0x1f' function='0x2'/>" >> $XML_FILE
+  echo "    </controller>" >> $XML_FILE
+  echo "    <controller type='virtio-serial' index='0'>" >> $XML_FILE
+  echo "      <address type='pci' domain='0x0000' bus='0x03' slot='0x00' function='0x0'/>" >> $XML_FILE
+  echo "    </controller>" >> $XML_FILE
+  echo "    <interface type='network'>" >> $XML_FILE
+  echo "      <mac address='52:54:00:2e:6c:5b'/>" >> $XML_FILE
+  echo "      <source network='default'/>" >> $XML_FILE
+  echo "      <model type='virtio'/>" >> $XML_FILE
+  echo "      <address type='pci' domain='0x0000' bus='0x01' slot='0x00' function='0x0'/>" >> $XML_FILE
+  echo "    </interface>" >> $XML_FILE
+  echo "    <serial type='pty'>" >> $XML_FILE
+  echo "      <target type='isa-serial' port='0'>" >> $XML_FILE
+  echo "        <model name='isa-serial'/>" >> $XML_FILE
+  echo "      </target>" >> $XML_FILE
+  echo "    </serial>" >> $XML_FILE
+  echo "    <console type='pty'>" >> $XML_FILE
+  echo "      <target type='serial' port='0'/>" >> $XML_FILE
+  echo "    </console>" >> $XML_FILE
+  echo "    <channel type='unix'>" >> $XML_FILE
+  echo "      <target type='virtio' name='org.qemu.guest_agent.0'/>" >> $XML_FILE
+  echo "      <address type='virtio-serial' controller='0' bus='0' port='1'/>" >> $XML_FILE
+  echo "    </channel>" >> $XML_FILE
+  echo "    <channel type='spicevmc'>" >> $XML_FILE
+  echo "      <target type='virtio' name='com.redhat.spice.0'/>" >> $XML_FILE
+  echo "      <address type='virtio-serial' controller='0' bus='0' port='2'/>" >> $XML_FILE
+  echo "    </channel>" >> $XML_FILE
+  echo "    <input type='tablet' bus='usb'>" >> $XML_FILE
+  echo "      <address type='usb' bus='0' port='1'/>" >> $XML_FILE
+  echo "    </input>" >> $XML_FILE
+  echo "    <input type='mouse' bus='ps2'/>" >> $XML_FILE
+  echo "    <input type='keyboard' bus='ps2'/>" >> $XML_FILE
+  echo "    <graphics type='spice' autoport='yes'>" >> $XML_FILE
+  echo "      <listen type='address'/>" >> $XML_FILE
+  echo "      <image compression='off'/>" >> $XML_FILE
+  echo "    </graphics>" >> $XML_FILE
+  echo "    <sound model='ich9'>" >> $XML_FILE
+  echo "      <address type='pci' domain='0x0000' bus='0x00' slot='0x1b' function='0x0'/>" >> $XML_FILE
+  echo "    </sound>" >> $XML_FILE
+  echo "    <audio id='1' type='spice'/>" >> $XML_FILE
+  echo "    <video>" >> $XML_FILE
+  echo "      <model type='qxl' ram='65536' vram='65536' vgamem='16384' heads='1' primary='yes'/>" >> $XML_FILE
+  echo "      <address type='pci' domain='0x0000' bus='0x00' slot='0x01' function='0x0'/>" >> $XML_FILE
+  echo "    </video>" >> $XML_FILE
+  echo "    <redirdev bus='usb' type='spicevmc'>" >> $XML_FILE
+  echo "      <address type='usb' bus='0' port='2'/>" >> $XML_FILE
+  echo "    </redirdev>" >> $XML_FILE
+  echo "    <redirdev bus='usb' type='spicevmc'>" >> $XML_FILE
+  echo "      <address type='usb' bus='0' port='3'/>" >> $XML_FILE
+  echo "    </redirdev>" >> $XML_FILE
+  echo "    <watchdog model='itco' action='reset'/>" >> $XML_FILE
+  echo "    <memballoon model='virtio'>" >> $XML_FILE
+  echo "      <address type='pci' domain='0x0000' bus='0x05' slot='0x00' function='0x0'/>" >> $XML_FILE
+  echo "    </memballoon>" >> $XML_FILE
+  echo "    <rng model='virtio'>" >> $XML_FILE
+  echo "      <backend model='random'>/dev/urandom</backend>" >> $XML_FILE
+  echo "      <address type='pci' domain='0x0000' bus='0x06' slot='0x00' function='0x0'/>" >> $XML_FILE
+  echo "    </rng>" >> $XML_FILE
+  echo "  </devices>" >> $XML_FILE
+  echo "</domain>" >> $XML_FILE
+  information_message "Importing VM config $XML_FILE"
+  execution_message "sudo virsh define $XML_FILE"
+  if [ "$TEST_MODE" = "false" ]; then
+    sudo virsh define $XML_FILE
+  fi
+  verbose_message "To start the VM and connect to console run the following commands:" TEXT
+  verbose_message "" TEXT
+  verbose_message "sudo virsh start $VM_NAME" TEXT
+  verbose_message "sudo virsh console $VM_NAME" TEXT
+}
+
+# Function: Delete a KVM VM
+
+delete_kvm_vm () {
+  information_message "Stopping KVM VM $VM_NAME"
+  execute_command "sudo virsh shutdown $VM_NAME"
+  information_message "Deleting VM $VM_NAME"
+  execute_command "sudo virsh undefine $VM_NAME --nvram"
+}
+
+# Function: Delete a VM
+
+delete_vm () {
+  if [ "$VM_TYPE" = "kvm" ]; then
+    check_kvm_vm_exists
+    if [ "$VM_EXISTS" = "true" ]; then
+      delete_kvm_vm
+    else
+      information_message "KVM VM $VM_NAME does not exist"
+    fi
+  fi
+}
+
+# Function: Create a VM for testing an ISO
+
+create_vm () {
+  if [ "$VM_TYPE" = "kvm" ]; then
+    check_kvm_vm_exists
+    if [ "$VM_EXISTS" = "false" ]; then
+      create_kvm_vm
+    else
+      information_message "KVM VM $VM_NAME already exists"
+    fi
+  fi
+}
+
+# Function: Handle command line arguments
 
 if [ "$SCRIPT_ARGS" = "" ]; then
   print_help
@@ -2270,8 +2603,9 @@ do
       ACTION="$2"
       shift 2
       ;;
-    -B|--layout)
+    -B|--layout|--vmsize)
       ISO_LAYOUT="$2"
+      VM_SIZE=$2
       shift 2
       ;;
     -b|--bootserverip)
@@ -2316,8 +2650,9 @@ do
       shift 2
       ISO_DHCP="false"
       ;;
-    -g|--grubmenu)
+    -g|--grubmenu|--vmname)
       ISO_GRUB_MENU="$2"
+      VM_NAME="$2"
       shift 2
       ;;
     -H|--hostname)
@@ -2332,8 +2667,9 @@ do
       shift 2
       ISO_DHCP="false"
       ;;
-    -i|--inputiso)
+    -i|--inputiso|--vmiso)
       INPUT_FILE="$2"
+      VM_ISO="$2"
       shift 2
       ;;
     -J|--grubfile)
@@ -2344,12 +2680,14 @@ do
       ISO_AUTOINSTALL_DIR="$2"
       shift 2
       ;;
-    -K|--kernel)
+    -K|--kernel|--vmtype)
       ISO_KERNEL="$2"
+      VM_TYPE="$2"
       shift 2
       ;;
-    -k|--kernelargs)
+    -k|--kernelargs|--vmcpus)
       ISO_KERNEL_ARGS="$2"
+      VM_CPUS="$2"
       shift 2
       ;;
     -L|--release)
@@ -2381,8 +2719,9 @@ do
       DO_CUSTOM_BOOT_SERVER_FILE="true"
       shift 2
       ;;
-    -n|--nic)
+    -n|--nic|--vmnic)
       ISO_NIC="$2"
+      VM_NIC="$2"
       shift 2
       ;;
     -O|--isopackages)
@@ -2420,11 +2759,12 @@ do
       shift 2
       ;;
     -r|--serialportspeed)
-      ISO_SERIAL_PORT_SPEED="$2"
+      ISO_SERIAL_PORT_SPEED0="$2"
       shift 2
       ;;
-    -S|--swapsize)
+    -S|--swapsize|--vmram)
       ISO_SWAPSIZE="$2"
+      VM_RAM="$2"
       shift 2
       ;;
     -s|--squashfsfile)
@@ -2436,7 +2776,7 @@ do
       shift 2
       ;;
     -t|--serialportaddress)
-      ISO_SERIAL_PORT_ADDRESS="$2"
+      ISO_SERIAL_PORT_ADDRESS0="$2"
       shift 2
       ;;
     -U|--username)
@@ -2453,7 +2793,7 @@ do
       exit
       ;;
     -v|--serialport)
-      ISO_SERIAL_PORT="$2"
+      ISO_SERIAL_PORT0="$2"
       shift 2
       ;;
     -W|--workdir)
@@ -2677,6 +3017,24 @@ case $ACTION in
     DO_EXECUTE_ISO_CHROOT_SCRIPT="true"
     DO_CREATE_AUTOINSTALL_ISO_FULL="true"
     ;;
+  'createkvmvm')
+    VM_TYPE="kvm"
+    DO_INSTALL_REQUIRED_PACKAGES="true"
+    DO_CREATE_VM="true"
+    ;;
+  'deletekvmvm')
+    VM_TYPE="kvm"
+    DO_INSTALL_REQUIRED_PACKAGES="true"
+    DO_DELETE_VM="true"
+    ;;
+  'createvm')
+    DO_INSTALL_REQUIRED_PACKAGES="true"
+    DO_CREATE_VM="true"
+    ;;
+  'deletevm')
+    DO_INSTALL_REQUIRED_PACKAGES="true"
+    DO_DELETE_VM="true"
+    ;;
   "queryiso")
     DO_ISO_QUERY="true"
     ;;
@@ -2755,14 +3113,32 @@ fi
 if [ "$ISO_COUNTRY" = "" ]; then
   ISO_COUNTRY="$DEFAULT_ISO_COUNTRY"
 fi
-if [ "$ISO_SERIAL_PORT" = "" ]; then
-  ISO_SERIAL_PORT="$DEFAULT_ISO_SERIAL_PORT"
+if [[ "$ISO_SERIAL_PORT0" =~ "," ]]; then
+    ISO_SERIAL_PORT0=$(echo "$ISO_SERIAL_PORT0" |cut -f1 -d,)
+    ISO_SERIAL_PORT1=$(echo "$ISO_SERIAL_PORT1" |cut -f2 -d,)
+else
+  if [ "$ISO_SERIAL_PORT0" = "" ]; then
+    ISO_SERIAL_PORT0="$DEFAULT_ISO_SERIAL_PORT0"
+    ISO_SERIAL_PORT1="$DEFAULT_ISO_SERIAL_PORT1"
+  fi
 fi
-if [ "$ISO_SERIAL_PORT_ADDRESS" = "" ]; then
-  ISO_SERIAL_PORT_ADDRESS="$DEFAULT_ISO_SERIAL_PORT_ADDRESS"
+if [[ "$ISO_SERIAL_PORT_ADDRESS0" =~ "," ]]; then
+    ISO_SERIAL_PORT_ADDRESS0=$(echo "$ISO_SERIAL_PORT_ADDRESS0" |cut -f1 -d,)
+    ISO_SERIAL_PORT_ADDRESS1=$(echo "$ISO_SERIAL_PORT_ADDRESS1" |cut -f2 -d,)
+else
+  if [ "$ISO_SERIAL_PORT_ADDRESS0" = "" ]; then
+    ISO_SERIAL_PORT_ADDRESS0="$DEFAULT_ISO_SERIAL_PORT_ADDRESS0"
+    ISO_SERIAL_PORT_ADDRESS1="$DEFAULT_ISO_SERIAL_PORT_ADDRESS1"
+  fi
 fi
-if [ "$ISO_SERIAL_PORT_SPEED" = "" ]; then
-  ISO_SERIAL_PORT_SPEED="$DEFAULT_ISO_SERIAL_PORT_SPEED"
+if [ "$ISO_SERIAL_PORT_SPEED0" = "" ]; then
+    ISO_SERIAL_PORT_SPEED0=$(echo "$DEFAULT_ISO_SERIAL_PORT_SPEED0" |cut -f1 -d,)
+    ISO_SERIAL_PORT_SPEED1=$(echo "$DEFAULT_ISO_SERIAL_PORT_SPEED1" |cut -f2 -d,)
+else
+  if [ "$ISO_SERIAL_PORT_SPEED0" = "" ]; then
+    ISO_SERIAL_PORT_SPEED0="$DEFAULT_ISO_SERIAL_PORT_SPEED0"
+    ISO_SERIAL_PORT_SPEED1="$DEFAULT_ISO_SERIAL_PORT_SPEED1"
+  fi
 fi
 if [ "$ISO_ARCH" = "" ]; then
   ISO_ARCH="$DEFAULT_ISO_ARCH"
@@ -2883,10 +3259,16 @@ if [ "$ISO_KERNEL_ARGS" = "" ]; then
   ISO_KERNEL_ARGS="$DEFAULT_ISO_KERNEL_ARGS"
 fi
 if [ "$ISO_KERNEL" = "" ]; then
-  ISO_KERNEL="$DEFAULT_ISO_KERNEL"
+  if [ "$DO_CREATE_VM" = "true" ]; then
+    ISO_KERNEL="$DEFAULT_VM_TYPE"
+  else
+    ISO_KERNEL="$DEFAULT_ISO_KERNEL"
+  fi
 fi
-if [ "$CODENAME" = "" ]; then
-  get_code_name
+if [[ "$ACTION" =~ "iso" ]]; then
+  if [ "$CODENAME" = "" ]; then
+    get_code_name
+  fi
 fi
 if [ "$ISO_LOCALE" = "" ]; then
   ISO_LOCALE="$DEFAULT_ISO_LOCALE"
@@ -3036,6 +3418,56 @@ if [ "$ISO_DHCP" = "true" ]; then
   TEMP_FILE_NAME=$( basename "$OUTPUT_FILE" .iso )
   OUTPUT_FILE="$TEMP_DIR_NAME/$TEMP_FILE_NAME-dhcp.iso"
 fi
+if [ "$DO_CREATE_VM" = "true" ]; then
+  if [ "$VM_TYPE" = "kvm" ]; then
+    REQUIRED_PACKAGES="$REQUIRED_PACKAGES qemu-full virt-manager virt-viewer dnsmasq bridge-utils libguestfs ebtables vde2 openbsd-netcat cloud-image-utils libosinfo"
+  fi
+fi
+if [ "$VM_TYPE" = "" ]; then
+  VM_TYPE="$DEFAULT_VM_TYPE"
+fi
+if [ "$VM_NIC" = "" ]; then
+  VM_NIC="$DEFAULT_VM_NIC"
+fi
+if [ "$VM_SIZE" = "" ]; then
+  VM_SIZE="$DEFAULT_VM_SIZE"
+fi
+if [ "$VM_CPUS" = "" ]; then
+  VM_CPUS="$DEFAULT_VM_CPUS"
+fi
+if [[ "$ACTION" =~ "vm" ]]; then
+  if [[ "$ACTION" =~ "create" ]]; then
+    if [ "$VM_RAM" = "" ]; then
+      VM_RAM="$DEFAULT_VM_RAM"
+    else
+      if [[ "$VM_RAM" =~ "G" ]] || [[ "$VM_RAM" =~ "g" ]]; then
+        VM_RAM=$(echo "$VM_RAM" |sed "s/[G,g]//g")
+        VM_RAM=$(echo "$VM_RAM*1024*1024" |bc -l)
+      fi
+      if [ "$VM_RAM" -lt 1024000 ]; then
+        warning_message "Insufficient RAM specified for VM"
+        exit
+      fi
+    fi
+  fi
+  if [ "$VM_NAME" = "" ]; then
+    VM_NAME="$DEFAULT_VM_NAME"
+  fi
+  if [[ "$ACTION" =~ "create" ]]; then
+    if ! [ "$VM_ISO" = "" ]; then
+      if ! [ -f "$VM_ISO" ]; then
+        warning_message "ISO $VM_ISO does not exist"
+        exit
+      fi
+    fi
+  fi
+fi
+if [ "$DO_SERIAL" = "true" ]; then
+  ISO_KERNEL_ARGS="$ISO_KERNEL_ARGS console=$ISO_SERIAL_PORT0,$ISO_SERIAL_PORT_SPEED0"
+  if ! [ "$ISO_SERIAL_PORT1" = "" ]; then
+    ISO_KERNEL_ARGS="$ISO_KERNEL_ARGS console=$ISO_SERIAL_PORT1,$ISO_SERIAL_PORT_SPEED1"
+  fi
+fi
 
 # Update Default work directories
 
@@ -3110,7 +3542,7 @@ fi
 
 if [ "$DO_ISO_SSH_KEY" = "true" ]; then
   if ! [ -f "$ISO_SSH_KEY_FILE" ]; then
-    echo "SSH Key file ($ISO_SSH_KEY_FILE) does not exist"
+    warning_message "SSH Key file ($ISO_SSH_KEY_FILE) does not exist"
   else
     ISO_SSH_KEY=$(<"$ISO_SSH_KEY_FILE")
   fi
@@ -3196,9 +3628,12 @@ if [ "$DO_CREATE_ANSIBLE" = "true" ] ; then
   handle_output "# BMC Username:          BMC_USERNAME                    $BMC_USERNAME" TEXT
   handle_output "# BMC Password:          BMC_PASSWORD                    $BMC_PASSWORD" TEXT
 fi
-handle_output "# Serial Port:           ISO_SERIAL_PORT                 $ISO_SERIAL_PORT" TEXT
-handle_output "# Serial Port Address:   ISO_SERIAL_PORT_ADDRESS         $ISO_SERIAL_PORT_ADDRESS" TEXT
-handle_output "# Serial Port Speed:     ISO_SERIAL_PORT_SPEDD           $ISO_SERIAL_PORT_SPEED" TEXT
+handle_output "# Serial Port:           ISO_SERIAL_PORT0                 $ISO_SERIAL_PORT0" TEXT
+handle_output "# Serial Port:           ISO_SERIAL_PORT1                 $ISO_SERIAL_PORT1" TEXT
+handle_output "# Serial Port Address:   ISO_SERIAL_PORT_ADDRESS0        $ISO_SERIAL_PORT_ADDRESS0" TEXT
+handle_output "# Serial Port Address:   ISO_SERIAL_PORT_ADDRESS1        $ISO_SERIAL_PORT_ADDRESS1" TEXT
+handle_output "# Serial Port Speed:     ISO_SERIAL_PORT_SPEED0          $ISO_SERIAL_PORT_SPEED0" TEXT
+handle_output "# Serial Port Speed:     ISO_SERIAL_PORT_SPEED1          $ISO_SERIAL_PORT_SPEED1" TEXT
 handle_output "# Use biosdevnames:      ISO_USE_BIOSDEVNAME             $ISO_USE_BIOSDEVNAME" TEXT
 
 if [ "$DO_PRINT_ENV" = "true" ] || [ "$INTERACTIVE_MODE" = "true" ]; then
@@ -3381,17 +3816,34 @@ if [ "$INTERACTIVE_MODE" = "true" ]; then
     # Get wether to install drivers 
     read -r -p "Install Drivers? [$DO_INSTALL_ISO_DRIVERS]: " NEW_INSTALL_ISO_DRIVERS
     DO_INSTALL_ISO_DRIVERS=${NEW_INSTALL_ISO_DRIVERS:-$DO_INSTALL_ISO_DRIVERS}
-    # Get Serial Port 
-    read -r -p "Serial Port? [$ISO_SERIAL_PORT]: " NEW_ISO_SERIAL_PORT
-    ISO_SERIAL_PORT=${NEW_ISO_SERIAL_PORT:-$ISO_SERIAL_PORT}
-    # Get Serial Port Address
-    read -r -p "Serial Port Address? [$ISO_SERIAL_PORT_ADDRESS]: " NEW_ISO_SERIAL_PORT_ADDRESS
-    ISO_SERIAL_PORT_ADDRESS=${NEW_ISO_SERIAL_PORT_ADDRESS:-$ISO_SERIAL_PORT_ADDRESS}
-    # Get Serial Port Speed 
-    read -r -p "Serial Port Speed? [$ISO_SERIAL_PORT_SPEED]: " NEW_ISO_SERIAL_PORT_SPEED
-    ISO_SERIAL_PORT_SPEED=${NEW_ISO_SERIAL_PORT_SPEED:-$ISO_SERIAL_PORT_SPEED}
+    # Get Serial Port 0 
+    read -r -p "Serial Port? [$ISO_SERIAL_PORT0]: " NEW_ISO_SERIAL_PORT0
+    ISO_SERIAL_PORT0=${NEW_ISO_SERIAL_PORT0:-$ISO_SERIAL_PORT0}
+    # Get Serial Port 1 
+    read -r -p "Serial Port? [$ISO_SERIAL_PORT1]: " NEW_ISO_SERIAL_PORT1
+    ISO_SERIAL_PORT1=${NEW_ISO_SERIAL_PORT1:-$ISO_SERIAL_PORT1}
+    # Get Serial Port Address 0
+    read -r -p "Serial Port Address? [$ISO_SERIAL_PORT_ADDRESS0]: " NEW_ISO_SERIAL_PORT_ADDRESS0
+    ISO_SERIAL_PORT_ADDRESS0=${NEW_ISO_SERIAL_PORT_ADDRESS0:-$ISO_SERIAL_PORT_ADDRESS0}
+    # Get Serial Port Address 1
+    read -r -p "Serial Port Address? [$ISO_SERIAL_PORT_ADDRESS1]: " NEW_ISO_SERIAL_PORT_ADDRESS1
+    ISO_SERIAL_PORT_ADDRESS1=${NEW_ISO_SERIAL_PORT_ADDRESS1:-$ISO_SERIAL_PORT_ADDRESS1}
+    # Get Serial Port Speed 0
+    read -r -p "Serial Port Speed? [$ISO_SERIAL_PORT_SPEED0]: " NEW_ISO_SERIAL_PORT_SPEED0
+    ISO_SERIAL_PORT_SPEED0=${NEW_ISO_SERIAL_PORT_SPEED0:-$ISO_SERIAL_PORT_SPEED0}
+    # Get Serial Port Speed 1
+    read -r -p "Serial Port Speed? [$ISO_SERIAL_PORT_SPEED1]: " NEW_ISO_SERIAL_PORT_SPEED1
+    ISO_SERIAL_PORT_SPEED1=${NEW_ISO_SERIAL_PORT_SPEED1:-$ISO_SERIAL_PORT_SPEED1}
   fi
 fi
+
+if [ "$DO_CREATE_VM" = "true" ]; then
+  if [ "$VM_ISO" = "" ]; then
+    if ! [ "$OUTPUT_FILE" = "" ]; then
+      VM_ISO="$OUTPUT_FILE"
+    fi
+  fi
+fi  
 
 if [ "$DO_DOCKER" = "true" ] || [ "$DO_CHECK_DOCKER" = "true" ]; then
   if ! [ -f "/.dockerenv" ]; then
@@ -3437,6 +3889,16 @@ fi
 # Prepare ISO
 # Create ISO
 
+if [ "$DO_DELETE_VM" = "true" ]; then
+  delete_vm
+  exit
+fi
+if [ "$DO_CREATE_VM" = "true" ]; then
+  get_info_from_iso
+  install_required_packages
+  create_vm
+  exit
+fi
 if [ "$DO_CHECK_RACADM" = "true" ]; then
   check_racadm
   exit

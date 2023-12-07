@@ -11,7 +11,7 @@ used to hang a shield on the shoulder or neck when not in use.
 Version
 -------
 
-Current version: 1.6.8
+Current version: 1.7.3
 
 Issues
 ------
@@ -45,6 +45,7 @@ The following packages are optional for additional features:
 - docker (required to create ISO on non Linux platforms)
 - nfs-kernel-server (required for racadm and redfish based ISO deployment)
 - ansible (required for iDRAC redfish ISO deployment)
+- kvm (required for building KVM test VM for testing ISO)
 
 For best results:
 
@@ -97,6 +98,9 @@ The current disk layouts are default one root partition configs, i.e. no separat
 var or home partitions. This could be changed, but in my experience testing recent
 cloud-init autoinstall versions/configs on Ubuntu it takes quite a bit of testing
 to get more complex layouts working without issue.
+
+This script can also be used to create a KVM VM to test the ISO created.
+This is useful for troubleshooting by connecting to the KVM VM in console mode and watching install.
 
 Usage
 -----
@@ -195,6 +199,8 @@ You can get more usage information by using the usage tag with the action switch
   queryiso:               Query ISO for information
   listalliso:             List all ISOs
   listiso:                List ISOs
+  createkvmvm:            Create KVM VM
+  deletekvmvm             Delete KVM VM
 
   options
   -------
@@ -251,6 +257,34 @@ Install required packages:
 
 ```
 ./guige.sh --action installrequired
+```
+
+Create an Ubuntu 22.04 ISO:
+
+```
+./guige.sh --action createiso --release 22.04
+```
+
+Create a test (and call it test) Ubuntu KVM VM (requires an Ubuntu 22.04 ISO to have been created) 
+
+```
+./guige.sh --action createkvmvm --vmname test  --release 22.04
+To start the VM and connect to console run the following commands:
+
+sudo virsh start test
+sudo virsh console test
+```
+
+Delete a test KVM VM named test
+
+```
+./guige.sh --action deletekvmvm --vmname test
+```
+
+Create a KVM VM and specify the amount of RAM and number of CPUs
+
+```
+./guige.sh --action createkvmvm --vmname test  --release 22.04 --vmram 2G --vmcpus 4
 ```
 
 Download base ISO (jammy)
