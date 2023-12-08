@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Name:         guige (Generic Ubuntu ISO Generation Engine)
-# Version:      1.7.3
+# Version:      1.7.4
 # Release:      1
 # License:      CC-BA (Creative Commons By Attribution)
 #               http://creativecommons.org/licenses/by/4.0/legalcode
@@ -27,7 +27,6 @@ BMC_EXPOSE_DURATION="180"
 # Default variables
 
 SCRIPT_NAME="guige"
-DEFAULT_VM_NAME="guige-test-vm"
 CURRENT_ISO_RELEASE_1404="14.04.6"
 CURRENT_ISO_RELEASE_1604="16.04.7"
 CURRENT_ISO_RELEASE_1804="18.04.6"
@@ -348,7 +347,7 @@ print_help () {
     -F|--bmcusername:         BMC/iDRAC User (default: $DEFAULT_BMC_USERNAME)
     -f|--delete:              Remove previously created files (default: $FORCE_MODE)
     -G|--gateway:             Gateway (default $DEFAULT_ISO_GATEWAY)
-    -g|--grubmenu|--vmname:   Set default grub menu or VM name (default: $DEFAULT_ISO_GRUB_MENU/$DEFAULT_VM_NAME)
+    -g|--grubmenu|--vmname:   Set default grub menu or VM name (default: $DEFAULT_ISO_GRUB_MENU/$SCRIPT_NAME)
     -H|--hostname|            Hostname (default: $DEFAULT_ISO_HOSTNAME)
     -h|--help                 Help/Usage Information
     -I|--ip:                  IP Address (default: $DEFAULT_ISO_IP)
@@ -546,6 +545,9 @@ check_docker_config () {
 
 get_code_name() {
   REL_NO="$ISO_MAJOR_REL.$ISO_MINOR_REL"
+  if [ "$REL_NO" = "." ]; then
+    REL_NO="$ISO_RELEASE"
+  fi
   case $REL_NO in
     "20.04")
       ISO_CODENAME="focal"
@@ -575,7 +577,6 @@ get_code_name() {
       ISO_CODENAME="noble"
       ;;
   esac
-
 }
 
 # Function: Get info from iso
@@ -3193,6 +3194,9 @@ else
       ;;
   esac
 fi
+if [ "$ISO_CODENAME" = "" ]; then
+  get_code_name
+fi
 ISO_MAJOR_REL=$(echo "$ISO_RELEASE" |cut -f1 -d.)
 ISO_MINOR_REL=$(echo "$ISO_RELEASE" |cut -f2 -d.)
 if [ "$ISO_USERNAME" = "" ]; then
@@ -3384,7 +3388,7 @@ if [ "$ISO_DHCP" = "false" ]; then
   fi
 fi
 if ! [ "$ISO_USERNAME" = "$DEFAULT_ISO_USERNAME" ]; then
-  TEMP_DIR_NAME=$( dirname "$OUTPUT_FILE" )
+  TEMP_DIR_NAME=$( dirname "$OaUTPUT_FILE" )
   TEMP_FILE_NAME=$( basename "$OUTPUT_FILE" .iso )
   OUTPUT_FILE="$TEMP_DIR_NAME/$TEMP_FILE_NAME-$ISO_USERNAME.iso"
 fi
@@ -3451,7 +3455,7 @@ if [[ "$ACTION" =~ "vm" ]]; then
     fi
   fi
   if [ "$VM_NAME" = "" ]; then
-    VM_NAME="$DEFAULT_VM_NAME"
+    VM_NAME="$SCRIPT_NAME-ubuntu-$ISO_RELEASE"
   fi
   if [[ "$ACTION" =~ "create" ]]; then
     if ! [ "$VM_ISO" = "" ]; then
