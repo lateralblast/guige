@@ -11,18 +11,18 @@ used to hang a shield on the shoulder or neck when not in use.
 Version
 -------
 
-Current version: 1.7.4
+Current version: 1.7.5
 
 Issues
 ------
 
 Current issues:
 
-- Currently does not work with Ubuntu 23.10 (waiting on updated installer, kernel and ZFS modules [1])
+- Currently does not work with Ubuntu 23.10 or later (have logged a bug with curtin installer team)
   - A workaround for this is to install 23.04 and upgrade to 23.10
-
-[1] https://www.theregister.com/2023/09/19/ubuntu_2310_taking_shape/?td=rt-3a
-
+- BIOS ISO does not support ZFS
+  - Default mode is UEFI with ZFS and LVM install options
+  - BIOS ISO mode will build installer with only LVM install
 
 Prerequisites
 -------------
@@ -259,10 +259,16 @@ Install required packages:
 ./guige.sh --action installrequired
 ```
 
-Create an Ubuntu 22.04 ISO:
+Create an Ubuntu 22.04 ISO (UEFI - default - ZFS and LVM install options):
 
 ```
 ./guige.sh --action createiso --release 22.04
+```
+
+Create an Ubuntu 22.04 ISO (BIOS - LVM install option only):
+
+```
+./guige.sh --action createiso --release 22.04 --options bios
 ```
 
 Create a test (and call it test) Ubuntu KVM VM (requires an Ubuntu 22.04 ISO to have been created) 

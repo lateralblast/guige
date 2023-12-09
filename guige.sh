@@ -1,7 +1,7 @@
-#!/usr/bin/env bash
+#/!/usr/bin/env bash
 
 # Name:         guige (Generic Ubuntu ISO Generation Engine)
-# Version:      1.7.4
+# Version:      1.7.5
 # Release:      1
 # License:      CC-BA (Creative Commons By Attribution)
 #               http://creativecommons.org/licenses/by/4.0/legalcode
@@ -64,7 +64,7 @@ DEFAULT_ISO_LC_ALL="en_US"
 DEFAULT_ISO_LAYOUT="us"
 DEFAULT_ISO_COUNTRY="us"
 DEFAULT_ISO_BUILD_TYPE="live-server"
-DEFAULT_ISO_BOOT_TYPE="efi"
+DEFAULT_ISO_BOOT_TYPE="uefi"
 DEFAULT_ISO_SERIAL_PORT0="ttyS0"
 DEFAULT_ISO_SERIAL_PORT_ADDRESS0="0x03f8"
 DEFAULT_ISO_SERIAL_PORT_SPEED0="115200"
@@ -297,7 +297,7 @@ print_usage () {
   biosdevname:            Enable biosdevname kernel parameters
   nounmount:              Don't unmount filesystems (useful for troubleshooting)
   testmode:               Don't execute commands (useful for testing and generating a script)
-  efi:                    Create UEFI based ISO
+  uefi:                   Create UEFI based ISO
   bios:                   Create BIOS based ISO
   verbose:                Verbose output
   interactive:            Interactively ask questions
@@ -384,7 +384,7 @@ print_help () {
     -x|--grubtimeout:         Grub timeout (default: $DEFAULT_ISO_GRUB_TIMEOUT)
     -Y|--allowpassword        Allow password access via SSH (default: $DEFAULT_ISO_ALLOW_PASSWORD)
     -y|--bmcpassword:         BMC/iDRAC password (default: $DEFAULT_BMC_PASSWORD)
-    -Z|--options:             Options (e.g. nounmount, testmode, bios, efi, verbose, interactive)
+    -Z|--options:             Options (e.g. nounmount, testmode, bios, uefi, verbose, interactive)
     -z|--volumemanager:       Volume Managers (defauls: $DEFAULT_ISO_VOLMGRS)
 HELP
   exit
@@ -1626,18 +1626,18 @@ create_autoinstall_iso () {
   ISO_MBR_PART_TYPE=$( xorriso -indev "$INPUT_FILE" -report_el_torito as_mkisofs |grep iso_mbr_part_type |tail -1 |awk '{print $2}' 2>&1 )
   BOOT_CATALOG=$( xorriso -indev "$INPUT_FILE" -report_el_torito as_mkisofs |grep "^-c " |tail -1 |awk '{print $2}' |cut -f2 -d"'" 2>&1 )
   BOOT_IMAGE=$( xorriso -indev "$INPUT_FILE" -report_el_torito as_mkisofs |grep "^-b " |tail -1 |awk '{print $2}' |cut -f2 -d"'" 2>&1 )
-  EFI_BOOT_SIZE=$( xorriso -indev "$INPUT_FILE" -report_el_torito as_mkisofs |grep "^-boot-load-size" |tail -1 |awk '{print $2}' |cut -f2 -d"'" 2>&1 )
+  UEFI_BOOT_SIZE=$( xorriso -indev "$INPUT_FILE" -report_el_torito as_mkisofs |grep "^-boot-load-size" |tail -1 |awk '{print $2}' |cut -f2 -d"'" 2>&1 )
   DOS_BOOT_SIZE=$( xorriso -indev "$INPUT_FILE" -report_el_torito as_mkisofs |grep "^-boot-load-size" |head -1 |awk '{print $2}' |cut -f2 -d"'" 2>&1 )
   if [ "$ISO_MAJOR_REL" = "22" ]; then
     handle_output "export APPEND_PART=\$( xorriso -indev \"$INPUT_FILE\" -report_el_torito as_mkisofs |grep append_partition |tail -1 |awk '{print \$3}' 2>&1 )"
-    handle_output "export EFI_IMAGE=\"--interval:appended_partition_2:::\""
+    handle_output "export UEFI_IMAGE=\"--interval:appended_partition_2:::\""
     APPEND_PART=$( xorriso -indev "$INPUT_FILE" -report_el_torito as_mkisofs |grep append_partition |tail -1 |awk '{print $3}' 2>&1 )
-    EFI_IMAGE="--interval:appended_partition_2:::"
+    UEFI_IMAGE="--interval:appended_partition_2:::"
   else
     handle_output "export APPEND_PART=\"0exf\""
-    handle_output "export EFI_IMAGE=\$( xorriso -indev \"$INPUT_FILE\" -report_el_torito as_mkisofs |grep '^-e ' |tail -1 |awk '{print \$2}' |cut -f2 -d\"'\" 2>&1 )"
+    handle_output "export UEFI_IMAGE=\$( xorriso -indev \"$INPUT_FILE\" -report_el_torito as_mkisofs |grep '^-e ' |tail -1 |awk '{print \$2}' |cut -f2 -d\"'\" 2>&1 )"
     APPEND_PART="0xef"
-    EFI_IMAGE=$( xorriso -indev "$INPUT_FILE" -report_el_torito as_mkisofs |grep "^-e " |tail -1 |awk '{print $2}' |cut -f2 -d"'" 2>&1 )
+    UEFI_IMAGE=$( xorriso -indev "$INPUT_FILE" -report_el_torito as_mkisofs |grep "^-e " |tail -1 |awk '{print $2}' |cut -f2 -d"'" 2>&1 )
   fi
   if [ "$TEST_MODE" = "false" ]; then
     if [ "$ISO_ARCH" = "amd64" ]; then
@@ -1647,24 +1647,24 @@ create_autoinstall_iso () {
       -append_partition 2 \"$APPEND_PART\" \"$WORK_DIR/BOOT/2-Boot-NoEmul.img\" -appended_part_as_gpt \
       -iso_mbr_part_type \"$ISO_MBR_PART_TYPE\" -c \"$BOOT_CATALOG\" -b \"$BOOT_IMAGE\" \
       -no-emul-boot -boot-load-size \"$DOS_BOOT_SIZE\" -boot-info-table --grub2-boot-info -eltorito-alt-boot \
-      -e \"$EFI_IMAGE\" -no-emul-boot -boot-load-size \"$EFI_BOOT_SIZE\" \"$ISO_SOURCE_DIR\""
+      -e \"$UEFI_IMAGE\" -no-emul-boot -boot-load-size \"$UEFI_BOOT_SIZE\" \"$ISO_SOURCE_DIR\""
       xorriso -as mkisofs -r -V "$ISO_VOLID" -o "$OUTPUT_FILE" \
       --grub2-mbr "$WORK_DIR/BOOT/1-Boot-NoEmul.img" --protective-msdos-label -partition_cyl_align off \
       -partition_offset 16 --mbr-force-bootable -append_partition 2 "$APPEND_PART" "$WORK_DIR/BOOT/2-Boot-NoEmul.img" \
       -appended_part_as_gpt -iso_mbr_part_type "$ISO_MBR_PART_TYPE" -c "$BOOT_CATALOG" -b "$BOOT_IMAGE" \
       -no-emul-boot -boot-load-size "$DOS_BOOT_SIZE" -boot-info-table --grub2-boot-info -eltorito-alt-boot \
-      -e "$EFI_IMAGE" -no-emul-boot -boot-load-size "$EFI_BOOT_SIZE" "$ISO_SOURCE_DIR"
+      -e "$UEFI_IMAGE" -no-emul-boot -boot-load-size "$UEFI_BOOT_SIZE" "$ISO_SOURCE_DIR"
     else
       handle_output "xorriso -as mkisofs -r -V \"$ISO_VOLID\" -o \"$OUTPUT_FILE\" \
       -partition_cyl_align all -partition_offset 16 -partition_hd_cyl 86 -partition_sec_hd 32 \
       -append_partition 2 \"$APPEND_PART\" \"$WORK_DIR/BOOT/Boot-NoEmul.img\" -G \"$WORK_DIR/BOOT/Boot-NoEmul.img\" \
       -iso_mbr_part_type \"$ISO_MBR_PART_TYPE\" -c \"$BOOT_CATALOG\" \
-      -e \"$EFI_IMAGE\" -no-emul-boot -boot-load-size \"$EFI_BOOT_SIZE\" \"$ISO_SOURCE_DIR\""
+      -e \"$UEFI_IMAGE\" -no-emul-boot -boot-load-size \"$UEFI_BOOT_SIZE\" \"$ISO_SOURCE_DIR\""
       xorriso -as mkisofs -r -V "$ISO_VOLID" -o "$OUTPUT_FILE" \
       -partition_cyl_align all -partition_offset 16 -partition_hd_cyl 86 -partition_sec_hd 32 \
       -append_partition 2 "$APPEND_PART" "$WORK_DIR/BOOT/Boot-NoEmul.img" -G "$WORK_DIR/BOOT/Boot-NoEmul.img" \
       -iso_mbr_part_type "$ISO_MBR_PART_TYPE" -c "$BOOT_CATALOG" \
-      -e "$EFI_IMAGE" -no-emul-boot -boot-load-size "$EFI_BOOT_SIZE" "$ISO_SOURCE_DIR"
+      -e "$UEFI_IMAGE" -no-emul-boot -boot-load-size "$UEFI_BOOT_SIZE" "$ISO_SOURCE_DIR"
     fi
     if [ "$DO_DOCKER" = "true" ]; then
       BASE_DOCKER_OUTPUT_FILE=$( basename "$OUTPUT_FILE" )
@@ -1766,9 +1766,11 @@ prepare_autoinstall_iso () {
     handle_output "echo \"menuentry 'Boot from next volume' {\" >> \"$ISO_SOURCE_DIR/boot/grub/grub.cfg\""
     handle_output "echo \"  exit 1\" >> \"$ISO_SOURCE_DIR/boot/grub/grub.cfg\""
     handle_output "echo \"}\" >> \"$ISO_SOURCE_DIR/boot/grub/grub.cfg\""
-    handle_output "echo \"menuentry 'UEFI Firmware Settings' {\" >> \"$ISO_SOURCE_DIR/boot/grub/grub.cfg\""
-    handle_output "echo \"  fwsetup\" >> \"$ISO_SOURCE_DIR/boot/grub/grub.cfg\""
-    handle_output "echo \"}\" >> \"$ISO_SOURCE_DIR/boot/grub/grub.cfg\""
+    if [[ "$ISO_BOOT_TYPE" =~ "efi" ]]; then
+      handle_output "echo \"menuentry 'UEFI Firmware Settings' {\" >> \"$ISO_SOURCE_DIR/boot/grub/grub.cfg\""
+      handle_output "echo \"  fwsetup\" >> \"$ISO_SOURCE_DIR/boot/grub/grub.cfg\""
+      handle_output "echo \"}\" >> \"$ISO_SOURCE_DIR/boot/grub/grub.cfg\""
+    fi
     if ! [ "$ISO_MAJOR_REL" = "22" ]; then
       handle_output "echo \"default $ISO_GRUB_MENU\" > \"$ISO_SOURCE_DIR/isolinux/txt.cfg\""
       COUNTER=0
@@ -1828,9 +1830,11 @@ prepare_autoinstall_iso () {
       echo "menuentry 'Boot from next volume' {" >> "$ISO_SOURCE_DIR/boot/grub/grub.cfg"
       echo "  exit 1" >> "$ISO_SOURCE_DIR/boot/grub/grub.cfg"
       echo "}" >> "$ISO_SOURCE_DIR/boot/grub/grub.cfg"
-      echo "menuentry 'UEFI Firmware Settings' {" >> "$ISO_SOURCE_DIR/boot/grub/grub.cfg"
-      echo "  fwsetup" >> "$ISO_SOURCE_DIR/boot/grub/grub.cfg"
-      echo "}" >> "$ISO_SOURCE_DIR/boot/grub/grub.cfg"
+      if [[ "$ISO_BOOT_TYPE" =~ "efi" ]]; then
+        echo "menuentry 'UEFI Firmware Settings' {" >> "$ISO_SOURCE_DIR/boot/grub/grub.cfg"
+        echo "  fwsetup" >> "$ISO_SOURCE_DIR/boot/grub/grub.cfg"
+        echo "}" >> "$ISO_SOURCE_DIR/boot/grub/grub.cfg"
+      fi
     fi
   fi
   for ISO_DEVICE in $ISO_DEVICES; do 
@@ -2333,15 +2337,20 @@ create_kvm_vm () {
   echo "  <memory unit='KiB'>$VM_RAM</memory>" >> $XML_FILE
   echo "  <currentMemory unit='KiB'>$VM_RAM</currentMemory>" >> $XML_FILE
   echo "  <vcpu placement='static'>$VM_CPUS</vcpu>" >> $XML_FILE
-  echo "  <os firmware='efi'>" >> $XML_FILE
-  echo "    <type arch='x86_64' machine='pc-q35-8.1'>hvm</type>" >> $XML_FILE
-  echo "    <firmware>" >> $XML_FILE
-  echo "      <feature enabled='no' name='enrolled-keys'/>" >> $XML_FILE
-  echo "      <feature enabled='no' name='secure-boot'/>" >> $XML_FILE
-  echo "    </firmware>" >> $XML_FILE
-  echo "    <loader readonly='yes' type='pflash'>$BIOS_FILE</loader>" >> $XML_FILE
-  echo "    <nvram template='$VARS_FILE'>$NVRAM_FILE</nvram>" >> $XML_FILE
-  echo "    <bootmenu enable='yes'/>" >> $XML_FILE
+  if [ "$ISO_BOOT_TYPE" = "bios" ]; then
+    echo "  <os>" >> $XML_FILE
+    echo "    <type arch='x86_64' machine='pc-q35-8.1'>hvm</type>" >> $XML_FILE
+  else
+    echo "  <os firmware='efi'>" >> $XML_FILE
+    echo "    <type arch='x86_64' machine='pc-q35-8.1'>hvm</type>" >> $XML_FILE
+    echo "    <firmware>" >> $XML_FILE
+    echo "      <feature enabled='no' name='enrolled-keys'/>" >> $XML_FILE
+    echo "      <feature enabled='no' name='secure-boot'/>" >> $XML_FILE
+    echo "    </firmware>" >> $XML_FILE
+    echo "    <loader readonly='yes' type='pflash'>$BIOS_FILE</loader>" >> $XML_FILE
+    echo "    <nvram template='$VARS_FILE'>$NVRAM_FILE</nvram>" >> $XML_FILE
+    echo "    <bootmenu enable='yes'/>" >> $XML_FILE
+  fi
   echo "  </os>" >> $XML_FILE
   echo "  <features>" >> $XML_FILE
   echo "    <acpi/>" >> $XML_FILE
@@ -2902,7 +2911,7 @@ else
   TEST_MODE="false";
 fi
 if [[ "$OPTIONS" =~ "efi" ]]; then
-  ISO_BOOT_TYPE="efi";
+  ISO_BOOT_TYPE="uefi";
 fi
 if [[ "$OPTIONS" =~ "bios" ]]; then
   ISO_BOOT_TYPE="bios";
@@ -3229,9 +3238,6 @@ fi
 if [ "$ISO_INSTALL_PACKAGES" = "" ]; then
   ISO_INSTALL_PACKAGES="$DEFAULT_ISO_INSTALL_PACKAGES"
 fi
-if [ "$ISO_INSTALL_PACKAGES" = "" ]; then
-  ISO_INSTALL_PACKAGES="$DEFAULT_ISO_INSTALL_PACKAGES"
-fi
 if [ "$ISO_TIMEZONE" = "" ]; then
   ISO_TIMEZONE="$DEFAULT_ISO_TIMEZONE"
 fi
@@ -3455,7 +3461,7 @@ if [[ "$ACTION" =~ "vm" ]]; then
     fi
   fi
   if [ "$VM_NAME" = "" ]; then
-    VM_NAME="$SCRIPT_NAME-ubuntu-$ISO_RELEASE"
+    VM_NAME="$SCRIPT_NAME-ubuntu-$ISO_RELEASE-$ISO_BOOT_TYPE"
   fi
   if [[ "$ACTION" =~ "create" ]]; then
     if ! [ "$VM_ISO" = "" ]; then
@@ -3522,16 +3528,23 @@ case $ISO_BUILD_TYPE in
     ;;
 esac
 
-# Handle EFI
+# Handle UEFI
 
 if [ "$ISO_BOOT_TYPE" = "efi" ]; then
   ISO_INSTALL_PACKAGES="$ISO_INSTALL_PACKAGES grub-efi"
   ISO_CHROOT_PACKAGES="$ISO_CHROOT_PACKAGES grub-efi"
 fi
 
+# Handle BIOS
+
+if [ "$ISO_BOOT_TYPE" = "bios" ]; then
+  ISO_INSTALL_PACKAGES="$ISO_INSTALL_PACKAGES grub-pc"
+  ISO_CHROOT_PACKAGES="$ISO_CHROOT_PACKAGES grub-pc"
+fi
+
 # Ubuntu Pro Apt News
 
-if [ "$ISO_MAJOR_REL" = "22" ]; then
+if [ $ISO_MAJOR_REL -ge 22 ]; then
   ISO_INSTALL_PACKAGES="$ISO_INSTALL_PACKAGES ubuntu-advantage-tools"
   ISO_CHROOT_PACKAGES="$ISO_CHROOT_PACKAGES ubuntu-advantage-tools"
 fi
