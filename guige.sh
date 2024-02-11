@@ -1,7 +1,7 @@
 #/!/usr/bin/env bash
 
 # Name:         guige (Generic Ubuntu ISO Generation Engine)
-# Version:      1.7.5
+# Version:      1.7.6
 # Release:      1
 # License:      CC-BA (Creative Commons By Attribution)
 #               http://creativecommons.org/licenses/by/4.0/legalcode
@@ -140,7 +140,7 @@ DO_CREATE_EXPORT="false"
 DO_CREATE_ANSIBLE="false"
 DO_CHECK_RACADM="false"
 DO_EXECUTE_RACADM="false"
-DO_LIST_ISOS="false"    
+DO_LIST_ISOS="false"
 DO_SCP_HEADER="false"
 DO_SERIAL="true"
 
@@ -282,7 +282,7 @@ print_usage () {
   createisoandsquashfs:   Create ISO and squashfs
   dockeriso:              Use Docker to create ISO
   dockerisoandsquashfs:   Use Docker to create ISO
-  queryiso:               Query ISO for information                  
+  queryiso:               Query ISO for information
   listalliso:             List all ISOs
   listiso:                List ISOs
   createkvmvm:            Create KVM VM
@@ -364,7 +364,7 @@ print_help () {
     -n|--nic|--vmnic:         Network device (default: $DEFAULT_ISO_NIC/$DEFAULT_VM_NIC)
     -O|--isopackages:         List of packages to install (default: $DEFAULT_ISO_INSTALL_PACKAGES)
     -o|--outputiso:           Output ISO file (default: $DEFAULT_OUTPUT_FILE_BASE)
-    -P|--password:            Password (default: $DEFAULT_ISO_USERNAME)
+    -P|--password:            Password (default: $DEFAULT_ISO_PASSWORD)
     -p|--chrootpackages:      List of packages to add to ISO (default: $DEFAULT_PACKAGES)
     -Q|--build:               Type of ISO to build (default: $DEFAULT_ISO_BUILD_TYPE)
     -q|--arch:                Architecture (default: $DEFAULT_ISO_ARCH)
@@ -812,7 +812,7 @@ check_base_iso_file () {
 }
 
 # Function: Grab ISO from Ubuntu
-# 
+#
 # Examples:
 #
 # Live Server
@@ -837,7 +837,7 @@ get_base_iso () {
   handle_output "# Check source ISO exists and grab it if it doesn't" TEXT
   BASE_INPUT_FILE=$( basename "$INPUT_FILE" )
   if [ "$FULL_FORCE_MODE" = "true" ]; then
-    handle_output "rm $WORK_DIR/files/$BASE_INPUT_FILE" 
+    handle_output "rm $WORK_DIR/files/$BASE_INPUT_FILE"
     if [ "$TEST_MODE" = "false" ]; then
       rm "$WORK_DIR/files/$BASE_INPUT_FILE"
     fi
@@ -919,9 +919,9 @@ copy_iso () {
 check_ansible () {
   handle_output "# Check ansible is installed" TEXT
   handle_output "ANSIBLE_BIN=\$( which ansible )"
-  handle_output  "ANSIBLE_CHECK=\$( basename $ANSIBLE_BIN )" 
+  handle_output  "ANSIBLE_CHECK=\$( basename $ANSIBLE_BIN )"
   ANSIBLE_BIN=$( which ansible )
-  ANSIBLE_CHECK=$( basename "$ANSIBLE_BIN" ) 
+  ANSIBLE_CHECK=$( basename "$ANSIBLE_BIN" )
   if [ "$OS_NAME" = "Darwin" ]; then
     COMMAND="brew install ansible"
   else
@@ -1244,7 +1244,7 @@ copy_squashfs () {
       fi
     fi
   else
-    handle_output "sudo unsquashfs -f -d \"$ISO_NEW_DIR/squashfs\" \"$ISO_SQUASHFS_FILE\"" 
+    handle_output "sudo unsquashfs -f -d \"$ISO_NEW_DIR/squashfs\" \"$ISO_SQUASHFS_FILE\""
     if [ "$TEST_MODE" = "false" ]; then
       sudo unsquashfs -f -d "$ISO_NEW_DIR/custom" "$ISO_SQUASHFS_FILE"
     fi
@@ -1267,7 +1267,7 @@ execute_chroot_script () {
   fi
 }
 
-# Function: Update ISO squashfs 
+# Function: Update ISO squashfs
 
 update_iso_squashfs () {
   handle_output "# Making squashfs (this will take a while)"
@@ -1309,7 +1309,7 @@ check_file_perms () {
 
 # Function: Create script to drop into chrooted environment
 #           Inside chrooted environment, mount filesystems and packages
-# 
+#
 # Examples:
 # mount -t proc none /proc/
 # mount -t sysfs none /sys/
@@ -1390,7 +1390,7 @@ get_password_crypt () {
     fi
   else
     if [ ! -f "/usr/bin/mkpasswd" ]; then
-      install_required_packages  
+      install_required_packages
     fi
     handle_output "export PASSWORD_CRYPT=\$(echo \"$ISO_PASSWORD\" |mkpasswd --method=SHA-512 --stdin)"
     if [ "$TEST_MODE" = "false" ]; then
@@ -1572,7 +1572,7 @@ get_password_crypt () {
 # EOF
 #
 # get ISO formatting information
-# 
+#
 # xorriso -indev ubuntu-22.04.1-live-server-amd64.iso -report_el_torito as_mkisofs
 # xorriso 1.5.4 : RockRidge filesystem manipulator, libburnia project.
 #
@@ -1668,7 +1668,7 @@ create_autoinstall_iso () {
     fi
     if [ "$DO_DOCKER" = "true" ]; then
       BASE_DOCKER_OUTPUT_FILE=$( basename "$OUTPUT_FILE" )
-      echo "# Output file will be at \"$OLD_WORK_DIR/files/$BASE_DOCKER_OUTPUT_FILE\"" 
+      echo "# Output file will be at \"$OLD_WORK_DIR/files/$BASE_DOCKER_OUTPUT_FILE\""
     fi
   fi
 }
@@ -1837,7 +1837,7 @@ prepare_autoinstall_iso () {
       fi
     fi
   fi
-  for ISO_DEVICE in $ISO_DEVICES; do 
+  for ISO_DEVICE in $ISO_DEVICES; do
     for ISO_VOLMGR in $ISO_VOLMGRS; do
       if [ -e "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data" ]; then
         rm "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
@@ -1975,7 +1975,7 @@ prepare_autoinstall_iso () {
           handle_output "echo \"      name: lvm\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
       fi
       handle_output "echo \"  early-commands:\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
-      if ! [ "$ISO_ALLOWLIST" = "" ]; then 
+      if ! [ "$ISO_ALLOWLIST" = "" ]; then
         if [[ "$ISO_ALLOWLIST" =~ "," ]]; then
           for MODULE in $(${ISO_BLOCKLIST//,/ }); do
             handle_output "echo \"    - \\\"echo '$MODULE' > /etc/modules-load.d/$MODULE.conf\\\"\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
@@ -1995,7 +1995,7 @@ prepare_autoinstall_iso () {
       if [ "$ISO_NIC" = "first-net" ]; then
         handle_output "echo \"    - \\\"sed -i \\\\\"s/first-net/\$(lshw -class network -short |awk '{print \$2}' |grep ^e |head -1)/g\\\\\" /autoinstall.yaml\\\"\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
       fi
-      if ! [ "$ISO_BLOCKLIST" = "" ]; then 
+      if ! [ "$ISO_BLOCKLIST" = "" ]; then
         if [[ "$ISO_BLOCKLIST" =~ "," ]]; then
           for MODULE in $(${ISO_BLOCKLIST//,/ }); do
             handle_output "echo \"    - \\\"echo 'blacklist $MODULE' > /etc/modprobe.d/$MODULE.conf\\\"\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
@@ -2197,7 +2197,7 @@ prepare_autoinstall_iso () {
           echo "      name: lvm" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
         fi
         echo "  early-commands:" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
-        if ! [ "$ISO_ALLOWLIST" = "" ]; then 
+        if ! [ "$ISO_ALLOWLIST" = "" ]; then
           if [[ "$ISO_ALLOWLIST" =~ "," ]]; then
             for MODULE in $(${ISO_ALLOWLIST//,/ }); do
               echo "    - \"echo '$MODULE' > /etc/modules-load.d/$MODULE.conf\"" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
@@ -2217,7 +2217,7 @@ prepare_autoinstall_iso () {
         echo "    - \"export DEBIAN_FRONTEND=\\\"noninteractive\\\" && dpkg $ISO_DPKG_CONF $ISO_DPKG_OVERWRITE --auto-deconfigure $ISO_DPKG_DEPENDS -i $ISO_INSTALL_MOUNT/$ISO_AUTOINSTALL_DIR/packages/*.deb\"" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
         echo "    - \"rm /etc/resolv.conf\"" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
         echo "    - \"echo \\\"nameserver $ISO_DNS\\\" >> /etc/resolv.conf\"" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
-        if ! [ "$ISO_BLOCKLIST" = "" ]; then 
+        if ! [ "$ISO_BLOCKLIST" = "" ]; then
           if [[ "$ISO_BLOCKLIST" =~ "," ]]; then
             for MODULE in $(${ISO_BLOCKLIST//,/ }); do
               echo "    - \"echo 'blacklist $MODULE' > /etc/modprobe.d/$MODULE.conf\"" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
@@ -2670,7 +2670,7 @@ do
       shift 2
       ;;
     -h|--help)
-      print_help 
+      print_help
       ;;
     -I|--ip)
       ISO_IP="$2"
@@ -2718,11 +2718,11 @@ do
       ;;
     -M|--installtarget)
       ISO_TARGET_MOUNT="$2"
-      shift 2 
+      shift 2
       ;;
     -m|--installmount)
       ISO_INSTALL_MOUNT="$2"
-      shift 2 
+      shift 2
       ;;
     -N|--bootserverfile)
       BOOT_SERVER_FILE="$2"
@@ -2762,7 +2762,7 @@ do
     -q|--arch)
       ISO_ARCH="$2"
       shift 2
-      ISO_ARCH=$( echo "$ISO_ARCH" |sed "s/aarch64/arm64/g" |sed "s/x86_64/amd64/g" )
+      ISO_ARCH=$( echo "$ISO_ARCH" |sed "s/aarch64/arm64/g" |sed "s/x86_64/amd64/g" |sed "s/x86/amd64/g" )
       ;;
     -R|--realname)
       ISO_REALNAME="$2"
@@ -3009,7 +3009,7 @@ case $ACTION in
     DO_INSTALL_REQUIRED_PACKAGES="true"
     DO_EXECUTE_ISO_CHROOT_SCRIPT="true"
     DO_CREATE_AUTOINSTALL_ISO_FULL="true"
-   ;; 
+   ;;
   "createdockeriso")
     DO_DOCKER="true"
     DO_CHECK_DOCKER="true"
@@ -3055,7 +3055,7 @@ case $ACTION in
     if [[ "$ACTION" =~ "listalliso" ]]; then
       LIST_ALL_ISOS="true"
     fi
-    DO_LIST_ISOS="true"    
+    DO_LIST_ISOS="true"
     ;;
   *)
     handle_output "Action: $ACTION is not a valid action"
@@ -3253,7 +3253,7 @@ fi
 if [ "$ISO_DEVICES" = "" ]; then
   ISO_DEVICES="$DEFAULT_ISO_DEVICES"
 fi
-if [ "$ISO_BOOT_TYPE" = "bios" ]; then 
+if [ "$ISO_BOOT_TYPE" = "bios" ]; then
   DEFAULT_ISO_VOLMGRS="lvm"
 fi
 if [ "$ISO_VOLMGRS" = "" ]; then
@@ -3301,7 +3301,7 @@ fi
 if [ "$ISO_OS_NAME" = "" ]; then
   ISO_OS_NAME="$DEFAULT_ISO_OS_NAME"
 fi
-if [ "$WORK_DIR" = "" ]; then 
+if [ "$WORK_DIR" = "" ]; then
   if [ "$DO_DAILY_ISO" = "true" ]; then
     WORK_DIR="$HOME/$SCRIPT_NAME/$ISO_OS_NAME/$ISO_CODENAME"
     DOCKER_WORK_DIR="/root/$SCRIPT_NAME/$ISO_OS_NAME/$ISO_CODENAME"
@@ -3356,7 +3356,7 @@ else
         OUTPUT_FILE="$WORK_DIR/files/ubuntu-$ISO_RELEASE-live-server-$ISO_ARCH-$ISO_BOOT_TYPE-autoinstall.iso"
         BOOT_SERVER_FILE="$OUTPUT_FILE"
         ;;
-    esac 
+    esac
   fi
 fi
 if [ "$ISO_SQUASHFS_FILE" = "" ]; then
@@ -3392,9 +3392,14 @@ if [ "$ISO_DHCP" = "false" ]; then
     TEMP_FILE_NAME=$( basename "$OUTPUT_FILE" .iso )
     OUTPUT_FILE="$TEMP_DIR_NAME/$TEMP_FILE_NAME-$ISO_GATEWAY.iso"
   fi
+  if ! [ "$ISO_NDS" = "$DEFAULT_ISO_DNS" ]; then
+    TEMP_DIR_NAME=$( dirname "$OUTPUT_FILE" )
+    TEMP_FILE_NAME=$( basename "$OUTPUT_FILE" .iso )
+    OUTPUT_FILE="$TEMP_DIR_NAME/$TEMP_FILE_NAME-$ISO_DNS.iso"
+  fi
 fi
 if ! [ "$ISO_USERNAME" = "$DEFAULT_ISO_USERNAME" ]; then
-  TEMP_DIR_NAME=$( dirname "$OaUTPUT_FILE" )
+  TEMP_DIR_NAME=$( dirname "$OUTPUT_FILE" )
   TEMP_FILE_NAME=$( basename "$OUTPUT_FILE" .iso )
   OUTPUT_FILE="$TEMP_DIR_NAME/$TEMP_FILE_NAME-$ISO_USERNAME.iso"
 fi
@@ -3500,7 +3505,7 @@ fi
 # Handle ISO URL
 
 BASE_INPUT_FILE=$( basename "$INPUT_FILE" )
-case $ISO_BUILD_TYPE in 
+case $ISO_BUILD_TYPE in
   "daily-live"|"daily-live-server")
     if [ "$ISO_RELEASE" = "$CURRENT_ISO_DEV_RELEASE" ]; then
       ISO_URL="https://cdimage.ubuntu.com/ubuntu-server/daily-live/current/$ISO_CODENAME-live-server-$ISO_ARCH.iso"
@@ -3509,7 +3514,7 @@ case $ISO_BUILD_TYPE in
     fi
     NEW_DIR="$ISO_OS_NAME/$ISO_CODENAME"
    ;;
-  "daily-desktop") 
+  "daily-desktop")
     ISO_URL="https://cdimage.ubuntu.com/$ISO_CODENAME/daily-live/current/$BASE_INPUT_FILE"
     NEW_DIR="$ISO_OS_NAME/$ISO_CODENAME"
     ;;
@@ -3672,7 +3677,7 @@ if [ "$INTERACTIVE_MODE" = "true" ]; then
       # Get bootserver IP
       read -r -p "Enter Bootserver IP [$BOOT_SERVER_IP]: " NEW_BOOT_SERVER_IP
       BOOT_SERVER_IP=${NEW_BOOT_SERVER_IP:-$BOOT_SERVER_IP}
-      # Get bootserver file 
+      # Get bootserver file
       read -r -p "Enter Bootserver file [$BOOT_SERVER_FILE]: " NEW_BOOT_SERVER_FILE
       BOOT_SERVER_FILE=${NEW_BOOT_SERVER_FILE:-$BOOT_SERVER_FILE}
     fi
@@ -3680,7 +3685,7 @@ if [ "$INTERACTIVE_MODE" = "true" ]; then
       # Get BMC IP
       read -r -p "Enter BMC/iDRAC IP [$BMC_IP]: " NEW_BMC_IP
       BMC_IP=${NEW_BMC_IP:-$BMC_IP}
-      # Get BMC Username 
+      # Get BMC Username
       read -r -p "Enter BMC/iDRAC Username [$BMC_USERNAME]: " NEW_BMC_USERNAME
       BMC_USERNAME=${NEW_BMC_USERNAME:-$BMC_USERNAME}
       # Get BMC Password
@@ -3741,10 +3746,10 @@ if [ "$INTERACTIVE_MODE" = "true" ]; then
       # Get IP
       read -r -p "Enter IP [$ISO_IP]: " NEW_ISO_IP
       ISO_IP=${NEW_ISO_IP:-$ISO_IP}
-      # Get CIDR 
+      # Get CIDR
       read -r -p "Enter CIDR [$ISO_CIDR]: " NEW_ISO_CIDR
       ISO_CIDR=${NEW_ISO_CIDR:-$ISO_CIDR}
-      # Get Geteway 
+      # Get Geteway
       read -r -p "Enter Gateway [$ISO_GATEWAY]: " NEW_ISO_GATEWAY
       ISO_GATEWAY=${NEW_ISO_GATEWAY:-$ISO_GATEWAY}
       # Get DNS
@@ -3766,10 +3771,10 @@ if [ "$INTERACTIVE_MODE" = "true" ]; then
     # Get LC _ALL
     read -r -p "Enter LC_ALL [$ISO_LC_ALL]: " NEW_ISO_LC_ALL
     ISO_LC_ALL=${NEW_ISO_LC_ALL:-$ISO_LC_ALL}
-    # Get Root Disk(s) 
+    # Get Root Disk(s)
     read -r -p "Enter Root Disk(s) [$ISO_DEVICES]: " NEW_ISO_DEVICES
     ISO_DEVICES=${NEW_ISO_DEVICES:-$ISO_DEVICES}
-    # Get Volume Managers 
+    # Get Volume Managers
     read -r -p "Enter Volume Manager(s) [$ISO_VOLMGRS]: " NEW_ISO_VOLMGRS
     ISO_VOLMGRS=${NEW_ISO_VOLMGRS:-$ISO_VOLMGRS}
     # Get Default Grub Menu selection
@@ -3778,7 +3783,7 @@ if [ "$INTERACTIVE_MODE" = "true" ]; then
     # Get Grub Timeout
     read -r -p "Enter Grub Timeout [$ISO_GRUB_TIMEOUT]: " NEW_ISO_GRUB_TIMEOUT
     ISO_GRUB_TIMEOUT=${NEW_ISO_GRUB_TIMEOUT:-$ISO_GRUB_TIMEOUT}
-    # Get Autoinstall directory 
+    # Get Autoinstall directory
     read -r -p "Enter Auttoinstall Directory [$ISO_AUTOINSTALL_DIR]: " NEW_ISO_AUTOINSTALL_DIR
     ISO_AUTOINSTALL_DIR=${NEW_ISO_AUTOINSTALL_DIR:-$ISO_AUTOINSTALL_DIR}
     # Get Install Mount
@@ -3811,7 +3816,7 @@ if [ "$INTERACTIVE_MODE" = "true" ]; then
       read -r -p "Install updates? [$DO_INSTALL_ISO_UPDATE]: " NEW_DO_INSTALL_ISO_UPDATE
       DO_INSTALL_ISO_UPDATE=${NEW_DO_INSTALL_ISO_UPDATE:-$DO_INSTALL_ISO_UPDATE}
       if [ "$DO_INSTALL_ISO_UPDATE" = "true" ]; then
-        # Get wether to install upgrades 
+        # Get wether to install upgrades
         read -r -p "Upgrade packages? [$DO_INSTALL_ISO_UPGRADE]: " NEW_DO_INSTALL_ISO_UPGRADE
         DO_INSTALL_ISO_UPGRADE=${NEW_DO_INSTALL_ISO_UPGRADE:-$DO_INSTALL_ISO_UPGRADE}
         # Get whether to do a dist-updrage
@@ -3819,7 +3824,7 @@ if [ "$INTERACTIVE_MODE" = "true" ]; then
         DO_INSTALL_ISO_DIST_UPGRADE=${NEW_DO_INSTALL_ISO_DIST_UPGRADE:-$DO_INSTALL_ISO_DIST_UPGRADE}
       fi
     fi
-    # Get swap size 
+    # Get swap size
     read -r -p "Enter Swap Size [$ISO_SWAPSIZE]: " NEW_ISO_SWAPSIZE
     ISO_SWAPSIZE=${NEW_ISO_SWAPSIZE:-$ISO_SWAPSIZE}
     # Determine wether we use an SSH key
@@ -3830,13 +3835,13 @@ if [ "$INTERACTIVE_MODE" = "true" ]; then
       read -r -p "SSH keys file [$ISO_SSH_KEY_FILE]: " NEW_ISO_SSH_KEY_FILE
       ISO_SSH_KEY_FILE=${NEW_ISO_SSH_KEY_FILE:-$ISO_SSH_KEY_FILE}
     fi
-    # Get wether to install drivers 
+    # Get wether to install drivers
     read -r -p "Install Drivers? [$DO_INSTALL_ISO_DRIVERS]: " NEW_INSTALL_ISO_DRIVERS
     DO_INSTALL_ISO_DRIVERS=${NEW_INSTALL_ISO_DRIVERS:-$DO_INSTALL_ISO_DRIVERS}
-    # Get Serial Port 0 
+    # Get Serial Port 0
     read -r -p "Serial Port? [$ISO_SERIAL_PORT0]: " NEW_ISO_SERIAL_PORT0
     ISO_SERIAL_PORT0=${NEW_ISO_SERIAL_PORT0:-$ISO_SERIAL_PORT0}
-    # Get Serial Port 1 
+    # Get Serial Port 1
     read -r -p "Serial Port? [$ISO_SERIAL_PORT1]: " NEW_ISO_SERIAL_PORT1
     ISO_SERIAL_PORT1=${NEW_ISO_SERIAL_PORT1:-$ISO_SERIAL_PORT1}
     # Get Serial Port Address 0
@@ -3860,7 +3865,7 @@ if [ "$DO_CREATE_VM" = "true" ]; then
       VM_ISO="$OUTPUT_FILE"
     fi
   fi
-fi  
+fi
 
 if [ "$DO_DOCKER" = "true" ] || [ "$DO_CHECK_DOCKER" = "true" ]; then
   if ! [ -f "/.dockerenv" ]; then
@@ -3885,7 +3890,7 @@ if [ "$DO_DOCKER" = "true" ] || [ "$DO_CHECK_DOCKER" = "true" ]; then
       echo "$DOCKER_WORK_DIR/files/$SCRIPT_BIN $SCRIPT_ARGS --workdir $DOCKER_WORK_DIR --oldworkdir $WORK_DIR" >> "$LOCAL_SCRIPT"
       if [ "$DO_DOCKER" = "true" ]; then
         BASE_DOCKER_OUTPUT_FILE=$( basename "$OUTPUT_FILE" )
-        echo "# Output file will be at \"$WORK_DIR/files/$BASE_DOCKER_OUTPUT_FILE\"" 
+        echo "# Output file will be at \"$WORK_DIR/files/$BASE_DOCKER_OUTPUT_FILE\""
       fi
       exec docker run --privileged=true --cap-add=CAP_MKNOD --device-cgroup-rule="b 7:* rmw" --platform "linux/$ISO_ARCH" --mount source="$SCRIPT_NAME-$ISO_ARCH,target=/root/$SCRIPT_NAME" --mount type=bind,source="$WORK_DIR/files,target=/root/$SCRIPT_NAME/$NEW_DIR/files"  "$SCRIPT_NAME-$ISO_ARCH" /bin/bash "$DOCKER_SCRIPT"
     fi
@@ -3969,7 +3974,7 @@ else
   if [ "$DO_EXECUTE_ISO_CHROOT_SCRIPT" = "true" ]; then
     DO_PRINT_HELP="false"
     mount_iso
-    execute_chroot_script 
+    execute_chroot_script
   fi
   if [ "$DO_PREPARE_AUTOINSTALL_ISO_ONLY" = "true" ]; then
     DO_PRINT_HELP="false"

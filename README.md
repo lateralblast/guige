@@ -5,13 +5,13 @@ GUIGE
 
 Generic Ubuntu ISO Generation Engine
 
-A guige (/ɡiːʒ/, /ɡiːd͡ʒ/) is a long strap, typically made of leather, 
-used to hang a shield on the shoulder or neck when not in use. 
+A guige (/ɡiːʒ/, /ɡiːd͡ʒ/) is a long strap, typically made of leather,
+used to hang a shield on the shoulder or neck when not in use.
 
 Version
 -------
 
-Current version: 1.7.5
+Current version: 1.7.6
 
 Issues
 ------
@@ -72,7 +72,7 @@ By default this script creates a DHCP based install ISO with two additonal insta
 - ZFS based install to the first non USB drive available using the first network device with link
 - LVM based install to the first non USB drive available using the first network device with link
 
-This can be customised as per examples section to use a custom drive, network device, 
+This can be customised as per examples section to use a custom drive, network device,
 and many other options (e.g. username and password)
 
 This script also supports creating ISOs via docker for non Linux platforms.
@@ -81,7 +81,7 @@ On Apple Silicon support for creating arm64 and amd64 is available by using the 
 This method doesn't support the older preseed method (i.e. Ubuntu 18.04 or earlier).
 Preseed method could be added reasonably easily I expect, but I've only need for Ubuntu 20.04 or later.
 
-Currently this is WIP and it works for ZFS (and LVM encapsulated EXT4) root only. 
+Currently this is WIP and it works for ZFS (and LVM encapsulated EXT4) root only.
 It is being converted from a set of shell commands.
 See the Todo section for some future plans/ideas.
 
@@ -271,7 +271,7 @@ Create an Ubuntu 22.04 ISO (BIOS - LVM install option only):
 ./guige.sh --action createiso --release 22.04 --options bios
 ```
 
-Create a test (and call it test) Ubuntu KVM VM (requires an Ubuntu 22.04 ISO to have been created) 
+Create a test (and call it test) Ubuntu KVM VM (requires an Ubuntu 22.04 ISO to have been created)
 
 ```
 ./guige.sh --action createkvmvm --vmname test  --release 22.04
@@ -296,7 +296,7 @@ Create a KVM VM and specify the amount of RAM and number of CPUs
 Download base ISO (jammy)
 
 ```
-./guige.sh --action getiso 
+./guige.sh --action getiso
 ```
 
 Create ISO (performs all steps):
@@ -495,7 +495,7 @@ cp ./isonew/custom/var/cache/apt/archives/*.deb source-files/autoinstall/package
 Create autoinstall Files
 ========================
 
-This example uses /dev/sda as a ZFS root device. 
+This example uses /dev/sda as a ZFS root device.
 The documentation for this process is hard to find, so the example is a simple unmirrored device, as this works.
 A mirror could be done as a post script or after install.
 
@@ -680,4 +680,3 @@ xorriso -as mkisofs -r -V 'Ubuntu-Server 22.04.1 LTS arm64' -o ../ubuntu-22.04-a
 ../BOOT/Boot-NoEmul.img -partition_offset 16 --mbr-force-bootable -append_partition 2 $APPEND_PARTITION ../BOOT/Boot-NoEmul.img \
 -appended_part_as_gpt -iso_mbr_part_type $ISO_MBR_PART_TYPE -c '/boot/boot.cat' -e '--interval:appended_partition_2:::' -no-emul-boot
 ```
-
