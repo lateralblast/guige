@@ -351,3 +351,5 @@
 # Added BIOS ISO option with LVM only install
 # 1.7.6: Sun 11 Feb 2024 15:36:05 AEDT
 # Fixed bug with username handling and naming ISO
+# 1.7.7: Sun 11 Feb 2024 20:44:14 AEDT
+# Added bootdisk name to ISO name if not default

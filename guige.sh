@@ -1,7 +1,7 @@
 #/!/usr/bin/env bash
 
 # Name:         guige (Generic Ubuntu ISO Generation Engine)
-# Version:      1.7.6
+# Version:      1.7.7
 # Release:      1
 # License:      CC-BA (Creative Commons By Attribution)
 #               http://creativecommons.org/licenses/by/4.0/legalcode
@@ -3402,6 +3402,11 @@ if ! [ "$ISO_USERNAME" = "$DEFAULT_ISO_USERNAME" ]; then
   TEMP_DIR_NAME=$( dirname "$OUTPUT_FILE" )
   TEMP_FILE_NAME=$( basename "$OUTPUT_FILE" .iso )
   OUTPUT_FILE="$TEMP_DIR_NAME/$TEMP_FILE_NAME-$ISO_USERNAME.iso"
+fi
+if ! [ "$ISO_DEVICES" = "$DEFAULT_ISO_DEVICES" ]; then
+  TEMP_DIR_NAME=$( dirname "$OUTPUT_FILE" )
+  TEMP_FILE_NAME=$( basename "$OUTPUT_FILE" .iso )
+  OUTPUT_FILE="$TEMP_DIR_NAME/$TEMP_FILE_NAME-$ISO_DEVICES.iso"
 fi
 if ! [ "$ISO_PREFIX" = "" ]; then
   TEMP_DIR_NAME=$( dirname "$OUTPUT_FILE" )
