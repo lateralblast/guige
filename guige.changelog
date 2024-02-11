@@ -353,3 +353,5 @@
 # Fixed bug with username handling and naming ISO
 # 1.7.7: Sun 11 Feb 2024 20:44:14 AEDT
 # Added bootdisk name to ISO name if not default
+# 1.7.8: Mon 12 Feb 2024 10:06:22 AEDT
+# Bug fixes for ZFS root install

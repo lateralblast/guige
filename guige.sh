@@ -1,7 +1,7 @@
 #/!/usr/bin/env bash
 
 # Name:         guige (Generic Ubuntu ISO Generation Engine)
-# Version:      1.7.7
+# Version:      1.7.8
 # Release:      1
 # License:      CC-BA (Creative Commons By Attribution)
 #               http://creativecommons.org/licenses/by/4.0/legalcode
@@ -64,7 +64,7 @@ DEFAULT_ISO_LC_ALL="en_US"
 DEFAULT_ISO_LAYOUT="us"
 DEFAULT_ISO_COUNTRY="us"
 DEFAULT_ISO_BUILD_TYPE="live-server"
-DEFAULT_ISO_BOOT_TYPE="uefi"
+DEFAULT_ISO_BOOT_TYPE="efi"
 DEFAULT_ISO_SERIAL_PORT0="ttyS0"
 DEFAULT_ISO_SERIAL_PORT_ADDRESS0="0x03f8"
 DEFAULT_ISO_SERIAL_PORT_SPEED0="115200"
@@ -2911,7 +2911,7 @@ else
   TEST_MODE="false";
 fi
 if [[ "$OPTIONS" =~ "efi" ]]; then
-  ISO_BOOT_TYPE="uefi";
+  ISO_BOOT_TYPE="efi";
 fi
 if [[ "$OPTIONS" =~ "bios" ]]; then
   ISO_BOOT_TYPE="bios";
@@ -3540,14 +3540,14 @@ esac
 
 # Handle UEFI
 
-if [ "$ISO_BOOT_TYPE" = "efi" ]; then
+if [[ "$ISO_BOOT_TYPE" =~ "efi" ]]; then
   ISO_INSTALL_PACKAGES="$ISO_INSTALL_PACKAGES grub-efi"
   ISO_CHROOT_PACKAGES="$ISO_CHROOT_PACKAGES grub-efi"
 fi
 
 # Handle BIOS
 
-if [ "$ISO_BOOT_TYPE" = "bios" ]; then
+if [[ "$ISO_BOOT_TYPE" =~ "bios" ]]; then
   ISO_INSTALL_PACKAGES="$ISO_INSTALL_PACKAGES grub-pc"
   ISO_CHROOT_PACKAGES="$ISO_CHROOT_PACKAGES grub-pc"
 fi
