@@ -3392,7 +3392,7 @@ if [ "$ISO_DHCP" = "false" ]; then
     TEMP_FILE_NAME=$( basename "$OUTPUT_FILE" .iso )
     OUTPUT_FILE="$TEMP_DIR_NAME/$TEMP_FILE_NAME-$ISO_GATEWAY.iso"
   fi
-  if ! [ "$ISO_NDS" = "$DEFAULT_ISO_DNS" ]; then
+  if ! [ "$ISO_DNS" = "$DEFAULT_ISO_DNS" ]; then
     TEMP_DIR_NAME=$( dirname "$OUTPUT_FILE" )
     TEMP_FILE_NAME=$( basename "$OUTPUT_FILE" .iso )
     OUTPUT_FILE="$TEMP_DIR_NAME/$TEMP_FILE_NAME-$ISO_DNS.iso"
