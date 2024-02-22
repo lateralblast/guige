@@ -11,7 +11,7 @@ used to hang a shield on the shoulder or neck when not in use.
 Version
 -------
 
-Current version: 1.7.8
+Current version: 1.8.4
 
 Issues
 ------
@@ -68,9 +68,12 @@ This script provides a wrapper for the Ubuntu ISO creation process.
 I wrote this as I didn't want to have to fire up Cubic or a similar GUI tool to create an ISO.
 I wanted to be able to automate the process.
 
-By default this script creates a DHCP based install ISO with two additonal install options:
+By default this script creates a DHCP based install ISO with four additonal install options:
 - ZFS based install to the first non USB drive available using the first network device with link
-- LVM based install to the first non USB drive available using the first network device with link
+- ZFS LVM based install to the first non USB drive available using the first network device with link (work in progress)
+- LVM based install to the first non USB drive available using the first network device with link (EXT4 root filesystem)
+- LVM based install to the first non USB drive available using the first network device with link (XFS root filesystem)
+- LVM based install to the first non USB drive available using the first network device with link (BTRFS root filesystem)
 
 This can be customised as per examples section to use a custom drive, network device,
 and many other options (e.g. username and password)
@@ -109,65 +112,70 @@ You can get help using the -h or --help switch:
 
 ```
   Usage: guige.sh [OPTIONS...]
-    -1|--country             Country (used for sources.list mirror - default: us)
-    -2|--isourl              Specify ISO URL
-    -3|--prefix              Prefix to add to ISO name
-    -4|--suffix              Suffix to add to ISO name
-    -5|--block               Block kernel module(s) (default: md_multipath)
-    -6|--allow               Load additional kernel modules(s)
-    -9|--search              Search output for value (eg --action listallisos --search efi)
-    -A|--codename            Linux release codename (default: jammy)
-    -a|--action:             Action to perform (e.g. createiso, justiso, runchrootscript, checkdocker, installrequired)
-    -B|--layout              Layout (default: us)
-    -b|--bootserverip:       NFS/Bootserver IP (default: 192.168.1.43)
-    -C|--cidr:               CIDR (default: 24)
-    -c|--sshkeyfile:         SSH key file to use as SSH key (default: ~/.ssh/id_rsa.pub)
-    -D|--dns:                DNS Server (ddefault: 8.8.8.8)
-    -d|--bootdisk:           Boot Disk devices (default: first-disk)
-    -E|--locale:             LANGUAGE (default: en_US.UTF-8)
-    -e|--lcall:              LC_ALL (default: en_US)
-    -F|--bmcusername:        BMC/iDRAC User (default: root)
-    -f|--delete:             Remove previously created files (default: false)
-    -G|--gateway:            Gateway (default 192.168.1.254)
-    -g|--grubmenu:           Set default grub menu (default: 0)
-    -H|--hostname:           Hostname (default: ubuntu)
-    -h|--help                Help/Usage Information
-    -I|--ip:                 IP Address (default: 192.168.1.2)
-    -i|--inputiso:           Input/base ISO file (default: ubuntu-22.04.2-live-server-arm64.iso)
-    -J|--grubfile            GRUB file (default: grub.cfg)
-    -j|--autoinstalldir      Directory where autoinstall config files are stored on ISO (default: autoinstall)
-    -K|--kernel:             Kernel package (default: linux-generic)
-    -k|--kernelargs:         Kernel arguments (default: console=tty0 console=vt0 console=ttyS1,115200)
-    -L|--release:            LSB release (default: 22.04.2)
-    -l|--bmcip:              BMC/iDRAC IP (default: 192.168.1.3)
-    -M|--installtarget:      Where the install mounts the target filesystem (default: /target)
-    -m|--installmount:       Where the install mounts the CD during install (default: /cdrom)
-    -N|--bootserverfile      Boot sever file (default: ubuntu-22.04.2-live-server-arm64-efi-autoinstall.iso)
-    -n|--nic:                Network device (default: first-net)
-    -O|--isopackages:        List of packages to install (default: zfsutils-linux zfs-initramfs net-tools curl wget sudo file rsync dialog setserial ansible)
-    -o|--outputiso:          Output ISO file (default: ubuntu-22.04.2-live-server-arm64-efi-autoinstall.iso)
-    -P|--password:           Password (default: ubuntu)
-    -p|--chrootpackages:     List of packages to add to ISO (default: )
-    -Q|--build:              Type of ISO to build (default: live-server)
-    -q|--arch:               Architecture (default: arm64)
-    -R|--realname:           Realname (default Ubuntu)
-    -r|--serialportspeed:    Serial Port Speed (default: 115200)
-    -S|--swapsize:           Swap size (default 2G)
-    -s|--squashfsfile:       Squashfs file (default: ubuntu-server-minimal.squashfs)
-    -T|--timezone:           Timezone (default: Australia/Melbourne)
-    -t|--serialportaddress:  Serial Port Address (default: 0x02f8)
-    -U|--username:           Username (default: ubuntu)
-    -u|--postinstall:        Postinstall action (e.g. installpackages, upgrade, distupgrade, installdrivers, all, autoupgrades)
-    -V|--version             Display Script Version
-    -v|--serialport          Serial Port (default: ttyS1)
-    -W|--workdir:            Work directory (default: ~/guige/ubuntu/22.04.2)
-    -w|--oldworkdir:         Docker work directory (used internally)
-    -X|--isovolid:           ISO Volume ID (default: ubuntu 22.04.2 Server)
-    -x|--grubtimeout:        Grub timeout (default: 10)
-    -Y|--allowpassword       Allow password access via SSH (default: false)
-    -y|--bmcpassword:        BMC/iDRAC password (default: calvin)
-    -Z|--options:            Options (e.g. nounmount, testmode, bios, efi, verbose, interactive)
-    -z|--volumemanager:      Volume Managers (defauls: zfs lvm)
+    -0|--oldrelease           Old release (used for copying file from an older release ISO - default: 23.04)
+    -1|--country              Country (used for sources.list mirror - default: us)
+    -2|--isourl               Specify ISO URL (default: )
+    -3|--prefix               Prefix to add to ISO name
+    -4|--suffix               Suffix to add to ISO name
+    -5|--block                Block kernel module(s) (default: )
+    -6|--allow                Load additional kernel modules(s)
+    -7|--oldisourl            Old release ISO URL (used with --oldrelease) (default: https://old-releases.ubuntu.com/releases/23.04/ubuntu-23.04-live-server-amd64.iso)
+    -8|--oldinputfile         Old release ISO (used with --oldrelease) (default: 23.04)
+    -9|--search               Search output for value (eg --action listallisos --search efi)
+    -A|--codename             Linux release codename (default: jammy)
+    -a|--action:              Action to perform (e.g. createiso, justiso, runchrootscript, checkdocker, installrequired)
+    -B|--layout|--vmsize:     Layout or VM disk size (default: us/20G)
+    -b|--bootserverip:        NFS/Bootserver IP (default: 172.17.0.1)
+    -C|--cidr:                CIDR (default: 24)
+    -c|--sshkeyfile:          SSH key file to use as SSH key (default: ~/.ssh/id_rsa.pub)
+    -D|--dns:                 DNS Server (ddefault: 8.8.8.8)
+    -d|--bootdisk:            Boot Disk devices (default: first-disk)
+    -E|--locale:              LANGUAGE (default: en_US.UTF-8)
+    -e|--lcall:               LC_ALL (default: en_US)
+    -F|--bmcusername:         BMC/iDRAC User (default: root)
+    -f|--delete:              Remove previously created files (default: false)
+    -G|--gateway:             Gateway (default 192.168.1.254)
+    -g|--grubmenu|--vmname:   Set default grub menu or VM name (default: 0/guige)
+    -H|--hostname|            Hostname (default: ubuntu)
+    -h|--help                 Help/Usage Information
+    -I|--ip:                  IP Address (default: 192.168.1.2)
+    -i|--inputiso|--vmiso:    Input/base ISO file (default: ubuntu-22.04.3-live-server-amd64.iso)
+    -J|--grubfile             GRUB file (default: grub.cfg)
+    -j|--autoinstalldir       Directory where autoinstall config files are stored on ISO (default: autoinstall)
+    -K|--kernel|--vmtype:     Kernel package or VM type (default: linux-generic/kvm)
+    -k|--kernelargs|--vmcpus: Kernel arguments (default: console=tty0 console=vt0)
+    -L|--release:             LSB release (default: 22.04.3)
+    -l|--bmcip:               BMC/iDRAC IP (default: 192.168.1.3)
+    -M|--installtarget:       Where the install mounts the target filesystem (default: /target)
+    -m|--installmount:        Where the install mounts the CD during install (default: /cdrom)
+    -N|--bootserverfile       Boot sever file (default: ubuntu-22.04.3-live-server-amd64-efi-autoinstall.iso)
+    -n|--nic|--vmnic:         Network device (default: first-net/default)
+    -O|--isopackages:         List of packages to install (default: zfsutils-linux zfs-initramfs net-tools curl lftp wget sudo file rsync dialog setserial ansible apt-utils whois squashfs-tools duperemove)
+    -o|--outputiso:           Output ISO file (default: ubuntu-22.04.3-live-server-amd64-efi-autoinstall.iso)
+    -P|--password:            Password (default: ubuntu)
+    -p|--chrootpackages:      List of packages to add to ISO (default: )
+    -Q|--build:               Type of ISO to build (default: live-server)
+    -q|--arch:                Architecture (default: amd64)
+    -R|--realname:            Realname (default Ubuntu)
+    -r|--serialportspeed:     Serial Port Speed (default: 115200,115200)
+    -S|--swapsize|--vmram:    Swap or VM memory size (default 2G/2048000)
+    -s|--squashfsfile:        Squashfs file (default: ubuntu-server-minimal.squashfs)
+    -T|--timezone:            Timezone (default: Australia/Melbourne)
+    -t|--serialportaddress:   Serial Port Address (default: 0x03f8,0x02f8)
+    -U|--username:            Username (default: ubuntu)
+    -u|--postinstall:         Postinstall action (e.g. installpackages, upgrade, distupgrade, installdrivers, all, autoupgrades)
+    -V|--version              Display Script Version
+    -v|--serialport:          Serial Port (default: ttyS0,ttyS1)
+    -W|--workdir:             Work directory (default: ~/guige/ubuntu/22.04.3)
+    -w|--preworkdir:          Docker work directory (used internally)
+    -X|--isovolid:            ISO Volume ID (default: ubuntu 22.04.3 Server)
+    -x|--grubtimeout:         Grub timeout (default: 10)
+    -Y|--allowpassword        Allow password access via SSH (default: false)
+    -y|--bmcpassword:         BMC/iDRAC password (default: calvin)
+    -Z|--options:             Options (e.g. nounmount, testmode, bios, uefi, verbose, interactive)
+    -z|--volumemanager:       Volume Managers (default: zfs zfs-lvm lvm xfs btrfs)
+      |--zfsfilesystems:      ZFS filesystems (default: /var /var/lib /var/lib/AccountsService /var/lib/apt /var/lib/dpkg /var/lib/NetworkManager /srv /usr /usr/local /var/games /var/log /var/mail /var/snap /var/spool /var/www)
+      |--autoinstall:         Use a custom autoinstall file (default: generate automatically)
 ```
 
 You can get more usage information by using the usage tag with the action switch:
@@ -277,8 +285,7 @@ Create a test (and call it test) Ubuntu KVM VM (requires an Ubuntu 22.04 ISO to 
 ./guige.sh --action createkvmvm --vmname test  --release 22.04
 To start the VM and connect to console run the following commands:
 
-sudo virsh start test
-sudo virsh console test
+sudo virsh start test ; sudo virsh console test
 ```
 
 Delete a test KVM VM named test

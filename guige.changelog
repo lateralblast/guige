@@ -355,3 +355,15 @@
 # Added bootdisk name to ISO name if not default
 # 1.7.8: Mon 12 Feb 2024 10:06:22 AEDT
 # Bug fixes for ZFS root install
+# 1.7.9: Mon 12 Feb 2024 12:37:22 AEDT
+# Added code to add ZFS as an option for BIOS mode
+# 1.8.0: Sat 17 Feb 2024 16:15:59 AEDT
+# Added some initial code for being able to copy files from a previous version
+# 1.8.1: Wed 21 Feb 2024 21:55:03 AEDT
+# Added XFS and BTRFS support
+# 1.8.2: Thu 22 Feb 2024 10:40:14 AEDT
+# Started adding support for ZFS LVM config
+# 1.8.3: Thu 22 Feb 2024 11:45:14 AEDT
+# Added support for custom autoinstall file
+# 1.8.4: Thu 22 Feb 2024 13:18:42 AEDT
+# Bug fixes and improvements
