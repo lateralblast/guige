@@ -11,7 +11,7 @@ used to hang a shield on the shoulder or neck when not in use.
 Version
 -------
 
-Current version: 1.8.4
+Current version: 1.8.9
 
 Issues
 ------
@@ -83,10 +83,6 @@ On Apple Silicon support for creating arm64 and amd64 is available by using the 
 
 This method doesn't support the older preseed method (i.e. Ubuntu 18.04 or earlier).
 Preseed method could be added reasonably easily I expect, but I've only need for Ubuntu 20.04 or later.
-
-Currently this is WIP and it works for ZFS (and LVM encapsulated EXT4) root only.
-It is being converted from a set of shell commands.
-See the Todo section for some future plans/ideas.
 
 So that the additional packages added to the install do not require network access,
 the squashfs filesystem is mounted and the packages are installed into it with the download option,

@@ -1,7 +1,7 @@
-#/!/usr/bin/env bash
+#!/usr/bin/env bash
 
 # Name:         guige (Generic Ubuntu ISO Generation Engine)
-# Version:      1.8.4
+# Version:      1.8.9
 # Release:      1
 # License:      CC-BA (Creative Commons By Attribution)
 #               http://creativecommons.org/licenses/by/4.0/legalcode
@@ -12,6 +12,8 @@
 # Vendor:       UNIX
 # Packager:     Richard Spindler <richard@lateralblast.com.au>
 # Description:  Shell script designed to simplify creation of custom Ubuntu Install ISOs
+
+# shellcheck disable=SC2129
 
 SCRIPT_ARGS="$*"
 SCRIPT_FILE="$0"
@@ -32,17 +34,16 @@ CURRENT_ISO_RELEASE_1604="16.04.7"
 CURRENT_ISO_RELEASE_1804="18.04.6"
 CURRENT_ISO_RELEASE_2004="20.04.6"
 CURRENT_ISO_RELEASE_2204="22.04.3"
+CURRENT_ISO_RELEASE_2210="22.10"
 CURRENT_ISO_RELEASE_2304="23.04"
 CURRENT_ISO_RELEASE_2310="23.10.1"
-CURRENT_ISO_RELEASE_2404="22.04"
+CURRENT_ISO_RELEASE_2404="24.04"
 CURRENT_ISO_RELEASE="22.04.3"
 CURRENT_OLD_ISO_RELEASE="23.04"
 CURRENT_ISO_DEV_RELEASE="24.04"
-CURRENT_ISO_DEV_CODENAME="noble"
 CURRENT_ISO_OS_NAME="ubuntu"
 CURRENT_DOCKER_UBUNTU_RELEASE="22.04"
 CURRENT_ISO_CODENAME="jammy"
-CURRENT_OLD_CODENAME="lunar"
 CURRENT_ISO_ARCH="amd64"
 DEFAULT_ISO_HOSTNAME="ubuntu"
 DEFAULT_ISO_REALNAME="Ubuntu"
@@ -78,7 +79,7 @@ DEFAULT_ISO_INSTALL_PACKAGES="zfsutils-linux zfs-initramfs net-tools curl lftp w
 REQUIRED_PACKAGES="p7zip-full lftp wget xorriso whois squashfs-tools sudo file rsync net-tools nfs-kernel-server ansible dialog apt-utils"
 DEFAULT_DOCKER_ARCH="amd64 arm64"
 DEFAULT_ISO_SSH_KEY_FILE="$HOME/.ssh/id_rsa.pub"
-MASKED_DEFAULT_ISO_SSH_KEY_FILE="~/.ssh/id_rsa.pub"
+MASKED_DEFAULT_ISO_SSH_KEY_FILE="$HOME/.ssh/id_rsa.pub"
 DEFAULT_ISO_SSH_KEY=""
 DEFAULT_ISO_ALLOW_PASSWORD="false"
 DEFAULT_BMC_USERNAME="root"
@@ -239,7 +240,7 @@ fi
 
 DEFAULT_WORK_DIR=$HOME/$SCRIPT_NAME/$DEFAULT_ISO_OS_NAME/$DEFAULT_ISO_RELEASE
 DEFAULT_OLD_WORK_DIR=$HOME/$SCRIPT_NAME/$DEFAULT_ISO_OS_NAME/$DEFAULT_OLD_ISO_RELEASE
-MASKED_DEFAULT_WORK_DIR="~/$SCRIPT_NAME/$DEFAULT_ISO_OS_NAME/$DEFAULT_ISO_RELEASE"
+MASKED_DEFAULT_WORK_DIR="$HOME/$SCRIPT_NAME/$DEFAULT_ISO_OS_NAME/$DEFAULT_ISO_RELEASE"
 DEFAULT_ISO_MOUNT_DIR="$DEFAULT_WORK_DIR/isomount"
 DEFAULT_OLD_ISO_MOUNT_DIR="$DEFAULT_OLD_WORK_DIR/isomount"
 
@@ -272,6 +273,10 @@ SCRIPT_VERSION=$( grep '^# Version' < "$0" | awk '{print $3}' )
 DEFAULT_BOOT_SERVER_FILE_BASE=$(basename "$DEFAULT_BOOT_SERVER_FILE")
 DEFAULT_ISO_SQUASHFS_FILE_BASE=$( basename "$DEFAULT_ISO_SQUASHFS_FILE" )
 DEFAULT_ISO_GRUB_FILE_BASE=$( basename "$DEFAULT_ISO_GRUB_FILE" )
+
+# Function: print_usage
+#
+# Print script usage information
 
 print_usage () {
   cat <<-USAGE
@@ -337,6 +342,10 @@ print_usage () {
 USAGE
   exit
 }
+
+# Function: print_help
+#
+# Print script help information
 
 print_help () {
   cat <<-HELP
@@ -410,7 +419,9 @@ HELP
   exit
 }
 
-# Function: Execute command
+# Function: execute_command
+#
+# Execute a command
 
 execute_command () {
   COMMAND="$1"
@@ -420,47 +431,57 @@ execute_command () {
   fi
 }
 
-# Function: Execute message
+# Function: execution_message
+#
+#  Print command
 
 execution_message () {
-  OUTPUT_TEXT=$1
+  OUTPUT_TEXT="$1"
   OUTPUT_TYPE="COMMAND"
   handle_output "$OUTPUT_TEXT" $OUTPUT_TYPE
 }
 
-# Function: Information message
+# Function: information_message
+#
+# Print informational message
 
 information_message () {
-  OUTPUT_TEXT=$1
+  OUTPUT_TEXT="$1"
   OUTPUT_TYPE="TEXT"
   handle_output "# Information: $OUTPUT_TEXT" $OUTPUT_TYPE
 }
 
-# Function: Verbose message
+# Function: verbose_message
+#
+# Print verbose message
 
 verbose_message () {
-  OUTPUT_TEXT=$1
+  OUTPUT_TEXT="$1"
   OUTPUT_TYPE="TEXT"
   TEMP_VERBOSE_MODE="true"
   handle_output "$OUTPUT_TEXT" $OUTPUT_TYPE
   TEMP_VERBOSE_MODE="false"
 }
 
-# Function: Warning message
+# Function: warning_message
+#
+# Print warning message
 
 warning_message () {
-  OUTPUT_TEXT=$1
+  OUTPUT_TEXT="$1"
   OUTPUT_TYPE="TEXT"
   TEMP_VERBOSE_MODE="true"
   handle_output "# Warning: $OUTPUT_TEXT" $OUTPUT_TYPE
   TEMP_VERBOSE_MODE="false"
 }
 
-# Function: Handle output
+# Function: handle_output
+#
+# Handle text output
 
 handle_output () {
-  OUTPUT_TEXT=$1
-  OUTPUT_TYPE=$2
+  OUTPUT_TEXT="$1"
+  OUTPUT_TYPE="$2"
   if [ "$VERBOSE_MODE" = "true" ] || [ "$TEMP_VERBOSE_MODE" = "true" ]; then
     if [ "$TEST_MODE" = "true" ]; then
       echo "$OUTPUT_TEXT"
@@ -474,7 +495,57 @@ handle_output () {
   fi
 }
 
-# Function: Create docker config
+# Function: create_dir
+#
+# Create directory
+
+create_dir () {
+  CREATE_DIR="$1"
+  handle_output "# Checking directory $CREATE_DIR exists"
+  if [ ! -d "$CREATE_DIR" ]; then
+    if [ "$TEST_MODE" = "false" ]; then
+      mkdir -p "$CREATE_DIR"
+    fi
+  fi
+}
+
+# Function: sudo_create_dir
+#
+# Create directory
+
+sudo_create_dir () {
+  CREATE_DIR="$1"
+  handle_output "# Checking directory $CREATE_DIR exists"
+  if [ ! -d "$CREATE_DIR" ]; then
+    if [ "$TEST_MODE" = "false" ]; then
+      if [ -f "/.dockerenv" ]; then
+        mkdir -p "$CREATE_DIR"
+      else
+        sudo mkdir -p "$CREATE_DIR"
+      fi
+    fi
+  fi
+}
+
+# Function: remove_dir
+#
+# Remove directory
+
+remove_dir () {
+  REMOVE_DIR="$1"
+  handle_output "# Checking directory $REMOVE_DIR exists"
+  if [ ! "$REMOVE_DIR" = "/" ]; then
+    if [[ $REMOVE_DIR =~ [0-9a-zA-Z] ]]; then
+      if [ -d "$REMOVE_DIR" ]; then
+        if [ "$TEST_MODE" = "false" ]; then
+          sudo rm -f "$REMOVE_DIR"
+        fi
+      fi
+    fi
+  fi
+}
+
+# Function: create_docker_config
 #
 # Create a docker config so we can run this from a non Linux platform
 #
@@ -499,37 +570,15 @@ handle_output () {
 
 check_docker_config () {
   if ! [ -f "/.dockerenv" ]; then
-    handle_output "# Create Docker configs" TEXT
+    handle_output "# Checking Docker configs" TEXT
     for DIR_ARCH in $DOCKER_ARCH; do
       if ! [ -d "$WORK_DIR/$DIR_ARCH" ]; then
-        handle_output "mkdir $WORK_DIR/$DIR_ARCH"
-        mkdir -p "$WORK_DIR/$DIR_ARCH"
+        handle_output "Creating directory $WORK_DIR/$DIR_ARCH" TEXT
+        create_dir "$WORK_DIR/$DIR_ARCH"
       fi
-      handle_output "# Check docker images" TEXT
-      handle_output "docker images |grep \"^$SCRIPT_NAME-$DIR_ARCH\" |awk '{print \$1}'"
-      handle_output "# Check volume images" TEXT
-      handle_output "docker volume list |grep \"^$SCRIPT_NAME-$DIR_ARCH\" |awk '{print \$1}'"
-      handle_output "# Create Docker config $WORK_DIR/$DIR_ARCH/docker-compose.yml" TEXT
-      handle_output "echo \"version: \\\"3\\\"\" > $WORK_DIR/$DIR_ARCH/docker-compose.yml"
-      handle_output "echo \"\" >> $WORK_DIR/$DIR_ARCH/docker-compose.yml"
-      handle_output "echo \"services:\" >> $WORK_DIR/$DIR_ARCH/docker-compose.yml"
-      handle_output "echo \"  $SCRIPT_NAME-$DIR_ARCH:\" >> $WORK_DIR/$DOCKER_ARCH/docker-compose.yml"
-      handle_output "echo \"    build:\" >> $WORK_DIR/$DIR_ARCH/docker-compose.yml"
-      handle_output "echo \"      context: .\" >> $WORK_DIR/$DOCKER_ARCH/docker-compose.yml"
-      handle_output "echo \"      dockerfile: Dockerfile\" >> $WORK_DIR/$DIR_ARCH/docker-compose.yml"
-      handle_output "echo \"    image: $SCRIPT_NAME-$DIR_ARCH\" >> $WORK_DIR/$DIR_ARCH/docker-compose.yml"
-      handle_output "echo \"    container_name: $SCRIPT_NAME-$DIR_ARCH\" >> $WORK_DIR/$DIR_ARCH/docker-compose.yml"
-      handle_output "echo \"    entrypoint: /bin/bash\" >> $WORK_DIR/$DIR_ARCH/docker-compose.yml"
-      handle_output "echo \"    working_dir: /root\" >> $WORK_DIR/$DIR_ARCH/docker-compose.yml"
-      handle_output "echo \"    platform: linux/$DIR_ARCH\" >> $WORK_DIR/$DIR_ARCH/docker-compose.yml"
-      handle_output "echo \"    volumes:\" >> $WORK_DIR/$DIR_ARCH/docker-compose.yml"
-      handle_output "echo \"      - /docker/$SCRIPT_NAME-$DIR_ARCH/:/root/$SCRIPT_NAME/\" >> $WORK_DIR/$DIR_ARCH/docker-compose.yml"
-      handle_output "# Create Docker config $WORK_DIR/$DIR_ARCH/Dockerfile" TEXT
-      handle_output "echo \"FROM ubuntu:$CURRENT_DOCKER_UBUNTU_RELEASE\" > $WORK_DIR/$DIR_ARCH/Dockerfile"
-      handle_output "echo \"RUN apt-get update && apt-get -o Dpkg::Options::=\"--force-overwrite\" install -y $REQUIRED_PACKAGES\" >> $WORK_DIR/$DIR_ARCH/Dockerfile"
-      handle_output "# Build docker"
-      handle_output "cd $WORK_DIR/$DIR_ARCH ; docker build . --tag $SCRIPT_NAME-$DIR_ARCH --platform linux/$DIR_ARCH"
+      handle_output "# Checking docker images" TEXT
       DOCKER_IMAGE_CHECK=$( docker images |grep "^$SCRIPT_NAME-$DIR_ARCH" |awk '{print $1}' )
+      handle_output "# Checking volume images" TEXT
       DOCKER_VOLUME_CHECK=$( docker volume list |grep "^$SCRIPT_NAME-$DIR_ARCH" |awk '{print $1}' )
       if ! [ "$DOCKER_VOLUME_CHECK" = "$SCRIPT_NAME-$DIR_ARCH" ]; then
         if [ "$TEST_MODE" = "false" ]; then
@@ -538,6 +587,7 @@ check_docker_config () {
       fi
       if ! [ "$DOCKER_IMAGE_CHECK" = "$SCRIPT_NAME-$DIR_ARCH" ]; then
         if [ "$TEST_MODE" = "false" ]; then
+          handle_output "# Creating Docker compose file $WORK_DIR/$DIR_ARCH/docker-compose.yml" TEXT
           echo "version: \"3\"" > "$WORK_DIR/$DIR_ARCH/docker-compose.yml"
           echo "" >> "$WORK_DIR/$DIR_ARCH/docker-compose.yml"
           echo "services:" >> "$WORK_DIR/$DIR_ARCH/docker-compose.yml"
@@ -552,8 +602,12 @@ check_docker_config () {
           echo "    platform: linux/$DIR_ARCH" >> "$WORK_DIR/$DIR_ARCH/docker-compose.yml"
           echo "    volumes:" >> "$WORK_DIR/$DIR_ARCH/docker-compose.yml"
           echo "      - /docker/$SCRIPT_NAME-$DIR_ARCH/:/root/$SCRIPT_NAME/" >> "$WORK_DIR/$DIR_ARCH/docker-compose.yml"
+          print_file "$WORK_DIR/$DIR_ARCH/docker-compose.yml"
+          handle_output "# Creating Docker config $WORK_DIR/$DIR_ARCH/Dockerfile" TEXT
           echo "FROM ubuntu:$CURRENT_DOCKER_UBUNTU_RELEASE" > "$WORK_DIR/$DIR_ARCH/Dockerfile"
           echo "RUN apt-get update && apt-get -o Dpkg::Options::=\"--force-overwrite\" install -y $REQUIRED_PACKAGES" >> "$WORK_DIR/$DIR_ARCH/Dockerfile"
+          print_file "$WORK_DIR/$DIR_ARCH/Dockerfile"
+          handle_output "# Building docker image $SCRIPT_NAME-$DIR_ARCH" TEXT
           docker build "$WORK_DIR/$DIR_ARCH" --tag "$SCRIPT_NAME-$DIR_ARCH" --platform "linux/$DIR_ARCH"
         fi
       fi
@@ -561,7 +615,9 @@ check_docker_config () {
   fi
 }
 
-# Function: Get codename
+# Function: get_codename
+#
+# Get Ubuntu relase codename
 
 get_code_name() {
   REL_NO="$ISO_MAJOR_REL.$ISO_MINOR_REL"
@@ -599,10 +655,12 @@ get_code_name() {
   esac
 }
 
-# Function: Get info from iso
+# Function: get_info_from_iso
+#
+# Get info from iso
 
 get_info_from_iso () {
-  handle_output "# Analysing $INPUT_FILE"
+  handle_output "# Analysing $INPUT_FILE" TEXT
   TEST_FILE=$( basename "$INPUT_FILE" )
   TEST_NAME=$( echo "$TEST_FILE" | cut -f1 -d- )
   TEST_TYPE=$( echo "$TEST_FILE" | cut -f2 -d- )
@@ -651,7 +709,6 @@ get_info_from_iso () {
       TEST_TYPE="live-server"
     fi
   fi
-  ISO_RELEASE_MAJOR=$(echo "$ISO_RELEASE" |awk -F. '{print $1"."$2}')
   OUTPUT_FILE="$WORK_DIR/files/$TEST_NAME-$ISO_RELEASE-$TEST_TYPE-$ISO_ARCH.iso"
   handle_output "# Input ISO:     $INPUT_FILE" TEXT
   handle_output "# Distribution:  $ISO_DISTRO" TEXT
@@ -661,6 +718,8 @@ get_info_from_iso () {
   handle_output "# Output ISO:    $OUTPUT_FILE" TEXT
 }
 
+# Function: get_my_ip
+#
 # Get my IP
 
 get_my_ip () {
@@ -675,14 +734,16 @@ get_my_ip () {
   fi
 }
 
-# Function: List ISOs
+# Function: list_isos
+#
+# List ISOs
 
 list_isos () {
   TEMP_VERBOSE_MODE="true"
   if [ "$ISO_SEARCH" = "" ]; then
-    FILE_LIST=$(find $WORK_DIR -name "*.iso" 2> /dev/null)
+    FILE_LIST=$(find "$WORK_DIR" -name "*.iso" 2> /dev/null)
   else
-    FILE_LIST=$(find $WORK_DIR -name "*.iso" 2> /dev/null |grep "$ISO_SEARCH" )
+    FILE_LIST=$(find "$WORK_DIR" -name "*.iso" 2> /dev/null |grep "$ISO_SEARCH" )
   fi
   for FILE_NAME in $FILE_LIST; do
     if [ "$DO_SCP_HEADER" = "true" ]; then
@@ -694,7 +755,9 @@ list_isos () {
   TEMP_VERBOSE_MODE="false"
 }
 
-# Function: Check work directories exist
+# Function: check_work_dir
+#
+# Check work directories exist
 #
 # Example:
 # mkdir -p ./isomount ./isonew/squashfs ./isonew/cd ./isonew/custom
@@ -703,62 +766,35 @@ check_work_dir () {
   handle_output "# Check work directories" TEXT
   for ISO_DIR in $ISO_MOUNT_DIR $ISO_NEW_DIR/squashfs $ISO_NEW_DIR/mksquash $ISO_NEW_DIR/cd $ISO_NEW_DIR/custom $WORK_DIR/bin $WORK_DIR/files; do
     handle_output "# Check directory $ISO_DIR exists" TEXT
-    handle_output "mkdir -p $ISO_DIR"
     if [ "$FORCE_MODE" = "true" ]; then
-      if [ -d "$ISO_DIR" ]; then
-        handle_output "# Remove existing directory $ISO_DIR"
-        handle_output "sudo rm -rf $ISO_DIR"
-        if [[ $ISO_DIR =~ [0-9a-zA-Z] ]]; then
-          if [ "$TEST_MODE" = "false" ]; then
-            sudo rm -rf "$ISO_DIR"
-          fi
-        fi
-      fi
+      remove_dir "$ISO_DIR"
     fi
-    if ! [ -d "$ISO_DIR" ]; then
-      handle_output "# Create $ISO_DIR if it doesn't exist" TEXT
-      if [ "$TEST_MODE" = "false" ]; then
-        mkdir -p "$ISO_DIR"
-      fi
-    fi
+    create_dir "$ISO_DIR"
   done
 }
+
+# Function: check_old_work_dir
+#
+# Check old release work directory
+# Used when copying files from old release to a new release
 
 check_old_work_dir () {
-  handle_output "# Check old release work directories" TEXT
+  handle_output "# Check old release work directories exist" TEXT
   for ISO_DIR in $OLD_ISO_MOUNT_DIR $OLD_WORK_DIR/files; do
-    handle_output "# Check directory $ISO_DIR exists" TEXT
-    handle_output "mkdir -p $ISO_DIR"
     if [ "$FORCE_MODE" = "true" ]; then
-      if [ -d "$ISO_DIR" ]; then
-        handle_output "# Remove existing directory $ISO_DIR"
-        handle_output "sudo rm -rf $ISO_DIR"
-        if [[ $ISO_DIR =~ [0-9a-zA-Z] ]]; then
-          if [ "$TEST_MODE" = "false" ]; then
-            sudo rm -rf "$ISO_DIR"
-          fi
-        fi
-      fi
+      remove_dir "$ISO_DIR"
     fi
-    if ! [ -d "$ISO_DIR" ]; then
-      handle_output "# Create $ISO_DIR if it doesn't exist" TEXT
-      if [ "$TEST_MODE" = "false" ]; then
-        mkdir -p "$ISO_DIR"
-      fi
-    fi
+    create_dir "$ISO_DIR"
   done
 }
 
-# Function: Execute racadm
+# Function: execute_racadm
+#
+# Execute racadm commands
 
 execute_racadm () {
-  handle_output "# Execute racadm" TEXT
-  handle_output "$RACADM_BIN -H \"$BMC_IP\" -u \"$BMC_USERNAME\" -p \"$BMC_PASSWORD\" -c \"remoteimage -d\""
-  handle_output "$RACADM_BIN -H \"$BMC_IP\" -u \"$BMC_USERNAME\" -p \"$BMC_PASSWORD\" -c \"remoteimage -c -l $BOOT_SERVER_IP:BOOT_SERVER_FILE\""
-  handle_output "$RACADM_BIN -H \"$BMC_IP\" -u \"$BMC_USERNAME\" -p \"$BMC_PASSWORD\" -c \"config -g cfgServerInfo -o cfgServerBootOnce 1\""
-  handle_output "$RACADM_BIN -H \"$BMC_IP\" -u \"$BMC_USERNAME\" -p \"$BMC_PASSWORD\" -c \"config -g cfgServerInfo -o cfgServerFirstBootDevice VCD-DVD\""
-  handle_output "$RACADM_BIN -H \"$BMC_IP\" -u \"$BMC_USERNAME\" -p \"$BMC_PASSWORD\" -c \"serveraction powercycle\""
   if [ "$TEST_MODE" = "false" ]; then
+    handle_output "# Executing racadm" TEXT
     $RACADM_BIN -H "$BMC_IP" -u "$BMC_USERNAME" -p "$BMC_PASSWORD" -c "remoteimage -d"
     $RACADM_BIN -H "$BMC_IP" -u "$BMC_USERNAME" -p "$BMC_PASSWORD" -c "remoteimage -c -l $BOOT_SERVER_IP:BOOT_SERVER_FILE"
     $RACADM_BIN -H "$BMC_IP" -u "$BMC_USERNAME" -p "$BMC_PASSWORD" -c "config -g cfgServerInfo -o cfgServerBootOnce 1"
@@ -767,10 +803,12 @@ execute_racadm () {
   fi
 }
 
-# Function: Check racadm
+# Function: check_racadm
+#
+# Check racadm
 
 check_racadm () {
-  handle_output "# Check racadm" TEXT
+  handle_output "# Checking racadm" TEXT
   RACADM_TEST=$( which racadm |grep "^/" )
   if [ -z "$RACADM_TEST" ]; then
     if ! [ -f "$HOME/.local/bin/racadm" ]; then
@@ -800,18 +838,18 @@ check_racadm () {
   fi
 }
 
-# Function: Install required packages
+# Function: install_required_packages
+#
+# Install required packages
 #
 # Example:
 # sudo apt install -y p7zip-full lftp wget xorriso
 
 install_required_packages () {
-  handle_output "# Check required packages are installed" TEXT
+  handle_output "# Checking required packages are installed" TEXT
   for PACKAGE in $REQUIRED_PACKAGES; do
     PACKAGE_VERSION=""
-    if [ "$VERBOSE_MODE" = "true" ]; then
-      handle_output "# Package: $PACKAGE" TEXT
-    fi
+    verbose_message "# Package: $PACKAGE" TEXT
     if [ "$OS_NAME" = "Darwin" ]; then
       PACKAGE_VERSION=$( brew list "$PACKAGE" 2>&1 |head -1 |awk -F"/" '{print $6}' )
     else
@@ -821,21 +859,19 @@ install_required_packages () {
         PACKAGE_VERSION=$( sudo dpkg -l "$PACKAGE" 2>&1 |grep "^ii" |awk '{print $3}' )
       fi
     fi
-    if [ "$VERBOSE_MODE" = "true" ]; then
-      handle_output "# Version: $PACKAGE_VERSION" TEXT
-    fi
+    verbose_message "# $PACKAGE version: $PACKAGE_VERSION" TEXT
     if [ -z "$PACKAGE_VERSION" ]; then
       if [ "$TEST_MODE" = "false" ]; then
         if [ "$OS_NAME" = "Darwin" ]; then
           brew update
-          brew install $PACKAGE
+          brew install "$PACKAGE"
         else
           if [[ "$LSB_RELEASE" =~ "Arch" ]] || [[ "$LSB_RELEASE" =~ "Endeavour" ]]; then
             sudo pacman -Sy
-            echo Y |sudo pacman -Sy $PACKAGE
+            echo Y |sudo pacman -Sy "$PACKAGE"
           else
             sudo apt update
-            sudo apt install -y $PACKAGE
+            sudo apt install -y "$PACKAGE"
           fi
         fi
       fi
@@ -843,7 +879,9 @@ install_required_packages () {
   done
 }
 
-# Function: Check base ISO file
+# Function: check_base_iso_file
+#
+# Check base ISO file exists
 
 check_base_iso_file () {
   if [ -f "$INPUT_FILE" ]; then
@@ -856,6 +894,11 @@ check_base_iso_file () {
   fi
 }
 
+# Function: check_old_base_iso_file
+#
+# Check previous release base ISO file exists
+# Used when copying files from an old release to a new release
+
 check_old_base_iso_file () {
   if [ -f "$OLD_INPUT_FILE" ]; then
     OLD_BASE_INPUT_FILE=$( basename "$OLD_INPUT_FILE" )
@@ -867,7 +910,9 @@ check_old_base_iso_file () {
   fi
 }
 
-# Function: Grab ISO from Ubuntu
+# Function: get_base_iso
+#
+# Grab ISO from Ubuntu
 #
 # Examples:
 #
@@ -899,13 +944,8 @@ get_base_iso () {
     fi
   fi
   check_base_iso_file
-  if [ "$DO_CHECK_ISO" = "true" ] && [ "$DO_DOCKER" = "false" ]; then
-    handle_output "cd $WORK_DIR/files ; wget -N $ISO_URL"
-  else
-    handle_output "wget $ISO_URL -O $WORK_DIR/files/$BASE_INPUT_FILE"
-  fi
   if [ "$DO_CHECK_ISO" = "true" ]; then
-    cd "$WORK_DIR/files" ; wget -N "$ISO_URL"
+    cd "$WORK_DIR/files" || exit ; wget -N "$ISO_URL"
   else
     if ! [ -f "$WORK_DIR/files/$BASE_INPUT_FILE" ]; then
       if [ "$TEST_MODE" = "false" ]; then
@@ -925,23 +965,20 @@ get_old_base_iso () {
     fi
   fi
   check_old_base_iso_file
-  if [ "$DO_CHECK_ISO" = "true" ] && [ "$DO_DOCKER" = "false" ]; then
-    handle_output "cd $OLD_WORK_DIR/files ; wget -N $OLD_ISO_URL"
-  else
-    handle_output "wget $OLD_ISO_URL -O $OLD_WORK_DIR/files/$OLD_BASE_INPUT_FILE"
-  fi
   if [ "$DO_CHECK_ISO" = "true" ]; then
-    cd "$OLD_WORK_DIR/files" ; wget -N "$OLD_ISO_URL"
+    cd "$OLD_WORK_DIR/files" || exit ; wget -N "$OLD_ISO_URL"
   else
     if ! [ -f "$OLD_WORK_DIR/files/$OLD_BASE_INPUT_FILE" ]; then
       if [ "$TEST_MODE" = "false" ]; then
         wget "$OLD_ISO_URL" -O "$OLD_WORK_DIR/files/$OLD_BASE_INPUT_FILE"
       fi
     fi
-  fi 
+  fi
 }
 
-# Function unmount loopback ISO filesystem
+# Function: unmount_iso
+#
+# unmount loopback ISO filesystem
 #
 # Examples:
 # sudo umount -l /home/user/ubuntu-iso/isomount
@@ -953,7 +990,9 @@ unmount_iso () {
   fi
 }
 
-# Function unmount loopback older release ISO filesystem
+# Function: unmount_old_iso
+#
+# unmount loopback older release ISO filesystem
 #
 # Examples:
 # sudo umount -l /home/user/ubuntu-old-iso/isomount
@@ -965,6 +1004,8 @@ unmount_old_iso () {
   fi
 }
 
+# Function: mount_iso
+#
 # Mount base ISO as loopback device so contents can be copied
 #
 # sudo mount -o loop ./ubuntu-22.04.1-live-server-arm64.iso ./isomount
@@ -979,6 +1020,8 @@ mount_iso () {
   fi
 }
 
+# Function: unmount_old_iso
+#
 # Mount older revision base ISO as loopback device so contents can be copied
 #
 # sudo mount -o loop ./ubuntu-22.04.1-live-server-arm64.iso ./isomount
@@ -987,49 +1030,53 @@ mount_iso () {
 mount_old_iso () {
   get_old_base_iso
   check_old_base_iso_file
-  handle_output "sudo mount -o loop \"$OLD_WORK_DIR/files/$OLD_BASE_INPUT_FILE\" \"$OLD_ISO_MOUNT_DIR\""
+  handle_output "$ Mounting ISO $OLD_WORK_DIR/files/$OLD_BASE_INPUT_FILE at $OLD_ISO_MOUNT_DIR" TEXT
   if [ "$TEST_MODE" = "false" ]; then
     sudo mount -o loop "$OLD_WORK_DIR/files/$OLD_BASE_INPUT_FILE" "$OLD_ISO_MOUNT_DIR"
   fi
 }
 
+# Function: unmount_squashfs
+#
+# Unmount squahfs filesystem
 
 unmount_squashfs () {
-  handle_output "sudo umount $ISO_NEW_DIR/squashfs"
+  handle_output "# Unmounting squashfs $ISO_NEW_DIR/squashfs" TEXT
   if [ "$TEST_MODE" = "false" ]; then
     sudo umount "$ISO_NEW_DIR/squashfs"
   fi
 }
 
-# Function: Copy contents of ISO to a RW location so we can work with them
+# Function: copy_iso
+#
+# Copy contents of ISO to a RW location so we can work with them
 #
 # Examples:
 # rsync --exclude=/casper/ubuntu-server-minimal.squashfs -av ./isomount/ ./isonew/cd
 # rsync -av ./isomount/ ./isonew/cd
 
 copy_iso () {
+  handle_output "# Copying ISO files from $ISO_MOUNT_DIR to $ISO_NEW_DIR/cd" TEXT
   if [ ! -f "/usr/bin/rsync" ]; then
     install_required_packages
   fi
   if [ "$VERBOSE_MODE" = "true" ]; then
-    handle_output "rsync -av \"$ISO_MOUNT_DIR/\" \"$ISO_NEW_DIR/cd\""
     if [ "$TEST_MODE" = "false" ]; then
       rsync -av "$ISO_MOUNT_DIR/" "$ISO_NEW_DIR/cd"
     fi
   else
-    handle_output "rsync -a \"$ISO_MOUNT_DIR/\" \"$ISO_NEW_DIR/cd\""
     if [ "$TEST_MODE" = "false" ]; then
       rsync -a "$ISO_MOUNT_DIR/" "$ISO_NEW_DIR/cd"
     fi
   fi
 }
 
-# Function: Check ansible
+# Function: check_ansible
+#
+# Check ansible
 
 check_ansible () {
-  handle_output "# Check ansible is installed" TEXT
-  handle_output "ANSIBLE_BIN=\$( which ansible )"
-  handle_output  "ANSIBLE_CHECK=\$( basename $ANSIBLE_BIN )"
+  handle_output "# Checking ansible is installed" TEXT
   ANSIBLE_BIN=$( which ansible )
   ANSIBLE_CHECK=$( basename "$ANSIBLE_BIN" )
   if [ "$OS_NAME" = "Darwin" ]; then
@@ -1043,10 +1090,8 @@ check_ansible () {
       $COMMAND
     fi
   fi
-  handle_output "# Check ansible collection is installed" TEXT
-  handle_output "ANSIBLE_CHECK=\$( ansible-galaxy collection list |grep \"dellemc.openmanage\" |awk '{print \$1}' |uniq )"
+  handle_output "# Checking ansible collection dellemc.openmanage is installed" TEXT
   ANSIBLE_CHECK=$( ansible-galaxy collection list |grep "dellemc.openmanage" |awk '{print $1}' |uniq )
-    handle_output "ansible-galaxy collection install dellemc.openmanage"
   if ! [ "$ANSIBLE_CHECK" = "dellemc.openmanage" ]; then
     if [ "$TEST_MODE" = "false" ]; then
       ansible-galaxy collection install dellemc.openmanage
@@ -1054,19 +1099,26 @@ check_ansible () {
   fi
 }
 
-# Function: Create Ansible
+# Function: print_file
+#
+# Print contents of file
+
+print_file () {
+  FILE_NAME="$1"
+  handle_output "# Contents of file $FILE_NAME"
+  if [ "$TEST_MODE" = "false" ]; then
+    cat "$FILE_NAME"
+  fi
+}
+
+
+# Function: create_ansible
+#
+# Creates an ansible file for setting up boot device on iDRAC using Redfish
 
 create_ansible () {
   HOSTS_YAML="$WORK_DIR/hosts.yaml"
-  handle_output "# Create $HOSTS_YAML" TEXT
-  handle_output "echo \"---\" > $HOSTS_YAML"
-  handle_output "echo \"idrac:\" >> $HOSTS_YAML"
-  handle_output "echo \"  hosts:\" >> $HOSTS_YAML"
-  handle_output "echo \"    $ISO_HOSTNAME:\" >> $HOSTS_YAML"
-  handle_output "echo \"      ansible_host:   $BMC_IP\" >> $HOSTS_YAML"
-  handle_output "echo \"      baseuri:        $BMC_IP\" >> $HOSTS_YAML"
-  handle_output "echo \"      idrac_user:     $BMC_USERNAME\" >> $HOSTS_YAML"
-  handle_output "echo \"      idrac_password: $BMC_PASSWORD\" >> $HOSTS_YAML"
+  handle_output "# Creating ansible hosts file $HOSTS_YAML"
   if [ "$TEST_MODE" = "false" ]; then
     echo "---" > "$HOSTS_YAML"
     echo "idrac:" >> "$HOSTS_YAML"
@@ -1076,111 +1128,11 @@ create_ansible () {
     echo "      baseuri:        $BMC_IP" >> "$HOSTS_YAML"
     echo "      idrac_user:     $BMC_USERNAME" >> "$HOSTS_YAML"
     echo "      idrac_password: $BMC_PASSWORD" >> "$HOSTS_YAML"
+    print_file "$HOSTS_YAML"
   fi
   IDRAC_YAML="$WORK_DIR/idrac.yaml"
   NFS_FILE=$( basename "$BOOT_SERVER_FILE" )
   NFS_DIR=$( dirname "$BOOT_SERVER_FILE" )
-  handle_output "# Create $HOSTS_YAML" TEXT
-  handle_output "echo \"- hosts: idrac\" > \"$IDRAC_YAML\""
-  handle_output "echo \"  name: $ISO_VOLID\" >> \"$IDRAC_YAML\""
-  handle_output "echo \"  gather_facts: False\" >> \"$IDRAC_YAML\""
-  handle_output "echo \"  vars:\" >> \"$IDRAC_YAML\""
-  handle_output "echo \"    idrac_osd_command_allowable_values: [\\\"BootToNetworkISO\\\", \\\"GetAttachStatus\\\", \\\"DetachISOImage\\\"]\" >> \"$IDRAC_YAML\""
-  handle_output "echo \"    idrac_osd_command_default: \\\"GetAttachStatus\\\"\" >> \"$IDRAC_YAML\""
-  handle_output "echo \"    GetAttachStatus_Code:\" >> \"$IDRAC_YAML\""
-  handle_output "echo \"      DriversAttachStatus:\" >> \"$IDRAC_YAML\""
-  handle_output "echo \"        \\\"0\\\": \\\"NotAttached\\\"\" >> \"$IDRAC_YAML\""
-  handle_output "echo \"        \\\"1\\\": \\\"Attached\\\"\" >> \"$IDRAC_YAML\""
-  handle_output "echo \"      ISOAttachStatus:\" >> \"$IDRAC_YAML\""
-  handle_output "echo \"        \\\"0\\\": \\\"NotAttached\\\"\" >> \"$IDRAC_YAML\""
-  handle_output "echo \"        \\\"1\\\": \\\"Attached\\\"\" >> \"$IDRAC_YAML\""
-  handle_output "echo \"    idrac_https_port:           $BMC_PORT\" >> \"$IDRAC_YAML\""
-  handle_output "echo \"    expose_duration:            $BMC_EXPOSE_DURATION\" >> \"$IDRAC_YAML\""
-  handle_output "echo \"    command:                    \\\"{{ idrac_osd_command_default }}\\\"\" >> \"$IDRAC_YAML\""
-  handle_output "echo \"    validate_certs:             no\" >> \"$IDRAC_YAML\""
-  handle_output "echo \"    force_basic_auth:           yes\" >> \"$IDRAC_YAML\""
-  handle_output "echo \"    share_name:                 $BOOT_SERVER_IP:$NFS_DIR/\" >> \"$IDRAC_YAML\""
-  handle_output "echo \"    ubuntu_iso:                 $NFS_FILE\" >> \"$IDRAC_YAML\""
-  handle_output "echo \"  collections:\" >> \"$IDRAC_YAML\""
-  handle_output "echo \"    - dellemc.openmanage\" >> \"$IDRAC_YAML\""
-  handle_output "echo \"  tasks:\" >> \"$IDRAC_YAML\""
-  handle_output "echo \"    - name: find the URL for the DellOSDeploymentService\" >> \"$IDRAC_YAML\""
-  handle_output "echo \"      ansible.builtin.uri:\" >> \"$IDRAC_YAML\""
-  handle_output "echo \"        url: \\\"https://{{ baseuri }}/redfish/v1/Systems/System.Embedded.1\\\"\" >> \"$IDRAC_YAML\""
-  handle_output "echo \"        user: \\\"{{ idrac_user }}\\\"\" >> \"$IDRAC_YAML\""
-  handle_output "echo \"        password: \\\"{{ idrac_password }}\\\"\" >> \"$IDRAC_YAML\""
-  handle_output "echo \"        method: GET\" >> \"$IDRAC_YAML\""
-  handle_output "echo \"        headers:\" >> \"$IDRAC_YAML\""
-  handle_output "echo \"          Accept: \\\"application/json\\\"\" >> \"$IDRAC_YAML\""
-  handle_output "echo \"          OData-Version: \\\"4.0\\\"\" >> \"$IDRAC_YAML\""
-  handle_output "echo \"        status_code: 200\" >> \"$IDRAC_YAML\""
-  handle_output "echo \"        validate_certs: \\\"{{ validate_certs }}\\\"\" >> \"$IDRAC_YAML\""
-  handle_output "echo \"        force_basic_auth: \\\"{{ force_basic_auth }}\\\"\" >> \"$IDRAC_YAML\""
-  handle_output "echo \"      register: result\" >> \"$IDRAC_YAML\""
-  handle_output "echo \"      delegate_to: localhost\" >> \"$IDRAC_YAML\""
-  handle_output "echo \"    - name: find the URL for the DellOSDeploymentService\" >> \"$IDRAC_YAML\""
-  handle_output "echo \"      ansible.builtin.set_fact:\" >> \"$IDRAC_YAML\""
-  handle_output "echo \"        idrac_osd_service_url: \\\"{{ result.json.Links.Oem.Dell.DellOSDeploymentService['@odata.id'] }}\\\"\" >> \"$IDRAC_YAML\""
-  handle_output "echo \"      when:\" >> \"$IDRAC_YAML\""
-  handle_output "echo \"        - result.json.Links.Oem.Dell.DellOSDeploymentService is defined\" >> \"$IDRAC_YAML\""
-  handle_output "echo \"    - block:\" >> \"$IDRAC_YAML\""
-  handle_output "echo \"        - name: get ISO attach status\" >> \"$IDRAC_YAML\""
-  handle_output "echo \"          ansible.builtin.uri:\" >> \"$IDRAC_YAML\""
-  handle_output "echo \"            url: \\\"https://{{ baseuri }}{{ idrac_osd_service_url }}/Actions/DellOSDeploymentService.GetAttachStatus\\\"\" >> \"$IDRAC_YAML\""
-  handle_output "echo \"            user: \\\"{{ idrac_user }}\\\"\" >> \"$IDRAC_YAML\""
-  handle_output "echo \"            password: \\\"{{ idrac_password }}\\\"\" >> \"$IDRAC_YAML\""
-  handle_output "echo \"            method: POST\" >> \"$IDRAC_YAML\""
-  handle_output "echo \"            headers:\" >> \"$IDRAC_YAML\""
-  handle_output "echo \"              Accept: \\\"application/json\\\"\" >> \"$IDRAC_YAML\""
-  handle_output "echo \"              Content-Type: \\\"application/json\\\"\" >> \"$IDRAC_YAML\""
-  handle_output "echo \"              OData-Version: \\\"4.0\\\"\" >> \"$IDRAC_YAML\""
-  handle_output "echo \"            body: \\\"{}\\\"\" >> \"$IDRAC_YAML\""
-  handle_output "echo \"            status_code: 200\" >> \"$IDRAC_YAML\""
-  handle_output "echo \"            force_basic_auth: \\\"{{ force_basic_auth }}\\\"\" >> \"$IDRAC_YAML\""
-  handle_output "echo \"          register: attach_status\" >> \"$IDRAC_YAML\""
-  handle_output "echo \"          delegate_to: localhost\" >> \"$IDRAC_YAML\""
-  handle_output "echo \"        - name: set ISO attach status as a fact variable\" >> \"$IDRAC_YAML\""
-  handle_output "echo \"          ansible.builtin.set_fact:\" >> \"$IDRAC_YAML\""
-  handle_output "echo \"            idrac_iso_attach_status: \\\"{{ idrac_iso_attach_status | default({}) | combine({item.key: item.value}) }}\\\"\" >> \"$IDRAC_YAML\""
-  handle_output "echo \"          with_dict:\" >> \"$IDRAC_YAML\""
-  handle_output "echo \"            DriversAttachStatus: \\\"{{ attach_status.json.DriversAttachStatus }}\\\"\" >> \"$IDRAC_YAML\""
-  handle_output "echo \"            ISOAttachStatus: \\\"{{ attach_status.json.ISOAttachStatus }}\\\"\" >> \"$IDRAC_YAML\""
-  handle_output "echo \"      when:\" >> \"$IDRAC_YAML\""
-  handle_output "echo \"        - idrac_osd_service_url is defined\" >> \"$IDRAC_YAML\""
-  handle_output "echo \"        - idrac_osd_service_url|length > 0\" >> \"$IDRAC_YAML\""
-  handle_output "echo \"    - block:\" >> \"$IDRAC_YAML\""
-  handle_output "echo \"        - name: detach ISO image if attached\" >> \"$IDRAC_YAML\""
-  handle_output "echo \"          ansible.builtin.uri:\" >> \"$IDRAC_YAML\""
-  handle_output "echo \"            url: \\\"https://{{ baseuri }}{{ idrac_osd_service_url }}/Actions/DellOSDeploymentService.DetachISOImage\\\"\" >> \"$IDRAC_YAML\""
-  handle_output "echo \"            user: \\\"{{ idrac_user }}\\\"\" >> \"$IDRAC_YAML\""
-  handle_output "echo \"            password: \\\"{{ idrac_password }}\\\"\" >> \"$IDRAC_YAML\""
-  handle_output "echo \"            method: POST\" >> \"$IDRAC_YAML\""
-  handle_output "echo \"            headers:\" >> \"$IDRAC_YAML\""
-  handle_output "echo \"              Accept: \\\"application/json\\\"\" >> \"$IDRAC_YAML\""
-  handle_output "echo \"              Content-Type: \\\"application/json\\\"\" >> \"$IDRAC_YAML\""
-  handle_output "echo \"              OData-Version: \\\"4.0\\\"\" >> \"$IDRAC_YAML\""
-  handle_output "echo \"            body: \\\"{}\\\"\" >> \"$IDRAC_YAML\""
-  handle_output "echo \"            status_code: 200\" >> \"$IDRAC_YAML\""
-  handle_output "echo \"            force_basic_auth: \\\"{{ force_basic_auth }}\\\"\" >> \"$IDRAC_YAML\""
-  handle_output "echo \"          register: detach_status\" >> \"$IDRAC_YAML\""
-  handle_output "echo \"          delegate_to: localhost\" >> \"$IDRAC_YAML\""
-  handle_output "echo \"        - ansible.builtin.debug:\" >> \"$IDRAC_YAML\""
-  handle_output "echo \"            msg: \\\"Successfuly detached the ISO image\\\"\" >> \"$IDRAC_YAML\""
-  handle_output "echo \"      when:\" >> \"$IDRAC_YAML\""
-  handle_output "echo \"        - idrac_osd_service_url is defined and idrac_osd_service_url|length > 0\" >> \"$IDRAC_YAML\""
-  handle_output "echo \"        - idrac_iso_attach_status\" >> \"$IDRAC_YAML\""
-  handle_output "echo \"        - idrac_iso_attach_status.ISOAttachStatus == \\\"Attached\\\" or\" >> \"$IDRAC_YAML\""
-  handle_output "echo \"          idrac_iso_attach_status.DriversAttachStatus == \\\"Attached\\\"\" >> \"$IDRAC_YAML\""
-  handle_output "echo \"    - name: boot to network ISO\" >> \"$IDRAC_YAML\""
-  handle_output "echo \"      dellemc.openmanage.idrac_os_deployment:\" >> \"$IDRAC_YAML\""
-  handle_output "echo \"        idrac_ip: \\\"{{ baseuri }}\\\"\" >> \"$IDRAC_YAML\""
-  handle_output "echo \"        idrac_user: \\\"{{ idrac_user }}\\\"\" >> \"$IDRAC_YAML\""
-  handle_output "echo \"        idrac_password: \"{{ idrac_password }}\\\"\" >> \"$IDRAC_YAML\""
-  handle_output "echo \"        share_name: \\\"{{ share_name }}\\\"\" >> \"$IDRAC_YAML\""
-  handle_output "echo \"        iso_image: \\\"{{ ubuntu_iso }}\\\"\" >> \"$IDRAC_YAML\""
-  handle_output "echo \"        expose_duration: \\\"{{ expose_duration }}\\\"\" >> \"$IDRAC_YAML\""
-  handle_output "echo \"      register: boot_to_network_iso_status\" >> \"$IDRAC_YAML\""
-  handle_output "echo \"      delegate_to: localhost\" >> \"$IDRAC_YAML\""
   if [ "$TEST_MODE" = "false" ]; then
     echo "- hosts: idrac" > "$IDRAC_YAML"
     echo "  name: $ISO_VOLID" >> "$IDRAC_YAML"
@@ -1282,49 +1234,52 @@ create_ansible () {
     echo "        expose_duration: \"{{ expose_duration }}\"" >> "$IDRAC_YAML"
     echo "      register: boot_to_network_iso_status" >> "$IDRAC_YAML"
     echo "      delegate_to: localhost" >> "$IDRAC_YAML"
+    print_file "$IDRAC_YAML"
   fi
 }
 
-# Function: Install server
+# Function: install_server
+#
+# Run ansible playbook to boot server from ISO
 
 install_server () {
   HOSTS_YAML="$WORK_DIR/hosts.yaml"
   IDRAC_YAML="$WORK_DIR/idrac.yaml"
-  handle_output "# Execute ansible" TEXT
-  handle_output "ansible-playbook \"$IDRAC_YAML\" -i \"$HOSTS_YAML\""
+  handle_output "# Executing ansible playbook $IDRAC_YAML" TEXT
   if [ "$TEST_MODE" = "false" ]; then
     ansible-playbook "$IDRAC_YAML" -i "$HOSTS_YAML"
   fi
 }
 
-# Function: Setup NFS server to export ISO
+# Function: create_export
+#
+# Setup NFS server to export ISO
 
 create_export () {
   NFS_DIR="$WORK_DIR/files"
-  handle_output "# Check export is enabled" TEXT
-  if [ -f "/etc/exports" ]; then
-    EXPORT_CHECK=$( grep -v "^#" < /etc/exports |grep "$NFS_DIR" |grep "$BMC_IP" |awk '{print $1}' | head -1 )
+  EXPORTS_FILE="/etc/exports"
+  handle_output "# Check NFS export is enabled" TEXT
+  if [ -f "$EXPORTS_FILE" ]; then
+    EXPORT_CHECK=$( grep -v "^#" < "$EXPORTS_FILE" |grep "$NFS_DIR" |grep "$BMC_IP" |awk '{print $1}' | head -1 )
   else
     EXPORT_CHECK=""
   fi
   if [ -z "$EXPORT_CHECK" ]; then
     if [ "$OS_NAME" = "Darwin" ]; then
-      handle_output "echo \"$NFS_DIR --mapall=$OS_USER $BMC_IP\" |sudo tee -a /etc/exports"
-      handle_output "sudo nfsd enable"
-      handle_output "sudo nfsd restart"
-      echo "$NFS_DIR --mapall=$OS_USER $BMC_IP" |sudo tee -a /etc/exports
+      echo "$NFS_DIR --mapall=$OS_USER $BMC_IP" |sudo tee -a "$EXPORTS_FILE"
       sudo nfsd enable
       sudo nfsd restart
     else
-      handle_output "echo \"$NFS_DIR $BMC_IP(sync,wdelay,hide,no_subtree_check,sec=sys,rw,secure,root_squash,no_all_squash)\" |sudo tee -a /etc/exports"
-      handle_output "sudo exportfs -a"
-      echo "$NFS_DIR $BMC_IP(sync,wdelay,hide,no_subtree_check,sec=sys,rw,secure,root_squash,no_all_squash)" |sudo tee -a /etc/exports
+      echo "$NFS_DIR $BMC_IP(sync,wdelay,hide,no_subtree_check,sec=sys,rw,secure,root_squash,no_all_squash)" |sudo tee -a "$EXPORTS_FILE"
       sudo exportfs -a
     fi
+    print_file "$EXPORTS_FILE"
   fi
 }
 
-# Function: Mount squashfs and copy files into it
+# Function: copy_squashfs
+#
+# Mount squashfs and copy files into it
 #
 # Examples:
 # sudo mount -t squashfs -o loop ./isomount/casper/ubuntu-server-minimal.squashfs ./isonew/squashfs/
@@ -1332,64 +1287,54 @@ create_export () {
 # sudo cp /etc/resolv.conf /etc/hosts ./isonew/custom/etc/
 
 copy_squashfs () {
+  handle_output "# Copying squashfs files" TEXT
   if [ ! -f "/usr/bin/rsync" ]; then
     install_required_packages
   fi
   CURRENT_KERNEL=$( uname -r )
-  KERNEL_CONFIG="/boot/config-$CURRENT_KERNEL"
   if [ -f "$CURRENT_KERNEL" ]; then
-    handle_output "sudo mount -t squashfs -o loop \"$ISO_SQUASHFS_FILE\" \"$ISO_NEW_DIR/squashfs\""
     if [ "$TEST_MODE" = "false" ]; then
       sudo mount -t squashfs -o loop "$ISO_SQUASHFS_FILE" "$ISO_NEW_DIR/squashfs"
     fi
     if [ "$VERBOSE_MODE" = "true" ]; then
-      handle_output "sudo rsync -av \"$ISO_NEW_DIR/squashfs/\" $ISO_NEW_DIR/custom"
       if [ "$TEST_MODE" = "false" ]; then
         sudo rsync -av "$ISO_NEW_DIR/squashfs/" "$ISO_NEW_DIR/custom"
       fi
     else
-      handle_output "sudo rsync -a \"$ISO_NEW_DIR/squashfs/\" \"$ISO_NEW_DIR/custom\""
       if [ "$TEST_MODE" = "false" ]; then
         sudo rsync -a "$ISO_NEW_DIR/squashfs/" "$ISO_NEW_DIR/custom"
       fi
     fi
   else
-    handle_output "sudo unsquashfs -f -d \"$ISO_NEW_DIR/squashfs\" \"$ISO_SQUASHFS_FILE\""
     if [ "$TEST_MODE" = "false" ]; then
       sudo unsquashfs -f -d "$ISO_NEW_DIR/custom" "$ISO_SQUASHFS_FILE"
     fi
   fi
-  handle_output "sudo cp /etc/resolv.conf /etc/hosts $ISO_NEW_DIR/custom/etc/"
   if [ "$TEST_MODE" = "false" ]; then
     sudo cp /etc/resolv.conf /etc/hosts "$ISO_NEW_DIR/custom/etc"
   fi
 }
 
-# Function: Chroot into environment and run script on chrooted environmnet
+# Function: execute_chroot_script
+#
+#  Chroot into environment and run script on chrooted environmnet
 #
 # Examples:
 # sudo chroot ./isonew/custom
 
 execute_chroot_script () {
-  handle_output "sudo chroot \"$ISO_NEW_DIR/custom\" \"/tmp/modify_chroot.sh\""
+  handle_output "# Executing chroot script" TEXT
   if [ "$TEST_MODE" = "false" ]; then
     sudo chroot "$ISO_NEW_DIR/custom" "/tmp/modify_chroot.sh"
   fi
 }
 
-# Function: Update ISO squashfs
+# Function: update_iso_squashfs
+#
+# Update ISO squashfs
 
 update_iso_squashfs () {
-  handle_output "# Making squashfs (this will take a while)"
-  handle_output "sudo mksquashfs \"$ISO_NEW_DIR/custom\" \"$ISO_NEW_DIR/mksquash/filesystem.squashfs\" -noappend"
-  handle_output "sudo cp \"$ISO_NEW_DIR/mksquash/filesystem.squashfs\" \"$ISO_NEW_DIR/cd/casper/filesystem.squashfs\""
-  handle_output "sudo chmod 0444 \"$ISO_NEW_DIR/cd/casper/filesystem.squashfs\""
-  handle_output "# Making filesystem.size"
-  handle_output "sudo echo -n \$( sudo du -s --block-size=1 \"$ISO_NEW_DIR/custom\" | tail -1 | awk '{print \$1}') | sudo tee \"$ISO_NEW_DIR/mksquash/filesystem.size\""
-  handle_output "sudo cp \"$ISO_NEW_DIR/mksquash/filesystem.size\" \"$ISO_NEW_DIR/cd/casper/filesystem.size\""
-  handle_output "cd $ISO_NEW_DIR ; sudo chmod 0444 \"$ISO_NEW_DIR/cd/casper/filesystem.size\""
-  handle_output "# Making md5sum"
-  handle_output "sudo find \"$ISO_SOURCE_DIR\" -type f -print0 | xargs -0 md5sum | sed \"s@$ISO_NEW_DIR@.@\" | grep -v md5sum.txt | sudo tee $ISO_NEW_DIR/cd/md5sum.txt"
+  handle_output "# Making squashfs (this will take a while)" TEXT
   if [ "$TEST_MODE" = "false" ]; then
     sudo mksquashfs "$ISO_NEW_DIR/custom" "$ISO_NEW_DIR/mksquash/filesystem.squashfs" -noappend
     sudo cp "$ISO_NEW_DIR/mksquash/filesystem.squashfs" "$NEW_SQUASHFS_FILE"
@@ -1401,24 +1346,29 @@ update_iso_squashfs () {
   fi
 }
 
-# Function: Check file permissions of file
+# Function: check_file_perms
+#
+# Check file permissions of file
 
 check_file_perms () {
-  CHECK_FILE=$1
+  handle_output "# Checking file permissions for $CHECK_FILE" TEXT
+  CHECK_FILE="$1"
   if [ -f "$CHECK_FILE" ]; then
     MY_USER="$USER"
     MY_GROUP=$(groups |awk '{print $1}')
-    FILE_USER=$(ls -l  "$OUTPUT_FILE" |awk '{print $3}')
-    if [ ! "$OWNER" = "$USER" ]; then
-      sudo chown $MY_USER "$CHECK_FILE"
-      sudo chgrp $MY_GROUP "$CHECK_FILE"
+    FILE_USER=$(find "$OUTPUT_FILE" -ls |awk '{print $5}')
+    if [ ! "$FILE_USER" = "$MY_USER" ]; then
+      sudo chown "$MY_USER" "$CHECK_FILE"
+      sudo chgrp "$MY_GROUP" "$CHECK_FILE"
     fi
   fi
 }
 
 
-# Function: Create script to drop into chrooted environment
-#           Inside chrooted environment, mount filesystems and packages
+# Function: create_chroot_script
+#
+# Create script to drop into chrooted environment
+# Inside chrooted environment, mount filesystems and packages
 #
 # Examples:
 # mount -t proc none /proc/
@@ -1437,26 +1387,7 @@ create_chroot_script () {
   ORIG_SCRIPT="$WORK_DIR/files/modify_chroot.sh"
   ISO_CHROOT_SCRIPT="$ISO_NEW_DIR/custom/tmp/modify_chroot.sh"
   check_file_perms "$ORIG_SCRIPT"
-  handle_output "echo \"#!/usr/bin/bash\" > \"$ORIG_SCRIPT\""
-  handle_output "echo \"mount -t proc none /proc/\" >> \"$ORIG_SCRIPT\""
-  handle_output "echo \"mount -t sysfs none /sys/\" >> \"$ORIG_SCRIPT\""
-  handle_output "echo \"mount -t devpts none /dev/pts\" >> \"$ORIG_SCRIPT\""
-  handle_output "echo \"export DEBIAN_FRONTEND=noninteractive\" >> \"$ORIG_SCRIPT\""
-  if [ ! "$ISO_COUNTRY" = "us" ]; then
-    handle_output "echo \"sed -i \\\"s/\\/archive/\\/au.archive/g\\\" /etc/apt/sources.list\" >> \"$ORIG_SCRIPT\""
-  fi
-  handle_output "echo \"rm /var/cache/apt/archives/*.deb\" >> \"$ORIG_SCRIPT\""
-  handle_output "echo \"rm /etc/update-motd.d/91-contract-ua-esm-status\" >> \"$ORIG_SCRIPT\""
-  handle_output "echo \"rm /etc/apt/apt.conf.d/20apt-esm-hook.conf\" >> \"$ORIG_SCRIPT\""
-  handle_output "echo \"apt update\" >> \"$ORIG_SCRIPT\""
-  handle_output "echo \"export LC_ALL=C ; apt install -y --download-only $ISO_CHROOT_PACKAGES\" >> \"$ORIG_SCRIPT\""
-  handle_output "echo \"export LC_ALL=C ; apt install -y $ISO_CHROOT_PACKAGES --option=Dpkg::Options::=$ISO_DPKG_CONF\" >> \"$ORIG_SCRIPT\""
-  handle_output "echo \"umount /proc/\" >> \"$ORIG_SCRIPT\""
-  handle_output "echo \"umount /sys/\" >> \"$ORIG_SCRIPT\""
-  handle_output "echo \"umount /dev/pts/\" >> \"$ORIG_SCRIPT\""
-  handle_output "echo \"exit\" >> \"$ORIG_SCRIPT\""
-  handle_output "sudo cp \"$ORIG_SCRIPT\" \"$ISO_CHROOT_SCRIPT\""
-  handle_output "sudo chmod +x $ISO_CHROOT_SCRIPT"
+  handle_output "# Creating chroot script $ISO_CHROOT_SCRIPT" TEXT
   if [ "$TEST_MODE" = "false" ]; then
     echo "#!/usr/bin/bash" > "$ORIG_SCRIPT"
     echo "mount -t proc none /proc/" >> "$ORIG_SCRIPT"
@@ -1464,7 +1395,9 @@ create_chroot_script () {
     echo "mount -t devpts none /dev/pts" >> "$ORIG_SCRIPT"
     echo "export HOME=/root" >> "$ORIG_SCRIPT"
     echo "export DEBIAN_FRONTEND=noninteractive" >> "$ORIG_SCRIPT"
-    echo "sed -i \"s/\\/archive/\\/au.archive/g\" /etc/apt/sources.list" >> "$ORIG_SCRIPT"
+    if [ ! "$ISO_COUNTRY" = "us" ]; then
+      echo "sed -i \"s/\\/archive/\\/$ISO_COUNTRY.archive/g\" /etc/apt/sources.list" >> "$ORIG_SCRIPT"
+    fi
     echo "rm /var/cache/apt/archives/*.deb" >> "$ORIG_SCRIPT"
     echo "rm /etc/apt/apt.conf.d/20apt-esm-hook.conf" >> "$ORIG_SCRIPT"
     echo "rm /etc/update-motd.d/91-contract-ua-esm-status" >> "$ORIG_SCRIPT"
@@ -1476,25 +1409,32 @@ create_chroot_script () {
     echo "umount /dev/pts/" >> "$ORIG_SCRIPT"
     echo "exit" >> "$ORIG_SCRIPT"
     if [ -f "/.dockerenv" ]; then
-      sudo mkdir -p "$ISO_NEW_DIR/custom/tmp"
+      if [ ! -d "$ISO_NEW_DIR/custom/tmp" ]; then
+        sudo_create_dir "$ISO_NEW_DIR/custom/tmp"
+      fi
     else
       if ! [[ "$OPTIONS" =~ "docker" ]]; then
-        sudo mkdir -p "$ISO_NEW_DIR/custom/tmp"
+        if [ ! -d "$ISO_NEW_DIR/custom/tmp" ]; then
+          sudo_create_dir "$ISO_NEW_DIR/custom/tmp"
+        fi
       fi
     fi
     sudo cp "$ORIG_SCRIPT" "$ISO_CHROOT_SCRIPT"
     sudo chmod +x "$ISO_CHROOT_SCRIPT"
+    print_file "$ORIG_SCRIPT"
   fi
 }
 
+# Function: get_password_crypt
+#
 # Get password crypt
 #
 # echo test |mkpasswd --method=SHA-512 --stdin
 
 get_password_crypt () {
-  ISO_PASSWORD=$1
+  ISO_PASSWORD="$1"
+  handle_output "# Generating password crypt" TEXT
   if [ "$OS_NAME" = "Darwin" ]; then
-    handle_output "export PASSWORD_CRYPT=\$(echo -n \"$ISO_PASSWORD\" |openssl sha512)"
     if [ "$TEST_MODE" = "false" ]; then
       ISO_PASSWORD_CRYPT=$( echo -n "$ISO_PASSWORD" |openssl sha512 )
     fi
@@ -1502,7 +1442,6 @@ get_password_crypt () {
     if [ ! -f "/usr/bin/mkpasswd" ]; then
       install_required_packages
     fi
-    handle_output "export PASSWORD_CRYPT=\$(echo \"$ISO_PASSWORD\" |mkpasswd --method=SHA-512 --stdin)"
     if [ "$TEST_MODE" = "false" ]; then
       ISO_PASSWORD_CRYPT=$( echo "$ISO_PASSWORD" |mkpasswd --method=SHA-512 --stdin )
     fi
@@ -1513,6 +1452,8 @@ get_password_crypt () {
   fi
 }
 
+# Function: create_autoinstall_iso
+#
 # Uncompress ISO and copy autoinstall files into it
 #
 # 7z -y x ubuntu-22.04.1-live-server-arm64.iso -osource-files
@@ -1729,35 +1670,21 @@ create_autoinstall_iso () {
     install_required_packages
   fi
   check_file_perms "$OUTPUT_FILE"
-  handle_output "# Create ISO"
-  handle_output "export ISO_MBR_PART_TYPE=\$( xorriso -indev \"$INPUT_FILE\" -report_el_torito as_mkisofs |grep iso_mbr_part_type |tail -1 |awk '{print \$2}' 2>&1 )"
-  handle_output "export BOOT_CATALOG=\$( xorriso -indev \"$INPUT_FILE\" -report_el_torito as_mkisofs |grep '^-c '|tail -1 |awk '{print \$2}' |cut -f2 -d\"'\" 2>&1 )"
-  handle_output "export BOOT_IMAGE=\$( xorriso -indev \"$INPUT_FILE\" -report_el_torito as_mkisofs |grep '^-b ' |tail -1 |awk '{print \$2}' |cut -f2 -d\"'\" 2>&1 )"
+  handle_output "# Creating ISO" TEXT
   ISO_MBR_PART_TYPE=$( xorriso -indev "$INPUT_FILE" -report_el_torito as_mkisofs |grep iso_mbr_part_type |tail -1 |awk '{print $2}' 2>&1 )
   BOOT_CATALOG=$( xorriso -indev "$INPUT_FILE" -report_el_torito as_mkisofs |grep "^-c " |tail -1 |awk '{print $2}' |cut -f2 -d"'" 2>&1 )
   BOOT_IMAGE=$( xorriso -indev "$INPUT_FILE" -report_el_torito as_mkisofs |grep "^-b " |tail -1 |awk '{print $2}' |cut -f2 -d"'" 2>&1 )
   UEFI_BOOT_SIZE=$( xorriso -indev "$INPUT_FILE" -report_el_torito as_mkisofs |grep "^-boot-load-size" |tail -1 |awk '{print $2}' |cut -f2 -d"'" 2>&1 )
   DOS_BOOT_SIZE=$( xorriso -indev "$INPUT_FILE" -report_el_torito as_mkisofs |grep "^-boot-load-size" |head -1 |awk '{print $2}' |cut -f2 -d"'" 2>&1 )
   if [ "$ISO_MAJOR_REL" = "22" ]; then
-    handle_output "export APPEND_PART=\$( xorriso -indev \"$INPUT_FILE\" -report_el_torito as_mkisofs |grep append_partition |tail -1 |awk '{print \$3}' 2>&1 )"
-    handle_output "export UEFI_IMAGE=\"--interval:appended_partition_2:::\""
     APPEND_PART=$( xorriso -indev "$INPUT_FILE" -report_el_torito as_mkisofs |grep append_partition |tail -1 |awk '{print $3}' 2>&1 )
     UEFI_IMAGE="--interval:appended_partition_2:::"
   else
-    handle_output "export APPEND_PART=\"0exf\""
-    handle_output "export UEFI_IMAGE=\$( xorriso -indev \"$INPUT_FILE\" -report_el_torito as_mkisofs |grep '^-e ' |tail -1 |awk '{print \$2}' |cut -f2 -d\"'\" 2>&1 )"
     APPEND_PART="0xef"
     UEFI_IMAGE=$( xorriso -indev "$INPUT_FILE" -report_el_torito as_mkisofs |grep "^-e " |tail -1 |awk '{print $2}' |cut -f2 -d"'" 2>&1 )
   fi
   if [ "$TEST_MODE" = "false" ]; then
     if [ "$ISO_ARCH" = "amd64" ]; then
-      handle_output "xorriso -as mkisofs -r -V \"$ISO_VOLID\" -o $OUTPUT_FILE \
-      --grub2-mbr ../BOOT/1-Boot-NoEmul.img --protective-msdos-label \
-      -partition_cyl_align off -partition_offset 16 --mbr-force-bootable \
-      -append_partition 2 \"$APPEND_PART\" \"$WORK_DIR/BOOT/2-Boot-NoEmul.img\" -appended_part_as_gpt \
-      -iso_mbr_part_type \"$ISO_MBR_PART_TYPE\" -c \"$BOOT_CATALOG\" -b \"$BOOT_IMAGE\" \
-      -no-emul-boot -boot-load-size \"$DOS_BOOT_SIZE\" -boot-info-table --grub2-boot-info -eltorito-alt-boot \
-      -e \"$UEFI_IMAGE\" -no-emul-boot -boot-load-size \"$UEFI_BOOT_SIZE\" \"$ISO_SOURCE_DIR\""
       xorriso -as mkisofs -r -V "$ISO_VOLID" -o "$OUTPUT_FILE" \
       --grub2-mbr "$WORK_DIR/BOOT/1-Boot-NoEmul.img" --protective-msdos-label -partition_cyl_align off \
       -partition_offset 16 --mbr-force-bootable -append_partition 2 "$APPEND_PART" "$WORK_DIR/BOOT/2-Boot-NoEmul.img" \
@@ -1765,11 +1692,6 @@ create_autoinstall_iso () {
       -no-emul-boot -boot-load-size "$DOS_BOOT_SIZE" -boot-info-table --grub2-boot-info -eltorito-alt-boot \
       -e "$UEFI_IMAGE" -no-emul-boot -boot-load-size "$UEFI_BOOT_SIZE" "$ISO_SOURCE_DIR"
     else
-      handle_output "xorriso -as mkisofs -r -V \"$ISO_VOLID\" -o \"$OUTPUT_FILE\" \
-      -partition_cyl_align all -partition_offset 16 -partition_hd_cyl 86 -partition_sec_hd 32 \
-      -append_partition 2 \"$APPEND_PART\" \"$WORK_DIR/BOOT/Boot-NoEmul.img\" -G \"$WORK_DIR/BOOT/Boot-NoEmul.img\" \
-      -iso_mbr_part_type \"$ISO_MBR_PART_TYPE\" -c \"$BOOT_CATALOG\" \
-      -e \"$UEFI_IMAGE\" -no-emul-boot -boot-load-size \"$UEFI_BOOT_SIZE\" \"$ISO_SOURCE_DIR\""
       xorriso -as mkisofs -r -V "$ISO_VOLID" -o "$OUTPUT_FILE" \
       -partition_cyl_align all -partition_offset 16 -partition_hd_cyl 86 -partition_sec_hd 32 \
       -append_partition 2 "$APPEND_PART" "$WORK_DIR/BOOT/Boot-NoEmul.img" -G "$WORK_DIR/BOOT/Boot-NoEmul.img" \
@@ -1783,54 +1705,45 @@ create_autoinstall_iso () {
   fi
 }
 
+# Function: prepare_autoinstall_iso
+#
+# Prepare sutoinstall ISO
+
 prepare_autoinstall_iso () {
   if [ -f "/usr/bin/7z" ]; then
     install_required_packages
   fi
-  handle_output "# Create autoinstall files"
+  handle_output "# Preparing autoinstall ISO" TEXT
   PACKAGE_DIR="$ISO_SOURCE_DIR/$ISO_AUTOINSTALL_DIR/packages"
   CASPER_DIR="$ISO_SOURCE_DIR/casper"
   SCRIPT_DIR="$ISO_SOURCE_DIR/$ISO_AUTOINSTALL_DIR/scripts"
   CONFIG_DIR="$ISO_SOURCE_DIR/$ISO_AUTOINSTALL_DIR/configs"
   FILES_DIR="$ISO_SOURCE_DIR/$ISO_AUTOINSTALL_DIR/files"
   BASE_INPUT_FILE=$( basename "$INPUT_FILE" )
-  handle_output "7z -y x \"$WORK_DIR/files/$BASE_INPUT_FILE\" -o\"$ISO_SOURCE_DIR\""
-  handle_output "rm -rf \"$WORK_DIR/BOOT\""
-  handle_output "mkdir -p \"$PACKAGE_DIR\""
-  handle_output "sudo rm \"$PACKAGE_DIR\"/*.deb"
-  handle_output "mkdir -p \"$SCRIPT_DIR\""
-  handle_output "mkdir -p \"$FILES_DIR\""
-  handle_output "cp \"$ISO_NEW_DIR\"/custom/var/cache/apt/archives/*.deb \"$PACKAGE_DIR\""
-  for ISO_DEVICE in $ISO_DEVICES; do
-    for ISO_VOLMGR in $ISO_VOLMGRS; do
-      handle_output "mkdir -p \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE\""
-      handle_output "touch \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/meta-data\""
-    done
-  done
   if [ "$TEST_MODE" = "false" ]; then
     7z -y x "$WORK_DIR/files/$BASE_INPUT_FILE" -o"$ISO_SOURCE_DIR"
-    mkdir -p "$PACKAGE_DIR"
-    mkdir -p "$SCRIPT_DIR"
-    mkdir -p "$FILES_DIR"
+    create_dir "$PACKAGE_DIR"
+    cheate_dir "$SCRIPT_DIR"
+    create_dir "$FILES_DIR"
     for ISO_DEVICE in $ISO_DEVICES; do
       for ISO_VOLMGR in $ISO_VOLMGRS; do
-        mkdir -p "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE"
+        handle_output "# Creating directory $CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE" TEXT
+        create_dir "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE"
+        handle_output "# Creating $CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/meta-data"
         touch "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/meta-data"
       done
     done
     sudo rm "$PACKAGE_DIR"/*.deb
+    handle_output "# Copying packages to $PACKAGE_DIR" TEXT
     if [ "$VERBOSE_MODE" = "true" ]; then
       sudo cp -v "$ISO_NEW_DIR"/custom/var/cache/apt/archives/*.deb "$PACKAGE_DIR"
     else
       sudo cp "$ISO_NEW_DIR"/custom/var/cache/apt/archives/*.deb "$PACKAGE_DIR"
     fi
     if [ "$DO_OLD_INSTALLER" = "true" ]; then
-      mount_old_iso 
-#      handle_output "sudo cp \"$OLD_INSTALL_SQUASHFS_FILE\" \"$CASPER_DIR/\""
-#      handle_output "sudo cp \"$OLD_INSTALL_SQUASHFS_FILE.gpg\" \"$CASPER_DIR/\""
-      handle_output "sudo cp \"$OLD_ISO_MOUNT_DIR/casper/*installer*\" \"$CASPER_DIR/\""
-      sudo cp $OLD_ISO_MOUNT_DIR/casper/*installer* "$CASPER_DIR/"
-#      sudo cp "$OLD_INSTALL_SQUASHFS_FILE.gpg" "$CASPER_DIR/"
+      handle_output "# Copying old installer files from $OLD_ISO_MOUNT_DIR/casper/ to $CASPER_DIR"
+      mount_old_iso
+      sudo cp "$OLD_ISO_MOUNT_DIR"/casper/*installer* "$CASPER_DIR/"
       umount_old_iso
     fi
   fi
@@ -1839,15 +1752,15 @@ prepare_autoinstall_iso () {
       if [ "$FORCE_MODE" = "true" ]; then
         rm -rf "$WORK_DIR/BOOT"
       fi
-      mkdir "$WORK_DIR/BOOT"
-      mkdir "$ISO_SOURCE_DIR/BOOT"
+      create_dir "$WORK_DIR/BOOT"
+      create_dir "$ISO_SOURCE_DIR/BOOT"
       cp -r "$ISO_SOURCE_DIR/[BOOT]"/* "$WORK_DIR/BOOT"/
       cp -r "$ISO_SOURCE_DIR/[BOOT]"/* "$ISO_SOURCE_DIR/BOOT"/
     fi
   else
     if [ "$TEST_MODE" = "false" ]; then
-      mkdir "$WORK_DIR/BOOT"
-      mkdir "$ISO_SOURCE_DIR/BOOT"
+      create_dir "$WORK_DIR/BOOT"
+      create_dir "$ISO_SOURCE_DIR/BOOT"
       cp -r "$ISO_SOURCE_DIR/[BOOT]"/* "$WORK_DIR/BOOT"/
       cp -r "$ISO_SOURCE_DIR/[BOOT]"/* "$ISO_SOURCE_DIR/BOOT"/
     fi
@@ -1858,81 +1771,25 @@ prepare_autoinstall_iso () {
       cp "$WORK_DIR/grub.cfg" "$ISO_SOURCE_DIR/boot/grub/grub.cfg"
     fi
   else
-    handle_output "echo \"set timeout=$ISO_GRUB_TIMEOUT\" > \"$ISO_SOURCE_DIR/boot/grub/grub.cfg\""
-    handle_output "echo \"default=$ISO_GRUB_MENU\" >> \"$ISO_SOURCE_DIR/boot/grub/grub.cfg\""
-    handle_output "echo \"loadfont unicode\" >> \"$ISO_SOURCE_DIR/boot/grub/grub.cfg\""
-    handle_output "echo \"timeout $GRUB_TIMEOUT\" > \"$ISO_SOURCE_DIR/boot/grub/grub.cfg\""
-    handle_output "echo \"default $GRUB_MENU\" >> \"$ISO_SOURCE_DIR/boot/grub/grub.cfg\""
-    handle_output "echo \"if loadfont /boot/grub/font.pf2 ; then\" >> $ISO_SOURCE_DIR/boot/grub/grub.cfg\""
-    handle_output "echo \"  set gfxmode=auto\" >> \"$ISO_SOURCE_DIR/boot/grub/grub.cfg\""
-    handle_output "echo \"  insmod efi_gop\" >> \"$ISO_SOURCE_DIR/boot/grub/grub.cfg\""
-    handle_output "echo \"  insmod efi_uga\" >> \"$ISO_SOURCE_DIR/boot/grub/grub.cfg\""
-    handle_output "echo \"  insmod gfxterm\" >> \"$ISO_SOURCE_DIR/boot/grub/grub.cfg\""
-    handle_output "echo \"  terminal_output gfxterm\" >> \"$ISO_SOURCE_DIR/boot/grub/grub.cfg\""
-    handle_output "echo \"fi\" >> \"$ISO_SOURCE_DIR/boot/grub/grub.cfg\""
-    handle_output "echo \"set menu_color_normal=white/black\" >> \"$ISO_SOURCE_DIR/boot/grub/grub.cfg\""
-    handle_output "echo \"set menu_color_highlight=black/light-gray\" >> \"$ISO_SOURCE_DIR/boot/grub/grub.cfg\""
-    for ISO_DEVICE in $ISO_DEVICES; do
-      for ISO_VOLMGR in $ISO_VOLMGRS; do
-        handle_output "echo \"menuentry '$ISO_VOLID:$ISO_VOLMGR:$ISO_DEVICE:$ISO_NIC ($ISO_KERNEL_ARGS)' {\" >> \"$ISO_SOURCE_DIR/boot/grub/grub.cfg\""
-        handle_output "echo \"  set gfxpayload=keep\" >> \"$ISO_SOURCE_DIR/boot/grub/grub.cfg\""
-        handle_output "echo \"  linux   /casper/vmlinuz $ISO_KERNEL_ARGS quiet autoinstall ds=nocloud\;s=/$ISO_INSTALL_MOUNT/$ISO_AUTOINSTALL_DIR/configs/$ISO_VOLMGR/$ISO_DEVICE/  ---\" >> \"$ISO_SOURCE_DIR/boot/grub/grub.cfg\""
-        handle_output "echo \"  initrd  /casper/initrd\" >> \"$ISO_SOURCE_DIR/boot/grub/grub.cfg\""
-        handle_output "echo \"}\" >> \"$ISO_SOURCE_DIR/boot/grub/grub.cfg\""
-      done
-    done
-    handle_output "echo \"menuentry 'Try or Install $ISO_VOLID' {\" >> \"$ISO_SOURCE_DIR/boot/grub/grub.cfg\""
-    handle_output "echo \"  set gfxpayload=keep\" >> \"$ISO_SOURCE_DIR/boot/grub/grub.cfg\""
-    handle_output "echo \"  linux /casper/vmlinuz quiet ---\" >> \"$ISO_SOURCE_DIR/boot/grub/grub.cfg\""
-    handle_output "echo \"  initrd  /casper/initrd\" >> \"$ISO_SOURCE_DIR/boot/grub/grub.cfg\""
-    handle_output "echo \"}\" >> \"$ISO_SOURCE_DIR/boot/grub/grub.cfg\""
-    handle_output "echo \"menuentry 'Boot from next volume' {\" >> \"$ISO_SOURCE_DIR/boot/grub/grub.cfg\""
-    handle_output "echo \"  exit 1\" >> \"$ISO_SOURCE_DIR/boot/grub/grub.cfg\""
-    handle_output "echo \"}\" >> \"$ISO_SOURCE_DIR/boot/grub/grub.cfg\""
-    if [[ "$ISO_BOOT_TYPE" =~ "efi" ]]; then
-      handle_output "echo \"menuentry 'UEFI Firmware Settings' {\" >> \"$ISO_SOURCE_DIR/boot/grub/grub.cfg\""
-      handle_output "echo \"  fwsetup\" >> \"$ISO_SOURCE_DIR/boot/grub/grub.cfg\""
-      handle_output "echo \"}\" >> \"$ISO_SOURCE_DIR/boot/grub/grub.cfg\""
-    fi
-    if ! [ "$ISO_MAJOR_REL" = "22" ]; then
-      handle_output "echo \"default $ISO_GRUB_MENU\" > \"$ISO_SOURCE_DIR/isolinux/txt.cfg\""
+    if [ "$TEST_MODE" = "false" ]; then
+      sudo_create_dir "$ISO_SOURCE_DIR/isolinux"
+      echo "default $ISO_GRUB_MENU" > "$ISO_SOURCE_DIR/isolinux/txt.cfg"
       COUNTER=0
       for ISO_DEVICE in $ISO_DEVICES; do
         for ISO_VOLMGR in $ISO_VOLMGRS; do
-          handle_output "echo \"label $COUNTER\" >> \"$ISO_SOURCE_DIR/isolinux/txt.cfg\""
-          handle_output "echo \"  menu label ^$ISO_VOLID:$ISO_VOLMGR:$ISO_DEVICE:$ISO_NIC ($ISO_KERNEL_ARGS)\" >> \"$ISO_SOURCE_DIR/isolinux/txt.cfg\""
-          handle_output "echo \"  kernel /casper/vmlinuz\" >> \"$ISO_SOURCE_DIR/isolinux/txt.cfg\""
-          handle_output "echo \"  append  initrd=/casper/initrd $ISO_KERNEL_ARGS quiet autoinstall fsck.mode=skip ds=nocloud;s=$ISO_INSTALL_MOUNT/$ISO_AUTOINSTALL_DIR/configs/$ISO_VOLMGR/$ISO_DEVICE/  ---\" >> \"$ISO_SOURCE_DIR/isolinux/txt.cfg\""
-          COUNTER=$(( $COUNTER+1 ))
+          echo "label $COUNTER" >> "$ISO_SOURCE_DIR/isolinux/txt.cfg"
+          echo "  menu label ^$ISO_VOLID:$ISO_VOLMGR:$ISO_DEVICE:$ISO_NIC ($ISO_KERNEL_ARGS)" >> "$ISO_SOURCE_DIR/isolinux/txt.cfg"
+          echo "  kernel /casper/vmlinuz" >> "$ISO_SOURCE_DIR/isolinux/txt.cfg"
+          echo "  append  initrd=/casper/initrd $ISO_KERNEL_ARGS quiet autoinstall fsck.mode=skip ds=nocloud;s=$ISO_INSTALL_MOUNT/$ISO_AUTOINSTALL_DIR/configs/$ISO_VOLMGR/$ISO_DEVICE/  ---" >> "$ISO_SOURCE_DIR/isolinux/txt.cfg"
+          COUNTER=$(( COUNTER+1 ))
         done
-        handle_output "echo \"label memtest\" >> \"$ISO_SOURCE_DIR/isolinux/txt.cfg\""
-        handle_output "echo \"  menu label Test ^Memory\" >> \"$ISO_SOURCE_DIR/isolinux/txt.cfg\""
-        handle_output "echo \"  kernel /install/mt86plus\" >> \"$ISO_SOURCE_DIR/isolinux/txt.cfg\""
-        handle_output "echo \"label hd\" >> \"$ISO_SOURCE_DIR/isolinux/txt.cfg\""
-        handle_output "echo \"  menu label ^Boot from first hard drive\" >> \"$ISO_SOURCE_DIR/isolinux/txt.cfg\""
-        handle_output "echo \"  localboot 0x80\" >> \"$ISO_SOURCE_DIR/isolinux/txt.cfg\""
       done
-      if [ "$TEST_MODE" = "false" ]; then
-        echo "default $ISO_GRUB_MENU" > "$ISO_SOURCE_DIR/isolinux/txt.cfg"
-        COUNTER=0
-        for ISO_DEVICE in $ISO_DEVICES; do
-          for ISO_VOLMGR in $ISO_VOLMGRS; do
-            echo "label $COUNTER" >> "$ISO_SOURCE_DIR/isolinux/txt.cfg"
-            echo "  menu label ^$ISO_VOLID:$ISO_VOLMGR:$ISO_DEVICE:$ISO_NIC ($ISO_KERNEL_ARGS)" >> "$ISO_SOURCE_DIR/isolinux/txt.cfg"
-            echo "  kernel /casper/vmlinuz" >> "$ISO_SOURCE_DIR/isolinux/txt.cfg"
-            echo "  append  initrd=/casper/initrd $ISO_KERNEL_ARGS quiet autoinstall fsck.mode=skip ds=nocloud;s=$ISO_INSTALL_MOUNT/$ISO_AUTOINSTALL_DIR/configs/$ISO_VOLMGR/$ISO_DEVICE/  ---" >> "$ISO_SOURCE_DIR/isolinux/txt.cfg"
-            COUNTER=$(( $COUNTER+1 ))
-          done
-        done
-        echo "label memtest" >> "$ISO_SOURCE_DIR/isolinux/txt.cfg"
-        echo "  menu label Test ^Memory" >> "$ISO_SOURCE_DIR/isolinux/txt.cfg"
-        echo "  kernel /install/mt86plus" >> "$ISO_SOURCE_DIR/isolinux/txt.cfg"
-        echo "label hd" >> "$ISO_SOURCE_DIR/isolinux/txt.cfg"
-        echo "  menu label ^Boot from first hard drive" >> "$ISO_SOURCE_DIR/isolinux/txt.cfg"
-        echo "  localboot 0x80" >> "$ISO_SOURCE_DIR/isolinux/txt.cfg"
-      fi
-    fi
-    if [ "$TEST_MODE" = "false" ]; then
+      echo "label memtest" >> "$ISO_SOURCE_DIR/isolinux/txt.cfg"
+      echo "  menu label Test ^Memory" >> "$ISO_SOURCE_DIR/isolinux/txt.cfg"
+      echo "  kernel /install/mt86plus" >> "$ISO_SOURCE_DIR/isolinux/txt.cfg"
+      echo "label hd" >> "$ISO_SOURCE_DIR/isolinux/txt.cfg"
+      echo "  menu label ^Boot from first hard drive" >> "$ISO_SOURCE_DIR/isolinux/txt.cfg"
+      echo "  localboot 0x80" >> "$ISO_SOURCE_DIR/isolinux/txt.cfg"
       echo "set timeout=$ISO_GRUB_TIMEOUT" > "$ISO_SOURCE_DIR/boot/grub/grub.cfg"
       echo "default=$ISO_GRUB_MENU" >> "$ISO_SOURCE_DIR/boot/grub/grub.cfg"
       echo "loadfont unicode" >> "$ISO_SOURCE_DIR/boot/grub/grub.cfg"
@@ -1965,227 +1822,6 @@ prepare_autoinstall_iso () {
       if [ -e "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data" ]; then
         rm "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
       fi
-      handle_output "echo \"#cloud-config\" > \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
-      handle_output "echo \"autoinstall:\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
-      handle_output "echo \"  apt:\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
-      handle_output "echo \"    preferences:\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
-      handle_output "echo \"      - package: \\\"*\\\"\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
-      handle_output "echo \"        pin: \\\"release a=$ISO_CODENAME-security\\\"\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
-      handle_output "echo \"        pin-priority: 200\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
-      handle_output "echo \"    disable_components: []\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
-      handle_output "echo \"    geoip: true\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
-      handle_output "echo \"    preserve_sources_list: false\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
-      handle_output "echo \"    primary:\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
-      handle_output "echo \"    - arches:\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
-      handle_output "echo \"      - $ISO_ARCH\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
-      handle_output "echo \"      uri: http://archive.ubuntu.com/ubuntu\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
-      handle_output "echo \"    - arches:\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
-      handle_output "echo \"      - default\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
-      handle_output "echo \"      uri: http://ports.ubuntu.com/ubuntu-ports\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
-      handle_output "echo \"  package_update: $DO_INSTALL_ISO_UPDATE\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
-      handle_output "echo \"  package_upgrade: $DO_INSTALL_ISO_UPGRADE\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
-      handle_output "echo \"  drivers:\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
-      handle_output "echo \"    install: $DO_INSTALL_ISO_DRIVERS\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
-      handle_output "echo \"  user-data:\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
-      handle_output "echo \"    timezone: $ISO_TIMEZONE\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
-      handle_output "echo \"  identity:\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
-      handle_output "echo \"    hostname: $ISO_HOSTNAME\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
-      handle_output "echo \"    password: \\\"$ISO_PASSWORD_CRYPT\\\"\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
-      handle_output "echo \"    realname: $ISO_REALNAME\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
-      handle_output "echo \"    username: $ISO_USERNAME\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
-      handle_output "echo \"  kernel:\" >> $CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
-      handle_output "echo \"    package: $ISO_KERNEL\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
-      handle_output "echo \"  keyboard:\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
-      handle_output "echo \"    layout: $ISO_LAYOUT\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
-      handle_output "echo \"  locale: $ISO_LOCALE\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
-      handle_output "echo \"  network:\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
-      handle_output "echo \"    ethernets:\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
-      handle_output "echo \"      $ISO_NIC:\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
-      if [ "$ISO_DHCP" = "true" ]; then
-        handle_output "echo \"        critical: true\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
-        handle_output "echo \"        dhcp-identifier: mac\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
-        handle_output "echo \"        dhcp4: $ISO_DHCP\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
-      else
-        handle_output "echo \"        addresses:\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
-        handle_output "echo \"        - $ISO_IP/$ISO_CIDR\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
-        handle_output "echo \"        gateway4; $ISO_GATEWAY\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
-        handle_output "echo \"        nameservers:\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
-        handle_output "echo \"          addresses:\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
-        handle_output "echo \"          - $ISO_DNS\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
-      fi
-      handle_output "echo \"    version: 2\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
-      handle_output "echo \"  ssh:\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
-      handle_output "echo \"    allow-pw: $ISO_ALLOW_PASSWORD\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
-      handle_output "echo \"    authorized-keys: [ \"$ISO_SSH_KEY\" ]\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
-      handle_output "echo \"    install-server: true\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
-      handle_output "echo \"  storage:\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
-#      if [ "$ISO_VOLMGR" = "zfs" ]; then
-#        handle_output "echo \"    config:\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
-#        handle_output "echo \"    - ptable: gpt\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
-#        handle_output "echo \"      path: /dev/$ISO_DEVICE\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
-#        handle_output "echo \"      wipe: superblock-recursive\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
-#        handle_output "echo \"      preserve: false\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
-#        handle_output "echo \"      name: ''\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
-#        handle_output "echo \"      grub_device: true\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
-#        handle_output "echo \"      type: disk\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
-#        handle_output "echo \"      id: disk1\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
-#        handle_output "echo \"    - device: disk1\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
-#        handle_output "echo \"      size: 1127219200\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
-#        handle_output "echo \"      wipe: superblock-recursive\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
-#        handle_output "echo \"      flag: boot\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
-#        handle_output "echo \"      number: 1\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
-#        handle_output "echo \"      preserve: false\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
-#        handle_output "echo \"      grub_device: true\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
-#        handle_output "echo \"      type: partition\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
-#        handle_output "echo \"      ptable: gpt\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
-#        handle_output "echo \"      id: disk1p1\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
-#        handle_output "echo \"    - fstype: fat32\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
-#        handle_output "echo \"      volume: disk1p1\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
-#        handle_output "echo \"      preserve: false\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
-#        handle_output "echo \"      type: format\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
-#        handle_output "echo \"      id: disk1p1fs1\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
-#        handle_output "echo \"    - path: /boot/$ISO_BOOT_TYPE\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
-#        handle_output "echo \"      device: disk1p1fs1\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
-#        handle_output "echo \"      type: mount\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
-#        handle_output "echo \"      id: mount-2\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
-#        handle_output "echo \"    - device: disk1\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
-#        handle_output "echo \"      size: -1\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
-#        handle_output "echo \"      wipe: superblock-recursive\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
-#        handle_output "echo \"      flag: root\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
-#        handle_output "echo \"      number: 2\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
-#        handle_output "echo \"      preserve: false\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
-#        handle_output "echo \"      grub_device: false\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
-#        handle_output "echo \"      type: partition\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
-#        handle_output "echo \"      id: disk1p2\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
-#        handle_output "echo \"    - id: disk1p2fs1\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
-#        handle_output "echo \"      type: format\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
-#        handle_output "echo \"      fstype: zfsroot\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
-#        handle_output "echo \"      volume: disk1p2\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
-#        handle_output "echo \"      preserve: false\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
-#        handle_output "echo \"    - id: disk1p2f1_rootpool\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
-#        handle_output "echo \"      mountpoint: /\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
-#        handle_output "echo \"      pool: rpool\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
-#        handle_output "echo \"      type: zpool\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
-#        handle_output "echo \"      device: disk1p2fs1\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
-#        handle_output "echo \"      preserve: false\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
-#        handle_output "echo \"      vdevs:\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
-#        handle_output "echo \"        - disk1p2fs1\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
-#        handle_output "echo \"    - id: disk1_rootpool_container\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
-#        handle_output "echo \"      pool: disk1p2f1_rootpool\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
-#        handle_output "echo \"      preserve: false\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
-#        handle_output "echo \"      properties:\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
-#        handle_output "echo \"        canmount: \\\"off\\\"\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
-#        handle_output "echo \"        mountpoint: \\\"none\\\"\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
-#        handle_output "echo \"      type: zfs\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
-#        handle_output "echo \"      volume: /ROOT\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
-#        handle_output "echo \"    - id: disk1_rootpool_rootfs\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
-#        handle_output "echo \"      pool: disk1p2f1_rootpool\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
-#        handle_output "echo \"      preserve: false\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
-#        handle_output "echo \"      properties:\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
-#        handle_output "echo \"        canmount: noauto\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
-#        handle_output "echo \"        mountpoint: /\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
-#        handle_output "echo \"      type: zfs\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
-#        handle_output "echo \"      volume: /ROOT/zfsroot\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
-#        handle_output "echo \"    - path: /\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
-#        handle_output "echo \"      device: disk1p2fs1\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
-#        handle_output "echo \"      type: mount\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
-#        handle_output "echo \"      id: mount-disk1p2\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
-#        handle_output "echo \"    swap:\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
-#        handle_output "echo \"      swap: $ISO_SWAPSIZE\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
-#      fi
-      if [ "$ISO_VOLMGR" = "lvm" ]; then
-          handle_output "echo \"    layout:\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
-          handle_output "echo \"      name: lvm\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
-      fi
-      handle_output "echo \"  early-commands:\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
-      if ! [ "$ISO_ALLOWLIST" = "" ]; then
-        if [[ "$ISO_ALLOWLIST" =~ "," ]]; then
-          for MODULE in $(${ISO_BLOCKLIST//,/ }); do
-            handle_output "echo \"    - \\\"echo '$MODULE' > /etc/modules-load.d/$MODULE.conf\\\"\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
-            handle_output "echo \"    - \\\"modprobe $MODULE\\\"\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
-          done
-        else
-          handle_output "echo \"    - \\\"echo '$ISO_ALLOWLIST' > /etc/modules-load.d/$ISO_BLOCKLIST.conf\\\"\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
-          handle_output "echo \"    - \\\"modprobe $ISO_ALLOWLIST\\\"\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
-        fi
-      fi
-      handle_output "echo \"    - \\\"export DEBIAN_FRONTEND=\\\\\"noninteractive\\\\\" && dpkg $ISO_DPKG_CONF $ISO_DPKG_OVERWRITE --auto-deconfigure $ISO_DPKG_DEPENDS -i $ISO_INSTALL_MOUNT/$ISO_AUTOINSTALL_DIR/packages/*.deb\\\"\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
-      handle_output "echo \"    - \\\"rm /etc/resolv.conf\\\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
-      handle_output "echo \"    - \\\"echo \\\\\"nameserver $ISO_DNS\\\\\" >> /etc/resolv.conf\\\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
-      if [ "$ISO_VOLMGR" = "zfs" ] && [ "$ISO_DEVICE" = "first-disk" ]; then
-        handle_output "echo \"    - \\\"sed -i \\\\\"s/first-disk/\$(lsblk -x TYPE|grep disk |sort |head -1 |awk '{print \$1}')/g\\\\\" /autoinstall.yaml\\\"\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
-      fi
-      if [ "$ISO_NIC" = "first-net" ]; then
-        handle_output "echo \"    - \\\"sed -i \\\\\"s/first-net/\$(lshw -class network -short |awk '{print \$2}' |grep ^e |head -1)/g\\\\\" /autoinstall.yaml\\\"\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
-      fi
-      if ! [ "$ISO_BLOCKLIST" = "" ]; then
-        if [[ "$ISO_BLOCKLIST" =~ "," ]]; then
-          for MODULE in $(${ISO_BLOCKLIST//,/ }); do
-            handle_output "echo \"    - \\\"echo 'blacklist $MODULE' > /etc/modprobe.d/$MODULE.conf\\\"\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
-            handle_output "echo \"    - \\\"modprobe -r $MODULE --remove-dependencies\\\"\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
-          done
-        else
-          handle_output "echo \"    - \\\"echo 'blacklist $ISO_BLOCKLIST' > /etc/modprobe.d/$ISO_BLOCKLIST.conf\\\"\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
-          handle_output "echo \"    - \\\"modprobe -r $ISO_BLOCKLIST --remove-dependencies\\\"\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
-        fi
-      fi
-      handle_output "echo \"  late-commands:\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
-      handle_output "echo \"    - \\\"mkdir -p $ISO_TARGET_MOUNT/var/postinstall/package\\\"\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
-      handle_output "echo \"    - \\\"cp $ISO_INSTALL_MOUNT/$ISO_AUTOINSTALL_DIR/packages/*.deb $ISO_TARGET_MOUNT/var/postinstall/packages/\\\"\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
-      handle_output "echo \"    - \\\"echo '#!/bin/bash' > $ISO_TARGET_MOUNT/tmp/post.sh\\\"\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
-      handle_output "echo \"    - \\\"echo 'export DEBIAN_FRONTEND=\\\\\\"noninteractive\\\\\\" && dpkg $ISO_DPKG_CONF $ISO_DPKG_OVERWRITE --auto-deconfigure $ISO_DPKG_DEPENDS -i /var/postinstall/packages/*.deb' >> $ISO_TARGET_MOUNT/tmp/post.sh\\\"\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
-      handle_output "echo \"    - \\\"echo '$ISO_TIMEZONE' > $ISO_TARGET_MOUNT/etc/timezone\\\"\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
-      handle_output "echo \"    - \\\"rm $ISO_TARGET_MOUNT/etc/localtime\\\"\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
-      handle_output "echo \"    - \\\"curtin in-target --target=$ISO_TARGET_MOUNT -- ln -s /usr/share/zoneinfo/$ISO_TIMEZONE /etc/localtime\\\"\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
-      if [ ! "$ISO_COUNTRY" = "us" ]; then
-        handle_output "echo \"    - \\\"curtin in-target --target=$ISO_TARGET_MOUNT -- sed -i \\\\\"s/\\/archive/\\/$ISO_COUNTRY.archive/g\\\\\" /etc/apt/sources.list \\\"\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
-      fi
-      handle_output "echo \"    - \\\"chmod +x $ISO_TARGET_MOUNT/tmp/post.sh\\\"\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
-      handle_output "echo \"    - \\\"curtin in-target --target=$ISO_TARGET_MOUNT -- /tmp/post.sh\\\"\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
-      if [ "$DO_SERIAL" = "true" ]; then
-        handle_output "echo \"    - \\\"echo 'GRUB_TERMINAL=\\\\\\\"serial console\\\\\\\"' >> $ISO_TARGET_MOUNT/etc/default/grub\\\"\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
-        handle_output "echo \"    - \\\"echo 'GRUB_SERIAL_COMMAND=\\\\\\\"serial --speed=$ISO_SERIAL_PORT_SPEED0 --port=$ISO_SERIAL_PORT_ADDRESS0\\\\\\\"' >> $ISO_TARGET_MOUNT/etc/default/grub\\\"\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
-      else
-        handle_output "echo \"    - \\\"echo 'GRUB_TERMINAL=\\\\\\\"console\\\\\\\"' >> $ISO_TARGET_MOUNT/etc/default/grub\\\"\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
-      fi
-      handle_output "echo \"    - \\\"echo 'GRUB_CMDLINE_LINUX=\\\\\\\"console=tty0 $ISO_KERNEL_ARGS\\\\\\\"' >> $ISO_TARGET_MOUNT/etc/default/grub\\\"\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
-      handle_output "echo \"    - \\\"echo 'GRUB_TIMEOUT=\\\\\\\"$ISO_GRUB_TIMEOUT\\\\\\\"' >> $ISO_TARGET_MOUNT/etc/default/grub\\\"\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
-      handle_output "echo \"    - \\\"echo '$ISO_USERNAME ALL=(ALL) NOPASSWD: ALL' >> $ISO_TARGET_MOUNT/etc/sudoers.d/$ISO_USERNAME\\\"\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
-      if [ "$DO_ISO_AUTO_UPGRADES" = "false" ]; then
-        handle_output "echo \"    - \\\"echo 'APT::Periodic::Update-Package-List \\\\\\\"0\\\\\\\";' > $ISO_TARGET_MOUNT/etc/apt/apt.conf.d/20auto-upgrades\\\"\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
-        handle_output "echo \"    - \\\"echo 'APT::Periodic::Download-Upgradeable-Packages \\\\\\\"0\\\\\\\";' >> $ISO_TARGET_MOUNT/etc/apt/apt.conf.d/20auto-upgrades\\\"\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
-        handle_output "echo \"    - \\\"echo 'APT::Periodic::AutocleanInterval \\\\\\\"0\\\\\\\";' >> $ISO_TARGET_MOUNT/etc/apt/apt.conf.d/20auto-upgrades\\\"\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
-        handle_output "echo \"    - \\\"echo 'APT::Periodic::Unattended-Upgrade \\\\\\\"0\\\\\\\";' >> $ISO_TARGET_MOUNT/etc/apt/apt.conf.d/20auto-upgrades\\\"\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
-      fi
-      if [ "$DO_SERIAL" = "true" ]; then
-        handle_output "echo \"    - \\\"curtin in-target --target=$ISO_TARGET_MOUNT -- systemctl enable serial-getty@ttyS0.service\\\"\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
-        handle_output "echo \"    - \\\"curtin in-target --target=$ISO_TARGET_MOUNT -- systemctl start serial-getty@ttyS0.service\\\"\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
-        handle_output "echo \"    - \\\"curtin in-target --target=$ISO_TARGET_MOUNT -- systemctl enable serial-getty@ttyS1.service\\\"\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
-        handle_output "echo \"    - \\\"curtin in-target --target=$ISO_TARGET_MOUNT -- systemctl start serial-getty@ttyS1.service\\\"\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
-        handle_output "echo \"    - \\\"curtin in-target --target=$ISO_TARGET_MOUNT -- systemctl enable serial-getty@ttyS4.service\\\"\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
-        handle_output "echo \"    - \\\"curtin in-target --target=$ISO_TARGET_MOUNT -- systemctl start serial-getty@ttyS4.service\\\"\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
-      fi
-      handle_output "echo \"    - \\\"curtin in-target --target=$ISO_TARGET_MOUNT -- /usr/sbin/update-grub\\\"\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
-      if [ "$DO_INSTALL_ISO_NETWORK_UPDATES" = "true" ]; then
-        if [ "$DO_INSTALL_ISO_UPDATE" = "true" ] || [ "$DO_INSTALL_ISO_DIST_UPGRADE" = "true" ]; then
-          handle_output "echo \"    - \\\"curtin in-target --target=$ISO_TARGET_MOUNT -- apt update\\\"\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
-        fi
-        if [ "$DO_INSTALL_ISO_UPGRADE" = "true" ]; then
-          handle_output "echo \"    - \\\"curtin in-target --target=$ISO_TARGET_MOUNT -- apt upgrade -y\\\"\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
-        fi
-        if [ "$DO_INSTALL_ISO_DIST_UPGRADE" = "true" ]; then
-          handle_output "echo \"    - \\\"curtin in-target --target=$ISO_TARGET_MOUNT -- apt dist-upgrade -y\\\"\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
-        fi
-        if [ "$DO_INSTALL_ISO_PACKAGES" = "true" ]; then
-          handle_output "echo \"    - \\\"curtin in-target --target=$ISO_TARGET_MOUNT -- apt install -y $ISO_INSTALL_PACKAGES\\\"\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
-        fi
-      fi
-      if [ "$ISO_MAJOR_REL" = "22" ]; then
-        if [ "$DO_ISO_APT_NEWS" = "false" ]; then
-          handle_output "echo \"    - \\\"curtin in-target --target=$ISO_TARGET_MOUNT -- pro config set apt_news=false\\\"\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
-        fi
-      fi
-      handle_output "echo \"  version: 1\" >> \"$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data\""
       if [ "$TEST_MODE" = "false" ]; then
         if [ "$DO_CUSTOM_AUTO_INSTALL" = "true" ]; then
           cp "$AUTO_INSTALL_FILE" "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
@@ -2393,7 +2029,7 @@ prepare_autoinstall_iso () {
                   echo "        canmount: 'on'" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
                   echo "      id: zfs-$ZFS_FS_COUNTER" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
                   echo "      type: zfs" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
-                  ZFS_FS_COUNTER=$(($ZFS_FS_COUNTER+1))
+                  ZFS_FS_COUNTER=$(( ZFS_FS_COUNTER+1 ))
                 done
                 echo "    - zpool: zpool-0" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
                 echo "      volume: BOOT/ubuntu_install" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
@@ -2627,7 +2263,7 @@ prepare_autoinstall_iso () {
                 echo "    - \"modprobe $MODULE\"" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
               done
             else
-              echo "    - \"echo '$ISO_ALLOWKLIST' > /etc/modules-load.d/$ISO_BLOCKLIST.conf\"" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
+              echo "    - \"echo '$ISO_ALLOWLIST' > /etc/modules-load.d/$ISO_BLOCKLIST.conf\"" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
               echo "    - \"modprobe $ISO_ALLOWLIST\"" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
             fi
           fi
@@ -2710,6 +2346,7 @@ prepare_autoinstall_iso () {
             fi
           fi
           echo "  version: 1" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
+          print_file "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
         fi
       fi
     done
@@ -2749,209 +2386,209 @@ create_kvm_vm () {
   information_message "Creating VM disk $VM_DISK"
   execution_message "sudo qemu-img create -f qcow2 $VM_DISK $VM_SIZE"
   if [ "$TEST_MODE" = "false" ]; then
-    sudo qemu-img create -f qcow2 $VM_DISK $VM_SIZE
+    sudo qemu-img create -f qcow2 "$VM_DISK" "$VM_SIZE"
   fi
   information_message "Generating VM config $XML_FILE"
   XML_FILE="/tmp/$VM_NAME.xml"
-  echo "<domain type='kvm'>" > $XML_FILE
-  echo "  <name>$VM_NAME</name>" >> $XML_FILE
-  echo "  <metadata>" >> $XML_FILE
-  echo "    <libosinfo:libosinfo xmlns:libosinfo=\"http://libosinfo.org/xmlns/libvirt/domain/1.0\">" >> $XML_FILE
-  echo "      <libosinfo:os id=\"http://ubuntu.com/ubuntu/22.04\"/>" >> $XML_FILE
-  echo "    </libosinfo:libosinfo>" >> $XML_FILE
-  echo "  </metadata>" >> $XML_FILE
-  echo "  <memory unit='KiB'>$VM_RAM</memory>" >> $XML_FILE
-  echo "  <currentMemory unit='KiB'>$VM_RAM</currentMemory>" >> $XML_FILE
-  echo "  <vcpu placement='static'>$VM_CPUS</vcpu>" >> $XML_FILE
+  echo "<domain type='kvm'>" > "$XML_FILE"
+  echo "  <name>$VM_NAME</name>" >> "$XML_FILE"
+  echo "  <metadata>" >> "$XML_FILE"
+  echo "    <libosinfo:libosinfo xmlns:libosinfo=\"http://libosinfo.org/xmlns/libvirt/domain/1.0\">" >> "$XML_FILE"
+  echo "      <libosinfo:os id=\"http://ubuntu.com/ubuntu/22.04\"/>" >> "$XML_FILE"
+  echo "    </libosinfo:libosinfo>" >> "$XML_FILE"
+  echo "  </metadata>" >> "$XML_FILE"
+  echo "  <memory unit='KiB'>$VM_RAM</memory>" >> "$XML_FILE"
+  echo "  <currentMemory unit='KiB'>$VM_RAM</currentMemory>" >> "$XML_FILE"
+  echo "  <vcpu placement='static'>$VM_CPUS</vcpu>" >> "$XML_FILE"
   if [ "$ISO_BOOT_TYPE" = "bios" ]; then
-    echo "  <os>" >> $XML_FILE
-    echo "    <type arch='x86_64' machine='pc-q35-8.1'>hvm</type>" >> $XML_FILE
+    echo "  <os>" >> "$XML_FILE"
+    echo "    <type arch='x86_64' machine='pc-q35-8.1'>hvm</type>" >> "$XML_FILE"
   else
-    echo "  <os firmware='efi'>" >> $XML_FILE
-    echo "    <type arch='x86_64' machine='pc-q35-8.1'>hvm</type>" >> $XML_FILE
-    echo "    <firmware>" >> $XML_FILE
-    echo "      <feature enabled='no' name='enrolled-keys'/>" >> $XML_FILE
-    echo "      <feature enabled='no' name='secure-boot'/>" >> $XML_FILE
-    echo "    </firmware>" >> $XML_FILE
-    echo "    <loader readonly='yes' type='pflash'>$BIOS_FILE</loader>" >> $XML_FILE
-    echo "    <nvram template='$VARS_FILE'>$NVRAM_FILE</nvram>" >> $XML_FILE
-    echo "    <bootmenu enable='yes'/>" >> $XML_FILE
+    echo "  <os firmware='efi'>" >> "$XML_FILE"
+    echo "    <type arch='x86_64' machine='pc-q35-8.1'>hvm</type>" >> "$XML_FILE"
+    echo "    <firmware>" >> "$XML_FILE"
+    echo "      <feature enabled='no' name='enrolled-keys'/>" >> "$XML_FILE"
+    echo "      <feature enabled='no' name='secure-boot'/>" >> "$XML_FILE"
+    echo "    </firmware>" >> "$XML_FILE"
+    echo "    <loader readonly='yes' type='pflash'>$BIOS_FILE</loader>" >> "$XML_FILE"
+    echo "    <nvram template='$VARS_FILE'>$NVRAM_FILE</nvram>" >> "$XML_FILE"
+    echo "    <bootmenu enable='yes'/>" >> "$XML_FILE"
   fi
-  echo "  </os>" >> $XML_FILE
-  echo "  <features>" >> $XML_FILE
-  echo "    <acpi/>" >> $XML_FILE
-  echo "    <apic/>" >> $XML_FILE
-  echo "    <vmport state='off'/>" >> $XML_FILE
-  echo "  </features>" >> $XML_FILE
-  echo "  <cpu mode='host-passthrough' check='none' migratable='on'/>" >> $XML_FILE
-  echo "  <clock offset='utc'>" >> $XML_FILE
-  echo "    <timer name='rtc' tickpolicy='catchup'/>" >> $XML_FILE
-  echo "    <timer name='pit' tickpolicy='delay'/>" >> $XML_FILE
-  echo "    <timer name='hpet' present='no'/>" >> $XML_FILE
-  echo "  </clock>" >> $XML_FILE
-  echo "  <on_poweroff>destroy</on_poweroff>" >> $XML_FILE
-  echo "  <on_reboot>restart</on_reboot>" >> $XML_FILE
-  echo "  <on_crash>destroy</on_crash>" >> $XML_FILE
-  echo "  <pm>" >> $XML_FILE
-  echo "    <suspend-to-mem enabled='no'/>" >> $XML_FILE
-  echo "    <suspend-to-disk enabled='no'/>" >> $XML_FILE
-  echo "  </pm>" >> $XML_FILE
-  echo "  <devices>" >> $XML_FILE
-  echo "    <emulator>/usr/bin/qemu-system-x86_64</emulator>" >> $XML_FILE
-  echo "    <disk type='file' device='disk'>" >> $XML_FILE
-  echo "      <driver name='qemu' type='qcow2' discard='unmap'/>" >> $XML_FILE
-  echo "      <source file='$VM_DISK'/>" >> $XML_FILE
-  echo "      <target dev='vda' bus='virtio'/>" >> $XML_FILE
-  echo "      <boot order='2'/>" >> $XML_FILE
-  echo "      <address type='pci' domain='0x0000' bus='0x04' slot='0x00' function='0x0'/>" >> $XML_FILE
-  echo "    </disk>" >> $XML_FILE
-  echo "    <disk type='file' device='cdrom'>" >> $XML_FILE
-  echo "      <driver name='qemu' type='raw'/>" >> $XML_FILE
-  echo "      <source file='$VM_ISO'/>" >> $XML_FILE
-  echo "      <target dev='sda' bus='sata'/>" >> $XML_FILE
-  echo "      <readonly/>" >> $XML_FILE
-  echo "      <boot order='1'/>" >> $XML_FILE
-  echo "      <address type='drive' controller='0' bus='0' target='0' unit='0'/>" >> $XML_FILE
-  echo "    </disk>" >> $XML_FILE
-  echo "    <controller type='usb' index='0' model='qemu-xhci' ports='15'>" >> $XML_FILE
-  echo "      <address type='pci' domain='0x0000' bus='0x02' slot='0x00' function='0x0'/>" >> $XML_FILE
-  echo "    </controller>" >> $XML_FILE
-  echo "    <controller type='pci' index='0' model='pcie-root'/>" >> $XML_FILE
-  echo "    <controller type='pci' index='1' model='pcie-root-port'>" >> $XML_FILE
-  echo "      <model name='pcie-root-port'/>" >> $XML_FILE
-  echo "      <target chassis='1' port='0x10'/>" >> $XML_FILE
-  echo "      <address type='pci' domain='0x0000' bus='0x00' slot='0x02' function='0x0' multifunction='on'/>" >> $XML_FILE
-  echo "    </controller>" >> $XML_FILE
-  echo "    <controller type='pci' index='2' model='pcie-root-port'>" >> $XML_FILE
-  echo "      <model name='pcie-root-port'/>" >> $XML_FILE
-  echo "      <target chassis='2' port='0x11'/>" >> $XML_FILE
-  echo "      <address type='pci' domain='0x0000' bus='0x00' slot='0x02' function='0x1'/>" >> $XML_FILE
-  echo "    </controller>" >> $XML_FILE
-  echo "    <controller type='pci' index='3' model='pcie-root-port'>" >> $XML_FILE
-  echo "      <model name='pcie-root-port'/>" >> $XML_FILE
-  echo "      <target chassis='3' port='0x12'/>" >> $XML_FILE
-  echo "      <address type='pci' domain='0x0000' bus='0x00' slot='0x02' function='0x2'/>" >> $XML_FILE
-  echo "    </controller>" >> $XML_FILE
-  echo "    <controller type='pci' index='4' model='pcie-root-port'>" >> $XML_FILE
-  echo "      <model name='pcie-root-port'/>" >> $XML_FILE
-  echo "      <target chassis='4' port='0x13'/>" >> $XML_FILE
-  echo "      <address type='pci' domain='0x0000' bus='0x00' slot='0x02' function='0x3'/>" >> $XML_FILE
-  echo "    </controller>" >> $XML_FILE
-  echo "    <controller type='pci' index='5' model='pcie-root-port'>" >> $XML_FILE
-  echo "      <model name='pcie-root-port'/>" >> $XML_FILE
-  echo "      <target chassis='5' port='0x14'/>" >> $XML_FILE
-  echo "      <address type='pci' domain='0x0000' bus='0x00' slot='0x02' function='0x4'/>" >> $XML_FILE
-  echo "    </controller>" >> $XML_FILE
-  echo "    <controller type='pci' index='6' model='pcie-root-port'>" >> $XML_FILE
-  echo "      <model name='pcie-root-port'/>" >> $XML_FILE
-  echo "      <target chassis='6' port='0x15'/>" >> $XML_FILE
-  echo "      <address type='pci' domain='0x0000' bus='0x00' slot='0x02' function='0x5'/>" >> $XML_FILE
-  echo "    </controller>" >> $XML_FILE
-  echo "    <controller type='pci' index='7' model='pcie-root-port'>" >> $XML_FILE
-  echo "      <model name='pcie-root-port'/>" >> $XML_FILE
-  echo "      <target chassis='7' port='0x16'/>" >> $XML_FILE
-  echo "      <address type='pci' domain='0x0000' bus='0x00' slot='0x02' function='0x6'/>" >> $XML_FILE
-  echo "    </controller>" >> $XML_FILE
-  echo "    <controller type='pci' index='8' model='pcie-root-port'>" >> $XML_FILE
-  echo "      <model name='pcie-root-port'/>" >> $XML_FILE
-  echo "      <target chassis='8' port='0x17'/>" >> $XML_FILE
-  echo "      <address type='pci' domain='0x0000' bus='0x00' slot='0x02' function='0x7'/>" >> $XML_FILE
-  echo "    </controller>" >> $XML_FILE
-  echo "    <controller type='pci' index='9' model='pcie-root-port'>" >> $XML_FILE
-  echo "      <model name='pcie-root-port'/>" >> $XML_FILE
-  echo "      <target chassis='9' port='0x18'/>" >> $XML_FILE
-  echo "      <address type='pci' domain='0x0000' bus='0x00' slot='0x03' function='0x0' multifunction='on'/>" >> $XML_FILE
-  echo "    </controller>" >> $XML_FILE
-  echo "    <controller type='pci' index='10' model='pcie-root-port'>" >> $XML_FILE
-  echo "      <model name='pcie-root-port'/>" >> $XML_FILE
-  echo "      <target chassis='10' port='0x19'/>" >> $XML_FILE
-  echo "      <address type='pci' domain='0x0000' bus='0x00' slot='0x03' function='0x1'/>" >> $XML_FILE
-  echo "    </controller>" >> $XML_FILE
-  echo "    <controller type='pci' index='11' model='pcie-root-port'>" >> $XML_FILE
-  echo "      <model name='pcie-root-port'/>" >> $XML_FILE
-  echo "      <target chassis='11' port='0x1a'/>" >> $XML_FILE
-  echo "      <address type='pci' domain='0x0000' bus='0x00' slot='0x03' function='0x2'/>" >> $XML_FILE
-  echo "    </controller>" >> $XML_FILE
-  echo "    <controller type='pci' index='12' model='pcie-root-port'>" >> $XML_FILE
-  echo "      <model name='pcie-root-port'/>" >> $XML_FILE
-  echo "      <target chassis='12' port='0x1b'/>" >> $XML_FILE
-  echo "      <address type='pci' domain='0x0000' bus='0x00' slot='0x03' function='0x3'/>" >> $XML_FILE
-  echo "    </controller>" >> $XML_FILE
-  echo "    <controller type='pci' index='13' model='pcie-root-port'>" >> $XML_FILE
-  echo "      <model name='pcie-root-port'/>" >> $XML_FILE
-  echo "      <target chassis='13' port='0x1c'/>" >> $XML_FILE
-  echo "      <address type='pci' domain='0x0000' bus='0x00' slot='0x03' function='0x4'/>" >> $XML_FILE
-  echo "    </controller>" >> $XML_FILE
-  echo "    <controller type='pci' index='14' model='pcie-root-port'>" >> $XML_FILE
-  echo "      <model name='pcie-root-port'/>" >> $XML_FILE
-  echo "      <target chassis='14' port='0x1d'/>" >> $XML_FILE
-  echo "      <address type='pci' domain='0x0000' bus='0x00' slot='0x03' function='0x5'/>" >> $XML_FILE
-  echo "    </controller>" >> $XML_FILE
-  echo "    <controller type='sata' index='0'>" >> $XML_FILE
-  echo "      <address type='pci' domain='0x0000' bus='0x00' slot='0x1f' function='0x2'/>" >> $XML_FILE
-  echo "    </controller>" >> $XML_FILE
-  echo "    <controller type='virtio-serial' index='0'>" >> $XML_FILE
-  echo "      <address type='pci' domain='0x0000' bus='0x03' slot='0x00' function='0x0'/>" >> $XML_FILE
-  echo "    </controller>" >> $XML_FILE
-  echo "    <interface type='network'>" >> $XML_FILE
-  echo "      <mac address='52:54:00:2e:6c:5b'/>" >> $XML_FILE
-  echo "      <source network='default'/>" >> $XML_FILE
-  echo "      <model type='virtio'/>" >> $XML_FILE
-  echo "      <address type='pci' domain='0x0000' bus='0x01' slot='0x00' function='0x0'/>" >> $XML_FILE
-  echo "    </interface>" >> $XML_FILE
-  echo "    <serial type='pty'>" >> $XML_FILE
-  echo "      <target type='isa-serial' port='0'>" >> $XML_FILE
-  echo "        <model name='isa-serial'/>" >> $XML_FILE
-  echo "      </target>" >> $XML_FILE
-  echo "    </serial>" >> $XML_FILE
-  echo "    <console type='pty'>" >> $XML_FILE
-  echo "      <target type='serial' port='0'/>" >> $XML_FILE
-  echo "    </console>" >> $XML_FILE
-  echo "    <channel type='unix'>" >> $XML_FILE
-  echo "      <target type='virtio' name='org.qemu.guest_agent.0'/>" >> $XML_FILE
-  echo "      <address type='virtio-serial' controller='0' bus='0' port='1'/>" >> $XML_FILE
-  echo "    </channel>" >> $XML_FILE
-  echo "    <channel type='spicevmc'>" >> $XML_FILE
-  echo "      <target type='virtio' name='com.redhat.spice.0'/>" >> $XML_FILE
-  echo "      <address type='virtio-serial' controller='0' bus='0' port='2'/>" >> $XML_FILE
-  echo "    </channel>" >> $XML_FILE
-  echo "    <input type='tablet' bus='usb'>" >> $XML_FILE
-  echo "      <address type='usb' bus='0' port='1'/>" >> $XML_FILE
-  echo "    </input>" >> $XML_FILE
-  echo "    <input type='mouse' bus='ps2'/>" >> $XML_FILE
-  echo "    <input type='keyboard' bus='ps2'/>" >> $XML_FILE
-  echo "    <graphics type='spice' autoport='yes'>" >> $XML_FILE
-  echo "      <listen type='address'/>" >> $XML_FILE
-  echo "      <image compression='off'/>" >> $XML_FILE
-  echo "    </graphics>" >> $XML_FILE
-  echo "    <sound model='ich9'>" >> $XML_FILE
-  echo "      <address type='pci' domain='0x0000' bus='0x00' slot='0x1b' function='0x0'/>" >> $XML_FILE
-  echo "    </sound>" >> $XML_FILE
-  echo "    <audio id='1' type='spice'/>" >> $XML_FILE
-  echo "    <video>" >> $XML_FILE
-  echo "      <model type='qxl' ram='65536' vram='65536' vgamem='16384' heads='1' primary='yes'/>" >> $XML_FILE
-  echo "      <address type='pci' domain='0x0000' bus='0x00' slot='0x01' function='0x0'/>" >> $XML_FILE
-  echo "    </video>" >> $XML_FILE
-  echo "    <redirdev bus='usb' type='spicevmc'>" >> $XML_FILE
-  echo "      <address type='usb' bus='0' port='2'/>" >> $XML_FILE
-  echo "    </redirdev>" >> $XML_FILE
-  echo "    <redirdev bus='usb' type='spicevmc'>" >> $XML_FILE
-  echo "      <address type='usb' bus='0' port='3'/>" >> $XML_FILE
-  echo "    </redirdev>" >> $XML_FILE
-  echo "    <watchdog model='itco' action='reset'/>" >> $XML_FILE
-  echo "    <memballoon model='virtio'>" >> $XML_FILE
-  echo "      <address type='pci' domain='0x0000' bus='0x05' slot='0x00' function='0x0'/>" >> $XML_FILE
-  echo "    </memballoon>" >> $XML_FILE
-  echo "    <rng model='virtio'>" >> $XML_FILE
-  echo "      <backend model='random'>/dev/urandom</backend>" >> $XML_FILE
-  echo "      <address type='pci' domain='0x0000' bus='0x06' slot='0x00' function='0x0'/>" >> $XML_FILE
-  echo "    </rng>" >> $XML_FILE
-  echo "  </devices>" >> $XML_FILE
-  echo "</domain>" >> $XML_FILE
+  echo "  </os>" >> "$XML_FILE"
+  echo "  <features>" >> "$XML_FILE"
+  echo "    <acpi/>" >> "$XML_FILE"
+  echo "    <apic/>" >> "$XML_FILE"
+  echo "    <vmport state='off'/>" >> "$XML_FILE"
+  echo "  </features>" >> "$XML_FILE"
+  echo "  <cpu mode='host-passthrough' check='none' migratable='on'/>" >> "$XML_FILE"
+  echo "  <clock offset='utc'>" >> "$XML_FILE"
+  echo "    <timer name='rtc' tickpolicy='catchup'/>" >> "$XML_FILE"
+  echo "    <timer name='pit' tickpolicy='delay'/>" >> "$XML_FILE"
+  echo "    <timer name='hpet' present='no'/>" >> "$XML_FILE"
+  echo "  </clock>" >> "$XML_FILE"
+  echo "  <on_poweroff>destroy</on_poweroff>" >> "$XML_FILE"
+  echo "  <on_reboot>restart</on_reboot>" >> "$XML_FILE"
+  echo "  <on_crash>destroy</on_crash>" >> "$XML_FILE"
+  echo "  <pm>" >> "$XML_FILE"
+  echo "    <suspend-to-mem enabled='no'/>" >> "$XML_FILE"
+  echo "    <suspend-to-disk enabled='no'/>" >> "$XML_FILE"
+  echo "  </pm>" >> "$XML_FILE"
+  echo "  <devices>" >> "$XML_FILE"
+  echo "    <emulator>/usr/bin/qemu-system-x86_64</emulator>" >> "$XML_FILE"
+  echo "    <disk type='file' device='disk'>" >> "$XML_FILE"
+  echo "      <driver name='qemu' type='qcow2' discard='unmap'/>" >> "$XML_FILE"
+  echo "      <source file='$VM_DISK'/>" >> "$XML_FILE"
+  echo "      <target dev='vda' bus='virtio'/>" >> "$XML_FILE"
+  echo "      <boot order='2'/>" >> "$XML_FILE"
+  echo "      <address type='pci' domain='0x0000' bus='0x04' slot='0x00' function='0x0'/>" >> "$XML_FILE"
+  echo "    </disk>" >> "$XML_FILE"
+  echo "    <disk type='file' device='cdrom'>" >> "$XML_FILE"
+  echo "      <driver name='qemu' type='raw'/>" >> "$XML_FILE"
+  echo "      <source file='$VM_ISO'/>" >> "$XML_FILE"
+  echo "      <target dev='sda' bus='sata'/>" >> "$XML_FILE"
+  echo "      <readonly/>" >> "$XML_FILE"
+  echo "      <boot order='1'/>" >> "$XML_FILE"
+  echo "      <address type='drive' controller='0' bus='0' target='0' unit='0'/>" >> "$XML_FILE"
+  echo "    </disk>" >> "$XML_FILE"
+  echo "    <controller type='usb' index='0' model='qemu-xhci' ports='15'>" >> "$XML_FILE"
+  echo "      <address type='pci' domain='0x0000' bus='0x02' slot='0x00' function='0x0'/>" >> "$XML_FILE"
+  echo "    </controller>" >> "$XML_FILE"
+  echo "    <controller type='pci' index='0' model='pcie-root'/>" >> "$XML_FILE"
+  echo "    <controller type='pci' index='1' model='pcie-root-port'>" >> "$XML_FILE"
+  echo "      <model name='pcie-root-port'/>" >> "$XML_FILE"
+  echo "      <target chassis='1' port='0x10'/>" >> "$XML_FILE"
+  echo "      <address type='pci' domain='0x0000' bus='0x00' slot='0x02' function='0x0' multifunction='on'/>" >> "$XML_FILE"
+  echo "    </controller>" >> "$XML_FILE"
+  echo "    <controller type='pci' index='2' model='pcie-root-port'>" >> "$XML_FILE"
+  echo "      <model name='pcie-root-port'/>" >> "$XML_FILE"
+  echo "      <target chassis='2' port='0x11'/>" >> "$XML_FILE"
+  echo "      <address type='pci' domain='0x0000' bus='0x00' slot='0x02' function='0x1'/>" >> "$XML_FILE"
+  echo "    </controller>" >> "$XML_FILE"
+  echo "    <controller type='pci' index='3' model='pcie-root-port'>" >> "$XML_FILE"
+  echo "      <model name='pcie-root-port'/>" >> "$XML_FILE"
+  echo "      <target chassis='3' port='0x12'/>" >> "$XML_FILE"
+  echo "      <address type='pci' domain='0x0000' bus='0x00' slot='0x02' function='0x2'/>" >> "$XML_FILE"
+  echo "    </controller>" >> "$XML_FILE"
+  echo "    <controller type='pci' index='4' model='pcie-root-port'>" >> "$XML_FILE"
+  echo "      <model name='pcie-root-port'/>" >> "$XML_FILE"
+  echo "      <target chassis='4' port='0x13'/>" >> "$XML_FILE"
+  echo "      <address type='pci' domain='0x0000' bus='0x00' slot='0x02' function='0x3'/>" >> "$XML_FILE"
+  echo "    </controller>" >> "$XML_FILE"
+  echo "    <controller type='pci' index='5' model='pcie-root-port'>" >> "$XML_FILE"
+  echo "      <model name='pcie-root-port'/>" >> "$XML_FILE"
+  echo "      <target chassis='5' port='0x14'/>" >> "$XML_FILE"
+  echo "      <address type='pci' domain='0x0000' bus='0x00' slot='0x02' function='0x4'/>" >> "$XML_FILE"
+  echo "    </controller>" >> "$XML_FILE"
+  echo "    <controller type='pci' index='6' model='pcie-root-port'>" >> "$XML_FILE"
+  echo "      <model name='pcie-root-port'/>" >> "$XML_FILE"
+  echo "      <target chassis='6' port='0x15'/>" >> "$XML_FILE"
+  echo "      <address type='pci' domain='0x0000' bus='0x00' slot='0x02' function='0x5'/>" >> "$XML_FILE"
+  echo "    </controller>" >> "$XML_FILE"
+  echo "    <controller type='pci' index='7' model='pcie-root-port'>" >> "$XML_FILE"
+  echo "      <model name='pcie-root-port'/>" >> "$XML_FILE"
+  echo "      <target chassis='7' port='0x16'/>" >> "$XML_FILE"
+  echo "      <address type='pci' domain='0x0000' bus='0x00' slot='0x02' function='0x6'/>" >> "$XML_FILE"
+  echo "    </controller>" >> "$XML_FILE"
+  echo "    <controller type='pci' index='8' model='pcie-root-port'>" >> "$XML_FILE"
+  echo "      <model name='pcie-root-port'/>" >> "$XML_FILE"
+  echo "      <target chassis='8' port='0x17'/>" >> "$XML_FILE"
+  echo "      <address type='pci' domain='0x0000' bus='0x00' slot='0x02' function='0x7'/>" >> "$XML_FILE"
+  echo "    </controller>" >> "$XML_FILE"
+  echo "    <controller type='pci' index='9' model='pcie-root-port'>" >> "$XML_FILE"
+  echo "      <model name='pcie-root-port'/>" >> "$XML_FILE"
+  echo "      <target chassis='9' port='0x18'/>" >> "$XML_FILE"
+  echo "      <address type='pci' domain='0x0000' bus='0x00' slot='0x03' function='0x0' multifunction='on'/>" >> "$XML_FILE"
+  echo "    </controller>" >> "$XML_FILE"
+  echo "    <controller type='pci' index='10' model='pcie-root-port'>" >> "$XML_FILE"
+  echo "      <model name='pcie-root-port'/>" >> "$XML_FILE"
+  echo "      <target chassis='10' port='0x19'/>" >> "$XML_FILE"
+  echo "      <address type='pci' domain='0x0000' bus='0x00' slot='0x03' function='0x1'/>" >> "$XML_FILE"
+  echo "    </controller>" >> "$XML_FILE"
+  echo "    <controller type='pci' index='11' model='pcie-root-port'>" >> "$XML_FILE"
+  echo "      <model name='pcie-root-port'/>" >> "$XML_FILE"
+  echo "      <target chassis='11' port='0x1a'/>" >> "$XML_FILE"
+  echo "      <address type='pci' domain='0x0000' bus='0x00' slot='0x03' function='0x2'/>" >> "$XML_FILE"
+  echo "    </controller>" >> "$XML_FILE"
+  echo "    <controller type='pci' index='12' model='pcie-root-port'>" >> "$XML_FILE"
+  echo "      <model name='pcie-root-port'/>" >> "$XML_FILE"
+  echo "      <target chassis='12' port='0x1b'/>" >> "$XML_FILE"
+  echo "      <address type='pci' domain='0x0000' bus='0x00' slot='0x03' function='0x3'/>" >> "$XML_FILE"
+  echo "    </controller>" >> "$XML_FILE"
+  echo "    <controller type='pci' index='13' model='pcie-root-port'>" >> "$XML_FILE"
+  echo "      <model name='pcie-root-port'/>" >> "$XML_FILE"
+  echo "      <target chassis='13' port='0x1c'/>" >> "$XML_FILE"
+  echo "      <address type='pci' domain='0x0000' bus='0x00' slot='0x03' function='0x4'/>" >> "$XML_FILE"
+  echo "    </controller>" >> "$XML_FILE"
+  echo "    <controller type='pci' index='14' model='pcie-root-port'>" >> "$XML_FILE"
+  echo "      <model name='pcie-root-port'/>" >> "$XML_FILE"
+  echo "      <target chassis='14' port='0x1d'/>" >> "$XML_FILE"
+  echo "      <address type='pci' domain='0x0000' bus='0x00' slot='0x03' function='0x5'/>" >> "$XML_FILE"
+  echo "    </controller>" >> "$XML_FILE"
+  echo "    <controller type='sata' index='0'>" >> "$XML_FILE"
+  echo "      <address type='pci' domain='0x0000' bus='0x00' slot='0x1f' function='0x2'/>" >> "$XML_FILE"
+  echo "    </controller>" >> "$XML_FILE"
+  echo "    <controller type='virtio-serial' index='0'>" >> "$XML_FILE"
+  echo "      <address type='pci' domain='0x0000' bus='0x03' slot='0x00' function='0x0'/>" >> "$XML_FILE"
+  echo "    </controller>" >> "$XML_FILE"
+  echo "    <interface type='network'>" >> "$XML_FILE"
+  echo "      <mac address='52:54:00:2e:6c:5b'/>" >> "$XML_FILE"
+  echo "      <source network='default'/>" >> "$XML_FILE"
+  echo "      <model type='virtio'/>" >> "$XML_FILE"
+  echo "      <address type='pci' domain='0x0000' bus='0x01' slot='0x00' function='0x0'/>" >> "$XML_FILE"
+  echo "    </interface>" >> "$XML_FILE"
+  echo "    <serial type='pty'>" >> "$XML_FILE"
+  echo "      <target type='isa-serial' port='0'>" >> "$XML_FILE"
+  echo "        <model name='isa-serial'/>" >> "$XML_FILE"
+  echo "      </target>" >> "$XML_FILE"
+  echo "    </serial>" >> "$XML_FILE"
+  echo "    <console type='pty'>" >> "$XML_FILE"
+  echo "      <target type='serial' port='0'/>" >> "$XML_FILE"
+  echo "    </console>" >> "$XML_FILE"
+  echo "    <channel type='unix'>" >> "$XML_FILE"
+  echo "      <target type='virtio' name='org.qemu.guest_agent.0'/>" >> "$XML_FILE"
+  echo "      <address type='virtio-serial' controller='0' bus='0' port='1'/>" >> "$XML_FILE"
+  echo "    </channel>" >> "$XML_FILE"
+  echo "    <channel type='spicevmc'>" >> "$XML_FILE"
+  echo "      <target type='virtio' name='com.redhat.spice.0'/>" >> "$XML_FILE"
+  echo "      <address type='virtio-serial' controller='0' bus='0' port='2'/>" >> "$XML_FILE"
+  echo "    </channel>" >> "$XML_FILE"
+  echo "    <input type='tablet' bus='usb'>" >> "$XML_FILE"
+  echo "      <address type='usb' bus='0' port='1'/>" >> "$XML_FILE"
+  echo "    </input>" >> "$XML_FILE"
+  echo "    <input type='mouse' bus='ps2'/>" >> "$XML_FILE"
+  echo "    <input type='keyboard' bus='ps2'/>" >> "$XML_FILE"
+  echo "    <graphics type='spice' autoport='yes'>" >> "$XML_FILE"
+  echo "      <listen type='address'/>" >> "$XML_FILE"
+  echo "      <image compression='off'/>" >> "$XML_FILE"
+  echo "    </graphics>" >> "$XML_FILE"
+  echo "    <sound model='ich9'>" >> "$XML_FILE"
+  echo "      <address type='pci' domain='0x0000' bus='0x00' slot='0x1b' function='0x0'/>" >> "$XML_FILE"
+  echo "    </sound>" >> "$XML_FILE"
+  echo "    <audio id='1' type='spice'/>" >> "$XML_FILE"
+  echo "    <video>" >> "$XML_FILE"
+  echo "      <model type='qxl' ram='65536' vram='65536' vgamem='16384' heads='1' primary='yes'/>" >> "$XML_FILE"
+  echo "      <address type='pci' domain='0x0000' bus='0x00' slot='0x01' function='0x0'/>" >> "$XML_FILE"
+  echo "    </video>" >> "$XML_FILE"
+  echo "    <redirdev bus='usb' type='spicevmc'>" >> "$XML_FILE"
+  echo "      <address type='usb' bus='0' port='2'/>" >> "$XML_FILE"
+  echo "    </redirdev>" >> "$XML_FILE"
+  echo "    <redirdev bus='usb' type='spicevmc'>" >> "$XML_FILE"
+  echo "      <address type='usb' bus='0' port='3'/>" >> "$XML_FILE"
+  echo "    </redirdev>" >> "$XML_FILE"
+  echo "    <watchdog model='itco' action='reset'/>" >> "$XML_FILE"
+  echo "    <memballoon model='virtio'>" >> "$XML_FILE"
+  echo "      <address type='pci' domain='0x0000' bus='0x05' slot='0x00' function='0x0'/>" >> "$XML_FILE"
+  echo "    </memballoon>" >> "$XML_FILE"
+  echo "    <rng model='virtio'>" >> "$XML_FILE"
+  echo "      <backend model='random'>/dev/urandom</backend>" >> "$XML_FILE"
+  echo "      <address type='pci' domain='0x0000' bus='0x06' slot='0x00' function='0x0'/>" >> "$XML_FILE"
+  echo "    </rng>" >> "$XML_FILE"
+  echo "  </devices>" >> "$XML_FILE"
+  echo "</domain>" >> "$XML_FILE"
   information_message "Importing VM config $XML_FILE"
   execution_message "sudo virsh define $XML_FILE"
   if [ "$TEST_MODE" = "false" ]; then
-    sudo virsh define $XML_FILE
+    sudo virsh define "$XML_FILE"
   fi
   verbose_message "To start the VM and connect to console run the following command:" TEXT
   verbose_message "" TEXT
@@ -3501,9 +3138,6 @@ case $ACTION in
     DO_OLD_INSTALLER="true"
     ;;
   "listallisos"|"listisos")
-    if [[ "$ACTION" =~ "listalliso" ]]; then
-      LIST_ALL_ISOS="true"
-    fi
     DO_LIST_ISOS="true"
     ;;
   *)
@@ -4035,7 +3669,7 @@ fi
 
 # Ubuntu Pro Apt News
 
-if [ $ISO_MAJOR_REL -ge 22 ]; then
+if [ "$ISO_MAJOR_REL" -ge 22 ]; then
   ISO_INSTALL_PACKAGES="$ISO_INSTALL_PACKAGES ubuntu-advantage-tools"
   ISO_CHROOT_PACKAGES="$ISO_CHROOT_PACKAGES ubuntu-advantage-tools"
 fi
@@ -4370,10 +4004,8 @@ if [ "$DO_DOCKER" = "true" ] || [ "$DO_CHECK_DOCKER" = "true" ]; then
     DOCKER_BIN="$WORK_DIR/files/$SCRIPT_BIN"
     LOCAL_SCRIPT="$WORK_DIR/files/guige_docker_script.sh"
     DOCKER_SCRIPT="$DOCKER_WORK_DIR/files/guige_docker_script.sh"
-    if ! [ "$DOCKER_BIN" = "$SCRIPT_FILE" ]; then
-      cp "$SCRIPT_FILE" "$DOCKER_BIN"
-      chmod +x "$DOCKER_BIN"
-    fi
+    cp "$SCRIPT_FILE" "$DOCKER_BIN"
+    chmod +x "$DOCKER_BIN"
     check_work_dir
     if [ "$DO_OLD_INSTALLER" = "true" ]; then
       check_old_work_dir
@@ -4383,9 +4015,6 @@ if [ "$DO_DOCKER" = "true" ] || [ "$DO_CHECK_DOCKER" = "true" ]; then
     if [ "$DO_DOCKER" = "false" ]; then
       exit
     fi
-    handle_output "echo \"#!/bin/bash\" > $LOCAL_SCRIPT"
-    handle_output "echo \"$DOCKER_WORK_DIR/files/$SCRIPT_BIN $SCRIPT_ARGS --workdir $DOCKER_WORK_DIR --preworkdir $WORK_DIR\" >> $LOCAL_SCRIPT"
-    handle_output "docker run --privileged=true --cap-add=CAP_MKNOD --device-cgroup-rule=\"b 7:* rmw\" --platform \"linux/$ISO_ARCH\" --mount source=\"$SCRIPT_NAME-$ISO_ARCH,target=/root/$SCRIPT_NAME\" --mount type=bind,source=\"$WORK_DIR/files,target=/root/$SCRIPT_NAME/$NEW_DIR/files\"  \"$SCRIPT_NAME-$ISO_ARCH\" /bin/bash \"$DOCKER_SCRIPT\""
     if ! [ "$TEST_MODE" = "true" ]; then
       echo "#!/bin/bash" > "$LOCAL_SCRIPT"
       echo "$DOCKER_WORK_DIR/files/$SCRIPT_BIN $SCRIPT_ARGS --workdir $DOCKER_WORK_DIR --preworkdir $WORK_DIR" >> "$LOCAL_SCRIPT"
@@ -4393,7 +4022,9 @@ if [ "$DO_DOCKER" = "true" ] || [ "$DO_CHECK_DOCKER" = "true" ]; then
         BASE_DOCKER_OUTPUT_FILE=$( basename "$OUTPUT_FILE" )
         echo "# Output file will be at \"$WORK_DIR/files/$BASE_DOCKER_OUTPUT_FILE\""
       fi
+#      echo "exec docker run --privileged=true --cap-add=CAP_MKNOD --device-cgroup-rule=\"b 7:* rmw\" --platform \"linux/$ISO_ARCH\" --mount source=\"$SCRIPT_NAME-$ISO_ARCH,target=/root/$SCRIPT_NAME\" --mount type=bind,source=\"$WORK_DIR/files,target=/root/$SCRIPT_NAME/$NEW_DIR/files\"  \"$SCRIPT_NAME-$ISO_ARCH\" /bin/bash \"$DOCKER_SCRIPT\""
       exec docker run --privileged=true --cap-add=CAP_MKNOD --device-cgroup-rule="b 7:* rmw" --platform "linux/$ISO_ARCH" --mount source="$SCRIPT_NAME-$ISO_ARCH,target=/root/$SCRIPT_NAME" --mount type=bind,source="$WORK_DIR/files,target=/root/$SCRIPT_NAME/$NEW_DIR/files"  "$SCRIPT_NAME-$ISO_ARCH" /bin/bash "$DOCKER_SCRIPT"
+      exit
     fi
   fi
   DO_PRINT_HELP="false"
