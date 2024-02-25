@@ -11,7 +11,7 @@ used to hang a shield on the shoulder or neck when not in use.
 Version
 -------
 
-Current version: 1.9.4
+Current version: 1.9.6
 
 Issues
 ------
@@ -74,6 +74,9 @@ By default this script creates a DHCP based install ISO with four additonal inst
 - LVM based install to the first non USB drive available using the first network device with link (EXT4 root filesystem)
 - LVM based install to the first non USB drive available using the first network device with link (XFS root filesystem)
 - LVM based install to the first non USB drive available using the first network device with link (BTRFS root filesystem)
+
+A custom cloud-init user-data file can be used by using the --userdata switch with the location of the file.
+This will copy the file into the image, create a boot menu entry called custom, and set that to default.
 
 This can be customised as per examples section to use a custom drive, network device,
 and many other options (e.g. username and password)
@@ -171,7 +174,7 @@ You can get help using the -h or --help switch:
     -Z|--options:             Options (e.g. nounmount, testmode, bios, uefi, verbose, interactive)
     -z|--volumemanager:       Volume Managers (default: zfs zfs-lvm lvm xfs btrfs)
       |--zfsfilesystems:      ZFS filesystems (default: /var /var/lib /var/lib/AccountsService /var/lib/apt /var/lib/dpkg /var/lib/NetworkManager /srv /usr /usr/local /var/games /var/log /var/mail /var/snap /var/spool /var/www)
-      |--autoinstall:         Use a custom autoinstall file (default: generate automatically)
+      |--userdata:            Use a custom autoinstall file (default: generate automatically)
 ```
 
 You can get more usage information by using the usage tag with the action switch:

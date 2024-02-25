@@ -387,3 +387,7 @@
 # Added check for packages before adding command to install packages
 # 1.9.4: Sun 25 Feb 2024 19:12:47 AEDT
 # Bug fixes
+# 1.9.5: Mon 26 Feb 2024 07:32:21 AEDT
+# Fixed bug with setting defaults
+# 1.9.6: Mon 26 Feb 2024 09:41:22 AEDT
+# Added custom user-data option

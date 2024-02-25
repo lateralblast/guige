@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Name:         guige (Generic Ubuntu/Unix ISO Generation Engine)
-# Version:      1.9.4
+# Version:      1.9.6
 # Release:      1
 # License:      CC-BA (Creative Commons By Attribution)
 #               http://creativecommons.org/licenses/by/4.0/legalcode
@@ -488,7 +488,7 @@ print_help () {
     -Z|--options:             Options (e.g. nounmount, testmode, bios, uefi, verbose, interactive)
     -z|--volumemanager:       Volume Managers (default: $DEFAULT_ISO_VOLMGRS)
       |--zfsfilesystems:      ZFS filesystems (default: $DEFAULT_ZFS_FILESYSTEMS)
-      |--autoinstall:         Use a custom autoinstall file (default: generate automatically)
+      |--userdata:            Use a custom user-data file (default: generate automatically)
 HELP
   exit
 }
@@ -1932,8 +1932,8 @@ prepare_autoinstall_iso () {
         rm "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
       fi
       if [ "$TEST_MODE" = "false" ]; then
-        if [ "$DO_CUSTOM_AUTO_INSTALL" = "true" ]; then
-          cp "$AUTO_INSTALL_FILE" "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
+        if [ "$ISO_VOLMGR" = "custom" ]; then
+          cp "$WORK_DIR/files/user-data" "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
         else
           echo "#cloud-config" > "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
           echo "autoinstall:" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
@@ -1954,6 +1954,8 @@ prepare_autoinstall_iso () {
           echo "      uri: http://ports.ubuntu.com/ubuntu-ports" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
           echo "  package_update: $DO_INSTALL_ISO_UPDATE" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
           echo "  package_upgrade: $DO_INSTALL_ISO_UPGRADE" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
+          echo "  codecs:" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
+          echo "    install: $DO_INSTALL_ISO_DRIVERS" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
           echo "  drivers:" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
           echo "    install: $DO_INSTALL_ISO_DRIVERS" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
           echo "  user-data:" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
@@ -2278,6 +2280,9 @@ prepare_autoinstall_iso () {
               else
                 echo "    config:" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
                 echo "    - ptable: gpt" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
+                if [ "$ISO_RELEASE" = "22.04.4" ] || [ "$ISO_RELEASE" = "24.04" ]; then
+                  echo "      wwn: first-wwn" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
+                fi
                 echo "      path: /dev/$ISO_DEVICE" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
                 echo "      wipe: superblock-recursive" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
                 echo "      preserve: false" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
@@ -2379,6 +2384,10 @@ prepare_autoinstall_iso () {
           if [ "$ISO_DEVICE" = "first-disk" ]; then
             if [ ! "$ISO_VOLMGR" = "lvm" ]; then
               echo "    - \"sed -i \\\"s/first-disk/\$(lsblk -x TYPE|grep disk |sort |head -1 |awk '{print \$1}')/g\\\" /autoinstall.yaml\"" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
+              if [ "$ISO_RELEASE" = "22.04.4" ] || [ "$ISO_RELEASE" = "24.04" ]; then
+                echo "    - \"sed -i \\\"s/first-wwn/\$(lsblk -x TYPE -o NAME,WWN,TYPE|grep disk |sort |head -1 |awk '{print \$2}')/g\\\" /autoinstall.yaml\"" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
+#                echo "    - \"sed -i \\\"s/first-serial/\$(lsblk -x TYPE -o NAME,WWN,TYPE|grep disk |sort |head -1 |awk '{print \$2}')/g\\\" /autoinstall.yaml\"" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
+              fi
             fi
           fi
           if [ "$ISO_NIC" = "first-net" ]; then
@@ -3060,29 +3069,32 @@ print_env () {
   handle_output "# Install target:            [ISO_TARGET_MOUNT]               $ISO_TARGET_MOUNT" TEXT
   handle_output "# Recreate squashfs:         [DO_ISO_SQUASHFS_UPDATE]         $DO_ISO_SQUASHFS_UPDATE" TEXT
   handle_output "# Squashfs packages:         [ISO_CHROOT_PACKAGES]            $ISO_CHROOT_PACKAGES" TEXT
-  handle_output "# Additional packages:       [ISO_INSTALL_PACKAGES            $ISO_INSTALL_PACKAGES" TEXT
-  handle_output "# Network updates:           [DO_INSTALL_ISO_NETWORK_UPDATES  $DO_INSTALL_ISO_NETWORK_UPDATES" TEXT
-  handle_output "# Install packages:          [DO_INSTALL_ISO_PACKAGES         $DO_INSTALL_ISO_PACKAGES" TEXT
-  handle_output "# Install updates:           [DO_INSTALL_ISO_UPDATE           $DO_INSTALL_ISO_UPDATE" TEXT
-  handle_output "# Install upgrades:          [DO_INSTALL_ISO_UPGRADE          $DO_INSTALL_ISO_UPGRADE" TEXT
-  handle_output "# Dist upgrades:             [DO_INSTALL_ISO_DIST_UPGRADE     $DO_INSTALL_ISO_DIST_UPGRADE" TEXT
-  handle_output "# Swap size:                 [ISO_SWAPSIZE                    $ISO_SWAPSIZE" TEXT
+  handle_output "# Additional packages:       [ISO_INSTALL_PACKAGES]           $ISO_INSTALL_PACKAGES" TEXT
+  handle_output "# Network updates:           [DO_INSTALL_ISO_NETWORK_UPDATES] $DO_INSTALL_ISO_NETWORK_UPDATES" TEXT
+  handle_output "# Install packages:          [DO_INSTALL_ISO_PACKAGES]        $DO_INSTALL_ISO_PACKAGES" TEXT
+  handle_output "# Install updates:           [DO_INSTALL_ISO_UPDATE]          $DO_INSTALL_ISO_UPDATE" TEXT
+  handle_output "# Install upgrades:          [DO_INSTALL_ISO_UPGRADE]         $DO_INSTALL_ISO_UPGRADE" TEXT
+  handle_output "# Dist upgrades:             [DO_INSTALL_ISO_DIST_UPGRADE]    $DO_INSTALL_ISO_DIST_UPGRADE" TEXT
+  handle_output "# Swap size:                 [ISO_SWAPSIZE]                   $ISO_SWAPSIZE" TEXT
   if [ "$DO_CREATE_EXPORT" = "true" ] || [ "$DO_CREATE_ANSIBLE" = "true" ]; then
-    handle_output "# Bootserver IP:             [BOOT_SERVER_IP                  $BOOT_SERVER_IP" TEXT
-    handle_output "# Bootserver file:           [BOOT_SERVER_FILE                $BOOT_SERVER_FILE" TEXT
+    handle_output "# Bootserver IP:             [BOOT_SERVER_IP]                 $BOOT_SERVER_IP" TEXT
+    handle_output "# Bootserver file:           [BOOT_SERVER_FILE]               $BOOT_SERVER_FILE" TEXT
   fi
   if [ "$DO_CREATE_ANSIBLE" = "true" ] ; then
-    handle_output "# BMC IP:                    [BMC_IP                          $BMC_IP" TEXT
-    handle_output "# BMC Username:              [BMC_USERNAME                    $BMC_USERNAME" TEXT
-    handle_output "# BMC Password:              [BMC_PASSWORD                    $BMC_PASSWORD" TEXT
+    handle_output "# BMC IP:                    [BMC_IP]                         $BMC_IP" TEXT
+    handle_output "# BMC Username:              [BMC_USERNAME]                   $BMC_USERNAME" TEXT
+    handle_output "# BMC Password:              [BMC_PASSWORD]                   $BMC_PASSWORD" TEXT
   fi
-  handle_output "# Serial Port:               [ISO_SERIAL_PORT0                $ISO_SERIAL_PORT0" TEXT
-  handle_output "# Serial Port:               [ISO_SERIAL_PORT1                $ISO_SERIAL_PORT1" TEXT
-  handle_output "# Serial Port Address:       [ISO_SERIAL_PORT_ADDRESS0        $ISO_SERIAL_PORT_ADDRESS0" TEXT
-  handle_output "# Serial Port Address:       [ISO_SERIAL_PORT_ADDRESS1        $ISO_SERIAL_PORT_ADDRESS1" TEXT
-  handle_output "# Serial Port Speed:         [ISO_SERIAL_PORT_SPEED0          $ISO_SERIAL_PORT_SPEED0" TEXT
-  handle_output "# Serial Port Speed:         [ISO_SERIAL_PORT_SPEED1          $ISO_SERIAL_PORT_SPEED1" TEXT
-  handle_output "# Use biosdevnames:          [ISO_USE_BIOSDEVNAME             $ISO_USE_BIOSDEVNAME" TEXT
+  handle_output "# Serial Port:               [ISO_SERIAL_PORT0]               $ISO_SERIAL_PORT0" TEXT
+  handle_output "# Serial Port:               [ISO_SERIAL_PORT1]               $ISO_SERIAL_PORT1" TEXT
+  handle_output "# Serial Port Address:       [ISO_SERIAL_PORT_ADDRESS0]       $ISO_SERIAL_PORT_ADDRESS0" TEXT
+  handle_output "# Serial Port Address:       [ISO_SERIAL_PORT_ADDRESS1]       $ISO_SERIAL_PORT_ADDRESS1" TEXT
+  handle_output "# Serial Port Speed:         [ISO_SERIAL_PORT_SPEED0]         $ISO_SERIAL_PORT_SPEED0" TEXT
+  handle_output "# Serial Port Speed:         [ISO_SERIAL_PORT_SPEED1]         $ISO_SERIAL_PORT_SPEED1" TEXT
+  handle_output "# Use biosdevnames:          [ISO_USE_BIOSDEVNAME]            $ISO_USE_BIOSDEVNAME" TEXT
+  if [ "$DO_CUSTOM_AUTO_INSTALL" = "true" ]; then
+    handle_output "# Custom user-data:          [AUTO_INSTALL_FILE]               $AUTO_INSTALL_FILE" TEXT
+  fi
   if [ "$DO_PRINT_ENV" = "true" ] || [ "$INTERACTIVE_MODE" = "true" ]; then
     TEMP_VERBOSE_MODE="false"
   fi
@@ -3140,8 +3152,10 @@ update_required_packages () {
 process_switches () {
   if [ "$DO_CUSTOM_AUTO_INSTALL" = "true" ]; then
     if [ ! -f "$AUTO_INSTALL_FILE" ]; then
-      echo "File $AUTO_INSTALL_FILE does not exist"
-      exit
+      if [ ! -f "/.dockerenv" ]; then
+        echo "File $AUTO_INSTALL_FILE does not exist"
+        exit
+      fi
     fi
   fi
   if [ "$ZFS_FILESYSTEMS" = "" ]; then
@@ -3298,6 +3312,9 @@ process_switches () {
     else
       DEFAULT_ISO_VOLMGRS="lvm"
     fi
+  fi
+  if [ "$DO_CUSTOM_AUTO_INSTALL" = "true" ]; then
+    DEFAULT_ISO_VOLMGRS="custom $DEFAULT_ISO_VOLMGRS"
   fi
   if [ "$ISO_VOLMGRS" = "" ]; then
     ISO_VOLMGRS="$DEFAULT_ISO_VOLMGRS"
@@ -3818,11 +3835,26 @@ handle_ubuntu_pro () {
   fi
 }
 
+# Function: copy_custom_user_data
+#
+# Copy the custome user-data file to a place we can get to it whne running in docker
+
+copy_custom_user_data () {
+  if [ "$DO_CUSTOM_AUTO_INSTALL" = "true" ]; then
+    if [ ! -f "/.dockerenv" ]; then
+      cp "$AUTO_INSTALL_FILE" "$WORK_DIR/files/user-data"
+    fi
+  fi
+}
+
 # Function: Handle command line arguments
 
 if [ "$SCRIPT_ARGS" = "" ]; then
   print_help
 fi
+
+set_defaults
+set_default_flags
 
 while test $# -gt 0
 do
@@ -4104,7 +4136,7 @@ do
       ZFS_FILESYSTEMS="$2"
       shift 2
       ;;
-    --autoinstall)
+    --userdata)
       DO_CUSTOM_AUTO_INSTALL="true"
       AUTO_INSTALL_FILE="$2"
       shift 2
@@ -4121,9 +4153,7 @@ done
 
 # Setup functions
 
-set_defaults
 reset_defaults
-set_default_flags
 set_default_os_name
 set_default_arch
 set_default_release
@@ -4143,6 +4173,7 @@ update_output_file_name
 update_iso_url
 handle_bios
 handle_ubuntu_pro
+copy_custom_user_data
 
 # Output variables
 
