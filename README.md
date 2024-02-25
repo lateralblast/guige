@@ -11,15 +11,15 @@ used to hang a shield on the shoulder or neck when not in use.
 Version
 -------
 
-Current version: 1.8.9
+Current version: 1.9.4
 
 Issues
 ------
 
 Current issues:
 
-- Currently does not work with Ubuntu 23.10 or later (have logged a bug with curtin installer team)
-  - A workaround for this is to install 23.04 and upgrade to 23.10
+- Currently does not work with Ubuntu 22.04.4 or later (have logged a bug with curtin installer team)
+  - A workaround for this is to install 22.04.3 or 23.04 and upgrade to a later release
 - BIOS ISO does not support ZFS
   - Default mode is UEFI with ZFS and LVM install options
   - BIOS ISO mode will build installer with only LVM install
