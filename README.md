@@ -11,7 +11,7 @@ used to hang a shield on the shoulder or neck when not in use.
 Version
 -------
 
-Current version: 1.9.6
+Current version: 1.9.8
 
 Issues
 ------
@@ -101,7 +101,7 @@ var or home partitions. This could be changed, but in my experience testing rece
 cloud-init autoinstall versions/configs on Ubuntu it takes quite a bit of testing
 to get more complex layouts working without issue.
 
-This script can also be used to create a KVM VM to test the ISO created.
+This script can also be used to create a KVM/QEMU VM to test the ISO created.
 This is useful for troubleshooting by connecting to the KVM VM in console mode and watching install.
 
 Usage

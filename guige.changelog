@@ -391,3 +391,7 @@
 # Fixed bug with setting defaults
 # 1.9.6: Mon 26 Feb 2024 09:41:22 AEDT
 # Added custom user-data option
+# 1.9.7: Mon 26 Feb 2024 22:10:56 AEDT
+# Fixed bug with package install on MacOS
+# 1.9.8: Tue 27 Feb 2024 17:40:55 AEDT
+# Fixed bugs and added support for QEMU VM on MacOS

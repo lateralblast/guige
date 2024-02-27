@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Name:         guige (Generic Ubuntu/Unix ISO Generation Engine)
-# Version:      1.9.6
+# Version:      1.9.8
 # Release:      1
 # License:      CC-BA (Creative Commons By Attribution)
 #               http://creativecommons.org/licenses/by/4.0/legalcode
@@ -78,8 +78,8 @@ set_defaults () {
   DEFAULT_ISO_SERIAL_PORT1="ttyS1"
   DEFAULT_ISO_SERIAL_PORT_ADDRESS1="0x02f8"
   DEFAULT_ISO_SERIAL_PORT_SPEED1="115200"
-  DEFAULT_ISO_INSTALL_PACKAGES="zfsutils-linux zfs-initramfs net-tools curl lftp wget sudo file rsync dialog setserial ansible apt-utils whois squashfs-tools duperemove"
-  REQUIRED_PACKAGES="p7zip-full lftp wget xorriso whois squashfs-tools sudo file rsync net-tools nfs-kernel-server ansible dialog apt-utils"
+  DEFAULT_ISO_INSTALL_PACKAGES="zfsutils-linux zfs-initramfs net-tools curl lftp wget sudo file rsync dialog setserial ansible apt-utils whois squashfs-tools duperemove jq"
+  REQUIRED_PACKAGES="p7zip-full lftp wget xorriso whois squashfs-tools sudo file rsync net-tools nfs-kernel-server ansible dialog apt-utils jq"
   DEFAULT_DOCKER_ARCH="amd64 arm64"
   DEFAULT_ISO_SSH_KEY_FILE="$HOME/.ssh/id_rsa.pub"
   MASKED_DEFAULT_ISO_SSH_KEY_FILE="$HOME/.ssh/id_rsa.pub"
@@ -960,7 +960,7 @@ install_required_packages () {
     PACKAGE_VERSION=""
     verbose_message "# Package: $PACKAGE" TEXT
     if [ "$OS_NAME" = "Darwin" ]; then
-      PACKAGE_VERSION=$( brew list "$PACKAGE" 2>&1 |head -1 |awk -F"/" '{print $6}' )
+      PACKAGE_VERSION=$( brew info $PACKAGE --json |jq -r ".[0].versions.stable" )
     else
       if [[ "$LSB_RELEASE" =~ "Arch" ]] || [[ "$LSB_RELEASE" =~ "Endeavour" ]]; then
         PACKAGE_VERSION=$( sudo pacman -Q "$PACKAGE" 2>&1 |awk '{print $2}' )
@@ -971,6 +971,7 @@ install_required_packages () {
     verbose_message "# $PACKAGE version: $PACKAGE_VERSION" TEXT
     if [ -z "$PACKAGE_VERSION" ]; then
       if [ "$TEST_MODE" = "false" ]; then
+        verbose_message "# Installing package $PACKAGE"
         if [ "$OS_NAME" = "Darwin" ]; then
           brew update
           brew install "$PACKAGE"
@@ -1819,7 +1820,7 @@ create_autoinstall_iso () {
 # Prepare sutoinstall ISO
 
 prepare_autoinstall_iso () {
-  if [ -f "/usr/bin/7z" ]; then
+  if [ -z "$(command -v 7z)" ]; then
     install_required_packages
   fi
   handle_output "# Preparing autoinstall ISO" TEXT
@@ -2481,7 +2482,11 @@ prepare_autoinstall_iso () {
 # Check if KVM VM exists
 
 check_kvm_vm_exists () {
-  KVM_TEST=$(sudo virsh list --all |awk '{ print $2 }' |grep "^$VM_NAME")
+  if [ "$OS_NAME" = "Darwin" ]; then
+    KVM_TEST=$(virsh list --all |awk '{ print $2 }' |grep "^$VM_NAME")
+  else
+    KVM_TEST=$(sudo virsh list --all |awk '{ print $2 }' |grep "^$VM_NAME")
+  fi
   if [ "$KVM_TEST" = "$VM_NAME" ]; then
     warning_message "KVM VM $VM_NAME exists"
     VM_EXISTS="true"
@@ -2491,14 +2496,43 @@ check_kvm_vm_exists () {
 # Create a KVM VM for testing an ISO
 
 create_kvm_vm () {
-  VIRT_DIR="/var/lib/libvirt"
+  if [ "$OS_NAME" = "Darwin" ]; then
+    VIRT_DIR="/opt/homebrew/var/lib/libvirt"
+    QEMU_VER=$(brew info qemu --json |jq -r ".[0].versions.stable")
+    VARS_FILE="/opt/homebrew/Cellar/qemu/$QEMU_VER/share/qemu/edk2-arm-vars.fd"
+    BIOS_FILE="/opt/homebrew/Cellar/qemu/$QEMU_VER/share/qemu/edk2-aarch64-code.fd"
+    QEMU_ARCH="aarch64"
+    QEMU_EMU="/opt/homebrew/bin/qemu-system-aarch64"
+    DOM_TYPE="hvf"
+    MACHINE="virt-8.2"
+    VIDEO="vga"
+    SERIAL="system-serial"
+    INPUT_BUS="usb"
+    IF_TYPE="user"
+    CD_BUS="scsi"
+  else
+    VIRT_DIR="/var/lib/libvirt"
+    VARS_FILE="/usr/share/OVMF/OVMF_VARS.fd"
+    BIOS_FILE="/usr/share/OVMF/OVMF_CODE.fd"
+    QEMU_ARCH="x86_64"
+    QEMU_EMU="/usr/bin/qemu-system-x86_64"
+    DOM_TYPE="kvm"
+    MACHINE="pc-q35-8.1"
+    VIDEO="qxl"
+    SERIAL="isa-serial"
+    INPUT_BUS="ps2"
+    IF_TYPE="network"
+    CD_BUS="sata"
+  fi
   QEMU_DIR="$VIRT_DIR/qemu"
+  if [ -z "$( command -v virsh )" ]; then
+    install_required_packages  
+  fi
+  QEMU_MAC=$( printf '52:54:00:%02X:%02X:%02X\n' $[RANDOM%256] $[RANDOM%256] $[RANDOM%256] )
   NVRAM_DIR="$QEMU_DIR/nvram"
-  IMAGE_DIR="$VIRT_DIR/images"
   NVRAM_FILE="$NVRAM_DIR/${VM_NAME}_VARS.fd"
-  VM_DISK="$IMAGE_DIR/$VM_NAME.qcow2"
-  BIOS_FILE="/usr/share/OVMF/OVMF_CODE.fd"
-  VARS_FILE="/usr/share/OVMF/OVMF_VARS.fd"
+  IMAGE_DIR="$VIRT_DIR/images"
+  VM_DISK="$WORK_DIR/$VM_NAME.qcow2"
   if ! [ -f "$BIOS_FILE" ]; then
     BIOS_FILE="/usr/share/edk2/x64/OVMF_CODE.fd"
     VARS_FILE="/usr/share/edk2/x64/OVMF_VARS.fd"
@@ -2511,11 +2545,15 @@ create_kvm_vm () {
   information_message "Creating VM disk $VM_DISK"
   execution_message "sudo qemu-img create -f qcow2 $VM_DISK $VM_SIZE"
   if [ "$TEST_MODE" = "false" ]; then
-    sudo qemu-img create -f qcow2 "$VM_DISK" "$VM_SIZE"
+    if [ "$OS_NAME" = "Darwin" ]; then
+      qemu-img create -f qcow2 "$VM_DISK" "$VM_SIZE"
+    else
+      sudo qemu-img create -f qcow2 "$VM_DISK" "$VM_SIZE"
+    fi
   fi
   information_message "Generating VM config $XML_FILE"
   XML_FILE="/tmp/$VM_NAME.xml"
-  echo "<domain type='kvm'>" > "$XML_FILE"
+  echo "<domain type='$DOM_TYPE'>" > "$XML_FILE"
   echo "  <name>$VM_NAME</name>" >> "$XML_FILE"
   echo "  <metadata>" >> "$XML_FILE"
   echo "    <libosinfo:libosinfo xmlns:libosinfo=\"http://libosinfo.org/xmlns/libvirt/domain/1.0\">" >> "$XML_FILE"
@@ -2527,10 +2565,10 @@ create_kvm_vm () {
   echo "  <vcpu placement='static'>$VM_CPUS</vcpu>" >> "$XML_FILE"
   if [ "$ISO_BOOT_TYPE" = "bios" ]; then
     echo "  <os>" >> "$XML_FILE"
-    echo "    <type arch='x86_64' machine='pc-q35-8.1'>hvm</type>" >> "$XML_FILE"
+    echo "    <type arch='$QEMU_ARCH' machine='$MACHINE'>hvm</type>" >> "$XML_FILE"
   else
     echo "  <os firmware='efi'>" >> "$XML_FILE"
-    echo "    <type arch='x86_64' machine='pc-q35-8.1'>hvm</type>" >> "$XML_FILE"
+    echo "    <type arch='$QEMU_ARCH' machine='$MACHINE'>hvm</type>" >> "$XML_FILE"
     echo "    <firmware>" >> "$XML_FILE"
     echo "      <feature enabled='no' name='enrolled-keys'/>" >> "$XML_FILE"
     echo "      <feature enabled='no' name='secure-boot'/>" >> "$XML_FILE"
@@ -2541,25 +2579,38 @@ create_kvm_vm () {
   fi
   echo "  </os>" >> "$XML_FILE"
   echo "  <features>" >> "$XML_FILE"
-  echo "    <acpi/>" >> "$XML_FILE"
-  echo "    <apic/>" >> "$XML_FILE"
-  echo "    <vmport state='off'/>" >> "$XML_FILE"
-  echo "  </features>" >> "$XML_FILE"
-  echo "  <cpu mode='host-passthrough' check='none' migratable='on'/>" >> "$XML_FILE"
-  echo "  <clock offset='utc'>" >> "$XML_FILE"
-  echo "    <timer name='rtc' tickpolicy='catchup'/>" >> "$XML_FILE"
-  echo "    <timer name='pit' tickpolicy='delay'/>" >> "$XML_FILE"
-  echo "    <timer name='hpet' present='no'/>" >> "$XML_FILE"
-  echo "  </clock>" >> "$XML_FILE"
-  echo "  <on_poweroff>destroy</on_poweroff>" >> "$XML_FILE"
-  echo "  <on_reboot>restart</on_reboot>" >> "$XML_FILE"
-  echo "  <on_crash>destroy</on_crash>" >> "$XML_FILE"
-  echo "  <pm>" >> "$XML_FILE"
-  echo "    <suspend-to-mem enabled='no'/>" >> "$XML_FILE"
-  echo "    <suspend-to-disk enabled='no'/>" >> "$XML_FILE"
-  echo "  </pm>" >> "$XML_FILE"
+  if [ "$OS_NAME" = "Darwin" ]; then
+    echo "    <acpi/>" >> "$XML_FILE"
+    echo "    <gic version='2'/>" >> "$XML_FILE"
+    echo "  </features>" >> "$XML_FILE"
+    echo "  <cpu mode='custom' match='exact' check='partial'>" >> "$XML_FILE"
+    echo "    <model fallback='forbid'>cortex-a57</model>" >> "$XML_FILE"
+    echo "  </cpu>" >> "$XML_FILE"
+    echo "  <clock offset='utc'/>" >> "$XML_FILE"
+    echo "  <on_poweroff>destroy</on_poweroff>" >> "$XML_FILE"
+    echo "  <on_reboot>restart</on_reboot>" >> "$XML_FILE"
+    echo "  <on_crash>destroy</on_crash>" >> "$XML_FILE"
+  else
+    echo "    <acpi/>" >> "$XML_FILE"
+    echo "    <apic/>" >> "$XML_FILE"
+    echo "    <vmport state='off'/>" >> "$XML_FILE"
+    echo "  </features>" >> "$XML_FILE"
+    echo "  <cpu mode='host-passthrough' check='none' migratable='on'/>" >> "$XML_FILE"
+    echo "  <clock offset='utc'>" >> "$XML_FILE"
+    echo "    <timer name='rtc' tickpolicy='catchup'/>" >> "$XML_FILE"
+    echo "    <timer name='pit' tickpolicy='delay'/>" >> "$XML_FILE"
+    echo "    <timer name='hpet' present='no'/>" >> "$XML_FILE"
+    echo "  </clock>" >> "$XML_FILE"
+    echo "  <on_poweroff>destroy</on_poweroff>" >> "$XML_FILE"
+    echo "  <on_reboot>restart</on_reboot>" >> "$XML_FILE"
+    echo "  <on_crash>destroy</on_crash>" >> "$XML_FILE"
+    echo "  <pm>" >> "$XML_FILE"
+    echo "    <suspend-to-mem enabled='no'/>" >> "$XML_FILE"
+    echo "    <suspend-to-disk enabled='no'/>" >> "$XML_FILE"
+    echo "  </pm>" >> "$XML_FILE"
+  fi
   echo "  <devices>" >> "$XML_FILE"
-  echo "    <emulator>/usr/bin/qemu-system-x86_64</emulator>" >> "$XML_FILE"
+  echo "    <emulator>$QEMU_EMU</emulator>" >> "$XML_FILE"
   echo "    <disk type='file' device='disk'>" >> "$XML_FILE"
   echo "      <driver name='qemu' type='qcow2' discard='unmap'/>" >> "$XML_FILE"
   echo "      <source file='$VM_DISK'/>" >> "$XML_FILE"
@@ -2567,14 +2618,37 @@ create_kvm_vm () {
   echo "      <boot order='2'/>" >> "$XML_FILE"
   echo "      <address type='pci' domain='0x0000' bus='0x04' slot='0x00' function='0x0'/>" >> "$XML_FILE"
   echo "    </disk>" >> "$XML_FILE"
-  echo "    <disk type='file' device='cdrom'>" >> "$XML_FILE"
-  echo "      <driver name='qemu' type='raw'/>" >> "$XML_FILE"
-  echo "      <source file='$VM_ISO'/>" >> "$XML_FILE"
-  echo "      <target dev='sda' bus='sata'/>" >> "$XML_FILE"
-  echo "      <readonly/>" >> "$XML_FILE"
-  echo "      <boot order='1'/>" >> "$XML_FILE"
-  echo "      <address type='drive' controller='0' bus='0' target='0' unit='0'/>" >> "$XML_FILE"
-  echo "    </disk>" >> "$XML_FILE"
+  if [ "$OS_NAME" = "Darwin" ]; then
+    echo "    <disk type='file' device='cdrom'>" >> "$XML_FILE"
+    echo "      <driver name='qemu' type='raw'/>" >> "$XML_FILE"
+    echo "      <source file='$VM_ISO'/>" >> "$XML_FILE"
+    echo "      <backingStore/>" >> "$XML_FILE"
+    echo "      <target dev='sda' bus='$CD_BUS'/>" >> "$XML_FILE"
+    echo "      <readonly/>" >> "$XML_FILE"
+    echo "      <boot order='1'/>" >> "$XML_FILE"
+    echo "      <alias name='scsi0-0-0-0'/>" >> "$XML_FILE"
+    echo "      <address type='drive' controller='0' bus='0' target='0' unit='0'/>" >> "$XML_FILE"
+    echo "    </disk>" >> "$XML_FILE"
+    echo "    <controller type='scsi' index='0' model='virtio-scsi'>" >> "$XML_FILE"
+    echo "      <alias name='scsi0'/>" >> "$XML_FILE"
+    echo "      <address type='pci' domain='0x0000' bus='0x03' slot='0x00' function='0x0'/>" >> "$XML_FILE"
+    echo "    </controller>" >> "$XML_FILE"
+    echo "    <controller type='virtio-serial' index='0'>" >> "$XML_FILE"
+    echo "      <address type='pci' domain='0x0000' bus='0x07' slot='0x00' function='0x0'/>" >> "$XML_FILE"
+    echo "    </controller>" >> "$XML_FILE"
+  else
+    echo "    <disk type='file' device='cdrom'>" >> "$XML_FILE"
+    echo "      <driver name='qemu' type='raw'/>" >> "$XML_FILE"
+    echo "      <source file='$VM_ISO'/>" >> "$XML_FILE"
+    echo "      <target dev='sda' bus='$CD_BUS'/>" >> "$XML_FILE"
+    echo "      <readonly/>" >> "$XML_FILE"
+    echo "      <boot order='1'/>" >> "$XML_FILE"
+    echo "      <address type='drive' controller='0' bus='0' target='0' unit='0'/>" >> "$XML_FILE"
+    echo "    </disk>" >> "$XML_FILE"
+    echo "    <controller type='virtio-serial' index='0'>" >> "$XML_FILE"
+    echo "      <address type='pci' domain='0x0000' bus='0x03' slot='0x00' function='0x0'/>" >> "$XML_FILE"
+    echo "    </controller>" >> "$XML_FILE"
+  fi
   echo "    <controller type='usb' index='0' model='qemu-xhci' ports='15'>" >> "$XML_FILE"
   echo "      <address type='pci' domain='0x0000' bus='0x02' slot='0x00' function='0x0'/>" >> "$XML_FILE"
   echo "    </controller>" >> "$XML_FILE"
@@ -2652,18 +2726,21 @@ create_kvm_vm () {
   echo "    <controller type='sata' index='0'>" >> "$XML_FILE"
   echo "      <address type='pci' domain='0x0000' bus='0x00' slot='0x1f' function='0x2'/>" >> "$XML_FILE"
   echo "    </controller>" >> "$XML_FILE"
-  echo "    <controller type='virtio-serial' index='0'>" >> "$XML_FILE"
-  echo "      <address type='pci' domain='0x0000' bus='0x03' slot='0x00' function='0x0'/>" >> "$XML_FILE"
-  echo "    </controller>" >> "$XML_FILE"
-  echo "    <interface type='network'>" >> "$XML_FILE"
-  echo "      <mac address='52:54:00:2e:6c:5b'/>" >> "$XML_FILE"
-  echo "      <source network='default'/>" >> "$XML_FILE"
+  echo "    <interface type='$IF_TYPE'>" >> "$XML_FILE"
+  echo "      <mac address='$QEMU_MAC'/>" >> "$XML_FILE"
+  if [ ! "$OS_NAME" = "Darwin" ]; then
+    echo "      <source network='default'/>" >> "$XML_FILE"
+  fi
   echo "      <model type='virtio'/>" >> "$XML_FILE"
   echo "      <address type='pci' domain='0x0000' bus='0x01' slot='0x00' function='0x0'/>" >> "$XML_FILE"
   echo "    </interface>" >> "$XML_FILE"
   echo "    <serial type='pty'>" >> "$XML_FILE"
-  echo "      <target type='isa-serial' port='0'>" >> "$XML_FILE"
-  echo "        <model name='isa-serial'/>" >> "$XML_FILE"
+  echo "      <target type='$SERIAL' port='0'>" >> "$XML_FILE"
+  if [ "$OS_NAME" = "Darwin" ]; then
+    echo "        <alias name='$SERIAL'/>" >> "$XML_FILE"
+  else
+    echo "        <model name='$SERIAL'/>" >> "$XML_FILE"
+  fi
   echo "      </target>" >> "$XML_FILE"
   echo "    </serial>" >> "$XML_FILE"
   echo "    <console type='pty'>" >> "$XML_FILE"
@@ -2673,34 +2750,40 @@ create_kvm_vm () {
   echo "      <target type='virtio' name='org.qemu.guest_agent.0'/>" >> "$XML_FILE"
   echo "      <address type='virtio-serial' controller='0' bus='0' port='1'/>" >> "$XML_FILE"
   echo "    </channel>" >> "$XML_FILE"
-  echo "    <channel type='spicevmc'>" >> "$XML_FILE"
-  echo "      <target type='virtio' name='com.redhat.spice.0'/>" >> "$XML_FILE"
-  echo "      <address type='virtio-serial' controller='0' bus='0' port='2'/>" >> "$XML_FILE"
-  echo "    </channel>" >> "$XML_FILE"
   echo "    <input type='tablet' bus='usb'>" >> "$XML_FILE"
   echo "      <address type='usb' bus='0' port='1'/>" >> "$XML_FILE"
   echo "    </input>" >> "$XML_FILE"
-  echo "    <input type='mouse' bus='ps2'/>" >> "$XML_FILE"
-  echo "    <input type='keyboard' bus='ps2'/>" >> "$XML_FILE"
-  echo "    <graphics type='spice' autoport='yes'>" >> "$XML_FILE"
-  echo "      <listen type='address'/>" >> "$XML_FILE"
-  echo "      <image compression='off'/>" >> "$XML_FILE"
-  echo "    </graphics>" >> "$XML_FILE"
+  echo "    <input type='mouse' bus='$INPUT_BUS'/>" >> "$XML_FILE"
+  echo "    <input type='keyboard' bus='$INPUT_BUS'/>" >> "$XML_FILE"
   echo "    <sound model='ich9'>" >> "$XML_FILE"
   echo "      <address type='pci' domain='0x0000' bus='0x00' slot='0x1b' function='0x0'/>" >> "$XML_FILE"
   echo "    </sound>" >> "$XML_FILE"
-  echo "    <audio id='1' type='spice'/>" >> "$XML_FILE"
   echo "    <video>" >> "$XML_FILE"
-  echo "      <model type='qxl' ram='65536' vram='65536' vgamem='16384' heads='1' primary='yes'/>" >> "$XML_FILE"
+  if [ "$OS_NAME" = "Darwin" ]; then
+    echo "      <model type='$VIDEO' vram='65536' heads='1' primary='yes'/>" >> "$XML_FILE"
+  else
+    echo "      <model type='$VIDEO' ram='65536' vram='65536' vgamem='16384' heads='1' primary='yes'/>" >> "$XML_FILE"
+  fi
   echo "      <address type='pci' domain='0x0000' bus='0x00' slot='0x01' function='0x0'/>" >> "$XML_FILE"
   echo "    </video>" >> "$XML_FILE"
-  echo "    <redirdev bus='usb' type='spicevmc'>" >> "$XML_FILE"
-  echo "      <address type='usb' bus='0' port='2'/>" >> "$XML_FILE"
-  echo "    </redirdev>" >> "$XML_FILE"
-  echo "    <redirdev bus='usb' type='spicevmc'>" >> "$XML_FILE"
-  echo "      <address type='usb' bus='0' port='3'/>" >> "$XML_FILE"
-  echo "    </redirdev>" >> "$XML_FILE"
-  echo "    <watchdog model='itco' action='reset'/>" >> "$XML_FILE"
+  if [ ! "$OS_NAME" = "Darwin" ]; then
+    echo "    <audio id='1' type='spice'/>" >> "$XML_FILE"
+    echo "    <channel type='spicevmc'>" >> "$XML_FILE"
+    echo "      <target type='virtio' name='com.redhat.spice.0'/>" >> "$XML_FILE"
+    echo "      <address type='virtio-serial' controller='0' bus='0' port='2'/>" >> "$XML_FILE"
+    echo "    </channel>" >> "$XML_FILE"
+    echo "    <graphics type='spice' autoport='yes'>" >> "$XML_FILE"
+    echo "      <listen type='address'/>" >> "$XML_FILE"
+    echo "      <image compression='off'/>" >> "$XML_FILE"
+    echo "    </graphics>" >> "$XML_FILE"
+    echo "    <redirdev bus='usb' type='spicevmc'>" >> "$XML_FILE"
+    echo "      <address type='usb' bus='0' port='2'/>" >> "$XML_FILE"
+    echo "    </redirdev>" >> "$XML_FILE"
+    echo "    <redirdev bus='usb' type='spicevmc'>" >> "$XML_FILE"
+    echo "      <address type='usb' bus='0' port='3'/>" >> "$XML_FILE"
+    echo "    </redirdev>" >> "$XML_FILE"
+    echo "    <watchdog model='itco' action='reset'/>" >> "$XML_FILE"
+  fi
   echo "    <memballoon model='virtio'>" >> "$XML_FILE"
   echo "      <address type='pci' domain='0x0000' bus='0x05' slot='0x00' function='0x0'/>" >> "$XML_FILE"
   echo "    </memballoon>" >> "$XML_FILE"
@@ -2710,14 +2793,23 @@ create_kvm_vm () {
   echo "    </rng>" >> "$XML_FILE"
   echo "  </devices>" >> "$XML_FILE"
   echo "</domain>" >> "$XML_FILE"
+  print_file "$XML_FILE"
   information_message "Importing VM config $XML_FILE"
-  execution_message "sudo virsh define $XML_FILE"
   if [ "$TEST_MODE" = "false" ]; then
-    sudo virsh define "$XML_FILE"
+    if [ "$OS_NAME" = "Darwin" ]; then
+      execution_message "virsh define $XML_FILE"
+      virsh define "$XML_FILE"
+      verbose_message "To start the VM and connect to console run the following command:" TEXT
+      verbose_message "" TEXT
+      verbose_message "virsh start $VM_NAME ; sudo virsh console $VM_NAME" TEXT
+    else
+      execution_message "sudo virsh define $XML_FILE"
+      sudo virsh define "$XML_FILE"
+      verbose_message "To start the VM and connect to console run the following command:" TEXT
+      verbose_message "" TEXT
+      verbose_message "sudo virsh start $VM_NAME ; sudo virsh console $VM_NAME" TEXT
+    fi
   fi
-  verbose_message "To start the VM and connect to console run the following command:" TEXT
-  verbose_message "" TEXT
-  verbose_message "sudo virsh start $VM_NAME ; sudo virsh console $VM_NAME" TEXT
 }
 
 # Function: delete_kvm_vm
@@ -2725,10 +2817,19 @@ create_kvm_vm () {
 # Delete a KVM VM
 
 delete_kvm_vm () {
-  information_message "Stopping KVM VM $VM_NAME"
-  execute_command "sudo virsh shutdown $VM_NAME"
-  information_message "Deleting VM $VM_NAME"
-  execute_command "sudo virsh undefine $VM_NAME --nvram"
+  if [ "$TEST_MODE" = "false" ]; then
+    if [ "$OS_NAME" = "Darwin" ]; then
+      information_message "Stopping KVM VM $VM_NAME"
+      execute_command "virsh -c \"qemu:///session\" shutdown $VM_NAME"
+      information_message "Deleting VM $VM_NAME"
+      execute_command "virsh undefine $VM_NAME --nvram"
+    else
+      information_message "Stopping KVM VM $VM_NAME"
+      execute_command "sudo virsh shutdown $VM_NAME"
+      information_message "Deleting VM $VM_NAME"
+      execute_command "sudo virsh undefine $VM_NAME --nvram"
+    fi
+  fi
 }
 
 # Function: delete_vm
@@ -3507,7 +3608,11 @@ update_output_file_name () {
   fi
   if [ "$DO_CREATE_VM" = "true" ]; then
     if [ "$VM_TYPE" = "kvm" ]; then
-      REQUIRED_PACKAGES="$REQUIRED_PACKAGES qemu-full virt-manager virt-viewer dnsmasq bridge-utils libguestfs ebtables vde2 openbsd-netcat cloud-image-utils libosinfo"
+      if [ "$OS_NAME" = "Darwin" ]; then
+        REQUIRED_PACKAGES="$REQUIRED_PACKAGES qemu libvirt dnsmasq libosinfo virt-manager"
+      else
+        REQUIRED_PACKAGES="$REQUIRED_PACKAGES qemu-full virt-manager virt-viewer dnsmasq bridge-utils libguestfs ebtables vde2 openbsd-netcat cloud-image-utils libosinfo"
+      fi
     fi
   fi
   if [ "$VM_TYPE" = "" ]; then
@@ -4204,7 +4309,6 @@ if [ "$DO_DELETE_VM" = "true" ]; then
 fi
 if [ "$DO_CREATE_VM" = "true" ]; then
   get_info_from_iso
-  install_required_packages
   create_vm
   exit
 fi
