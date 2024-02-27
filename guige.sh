@@ -2801,7 +2801,7 @@ create_kvm_vm () {
       virsh define "$XML_FILE"
       verbose_message "To start the VM and connect to console run the following command:" TEXT
       verbose_message "" TEXT
-      verbose_message "virsh start $VM_NAME ; sudo virsh console $VM_NAME" TEXT
+      verbose_message "virsh start $VM_NAME ; virsh console $VM_NAME" TEXT
     else
       execution_message "sudo virsh define $XML_FILE"
       sudo virsh define "$XML_FILE"
