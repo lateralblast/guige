@@ -399,3 +399,7 @@
 # Added function to list VMs
 # 2.0.0: Wed 28 Feb 2024 20:54:32 AEDT
 # Fixed bug with VM ISO determination
+# 2.0.1: Fri 01 Mar 2024 05:17:29 AEDT
+# Updates to cloud-init config generation
+# 2.0.2: Fri 01 Mar 2024 06:05:19 AEDT
+# Added serial kernel arguments to install/trial menu option

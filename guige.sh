@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Name:         guige (Generic Ubuntu/Unix ISO Generation Engine)
-# Version:      2.0.0
+# Version:      2.0.2
 # Release:      1
 # License:      CC-BA (Creative Commons By Attribution)
 #               http://creativecommons.org/licenses/by/4.0/legalcode
@@ -48,6 +48,7 @@ set_defaults () {
   CURRENT_DOCKER_UBUNTU_RELEASE="22.04"
   CURRENT_ISO_CODENAME="jammy"
   CURRENT_ISO_ARCH="amd64"
+  DEFAULT_ISO_SOURCE_ID="ubuntu-server"
   DEFAULT_ISO_HOSTNAME="ubuntu"
   DEFAULT_ISO_REALNAME="Ubuntu"
   DEFAULT_ISO_USERNAME="ubuntu"
@@ -98,6 +99,7 @@ set_defaults () {
   DEFAULT_VM_CPUS="2"
   DEFAULT_VM_SIZE="20G"
   DEFAULT_VM_NIC="default"
+  DEFAULT_ISO_OEM_INSTALL="auto"
   DEFAULT_ZFS_FILESYSTEMS="/var /var/lib /var/lib/AccountsService /var/lib/apt /var/lib/dpkg /var/lib/NetworkManager /srv /usr /usr/local /var/games /var/log /var/mail /var/snap /var/spool /var/www"
   VM_EXISTS="false"
   ISO_DHCP="true"
@@ -151,6 +153,7 @@ set_default_flags () {
   DO_INSTALL_ISO_NETWORK_UPDATES="false"
   DO_INSTALL_ISO_PACKAGES="false"
   DO_INSTALL_ISO_DRIVERS="false"
+  DO_INSTALL_ISO_CODECS="false"
   DO_ISO_AUTO_UPGRADES="false"
   DO_ISO_APT_NEWS="false"
   DO_GET_BASE_ISO="false"
@@ -177,6 +180,8 @@ set_default_flags () {
   DO_SCP_HEADER="false"
   DO_SERIAL="true"
   DO_CUSTOM_AUTO_INSTALL="false"
+  DO_ISO_SEARCH_DRIVERS="false"
+  DO_ISO_PRESERVE_SOURCES="false"
 }
 
 # Function: set_default_os_name
@@ -490,6 +495,8 @@ print_help () {
     -z|--volumemanager:       Volume Managers (default: $DEFAULT_ISO_VOLMGRS)
       |--zfsfilesystems:      ZFS filesystems (default: $DEFAULT_ZFS_FILESYSTEMS)
       |--userdata:            Use a custom user-data file (default: generate automatically)
+      |--oeminstall:          OEM install type (default $DEFAULT_ISO_OEM_INSTALL)
+      |--sourceid:            Source ID ($DEFAULT_ISO_SOURCE_ID) 
 HELP
   exit
 }
@@ -1913,9 +1920,10 @@ prepare_autoinstall_iso () {
           echo "}" >> "$ISO_SOURCE_DIR/boot/grub/grub.cfg"
         done
       done
+      KERNEL_SERIAL_ARGS="console=$ISO_SERIAL_PORT0,$ISO_SERIAL_PORT_SPEED0 console=$ISO_SERIAL_PORT1,$ISO_SERIAL_PORT_SPEED1"
       echo "menuentry 'Try or Install $ISO_VOLID' {" >> "$ISO_SOURCE_DIR/boot/grub/grub.cfg"
       echo "  set gfxpayload=keep" >> "$ISO_SOURCE_DIR/boot/grub/grub.cfg"
-      echo "  linux /casper/vmlinuz quiet ---" >> "$ISO_SOURCE_DIR/boot/grub/grub.cfg"
+      echo "  linux /casper/vmlinuz $KERNEL_SERIAL_ARGS quiet ---" >> "$ISO_SOURCE_DIR/boot/grub/grub.cfg"
       echo "  initrd  /casper/initrd" >> "$ISO_SOURCE_DIR/boot/grub/grub.cfg"
       echo "}" >> "$ISO_SOURCE_DIR/boot/grub/grub.cfg"
       echo "menuentry 'Boot from next volume' {" >> "$ISO_SOURCE_DIR/boot/grub/grub.cfg"
@@ -1940,24 +1948,32 @@ prepare_autoinstall_iso () {
           echo "#cloud-config" > "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
           echo "autoinstall:" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
           echo "  apt:" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
+          echo "    disable_components: []" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
           echo "    preferences:" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
           echo "      - package: \"*\"" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
           echo "        pin: \"release a=$ISO_CODENAME-security\"" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
           echo "        pin-priority: 200" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
-          echo "    disable_components: []" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
           echo "    geoip: true" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
-          echo "    preserve_sources_list: false" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
-          echo "    primary:" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
+          echo "    mirror-selection:" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
+          echo "      primary:" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
+          echo "      - arches:" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
+          echo "        - $ISO_ARCH" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
+          echo "        uri: http://archive.ubuntu.com/ubuntu" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
+          echo "      - arches:" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
+          echo "        - default" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
+          echo "        uri: http://ports.ubuntu.com/ubuntu-ports" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
+          echo "    preserve_sources_list: $DO_ISO_PRESERVE_SOURCES" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
+          echo "    security:" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
           echo "    - arches:" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
           echo "      - $ISO_ARCH" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
-          echo "      uri: http://archive.ubuntu.com/ubuntu" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
+          echo "      uri: http://security.ubuntu.com/ubuntu/" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
           echo "    - arches:" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
-          echo "      - default" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
+          echo "      - $ISO_ARCH" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
           echo "      uri: http://ports.ubuntu.com/ubuntu-ports" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
-          echo "  package_update: $DO_INSTALL_ISO_UPDATE" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
-          echo "  package_upgrade: $DO_INSTALL_ISO_UPGRADE" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
+          echo "    package_update: $DO_INSTALL_ISO_UPDATE" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
+          echo "    package_upgrade: $DO_INSTALL_ISO_UPGRADE" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
           echo "  codecs:" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
-          echo "    install: $DO_INSTALL_ISO_DRIVERS" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
+          echo "    install: $DO_INSTALL_ISO_CODECS" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
           echo "  drivers:" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
           echo "    install: $DO_INSTALL_ISO_DRIVERS" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
           echo "  user-data:" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
@@ -1988,6 +2004,11 @@ prepare_autoinstall_iso () {
             echo "          - $ISO_DNS" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
           fi
           echo "    version: 2" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
+          echo "  oem:" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
+          echo "    install: $ISO_OEM_INSTALL" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
+          echo "  source:" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
+          echo "    id: $ISO_SOURCE_ID" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
+          echo "    search_drivers: $DO_ISO_SEARCH_DRIVERS" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
           echo "  ssh:" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
           echo "    allow-pw: $ISO_ALLOW_PASSWORD" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
           echo "    authorized-keys: [ \"$ISO_SSH_KEY\" ]" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
@@ -2905,6 +2926,12 @@ list_vm () {
 # Process option switch
 
 process_options () {
+  if [[ "$OPTIONS" =~ "searchdrivers" ]]; then
+    DO_ISO_SEARCH_DRIVERS="true"
+  fi
+  if [[ "$OPTIONS" =~ "preservesourceslist" ]]; then
+    DO_ISO_PRESERVE_SOURCES="true"
+  fi
   if [[ "$OPTIONS" =~ "scp" ]]; then
     DO_SCP_HEADER="true"
   fi
@@ -3229,6 +3256,10 @@ print_env () {
   handle_output "# Serial Port Speed:         [ISO_SERIAL_PORT_SPEED0]         $ISO_SERIAL_PORT_SPEED0" TEXT
   handle_output "# Serial Port Speed:         [ISO_SERIAL_PORT_SPEED1]         $ISO_SERIAL_PORT_SPEED1" TEXT
   handle_output "# Use biosdevnames:          [ISO_USE_BIOSDEVNAME]            $ISO_USE_BIOSDEVNAME" TEXT
+  handle_output "# OEM Install:               [ISO_OEM_INSTALL]                $ISO_OEM_INSTALL" TEXT
+  handle_output "# Source ID:                 [ISO_SOURCE_ID]                  $ISO_SOURCE_ID" TEXT
+  handle_output "# Search Drivers:            [DO_ISO_SEARCH_DRIVERS]          $DO_ISO_SEARCH_DRIVERS" TEXT
+  handle_output "# Preserve Sources:          [DO_ISO_PRESERVE_SOURCES]        $DO_ISO_PRESERVE_SOURCES" TEXT
   if [ "$DO_CUSTOM_AUTO_INSTALL" = "true" ]; then
     handle_output "# Custom user-data:          [AUTO_INSTALL_FILE]               $AUTO_INSTALL_FILE" TEXT
   fi
@@ -3294,6 +3325,12 @@ process_switches () {
         exit
       fi
     fi
+  fi
+  if [ "$ISO_SOURCE_ID" = "" ]; then
+    ISO_SOURCE_ID="$DEFAULT_ISO_SOURCE_ID"
+  fi
+  if [ "$ISO_OEM_INSTALL" = "" ]; then
+    ISO_OEM_INSTALL="$DEFAULT_ISO_OEM_INSTALL"
   fi
   if [ "$ZFS_FILESYSTEMS" = "" ]; then
     ZFS_FILESYSTEMS="$DEFAULT_ZFS_FILESYSTEMS"
@@ -3875,26 +3912,32 @@ get_interactive_input () {
       read -r -p "SSH keys file [$ISO_SSH_KEY_FILE]: " NEW_ISO_SSH_KEY_FILE
       ISO_SSH_KEY_FILE=${NEW_ISO_SSH_KEY_FILE:-$ISO_SSH_KEY_FILE}
     fi
-    # Get wether to install drivers
+    # Get type of OEM install
+    read -r -p "OEM Install? [$ISO_OEM_INSTALL]: " NEW_ISO_OEM_INSTALL
+    ISO_OEM_INSTALL=${NEW_ISO_OEM_INSTALL:-$ISO_OEM_INSTALL}
+    # Get whether to install drivers
     read -r -p "Install Drivers? [$DO_INSTALL_ISO_DRIVERS]: " NEW_INSTALL_ISO_DRIVERS
     DO_INSTALL_ISO_DRIVERS=${NEW_INSTALL_ISO_DRIVERS:-$DO_INSTALL_ISO_DRIVERS}
+    # Get whether to install codecs
+    read -r -p "Install Codecs? [$DO_INSTALL_ISO_CODECS]: " NEW_INSTALL_ISO_CODECS
+    DO_INSTALL_ISO_CODECS=${NEW_INSTALL_ISO_CODECS:-$DO_INSTALL_ISO_CODECS}
     # Get Serial Port 0
-    read -r -p "Serial Port? [$ISO_SERIAL_PORT0]: " NEW_ISO_SERIAL_PORT0
+    read -r -p "First Serial Port? [$ISO_SERIAL_PORT0]: " NEW_ISO_SERIAL_PORT0
     ISO_SERIAL_PORT0=${NEW_ISO_SERIAL_PORT0:-$ISO_SERIAL_PORT0}
     # Get Serial Port 1
-    read -r -p "Serial Port? [$ISO_SERIAL_PORT1]: " NEW_ISO_SERIAL_PORT1
+    read -r -p "Second Serial Port? [$ISO_SERIAL_PORT1]: " NEW_ISO_SERIAL_PORT1
     ISO_SERIAL_PORT1=${NEW_ISO_SERIAL_PORT1:-$ISO_SERIAL_PORT1}
     # Get Serial Port Address 0
-    read -r -p "Serial Port Address? [$ISO_SERIAL_PORT_ADDRESS0]: " NEW_ISO_SERIAL_PORT_ADDRESS0
+    read -r -p "First Serial Port Address? [$ISO_SERIAL_PORT_ADDRESS0]: " NEW_ISO_SERIAL_PORT_ADDRESS0
     ISO_SERIAL_PORT_ADDRESS0=${NEW_ISO_SERIAL_PORT_ADDRESS0:-$ISO_SERIAL_PORT_ADDRESS0}
     # Get Serial Port Address 1
-    read -r -p "Serial Port Address? [$ISO_SERIAL_PORT_ADDRESS1]: " NEW_ISO_SERIAL_PORT_ADDRESS1
+    read -r -p "Second Serial Port Address? [$ISO_SERIAL_PORT_ADDRESS1]: " NEW_ISO_SERIAL_PORT_ADDRESS1
     ISO_SERIAL_PORT_ADDRESS1=${NEW_ISO_SERIAL_PORT_ADDRESS1:-$ISO_SERIAL_PORT_ADDRESS1}
     # Get Serial Port Speed 0
-    read -r -p "Serial Port Speed? [$ISO_SERIAL_PORT_SPEED0]: " NEW_ISO_SERIAL_PORT_SPEED0
+    read -r -p "First Serial Port Speed? [$ISO_SERIAL_PORT_SPEED0]: " NEW_ISO_SERIAL_PORT_SPEED0
     ISO_SERIAL_PORT_SPEED0=${NEW_ISO_SERIAL_PORT_SPEED0:-$ISO_SERIAL_PORT_SPEED0}
     # Get Serial Port Speed 1
-    read -r -p "Serial Port Speed? [$ISO_SERIAL_PORT_SPEED1]: " NEW_ISO_SERIAL_PORT_SPEED1
+    read -r -p "Second Serial Port Speed? [$ISO_SERIAL_PORT_SPEED1]: " NEW_ISO_SERIAL_PORT_SPEED1
     ISO_SERIAL_PORT_SPEED1=${NEW_ISO_SERIAL_PORT_SPEED1:-$ISO_SERIAL_PORT_SPEED1}
   fi
 }
@@ -4283,6 +4326,14 @@ do
     --userdata)
       DO_CUSTOM_AUTO_INSTALL="true"
       AUTO_INSTALL_FILE="$2"
+      shift 2
+      ;;
+    --oeminstall)
+      ISO_OEM_INSTALL="$2"
+      shift 2
+      ;;
+    --sourceid)
+      ISO_SOURCE_ID="$2"
       shift 2
       ;;
     --)
