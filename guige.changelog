@@ -395,3 +395,7 @@
 # Fixed bug with package install on MacOS
 # 1.9.8: Tue 27 Feb 2024 17:40:55 AEDT
 # Fixed bugs and added support for QEMU VM on MacOS
+# 1.9.9: Wed 28 Feb 2024 19:20:28 AEDT
+# Added function to list VMs
+# 2.0.0: Wed 28 Feb 2024 20:54:32 AEDT
+# Fixed bug with VM ISO determination

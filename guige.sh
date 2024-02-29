@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Name:         guige (Generic Ubuntu/Unix ISO Generation Engine)
-# Version:      1.9.8
+# Version:      2.0.0
 # Release:      1
 # License:      CC-BA (Creative Commons By Attribution)
 #               http://creativecommons.org/licenses/by/4.0/legalcode
@@ -144,6 +144,7 @@ set_default_flags () {
   DO_CHECK_ISO="false"
   DO_CREATE_VM="false"
   DO_DELETE_VM="false"
+  DO_LIST_VM="false"
   DO_OLD_INSTALLER="false"
   DO_CUSTOM_BOOT_SERVER_FILE="false"
   DO_INSTALL_REQUIRED_PACKAGES="false"
@@ -2479,6 +2480,8 @@ prepare_autoinstall_iso () {
   done
 }
 
+# Function: check_kvm_vm_existd
+# 
 # Check if KVM VM exists
 
 check_kvm_vm_exists () {
@@ -2493,9 +2496,14 @@ check_kvm_vm_exists () {
   fi
 }
 
+# Function: create_kvm_vm
+#
 # Create a KVM VM for testing an ISO
 
 create_kvm_vm () {
+  if [ -z "$( command -v virsh )" ]; then
+    install_required_packages  
+  fi
   if [ "$OS_NAME" = "Darwin" ]; then
     VIRT_DIR="/opt/homebrew/var/lib/libvirt"
     QEMU_VER=$(brew info qemu --json |jq -r ".[0].versions.stable")
@@ -2525,9 +2533,6 @@ create_kvm_vm () {
     CD_BUS="sata"
   fi
   QEMU_DIR="$VIRT_DIR/qemu"
-  if [ -z "$( command -v virsh )" ]; then
-    install_required_packages  
-  fi
   QEMU_MAC=$( printf '52:54:00:%02X:%02X:%02X\n' $[RANDOM%256] $[RANDOM%256] $[RANDOM%256] )
   NVRAM_DIR="$QEMU_DIR/nvram"
   NVRAM_FILE="$NVRAM_DIR/${VM_NAME}_VARS.fd"
@@ -2817,6 +2822,9 @@ create_kvm_vm () {
 # Delete a KVM VM
 
 delete_kvm_vm () {
+  if [ -z "$( command -v virsh )" ]; then
+    install_required_packages  
+  fi
   if [ "$TEST_MODE" = "false" ]; then
     if [ "$OS_NAME" = "Darwin" ]; then
       information_message "Stopping KVM VM $VM_NAME"
@@ -2865,6 +2873,31 @@ create_vm () {
       information_message "KVM VM $VM_NAME already exists"
     fi
   fi
+}
+
+# Function: list_kvm_vm
+#
+# List KVM VMs
+
+list_kvm_vm () {
+  if [ -z "$( command -v virsh )" ]; then
+    install_required_packages  
+  fi
+  if [ "$OS_NAME" = "Darwin" ]; then
+    virsh list --all
+  else
+    sudo virsh list --all
+  fi
+}
+
+# Function: list_vm
+#
+# List VMs
+
+list_vm () {
+  if [ "$VM_TYPE" = "kvm" ]; then
+    list_kvm_vm
+  fi  
 }
 
 # Function: process_options
@@ -2978,6 +3011,9 @@ process_actions () {
     "runracadm")
       DO_CHECK_RACADM="true"
       DO_EXECUTE_RACADM="true"
+      ;;
+    "listvm")
+      DO_LIST_VM="true"
       ;;
     "createexport")
       DO_CHECK_WORK_DIR="true"
@@ -3666,6 +3702,9 @@ update_output_file_name () {
   if [ "$OLD_WORK_DIR" = "" ]; then
     OLD_WORK_DIR="$DEFAULT_OLD_WORK_DIR"
   fi
+  if [ "$VM_ISO" = "" ]; then
+    VM_ISO="$OUTPUT_FILE"
+  fi
 }
 
 # Function: get_interactive_input
@@ -4299,6 +4338,11 @@ if [ "$INTERACTIVE_MODE" = "true" ]; then
 fi
 
 # Handle specific functions
+
+if [ "$DO_LIST_VM" = "true" ]; then
+  list_vm
+  exit
+fi
 
 if [ "$DO_DOCKER" = "true" ] || [ "$DO_CHECK_DOCKER" = "true" ]; then
   create_docker_iso
