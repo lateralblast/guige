@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Name:         guige (Generic Ubuntu/Unix ISO Generation Engine)
-# Version:      2.0.2
+# Version:      2.0.4
 # Release:      1
 # License:      CC-BA (Creative Commons By Attribution)
 #               http://creativecommons.org/licenses/by/4.0/legalcode
@@ -1893,12 +1893,19 @@ prepare_autoinstall_iso () {
       sudo_create_dir "$ISO_SOURCE_DIR/isolinux"
       echo "default $ISO_GRUB_MENU" > "$ISO_SOURCE_DIR/isolinux/txt.cfg"
       COUNTER=0
+      ISO_KERNEL_SERIAL_ARGS="console=$ISO_SERIAL_PORT0,$ISO_SERIAL_PORT_SPEED0 console=$ISO_SERIAL_PORT1,$ISO_SERIAL_PORT_SPEED1"
       for ISO_DEVICE in $ISO_DEVICES; do
         for ISO_VOLMGR in $ISO_VOLMGRS; do
           echo "label $COUNTER" >> "$ISO_SOURCE_DIR/isolinux/txt.cfg"
-          echo "  menu label ^$ISO_VOLID:$ISO_VOLMGR:$ISO_DEVICE:$ISO_NIC ($ISO_KERNEL_ARGS)" >> "$ISO_SOURCE_DIR/isolinux/txt.cfg"
-          echo "  kernel /casper/vmlinuz" >> "$ISO_SOURCE_DIR/isolinux/txt.cfg"
-          echo "  append  initrd=/casper/initrd $ISO_KERNEL_ARGS quiet autoinstall fsck.mode=skip ds=nocloud;s=$ISO_INSTALL_MOUNT/$ISO_AUTOINSTALL_DIR/configs/$ISO_VOLMGR/$ISO_DEVICE/  ---" >> "$ISO_SOURCE_DIR/isolinux/txt.cfg"
+          if [[ "$ISO_VOLMGR" =~ "custom" ]]; then
+            echo "  menu label ^$ISO_VOLID:$ISO_VOLMGR: ($ISO_KERNEL_SERIAL_ARGS)" >> "$ISO_SOURCE_DIR/isolinux/txt.cfg"
+            echo "  kernel /casper/vmlinuz" >> "$ISO_SOURCE_DIR/isolinux/txt.cfg"
+            echo "  append  initrd=/casper/initrd $ISO_SERIAL_KERNEL_ARGS quiet autoinstall fsck.mode=skip ds=nocloud;s=$ISO_INSTALL_MOUNT/$ISO_AUTOINSTALL_DIR/configs/$ISO_VOLMGR/$ISO_DEVICE/  ---" >> "$ISO_SOURCE_DIR/isolinux/txt.cfg"
+          else
+            echo "  menu label ^$ISO_VOLID:$ISO_VOLMGR:$ISO_DEVICE:$ISO_NIC ($ISO_KERNEL_ARGS)" >> "$ISO_SOURCE_DIR/isolinux/txt.cfg"
+            echo "  kernel /casper/vmlinuz" >> "$ISO_SOURCE_DIR/isolinux/txt.cfg"
+            echo "  append  initrd=/casper/initrd $ISO_KERNEL_ARGS quiet autoinstall fsck.mode=skip ds=nocloud;s=$ISO_INSTALL_MOUNT/$ISO_AUTOINSTALL_DIR/configs/$ISO_VOLMGR/$ISO_DEVICE/  ---" >> "$ISO_SOURCE_DIR/isolinux/txt.cfg"
+          fi
           COUNTER=$(( COUNTER+1 ))
         done
       done
@@ -1913,17 +1920,22 @@ prepare_autoinstall_iso () {
       echo "loadfont unicode" >> "$ISO_SOURCE_DIR/boot/grub/grub.cfg"
       for ISO_DEVICE in $ISO_DEVICES; do
         for ISO_VOLMGR in $ISO_VOLMGRS; do
-          echo "menuentry '$ISO_VOLID:$ISO_VOLMGR:$ISO_DEVICE:$ISO_NIC ($ISO_KERNEL_ARGS)' {" >> "$ISO_SOURCE_DIR/boot/grub/grub.cfg"
-          echo "  set gfxpayload=keep" >> "$ISO_SOURCE_DIR/boot/grub/grub.cfg"
-          echo "  linux   /casper/vmlinuz $ISO_KERNEL_ARGS quiet autoinstall fsck.mode=skip ds=nocloud\;s=$ISO_INSTALL_MOUNT/$ISO_AUTOINSTALL_DIR/configs/$ISO_VOLMGR/$ISO_DEVICE/  ---" >> "$ISO_SOURCE_DIR/boot/grub/grub.cfg"
+          if [[ "$ISO_VOLMGR" =~ "custom" ]]; then
+            echo "menuentry '$ISO_VOLID:$ISO_VOLMGR:defaults ($ISO_KERNEL_SERIAL_ARGS)' {" >> "$ISO_SOURCE_DIR/boot/grub/grub.cfg"
+            echo "  set gfxpayload=keep" >> "$ISO_SOURCE_DIR/boot/grub/grub.cfg"
+            echo "  linux   /casper/vmlinuz $ISO_KERNEL_SERIAL_ARGS quiet autoinstall fsck.mode=skip ds=nocloud\;s=$ISO_INSTALL_MOUNT/$ISO_AUTOINSTALL_DIR/configs/$ISO_VOLMGR/$ISO_DEVICE/  ---" >> "$ISO_SOURCE_DIR/boot/grub/grub.cfg"
+          else
+            echo "menuentry '$ISO_VOLID:$ISO_VOLMGR:$ISO_DEVICE:$ISO_NIC ($ISO_KERNEL_SERIAL_ARGS)' {" >> "$ISO_SOURCE_DIR/boot/grub/grub.cfg"
+            echo "  set gfxpayload=keep" >> "$ISO_SOURCE_DIR/boot/grub/grub.cfg"
+            echo "  linux   /casper/vmlinuz $ISO_KERNEL_ARGS quiet autoinstall fsck.mode=skip ds=nocloud\;s=$ISO_INSTALL_MOUNT/$ISO_AUTOINSTALL_DIR/configs/$ISO_VOLMGR/$ISO_DEVICE/  ---" >> "$ISO_SOURCE_DIR/boot/grub/grub.cfg"
+          fi
           echo "  initrd  /casper/initrd" >> "$ISO_SOURCE_DIR/boot/grub/grub.cfg"
           echo "}" >> "$ISO_SOURCE_DIR/boot/grub/grub.cfg"
         done
       done
-      KERNEL_SERIAL_ARGS="console=$ISO_SERIAL_PORT0,$ISO_SERIAL_PORT_SPEED0 console=$ISO_SERIAL_PORT1,$ISO_SERIAL_PORT_SPEED1"
-      echo "menuentry 'Try or Install $ISO_VOLID' {" >> "$ISO_SOURCE_DIR/boot/grub/grub.cfg"
+      echo "menuentry 'Try or Install $ISO_VOLID ($ISO_KERNEL_SERIAL_ARGS)' {" >> "$ISO_SOURCE_DIR/boot/grub/grub.cfg"
       echo "  set gfxpayload=keep" >> "$ISO_SOURCE_DIR/boot/grub/grub.cfg"
-      echo "  linux /casper/vmlinuz $KERNEL_SERIAL_ARGS quiet ---" >> "$ISO_SOURCE_DIR/boot/grub/grub.cfg"
+      echo "  linux /casper/vmlinuz $ISO_KERNEL_SERIAL_ARGS fsck.mode=skip quiet ---" >> "$ISO_SOURCE_DIR/boot/grub/grub.cfg"
       echo "  initrd  /casper/initrd" >> "$ISO_SOURCE_DIR/boot/grub/grub.cfg"
       echo "}" >> "$ISO_SOURCE_DIR/boot/grub/grub.cfg"
       echo "menuentry 'Boot from next volume' {" >> "$ISO_SOURCE_DIR/boot/grub/grub.cfg"
@@ -2849,12 +2861,12 @@ delete_kvm_vm () {
   if [ "$TEST_MODE" = "false" ]; then
     if [ "$OS_NAME" = "Darwin" ]; then
       information_message "Stopping KVM VM $VM_NAME"
-      execute_command "virsh -c \"qemu:///session\" shutdown $VM_NAME"
+      execute_command "virsh -c \"qemu:///session\" destroy $VM_NAME"
       information_message "Deleting VM $VM_NAME"
       execute_command "virsh undefine $VM_NAME --nvram"
     else
       information_message "Stopping KVM VM $VM_NAME"
-      execute_command "sudo virsh shutdown $VM_NAME"
+      execute_command "sudo virsh destroy $VM_NAME"
       information_message "Deleting VM $VM_NAME"
       execute_command "sudo virsh undefine $VM_NAME --nvram"
     fi
