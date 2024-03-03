@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Name:         guige (Generic Ubuntu/Unix ISO Generation Engine)
-# Version:      2.0.4
+# Version:      2.0.6
 # Release:      1
 # License:      CC-BA (Creative Commons By Attribution)
 #               http://creativecommons.org/licenses/by/4.0/legalcode
@@ -121,18 +121,25 @@ set_defaults () {
 # Reset defaults
 
 reset_defaults () {
-  if [[ "$ISO_CODENAME" =~ "rocky" ]]; then
+  if [[ "$ISO_OS_NAME" =~ "rocky" ]]; then
+    DEFAULT_ISO_ARCH="x86_64"
     CURRENT_ISO_RELEASE="9.3"
-    CURRENT_ISO_OS_NAME="rocky"
+    CURRENT_ISO_RELEASE_9="9.3"
+    DEFAULT_ISO_RELEASE="$CURRENT_ISO_RELEASE"
+    DEFAULT_ISO_MAJOR_RELEASE=$(echo "$DEFAULT_ISO_RELEASE" |cut -f1 -d.)
+    DEFAULT_ISO_MINOR_RELEASE=$(echo "$DEFAULT_ISO_RELEASE" |cut -f2 -d.)
+    DEFAULT_ISO_OS_NAME="rocky"
     DEFAULT_ISO_HOSTNAME="rocky"
     DEFAULT_ISO_REALNAME="Rocky"
     DEFAULT_ISO_USERNAME="rocky"
     DEFAULT_ISO_PASSWORD="rocky"
+    DEFAULT_ISO_BUILD_TYPE="dvd"
     DEFAULT_WORK_DIR="$HOME/$SCRIPT_NAME/$DEFAULT_ISO_OS_NAME/$DEFAULT_ISO_RELEASE"
     DEFAULT_ISO_MOUNT_DIR="$DEFAULT_WORK_DIR/isomount"
+    DEFAULT_INPUT_FILE="$DEFAULT_WORK_DIR/$DEFAULT_ISO_REALNAME-$DEFAULT_ISO_RELEASE-$DEFAULT_ISO_ARCH-dvd.iso"
     DEFAULT_INPUT_FILE_BASE=$( basename "$DEFAULT_INPUT_FILE" )
     DEFAULT_OUTPUT_FILE_BASE=$( basename "$DEFAULT_OUTPUT_FILE" )
-    DEFAULT_OLD_ISO_URL="https://download.rockylinux.org/pub/rocky/9/isos/$DEFAULT_ISO_ARCH/"
+    DEFAULT_ISO_URL="https://download.rockylinux.org/pub/rocky/$DEFAULT_ISO_MAJOR_RELEASE/isos/$DEFAULT_ISO_ARCH/$DEFAULT_INPUT_FILE_BASE"
   fi
 }
 
@@ -141,6 +148,10 @@ reset_defaults () {
 # Set default flags 
 
 set_default_flags () {
+  DO_NO_MULTIPATH="false"
+  DO_KVM_PACKAGES="false"
+  DO_NO_HWE_KERNEL="false"
+  DO_CLUSTER_PACKAGES="false"
   DO_DAILY_ISO="false"
   DO_CHECK_DOCKER="false"
   DO_CHECK_ISO="false"
@@ -210,18 +221,22 @@ set_default_os_name () {
 
 set_default_arch () {
   if [ -f "/usr/bin/uname" ]; then
-    DEFAULT_ISO_ARCH=$( uname -m | sed "s/aarch64/arm64/g" |sed "s/x86_64/amd64/g" )
     if [ "$OS_NAME" = "Linux" ]; then
       if [ "$( command -v ifconfig )" ]; then
         DEFAULT_BOOT_SERVER_IP=$( ifconfig | grep "inet " | grep -v "127.0.0.1" |head -1 |awk '{print $2}' )
       else
         DEFAULT_BOOT_SERVER_IP=$( ip addr | grep "inet " | grep -v "127.0.0.1" |head -1 |awk '{print $2}' |cut -f1 -d/ )
       fi
-      if [ "$DEFAULT_ISO_ARCH" = "x86_64" ] || [ "$DEFAULT_ISO_ARCH" = "amd64" ]; then
-        DEFAULT_ISO_ARCH="amd64"
-      fi
-      if [ "$DEFAULT_ISO_ARCH" = "aarch64" ] || [ "$DEFAULT_ISO_ARCH" = "arm64" ]; then
-        DEFAULT_ISO_ARCH="arm64"
+      if [ "$ISO_OS_NAME" = "rocky" ]; then
+        DEFAULT_ISO_ARCH=$( uname -m)
+      else
+        DEFAULT_ISO_ARCH=$( uname -m | sed "s/aarch64/arm64/g" |sed "s/x86_64/amd64/g" )
+        if [ "$DEFAULT_ISO_ARCH" = "x86_64" ] || [ "$DEFAULT_ISO_ARCH" = "amd64" ]; then
+          DEFAULT_ISO_ARCH="amd64"
+        fi
+        if [ "$DEFAULT_ISO_ARCH" = "aarch64" ] || [ "$DEFAULT_ISO_ARCH" = "arm64" ]; then
+          DEFAULT_ISO_ARCH="arm64"
+        fi
       fi
     else
       if [ "$( command -v ifconfig )" ]; then
@@ -331,7 +346,7 @@ set_default_files () {
   DEFAULT_ISO_SQUASHFS_FILE="$DEFAULT_ISO_MOUNT_DIR/casper/ubuntu-server-minimal.squashfs"
   DEFAULT_OLD_INSTALL_SQUASHFS_FILE="$DEFAULT_OLD_ISO_MOUNT_DIR/casper/ubuntu-server-minimal.ubuntu-server.installer.squashfs"
   DEFAULT_ISO_GRUB_FILE="$DEFAULT_WORK_DIR/grub.cfg"
-  DEFAULT_ISO_VOLID="$DEFAULT_ISO_OS_NAME $DEFAULT_ISO_RELEASE Server"
+  DEFAULT_ISO_VOLID="$DEFAULT_ISO_REALNAME $DEFAULT_ISO_RELEASE Server"
   DEFAULT_INPUT_FILE_BASE=$( basename "$DEFAULT_INPUT_FILE" )
   DEFAULT_OUTPUT_FILE_BASE=$( basename "$DEFAULT_OUTPUT_FILE" )
   DEFAULT_BOOT_SERVER_FILE_BASE=$(basename "$DEFAULT_BOOT_SERVER_FILE")
@@ -345,7 +360,7 @@ set_default_files () {
 
 reset_default_files () {
   ISO_GRUB_FILE="$WORK_DIR/grub.cfg"
-  if [ "$ISO_MAJOR_REL" -ge "22" ]; then
+  if [ "$ISO_MAJOR_RELEASE" -ge "22" ]; then
     ISO_SQUASHFS_FILE="$ISO_MOUNT_DIR/casper/ubuntu-server-minimal.squashfs"
     NEW_SQUASHFS_FILE="$ISO_SOURCE_DIR/casper/ubuntu-server-minimal.squashfs"
   else
@@ -391,17 +406,19 @@ print_usage () {
   options
   -------
 
-  cluster                 Install cluster related packages (pcs, gluster, etc)
-  kvm                     Install KVM related packages (virt-manager, cloud-image-utils, etc)
-  sshkey                  Add SSH key from ~/.ssh if present
-  biosdevname:            Enable biosdevname kernel parameters
-  nounmount:              Don't unmount filesystems (useful for troubleshooting)
-  testmode:               Don't execute commands (useful for testing and generating a script)
-  uefi:                   Create UEFI based ISO
-  bios:                   Create BIOS based ISO
-  verbose:                Verbose output
-  interactive:            Interactively ask questions
+  cluster                 Install cluster related packages (pcs, gluster, etc)  (default: $DO_CLUSTER_PACKAGES)
+  kvm                     Install KVM related packages (virt-manager, cloud-image-utils, etc) (def) ($DO_KVM_PACKAGES)
+  sshkey                  Add SSH key from ~/.ssh if present (default $DO_ISO_SSH_KEY)
+  biosdevname:            Enable biosdevname kernel parameters (default: $ISO_USE_BIOSDEVNAME)
+  nounmount:              Don't unmount filesystems (useful for troubleshooting) (default: $DO_NO_UNMOUNT_ISO)
+  testmode:               Don't execute commands (useful for testing and generating a script) (deafault: $TEST_MODE)
+  efi:                    Create UEFI based ISO (default $ISO_BOOT_TYPE)
+  bios:                   Create BIOS based ISO (default $ISO_BOOT_TYPE)
+  verbose:                Verbose output (default: $VERBOSE_MODE)
+  interactive:            Interactively ask questions (default: $INTERACTIVE_MODE)
   autoupgrades:           Allow autoupgrades
+  nohwekernel:            Don't install HWE kernel packages (Ubuntu) (deafault: $DO_NO_HWE_KERNEL)
+  nomultipath:            Don't load multipath kernel module (default: $DO_NO_MULTIPATH)
 
   postinstall
   -----------
@@ -737,11 +754,11 @@ create_docker_iso () {
 # Get Ubuntu relase codename
 
 get_code_name() {
-  REL_NO="$ISO_MAJOR_REL.$ISO_MINOR_REL"
-  if [ "$REL_NO" = "." ]; then
-    REL_NO="$ISO_RELEASE"
+  RELEASE_NO="$ISO_MAJOR_RELEASE.$ISO_MINOR_RELEASE"
+  if [ "$RELEASE_NO" = "." ]; then
+    RELEASE_NO="$ISO_RELEASE"
   fi
-  case $REL_NO in
+  case $RELEASE_NO in
     "20.04")
       ISO_CODENAME="focal"
       ;;
@@ -1794,7 +1811,7 @@ create_autoinstall_iso () {
   BOOT_IMAGE=$( xorriso -indev "$INPUT_FILE" -report_el_torito as_mkisofs |grep "^-b " |tail -1 |awk '{print $2}' |cut -f2 -d"'" 2>&1 )
   UEFI_BOOT_SIZE=$( xorriso -indev "$INPUT_FILE" -report_el_torito as_mkisofs |grep "^-boot-load-size" |tail -1 |awk '{print $2}' |cut -f2 -d"'" 2>&1 )
   DOS_BOOT_SIZE=$( xorriso -indev "$INPUT_FILE" -report_el_torito as_mkisofs |grep "^-boot-load-size" |head -1 |awk '{print $2}' |cut -f2 -d"'" 2>&1 )
-  if [ "$ISO_MAJOR_REL" = "22" ]; then
+  if [ "$ISO_MAJOR_RELEASE" = "22" ]; then
     APPEND_PART=$( xorriso -indev "$INPUT_FILE" -report_el_torito as_mkisofs |grep append_partition |tail -1 |awk '{print $3}' 2>&1 )
     UEFI_IMAGE="--interval:appended_partition_2:::"
   else
@@ -1823,9 +1840,18 @@ create_autoinstall_iso () {
   fi
 }
 
+# Function: prepare_kickstart_iso
+#
+# Prepare Rocky kickstart ISO
+
+prepare_kickstart_iso () {
+  # insert code here 
+  echo "" 
+}
+
 # Function: prepare_autoinstall_iso
 #
-# Prepare sutoinstall ISO
+# Prepare Ubuntu autoinstall ISO
 
 prepare_autoinstall_iso () {
   if [ -z "$(command -v 7z)" ]; then
@@ -2499,7 +2525,7 @@ prepare_autoinstall_iso () {
             if [ "$DO_INSTALL_ISO_PACKAGES" = "true" ]; then
               echo "    - \"curtin in-target --target=$ISO_TARGET_MOUNT -- apt install -y $ISO_INSTALL_PACKAGES\"" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
             fi
-            if [ "$ISO_MAJOR_REL" = "22" ]; then
+            if [ "$ISO_MAJOR_RELEASE" = "22" ]; then
               if [ "$DO_ISO_APT_NEWS" = "false" ]; then
                 echo "    - \"curtin in-target --target=$ISO_TARGET_MOUNT -- pro config set apt_news=false\"" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DEVICE/user-data"
               fi
@@ -2938,6 +2964,11 @@ list_vm () {
 # Process option switch
 
 process_options () {
+  if [ "$OPTIONS" = "nohwekernel" ]; then
+    DO_NO_HWE_KERNEL="true"
+  else
+    DO_NO_HWE_KERNEL="false"
+  fi
   if [[ "$OPTIONS" =~ "searchdrivers" ]]; then
     DO_ISO_SEARCH_DRIVERS="true"
   fi
@@ -2974,6 +3005,7 @@ process_options () {
     DO_SERIAL="false"
   fi
   if [[ "$OPTIONS" =~ "nomultipath" ]]; then
+    DO_NO_MULTIPATH="true"
     if [ "$ISO_BLOCKLIST" = "" ]; then
       ISO_BLOCKLIST="md_multipath"
     else
@@ -2981,9 +3013,11 @@ process_options () {
     fi
   fi
   if [[ "$OPTIONS" =~ "cluster" ]]; then
+    DO_CLUSTER_PACKAGES="true"
     DEFAULT_ISO_INSTALL_PACKAGES="$DEFAULT_ISO_INSTALL_PACKAGES pcs pacemaker cockpit cockpit-machines resource-agents-extra resource-agents-common resource-agents-base glusterfs-server"
   fi
   if [[ "$OPTIONS" =~ "kvm" ]]; then
+    DO_CLUSTER_PACKAGES="true"
     DEFAULT_ISO_INSTALL_PACKAGES="$DEFAULT_ISO_INSTALL_PACKAGES cpu-checker qemu-kvm libvirt-daemon-system libvirt-clients bridge-utils virt-manager cloud-image-utils"
   fi
   if [[ "$OPTIONS" =~ "sshkey" ]]; then
@@ -3155,7 +3189,7 @@ process_actions () {
     "oldinstaller")
       DO_OLD_INSTALLER="true"
       ;;
-    "listallisos"|"listisos")
+    ""listalliso"|listallisos"|"listiso"|"listisos")
       DO_LIST_ISOS="true"
       ;;
     *)
@@ -3182,7 +3216,6 @@ process_actions () {
 
 print_env () {
   handle_output "# Setting Variables" TEXT
-  handle_output "# Release:                   [ISO_RELEASE]                    $ISO_RELEASE" TEXT
   handle_output "# Codename:                  [ISO_CODENAME]                   $ISO_CODENAME" TEXT
   handle_output "# Architecture:              [ISO_ARCH]                       $ISO_ARCH" TEXT
   handle_output "# Work directory:            [WORK_DIR]                       $WORK_DIR" TEXT
@@ -3200,6 +3233,8 @@ print_env () {
   handle_output "# ISO output file:           [OUTPUT_FILE]                    $OUTPUT_FILE" TEXT
   handle_output "# SCP command:               [SCP_COMMAND]                    $MY_USERNAME@$MY_IP:$OUTPUT_FILE" TEXT
   handle_output "# ISO Release:               [ISO_RELEASE]                    $ISO_RELEASE" TEXT
+  handle_output "# ISO Release (Major):       [ISO_MAJOR_RELEASE]              $ISO_MAJOR_RELEASE" TEXT
+  handle_output "# ISO Release (Minor):       [ISO_MINOR_RELEASE]              $ISO_MINOR_RELEASE" TEXT
   handle_output "# ISO Build:                 [ISO_BUILD_TYPE]                 $ISO_BUILD_TYPE" TEXT
   handle_output "# ISO Volume ID:             [ISO_VOLID]                      $ISO_VOLID" TEXT
   handle_output "# ISO mount directory:       [ISO_MOUNT_DIR]                  $ISO_MOUNT_DIR" TEXT
@@ -3325,6 +3360,18 @@ update_required_packages () {
   fi
 }
 
+# Function: update_iso_packages
+#
+# Update packages to include in ISO
+
+update_iso_packages () {
+  if [ "$ISO_OS_NAME" = "ubuntu" ]; then
+    if [ "$DO_NO_HWE_KERNEL" = "false" ]; then
+      ISO_INSTALL_PACKAGES="$ISO_INSTALL_PACKAGES linux-image-generic-hwe-$ISO_MAJOR_RELEASE.$ISO_MINOR_RELEASE"
+    fi
+  fi
+}
+
 # Function: process_switches
 #
 # Process switches
@@ -3418,32 +3465,52 @@ process_switches () {
   if [ "$ISO_CIDR" = "" ]; then
     ISO_CIDR="$DEFAULT_ISO_CIDR"
   fi
+  if [ "$ISO_OS_NAME" = "" ]; then
+    ISO_OS_NAME="$DEFAULT_ISO_OS_NAME"
+  fi
   if [ "$ISO_RELEASE" = "" ]; then
     ISO_RELEASE="$DEFAULT_ISO_RELEASE"
   else
-    case "$ISO_RELEASE" in
-      "22.04")
-        ISO_RELEASE="$CURRENT_ISO_RELEASE_2204"
-        ;;
-      "20.04")
-        ISO_RELEASE="$CURRENT_ISO_RELEASE_2004"
-        ;;
-      "18.04")
-        ISO_RELEASE="$CURRENT_ISO_RELEASE_1804"
-        ;;
-      "16.04")
-        ISO_RELEASE="$CURRENT_ISO_RELEASE_1604"
-        ;;
-      "14.04")
-        ISO_RELEASE="$CURRENT_ISO_RELEASE_1404"
-        ;;
-    esac
+    if [ "$ISO_OS_NAME" = "ubuntu" ]; then
+      case "$ISO_RELEASE" in
+        "22.04")
+          ISO_RELEASE="$CURRENT_ISO_RELEASE_2204"
+          ;;
+        "20.04")
+          ISO_RELEASE="$CURRENT_ISO_RELEASE_2004"
+          ;;
+        "18.04")
+          ISO_RELEASE="$CURRENT_ISO_RELEASE_1804"
+          ;;
+        "16.04")
+          ISO_RELEASE="$CURRENT_ISO_RELEASE_1604"
+          ;;
+        "14.04")
+          ISO_RELEASE="$CURRENT_ISO_RELEASE_1404"
+          ;;
+        *)
+          ISO_RELEASE="$CURRENT_ISO_RELEASE"
+          ;;
+      esac
+    else
+      if [ "$ISO_OS_NAME" = "rocky" ]; then
+        case "$ISO_RELEASE" in
+          "9")
+            ISO_RELEASE="$CURRENT_ISO_RELEASE_9"
+            ;;
+          *)
+            ISO_RELEASE="$CURRENT_ISO_RELEASE"
+            ;;
+        esac
+      fi
+    fi
   fi
   if [ "$OLD_ISO_RELEASE" = "" ]; then
     OLD_ISO_RELEASE="$CURRENT_OLD_ISO_RELEASE"
   fi
-  ISO_MAJOR_REL=$(echo "$ISO_RELEASE" |cut -f1 -d.)
-  ISO_MINOR_REL=$(echo "$ISO_RELEASE" |cut -f2 -d.)
+  ISO_MAJOR_RELEASE=$(echo "$ISO_RELEASE" |cut -f1 -d.)
+  ISO_MINOR_RELEASE=$(echo "$ISO_RELEASE" |cut -f2 -d.)
+  ISO_POINT_RELEASE=$(echo "$ISO_RELEASE" |cut -f3 -d.)
   if [ "$ISO_CODENAME" = "" ]; then
     get_code_name
   fi
@@ -3544,9 +3611,6 @@ process_switches () {
   if [ "$ISO_AUTOINSTALL_DIR" = "" ]; then
     ISO_AUTOINSTALL_DIR="$DEFAULT_ISO_AUTOINSTALL_DIR"
   fi
-  if [ "$ISO_OS_NAME" = "" ]; then
-    ISO_OS_NAME="$DEFAULT_ISO_OS_NAME"
-  fi
   if [ "$WORK_DIR" = "" ]; then
     if [ "$DO_DAILY_ISO" = "true" ]; then
       WORK_DIR="$HOME/$SCRIPT_NAME/$ISO_OS_NAME/$ISO_CODENAME"
@@ -3567,10 +3631,10 @@ process_switches () {
   if [ "$ISO_VOLID" = "" ]; then
     case $ISO_BUILD_TYPE in
       "daily-desktop"|"desktop")
-        ISO_VOLID="$ISO_OS_NAME $ISO_RELEASE Desktop"
+        ISO_VOLID="$ISO_REALNAME $ISO_RELEASE Desktop"
         ;;
       *)
-        ISO_VOLID="$ISO_OS_NAME $ISO_RELEASE Server"
+        ISO_VOLID="$ISO_REALNAME $ISO_RELEASE Server"
         ;;
     esac
   fi
@@ -3581,28 +3645,38 @@ process_switches () {
     get_info_from_iso
   else
     if [ "$DO_CUSTOM_BOOT_SERVER_FILE" = "false" ]; then
-      case $ISO_BUILD_TYPE in
-        "daily-live"|"daily-live-server")
-          INPUT_FILE="$WORK_DIR/files/$ISO_CODENAME-live-server-$ISO_ARCH.iso"
-          OUTPUT_FILE="$WORK_DIR/files/$ISO_CODENAME-live-server-$ISO_ARCH-$ISO_BOOT_TYPE-autoinstall.iso"
-          BOOT_SERVER_FILE="$OUTPUT_FILE"
+      if [ "$ISO_OS_NAME" = "ubuntu" ]; then
+        case $ISO_BUILD_TYPE in
+          "daily-live"|"daily-live-server")
+            INPUT_FILE="$WORK_DIR/files/$ISO_CODENAME-live-server-$ISO_ARCH.iso"
+            OUTPUT_FILE="$WORK_DIR/files/$ISO_CODENAME-live-server-$ISO_ARCH-$ISO_BOOT_TYPE-autoinstall.iso"
+            BOOT_SERVER_FILE="$OUTPUT_FILE"
+            ;;
+          "daily-desktop")
+            INPUT_FILE="$WORK_DIR/files/$ISO_CODENAME-desktop-$ISO_ARCH.iso"
+            OUTPUT_FILE="$WORK_DIR/files/$ISO_CODENAME-desktop-$ISO_ARCH-$ISO_BOOT_TYPE-autoinstall.iso"
+            BOOT_SERVER_FILE="$OUTPUT_FILE"
+            ;;
+         "desktop")
+            INPUT_FILE="$WORK_DIR/files/$ISO_OS_NAME-$ISO_RELEASE-desktop-$ISO_ARCH.iso"
+            OUTPUT_FILE="$WORK_DIR/files/$ISO_OS_NAME-$ISO_RELEASE-desktop-$ISO_ARCH-$ISO_BOOT_TYPE-autoinstall.iso"
+            BOOT_SERVER_FILE="$OUTPUT_FILE"
+            ;;
+          *)
+            INPUT_FILE="$WORK_DIR/files/$ISO_OS_NAME-$ISO_RELEASE-live-server-$ISO_ARCH.iso"
+            OUTPUT_FILE="$WORK_DIR/files/$$ISO_OS_NAME-$ISO_RELEASE-live-server-$ISO_ARCH-$ISO_BOOT_TYPE-autoinstall.iso"
+            BOOT_SERVER_FILE="$OUTPUT_FILE"
+            ;;
+        esac
+      else
+        case $ISO_BUILD_TYPE in
+          *)
+            INPUT_FILE="$WORK_DIR/files/$ISO_REALNAME-$ISO_RELEASE-$ISO_ARCH-$ISO_BUILD_TYPE.iso"
+            OUTPUT_FILE="$WORK_DIR/files/$$ISO_REALNAME-$ISO_RELEASE-$ISO_ARCH-$ISO_BOOT_TYPE-$ISO_BUILD_TYPE-kickstart.iso"
+            BOOT_SERVER_FILE="$OUTPUT_FILE"
           ;;
-        "daily-desktop")
-          INPUT_FILE="$WORK_DIR/files/$ISO_CODENAME-desktop-$ISO_ARCH.iso"
-          OUTPUT_FILE="$WORK_DIR/files/$ISO_CODENAME-desktop-$ISO_ARCH-$ISO_BOOT_TYPE-autoinstall.iso"
-          BOOT_SERVER_FILE="$OUTPUT_FILE"
-          ;;
-       "desktop")
-          INPUT_FILE="$WORK_DIR/files/ubuntu-$ISO_RELEASE-desktop-$ISO_ARCH.iso"
-          OUTPUT_FILE="$WORK_DIR/files/ubuntu-$ISO_RELEASE-desktop-$ISO_ARCH-$ISO_BOOT_TYPE-autoinstall.iso"
-          BOOT_SERVER_FILE="$OUTPUT_FILE"
-          ;;
-        *)
-          INPUT_FILE="$WORK_DIR/files/ubuntu-$ISO_RELEASE-live-server-$ISO_ARCH.iso"
-          OUTPUT_FILE="$WORK_DIR/files/ubuntu-$ISO_RELEASE-live-server-$ISO_ARCH-$ISO_BOOT_TYPE-autoinstall.iso"
-          BOOT_SERVER_FILE="$OUTPUT_FILE"
-          ;;
-      esac
+        esac
+      fi
     fi
   fi
   if [ "$ISO_SQUASHFS_FILE" = "" ]; then
@@ -3685,6 +3759,11 @@ update_output_file_name () {
     TEMP_DIR_NAME=$( dirname "$OUTPUT_FILE" )
     TEMP_FILE_NAME=$( basename "$OUTPUT_FILE" .iso )
     OUTPUT_FILE="$TEMP_DIR_NAME/$TEMP_FILE_NAME-biosdevname.iso"
+  fi
+  if [[ "$OPTIONS" =~ "sshkey" ]]; then
+    TEMP_DIR_NAME=$( dirname "$OUTPUT_FILE" )
+    TEMP_FILE_NAME=$( basename "$OUTPUT_FILE" .iso )
+    OUTPUT_FILE="$TEMP_DIR_NAME/$TEMP_FILE_NAME-sshkey.iso"
   fi
   if [ "$ISO_DHCP" = "true" ]; then
     TEMP_DIR_NAME=$( dirname "$OUTPUT_FILE" )
@@ -3956,39 +4035,47 @@ get_interactive_input () {
 
 update_iso_url () {
   BASE_INPUT_FILE=$( basename "$INPUT_FILE" )
-  case $ISO_BUILD_TYPE in
-    "daily-live"|"daily-live-server")
-      if [ "$ISO_RELEASE" = "$CURRENT_ISO_DEV_RELEASE" ] || [ "$ISO_CODENAME" = "$CURRENT_ISO_CODENAME" ]; then
-        ISO_URL="https://cdimage.ubuntu.com/ubuntu-server/daily-live/current/$ISO_CODENAME-live-server-$ISO_ARCH.iso"
-      else
-        ISO_URL="https://cdimage.ubuntu.com/ubuntu-server/$ISO_CODENAME/daily-live/current/$BASE_INPUT_FILE"
+  if [ "$ISO_OS_NAME" = "ubuntu" ]; then
+    case $ISO_BUILD_TYPE in
+      "daily-live"|"daily-live-server")
+        if [ "$ISO_RELEASE" = "$CURRENT_ISO_DEV_RELEASE" ] || [ "$ISO_CODENAME" = "$CURRENT_ISO_CODENAME" ]; then
+          ISO_URL="https://cdimage.ubuntu.com/ubuntu-server/daily-live/current/$ISO_CODENAME-live-server-$ISO_ARCH.iso"
+        else
+          ISO_URL="https://cdimage.ubuntu.com/ubuntu-server/$ISO_CODENAME/daily-live/current/$BASE_INPUT_FILE"
+        fi
+        NEW_DIR="$ISO_OS_NAME/$ISO_CODENAME"
+       ;;
+      "daily-desktop")
+        if [ "$ISO_RELEASE" = "$CURRENT_ISO_DEV_RELEASE" ] || [ "$ISO_CODENAME" = "$CURRENT_ISO_CODENAME" ]; then
+          ISO_URL="https://cdimage.ubuntu.com/daily-live/current/$BASE_INPUT_FILE"
+        else
+          ISO_URL="https://cdimage.ubuntu.com/$ISO_CODENAME/daily-live/current/$BASE_INPUT_FILE"
+        fi
+        NEW_DIR="$ISO_OS_NAME/$ISO_CODENAME"
+        ;;
+      "desktop")
+        ISO_URL="https://releases.ubuntu.com/$ISO_RELEASE/$BASE_INPUT_FILE"
+        NEW_DIR="$ISO_OS_NAME/$ISO_RELEASE"
+        ;;
+      *)
+        if [ "$ISO_ARCH" = "amd64" ]; then
+          URL_RELEASE=$( echo "$ISO_RELEASE" |awk -F. '{print $1"."$2}' )
+          ISO_URL="https://releases.ubuntu.com/$URL_RELEASE/$BASE_INPUT_FILE"
+        else
+          ISO_URL="https://cdimage.ubuntu.com/releases/$ISO_RELEASE/release/$BASE_INPUT_FILE"
+        fi
+        NEW_DIR="$ISO_OS_NAME/$ISO_RELEASE"
+        ;;
+    esac
+    if [ "$OLD_ISO_URL" = "" ]; then
+      OLD_ISO_URL="$DEFAULT_OLD_ISO_URL"
+    fi
+  else
+    if [ "$ISO_OS_NAME" = "rocky" ]; then
+      if [ "$ISO_URL" = "" ]; then
+        ISO_URL="https://download.rockylinux.org/pub/rocky/$ISO_MAJOR_RELEASE/isos/$ISO_ARCH/$BASE_INPUT_FILE"
       fi
-      NEW_DIR="$ISO_OS_NAME/$ISO_CODENAME"
-     ;;
-    "daily-desktop")
-      if [ "$ISO_RELEASE" = "$CURRENT_ISO_DEV_RELEASE" ] || [ "$ISO_CODENAME" = "$CURRENT_ISO_CODENAME" ]; then
-        ISO_URL="https://cdimage.ubuntu.com/daily-live/current/$BASE_INPUT_FILE"
-      else
-        ISO_URL="https://cdimage.ubuntu.com/$ISO_CODENAME/daily-live/current/$BASE_INPUT_FILE"
-      fi
-      NEW_DIR="$ISO_OS_NAME/$ISO_CODENAME"
-      ;;
-    "desktop")
-      ISO_URL="https://releases.ubuntu.com/$ISO_RELEASE/$BASE_INPUT_FILE"
-      NEW_DIR="$ISO_OS_NAME/$ISO_RELEASE"
-      ;;
-    *)
-      if [ "$ISO_ARCH" = "amd64" ]; then
-        URL_RELEASE=$( echo "$ISO_RELEASE" |awk -F. '{print $1"."$2}' )
-        ISO_URL="https://releases.ubuntu.com/$URL_RELEASE/$BASE_INPUT_FILE"
-      else
-        ISO_URL="https://cdimage.ubuntu.com/releases/$ISO_RELEASE/release/$BASE_INPUT_FILE"
-      fi
-      NEW_DIR="$ISO_OS_NAME/$ISO_RELEASE"
-      ;;
-  esac
-  if [ "$OLD_ISO_URL" = "" ]; then
-    OLD_ISO_URL="$DEFAULT_OLD_ISO_URL"
+    fi
   fi
 }
 
@@ -4027,7 +4114,7 @@ get_ssh_key () {
 
 handle_ubuntu_pro () {
   if [ "$ISO_REALNAME" = "Ubuntu" ]; then
-    if [ "$ISO_MAJOR_REL" -ge 22 ]; then
+    if [ "$ISO_MAJOR_RELEASE" -ge 22 ]; then
       ISO_INSTALL_PACKAGES="$ISO_INSTALL_PACKAGES ubuntu-advantage-tools"
       ISO_CHROOT_PACKAGES="$ISO_CHROOT_PACKAGES ubuntu-advantage-tools"
     fi
@@ -4099,7 +4186,7 @@ do
       shift 2
       ;;
     -A|--codename|--distro)
-      ISO_CODENAME="$2"
+      ISO_OS_NAME="$2"
       shift 2
       ;;
     -a|--action)
@@ -4124,7 +4211,7 @@ do
       DO_ISO_SSH_KEY="true"
       shift 2
       ;;
-    -D|--dns)
+    -D|--dns|--nameserver)
       ISO_DNS="$2"
       shift 2
       ;;
@@ -4335,7 +4422,7 @@ do
       ZFS_FILESYSTEMS="$2"
       shift 2
       ;;
-    --userdata)
+    --userdata|--autoinstall|--kickstart)
       DO_CUSTOM_AUTO_INSTALL="true"
       AUTO_INSTALL_FILE="$2"
       shift 2
@@ -4359,7 +4446,6 @@ do
 done
 
 # Setup functions
-
 reset_defaults
 set_default_os_name
 set_default_arch
@@ -4376,6 +4462,7 @@ process_options
 process_actions
 process_post_install
 update_required_packages
+update_iso_packages
 update_output_file_name
 update_iso_url
 handle_bios
@@ -4452,6 +4539,9 @@ fi
 if [ "$DO_GET_BASE_ISO" = "true" ]; then
   DO_PRINT_HELP="false"
   get_base_iso
+  if [ "$ACTION" = "getiso" ]; then
+    exit
+  fi
 fi
 if [ "$DO_CREATE_AUTOINSTALL_ISO_FULL" = "true" ]; then
   DO_PRINT_HELP="false"
