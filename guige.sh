@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Name:         guige (Generic Ubuntu/Unix ISO Generation Engine)
-# Version:      2.1.1
+# Version:      2.1.2
 # Release:      1
 # License:      CC-BA (Creative Commons By Attribution)
 #               http://creativecommons.org/licenses/by/4.0/legalcode
@@ -50,147 +50,153 @@ set_default_flags
 
 while test $# -gt 0
 do
-  if [ "$2" = "" ]; then
-    warning_message "No $1 specified"
+  if [ "$1" = "-h" ]; then
+    print_help
     exit
   fi
+  if [ "$2" = "" ]; then
+    if ! [[ "$1" =~ "version" ]] && ! [[ "$1" =~ "help" ]]; then
+      warning_message "No $1 specified"
+      exit
+    fi
+  fi
   case $1 in
-    -0|--oldrelease)
+    --oldrelease)
       OLD_ISO_RELEASE="$2"
       shift 2
       ;;
-    -1|--country)
+    --country)
       ISO_COUNTRY="$2"
       shift 2
       ;;
-    -2|--isourl)
+    --isourl)
       ISO_URL="$2"
       shift 2
       ;;
-    -3|--prefix)
+    --prefix)
       ISO_PREFIX="$2"
       shift 2
       ;;
-    -4|--suffix)
+    --suffix)
       ISO_SUFFIX="$2"
       shift 2
       ;;
-    -5|--block)
+    --block)
       ISO_BLOCKLIST="$2"
       shift 2
       ;;
-    -6|--allow)
+    --allow)
       ISO_ALLOWLIST="$2"
       shift 2
       ;;
-    -7|--oldisourl)
+    --oldisourl)
       OLD_ISO_URL="$2"
       shift 2
       ;;
-    -8|--oldinputfile)
+    --oldinputfile)
       OLD_INPUT_FILE="$2"
       shift 2
       ;;
-    -9|--search)
+    --search)
       ISO_SEARCH="$2"
       shift 2
       ;;
-    -A|--codename|--distro)
+    --codename|--distro)
       ISO_OS_NAME="$2"
       shift 2
       ;;
-    -a|--action)
+    --action)
       ACTION="$2"
       shift 2
       ;;
-    -B|--layout|--vmsize)
+    --layout|--vmsize)
       ISO_LAYOUT="$2"
       VM_SIZE=$2
       shift 2
       ;;
-    -b|--bootserverip)
+    --bootserverip)
       BOOT_SERVER_IP="$2"
       shift 2
       ;;
-    -C|--cidr)
+    --cidr)
       ISO_CIDR="$2"
       shift 2
       ;;
-    -c|--sshkeyfile)
+    --sshkeyfile)
       ISO_SSH_KEY_FILE="$2"
       DO_ISO_SSH_KEY="true"
       shift 2
       ;;
-    -D|--dns|--nameserver)
+    --dns|--nameserver)
       ISO_DNS="$2"
       shift 2
       ;;
-    -d|--bootdisk)
+    --bootdisk)
       ISO_DEVICES+="$2"
       shift 2
       ;;
-    -E|--locale)
+    --locale)
       ISO_LOCALE="$2"
       shift 2
       ;;
-    -e|--lcall)
+    --lcall)
       ISO_LC_ALL="$2"
       shift 2
       ;;
-    -F|--bmcusername)
+    --bmcusername)
       BMC_USERNAME="$2"
       shift 2
       ;;
-    -f|--delete)
+    --delete)
       DELETE="$2"
       shift 2
       ;;
-    -G|--gateway)
+    --gateway)
       ISO_GATEWAY="$2"
       shift 2
       ISO_DHCP="false"
       ;;
-    -g|--grubmenu|--vmname)
+    --grubmenu|--vmname)
       ISO_GRUB_MENU="$2"
       VM_NAME="$2"
       shift 2
       ;;
-    -H|--hostname)
+    --hostname)
       ISO_HOSTNAME="$2"
       shift 2
       ;;
-    -h|--help)
+    --help)
       print_help
       ;;
-    -I|--ip)
+    --ip)
       ISO_IP="$2"
       shift 2
       ISO_DHCP="false"
       ;;
-    -i|--inputiso|--vmiso)
+    --inputiso|--vmiso)
       INPUT_FILE="$2"
       VM_ISO="$2"
       shift 2
       ;;
-    -J|--grubfile)
+    --grubfile)
       ISO_GRUB_FILE="$2"
       shift 2
       ;;
-    -j|--autoinstalldir)
+    --autoinstalldir)
       ISO_AUTOINSTALL_DIR="$2"
       shift 2
       ;;
-    -K|--kernel|--vmtype)
+    --kernel|--vmtype)
       ISO_KERNEL="$2"
       VM_TYPE="$2"
       shift 2
       ;;
-    -k|--kernelargs|--vmcpus)
+    --kernelargs|--vmcpus)
       ISO_KERNEL_ARGS="$2"
       VM_CPUS="$2"
       shift 2
       ;;
-    -L|--release)
+    --release)
       ISO_RELEASE="$2"
       shift 2
       case $ISO_RELEASE in
@@ -202,45 +208,45 @@ do
           ;;
       esac
       ;;
-    -l|--bmcip)
+    --bmcip)
       BMC_IP="$2"
       shift 2
       ;;
-    -M|--installtarget)
+    --installtarget)
       ISO_TARGET_MOUNT="$2"
       shift 2
       ;;
-    -m|--installmount)
+    --installmount)
       ISO_INSTALL_MOUNT="$2"
       shift 2
       ;;
-    -N|--bootserverfile)
+    --bootserverfile)
       BOOT_SERVER_FILE="$2"
       DO_CUSTOM_BOOT_SERVER_FILE="true"
       shift 2
       ;;
-    -n|--nic|--vmnic)
+    --nic|--vmnic)
       ISO_NIC="$2"
       VM_NIC="$2"
       shift 2
       ;;
-    -O|--isopackages)
+    --isopackages)
       ISO_INSTALL_PACKAGES="$2"
       shift 2
       ;;
-    -o|--outputiso)
+    --outputiso)
       OUTPUT_FILE="$2"
       shift 2
       ;;
-    -P|--password)
+    --password)
       ISO_PASSWORD="$2"
       shift 2
       ;;
-    -p|--chrootpackages)
+    --chrootpackages)
       ISO_CHROOT_PACKAGES="$2"
       shift 2
       ;;
-    -Q|--build)
+    --build)
       ISO_BUILD_TYPE="$2"
       case "$ISO_BUILD_TYPE" in
         "daily")
@@ -249,82 +255,82 @@ do
       esac
       shift 2
       ;;
-    -q|--arch)
+    --arch)
       ISO_ARCH="$2"
       shift 2
       ISO_ARCH=$( echo "$ISO_ARCH" |sed "s/aarch64/arm64/g" |sed "s/x86_64/amd64/g" |sed "s/x86/amd64/g" )
       ;;
-    -R|--realname)
+    --realname)
       ISO_REALNAME="$2"
       shift 2
       ;;
-    -r|--serialportspeed)
+    --serialportspeed)
       ISO_SERIAL_PORT_SPEED0="$2"
       shift 2
       ;;
-    -S|--swapsize|--vmram)
+    --swapsize|--vmram)
       ISO_SWAPSIZE="$2"
       VM_RAM="$2"
       shift 2
       ;;
-    -s|--squashfsfile)
+    --squashfsfile)
       ISO_SQUASHFS_FILE="$2"
       shift 2
       ;;
-    -T|--timezone)
+    --timezone)
       ISO_TIMEZONE="$2"
       shift 2
       ;;
-    -t|--serialportaddress)
+    --serialportaddress)
       ISO_SERIAL_PORT_ADDRESS0="$2"
       shift 2
       ;;
-    -U|--username)
+    --username)
       ISO_USERNAME="$2"
       shift 2
       ;;
-    -u|--postinstall)
+    --postinstall)
       ISO_POSTINSTALL="$2"
       shift 2
       ;;
-    -V|--version)
+    --version)
       echo "$SCRIPT_VERSION"
       shift
       exit
       ;;
-    -v|--serialport)
+    --serialport)
       ISO_SERIAL_PORT0="$2"
       shift 2
       ;;
-    -W|--workdir)
+    --workdir)
       WORK_DIR="$2"
       shift 2
       ;;
-    -w|--preworkdir)
+    --preworkdir)
       PRE_WORK_DIR="$2"
       shift 2
       ;;
-    -X|--isovolid)
+    --isovolid)
       ISO_VOLID="$2"
       shift 2
       ;;
-    -x|--grubtimeout)
+    --grubtimeout)
       ISO_GRUB_TIMEOUT="$2"
       shift 2
       ;;
-    -Y|--allowpassword)
+    --allowpassword)
       ISO_ALLOW_PASSWORD="true"
       shift
       ;;
-    -y|--bmcpassword)
+    --bmcpassword)
       BMC_PASSWORD="$2"
       shift 2
       ;;
-    -Z|--options)
+    --options)
       OPTIONS="$2";
       shift 2
       ;;
-    -z|--volumemanager)
+    --volumemanager)
       ISO_VOLMGR="$2"
       shift 2
       ;;

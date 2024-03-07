@@ -421,3 +421,5 @@
 # Bug fixes
 # 2.1.1: Thu 07 Mar 2024 16:45:48 AEDT
 # Added handling for empty switches
+# 2.1.2: Thu 07 Mar 2024 16:59:18 AEDT
+# Removed short args/switches
