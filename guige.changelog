@@ -419,3 +419,5 @@
 # Split code into modules to help with size and editing
 # 2.1.0: Thu 07 Mar 2024 16:32:48 AEDT
 # Bug fixes
+# 2.1.1: Thu 07 Mar 2024 16:45:48 AEDT
+# Added handling for empty switches

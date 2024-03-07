@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Name:         guige (Generic Ubuntu/Unix ISO Generation Engine)
-# Version:      2.1.0
+# Version:      2.1.1
 # Release:      1
 # License:      CC-BA (Creative Commons By Attribution)
 #               http://creativecommons.org/licenses/by/4.0/legalcode
@@ -50,6 +50,10 @@ set_default_flags
 
 while test $# -gt 0
 do
+  if [ "$2" = "" ]; then
+    warning_message "No $1 specified"
+    exit
+  fi
   case $1 in
     -0|--oldrelease)
       OLD_ISO_RELEASE="$2"
