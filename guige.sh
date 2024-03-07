@@ -39,8 +39,6 @@ if [ -d "$MODULE_PATH" ]; then
   done
 fi
 
-exit
-
 # Function: Handle command line arguments
 
 if [ "$SCRIPT_ARGS" = "" ]; then
