@@ -411,3 +411,11 @@
 # Updates and improvements
 # 2.0.6: Sun 03 Mar 2024 20:38:53 AEDT
 # Fixed HWE kernel package addition
+# 2.0.7: Sun 03 Mar 2024 20:53:00 AEDT
+# Started splitting operations out to help with adding other Linux distributions
+# 2.0.8: Wed 06 Mar 2024 15:02:31 AEDT
+# Started code for generating kickstart
+# 2.0.9: Thu 07 Mar 2024 14:37:10 AEDT
+# Split code into modules to help with size and editing
+# 2.1.0: Thu 07 Mar 2024 16:32:48 AEDT
+# Bug fixes
