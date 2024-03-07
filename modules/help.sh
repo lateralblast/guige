@@ -1,25 +1,26 @@
-# Function: print_help
+# Function: print_cli_help
 #
 # Print script help information
 
-print_help () {
+print_cli_help () {
   cat <<-HELP
 
   Usage: ${0##*/} [OPTIONS...]
-    --oldrelease           Old release (used for copying file from an older release ISO - default: $DEFAULT_OLD_ISO_RELEASE)
+  
+    --oldrelease           Old release (used for copying file from an older release ISO)
     --country              Country (used for sources.list mirror - default: $DEFAULT_ISO_COUNTRY)
-    --isourl               Specify ISO URL (default: $DEFAULT_ISO_URL)
+    --isourl               Specify ISO URL
     --prefix               Prefix to add to ISO name
     --suffix               Suffix to add to ISO name
-    --block                Block kernel module(s) (default: $DEFAULT_ISO_BLOCKLIST)
+    --block                Block kernel module(s)
     --allow                Load additional kernel modules(s)
-    --oldisourl            Old release ISO URL (used with --oldrelease) (default: $DEFAULT_OLD_ISO_URL)
-    --oldinputfile         Old release ISO (used with --oldrelease) (default: $DEFAULT_OLD_ISO_RELEASE)
+    --oldisourl            Old release ISO URL (used with --oldrelease)
+    --oldinputfile         Old release ISO (used with --oldrelease)
     --search               Search output for value (eg --action listallisos --search efi)
-    --codename|--disto     Linux release codename or distribution (default: $DEFAULT_ISO_CODENAME)
+    --codename|--disto     Linux release codename or distribution
     --action:              Action to perform (e.g. createiso, justiso, runchrootscript, checkdocker, installrequired)
     --layout|--vmsize:     Layout or VM disk size (default: $DEFAULT_ISO_LAYOUT/$DEFAULT_VM_SIZE)
-    --bootserverip:        NFS/Bootserver IP (default: $DEFAULT_BOOT_SERVER_IP)
+    --bootserverip:        NFS/Bootserver IP
     --cidr:                CIDR (default: $DEFAULT_ISO_CIDR)
     --sshkeyfile:          SSH key file to use as SSH key (default: $MASKED_DEFAULT_ISO_SSH_KEY_FILE)
     --dns:                 DNS Server (ddefault: $DEFAULT_ISO_DNS)
@@ -33,9 +34,9 @@ print_help () {
     --hostname             Hostname (default: $DEFAULT_ISO_HOSTNAME)
     --help                 Help/Usage Information
     --ip:                  IP Address (default: $DEFAULT_ISO_IP)
-    --inputiso|--vmiso:    Input/base ISO file (default: $DEFAULT_INPUT_FILE_BASE)
-    --grubfile             GRUB file (default: $DEFAULT_ISO_GRUB_FILE_BASE)
-    --autoinstalldir       Directory where autoinstall config files are stored on ISO (default: $DEFAULT_ISO_AUTOINSTALL_DIR)
+    --inputiso|--vmiso:    Input/base ISO file
+    --grubfile             GRUB file
+    --autoinstalldir       Directory where autoinstall config files are stored on ISO
     --kernel|--vmtype:     Kernel package or VM type (default: $DEFAULT_ISO_KERNEL/$DEFAULT_VM_TYPE)
     --kernelargs|--vmcpus: Kernel arguments (default: $DEFAULT_ISO_KERNEL_ARGS)
     --release:             LSB release (default: $DEFAULT_ISO_RELEASE)
@@ -60,9 +61,9 @@ print_help () {
     --postinstall:         Postinstall action (e.g. installpackages, upgrade, distupgrade, installdrivers, all, autoupgrades)
     --version              Display Script Version
     --serialport:          Serial Port (default: $DEFAULT_ISO_SERIAL_PORT0,$DEFAULT_ISO_SERIAL_PORT1)
-    --workdir:             Work directory (default: $MASKED_DEFAULT_WORK_DIR)
+    --workdir:             Work directory
     --preworkdir:          Docker work directory (used internally)
-    --isovolid:            ISO Volume ID (default: $DEFAULT_ISO_VOLID)
+    --isovolid:            ISO Volume ID
     --grubtimeout:         Grub timeout (default: $DEFAULT_ISO_GRUB_TIMEOUT)
     --allowpassword        Allow password access via SSH (default: $DEFAULT_ISO_ALLOW_PASSWORD)
     --bmcpassword:         BMC/iDRAC password (default: $DEFAULT_BMC_PASSWORD)
@@ -70,19 +71,50 @@ print_help () {
     --volumemanager:       Volume Managers (default: $DEFAULT_ISO_VOLMGRS)
     --zfsfilesystems:      ZFS filesystems (default: $DEFAULT_ZFS_FILESYSTEMS)
     --userdata:            Use a custom user-data file (default: generate automatically)
-    --oeminstall:          OEM Install Type (default $DEFAULT_ISO_OEM_INSTALL)
-    --sourceid:            Source ID ($DEFAULT_ISO_SOURCE_ID) 
-    --installmode:         Install Mode ($DEFAULT_ISO_INSTALL_MODE)
-    --passwordalgorithm:   Password Algorithm ($DEFAULT_ISO_PASSWORD_ALGORITHM)
-    --bootloader:          Boot Loader Location ($DEFAULT_ISO_BOOT_LOADER_LOCATION)
-    --selinux:             SELinux Mode ($DEFAULT_ISO_SELINUX)
-    --firewall:            Firewall ($DEFAULT_ISO_FIREWALL)
-    --allow:               Allow Services ($DEFAULT_ISO_ALLOW_SERVICE)
-    --onboot:              Enable Network on Boot ($DEFAULT_ISO_ONBOOT)
-    --enableservice        Enable Service ($DEFAULT_ISO_ENABLE_SERVICE)
-    --disableservice       Disable Service ($DEFAULT_ISO_DISABLE_SERVICE)
-    --gecos                GECOS Field Entry ($DEFAULT_ISO_DISABLE_SERVICE)
-    --installsource        Install Source ($DEFAULT_ISO_INSTALL_SOURCE)
+    --oeminstall:          OEM Install Type (default: $DEFAULT_ISO_OEM_INSTALL)
+    --sourceid:            Source ID (default: $DEFAULT_ISO_SOURCE_ID) 
+    --installmode:         Install Mode (default: $DEFAULT_ISO_INSTALL_MODE)
+    --passwordalgorithm:   Password Algorithm (default: $DEFAULT_ISO_PASSWORD_ALGORITHM)
+    --bootloader:          Boot Loader Location (default: $DEFAULT_ISO_BOOT_LOADER_LOCATION)
+    --selinux:             SELinux Mode (default: $DEFAULT_ISO_SELINUX)
+    --firewall:            Firewall (default: $DEFAULT_ISO_FIREWALL)
+    --allow:               Allow Services (default: $DEFAULT_ISO_ALLOW_SERVICE)
+    --onboot:              Enable Network on Boot (default: $DEFAULT_ISO_ONBOOT)
+    --enableservice        Enable Service (default: $DEFAULT_ISO_ENABLE_SERVICE)
+    --disableservice       Disable Service (default: $DEFAULT_ISO_DISABLE_SERVICE)
+    --gecos                GECOS Field Entry (default: $DEFAULT_ISO_DISABLE_SERVICE)
+    --installsource        Install Source (default: $DEFAULT_ISO_INSTALL_SOURCE)
 HELP
   exit
+}
+
+# Function: print_help
+#
+# Print help
+
+print_help () {
+  case "$1" in
+    "cli")
+      print_cli_help
+      ;;
+    "actions")
+      print_actions
+      exit
+      ;;
+    "options")
+      print_options
+      exit
+      ;;
+    "postinstall")
+      print_postinstall
+      exit
+      ;;
+    "examples")
+      print_examples
+      exit
+      ;;
+    *)
+      print_cli_help
+      ;;
+  esac
 }

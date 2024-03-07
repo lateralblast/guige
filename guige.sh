@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Name:         guige (Generic Ubuntu/Unix ISO Generation Engine)
-# Version:      2.1.2
+# Version:      2.1.3
 # Release:      1
 # License:      CC-BA (Creative Commons By Attribution)
 #               http://creativecommons.org/licenses/by/4.0/legalcode
@@ -39,23 +39,23 @@ if [ -d "$MODULE_PATH" ]; then
   done
 fi
 
+set_defaults
+set_default_flags
+
 # Function: Handle command line arguments
 
 if [ "$SCRIPT_ARGS" = "" ]; then
   print_help
 fi
 
-set_defaults
-set_default_flags
-
 while test $# -gt 0
 do
   if [ "$1" = "-h" ]; then
-    print_help
+    print_help "$2"
     exit
   fi
   if [ "$2" = "" ]; then
-    if ! [[ "$1" =~ "version" ]] && ! [[ "$1" =~ "help" ]]; then
+    if ! [[ "$1" =~ "version" ]] && ! [[ "$1" =~ "help" ]] && ! [[ "$1" =~ "usage" ]]; then
       warning_message "No $1 specified"
       exit
     fi
@@ -391,12 +391,17 @@ do
       ISO_INSTALL_SOURCE="$2"
       shift 2
       ;;
+    --usage)
+      print_usage "$2"
+      exit
+      ;;
     --)
       shift
       break
       ;;
     *)
-      print_help
+      print_help "$2"
+      exit
       ;;
   esac
 done

@@ -2,11 +2,11 @@
 #
 # Print script usage information
 
-print_usage () {
-  cat <<-USAGE
+print_actions () {
+  cat <<-ACTIONS
 
-  action
-  ------
+  actions
+  -------
 
   checkracadm:            Check RACADM requirements are installed
   runracadm:              Run racadm to deploy image
@@ -31,6 +31,11 @@ print_usage () {
   listiso:                List ISOs
   createkvmvm:            Create KVM VM
   deletekvmvm:            Delete KVM VM
+ACTIONS
+}
+
+print_options () {
+  cat <<-OPTIONS
 
   options
   -------
@@ -49,6 +54,11 @@ print_usage () {
   nohwekernel:            Don't install HWE kernel packages (Ubuntu) (deafault: $DO_NO_HWE_KERNEL)
   nomultipath:            Don't load multipath kernel module (default: $DO_NO_MULTIPATH)
   plaintextpassword:      Use plaintext password (default: $DO_PLAIN_TEXT_PASSWORD)
+OPTIONS
+}
+
+print_postinstall () {
+  cat <<-POSTINSTALL
 
   postinstall
   -----------
@@ -58,14 +68,58 @@ print_usage () {
   updates:                Do updates as part of install process
   upgrades:               Do upgrades as part of install process
   all:                    Do all updates as part of install process
+POSTINSTALL
+}
 
+print_examples () {
+  cat <<-EXAMPLES
+  
   Examples
   --------
 
   Create an ISO with a static IP configuration:
 
   ${0##*/} --action createiso --options verbose --ip 192.168.1.211 --cidr 24 --dns 8.8.8.8 --gateway 192.168.1.254
+EXAMPLES
+}
 
-USAGE
-  exit
+
+# Function: print_all_usage
+#
+# Print script usage information
+
+print_all_usage () {
+  print_actions
+  print_options
+  print_postinstall
+  print_examples
+}
+
+# Function: print_usage
+#
+# Print script usage information
+
+print_usage () {
+  case "$1" in
+    "actions")
+      print_actions
+      exit
+      ;;
+    "options")
+      print_options
+      exit
+      ;;
+    "postinstall")
+      print_postinstall
+      exit
+      ;;
+    "examples")
+      print_examples
+      exit
+      ;;
+    *)
+      print_all_usage
+      exit
+      ;;
+  esac
 }

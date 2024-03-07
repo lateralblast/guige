@@ -3,6 +3,9 @@
 # Process switches
 
 process_switches () {
+  if [ "$ISO_SELINUX" = "" ]; then
+    ISO_SELINUX="$DEFAULT_ISO_SELINUX"
+  fi
   if [ "$ISO_INSTALL_SOURCE" = "" ]; then
     ISO_INSTALL_SOURCE="$DEFAULT_ISO_INSTALL_SOURCE"
   fi
