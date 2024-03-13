@@ -46,7 +46,7 @@ The following packages are optional for additional features:
 - nfs-kernel-server (required for racadm and redfish based ISO deployment)
 - ansible (required for iDRAC redfish ISO deployment)
 - kvm (required for building KVM test VM for testing ISO)
-- Use ksvalidator to check kickstart files if available 
+- Use ksvalidator to check kickstart files if available (pip install pykickstart)
 
 For best results:
 
