@@ -24,7 +24,7 @@ print_cli_help () {
     --cidr:                CIDR (default: $DEFAULT_ISO_CIDR)
     --sshkeyfile:          SSH key file to use as SSH key (default: $MASKED_DEFAULT_ISO_SSH_KEY_FILE)
     --dns:                 DNS Server (ddefault: $DEFAULT_ISO_DNS)
-    --bootdisk:            Boot Disk devices (default: $DEFAULT_ISO_DEVICES)
+    --bootdisk:            Boot Disk devices (default: $DEFAULT_ISO_DISK)
     --locale:              LANGUAGE (default: $DEFAULT_ISO_LOCALE)
     --lcall:               LC_ALL (default: $DEFAULT_ISO_LC_ALL)
     --bmcusername:         BMC/iDRAC User (default: $DEFAULT_BMC_USERNAME)
@@ -53,7 +53,7 @@ print_cli_help () {
     --arch:                Architecture (default: $DEFAULT_ISO_ARCH)
     --realname:            Realname (default $DEFAULT_ISO_REALNAME)
     --serialportspeed:     Serial Port Speed (default: $DEFAULT_ISO_SERIAL_PORT_SPEED0,$DEFAULT_ISO_SERIAL_PORT_SPEED1)
-    --swapsize|--vmram:    Swap or VM memory size (default $DEFAULT_ISO_SWAPSIZE/$DEFAULT_VM_RAM)
+    --swapsize|--vmram:    Swap or VM memory size (default $DEFAULT_ISO_SWAP_SIZE/$DEFAULT_VM_RAM)
     --squashfsfile:        Squashfs file (default: $DEFAULT_ISO_SQUASHFS_FILE_BASE)
     --timezone:            Timezone (default: $DEFAULT_ISO_TIMEZONE)
     --serialportaddress:   Serial Port Address (default: $DEFAULT_ISO_SERIAL_PORT_ADDRESS0,$DEFAULT_ISO_SERIAL_PORT_ADDRESS1)
@@ -84,6 +84,12 @@ print_cli_help () {
     --disableservice       Disable Service (default: $DEFAULT_ISO_DISABLE_SERVICE)
     --gecos                GECOS Field Entry (default: $DEFAULT_ISO_DISABLE_SERVICE)
     --installsource        Install Source (default: $DEFAULT_ISO_INSTALL_SOURCE)
+    --bootsize             Boot partition size (default: $DEFAULT_ISO_BOOT_SIZE)
+    --rootsize             Root partition size (default: $DEFAULT_ISO_ROOT_SIZE)
+    --installuser          Temporary install username for remote access during install (default: $DEFAULT_ISO_INSTALL_USERNAME)
+    --installpassword      Temporary install password for remote access during install (default: $DEFAULT_ISO_INSTALL_PASSWORD)
+    --pesize               PE size (default: $DEFAULT_ISO_PE_SIZE)
+    --vgname               Volume Group Name (default: $DEFAULT_ISO_VG_NAME)
 HELP
   exit
 }

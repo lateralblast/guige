@@ -124,6 +124,9 @@ process_actions () {
     ""listalliso"|listallisos"|"listiso"|"listisos")
       DO_LIST_ISOS="true"
       ;;
+    "test")
+      DO_TEST="true"
+      ;;
     *)
       handle_output "Action: $ACTION is not a valid action"
       exit

@@ -11,7 +11,7 @@ used to hang a shield on the shoulder or neck when not in use.
 Version
 -------
 
-Current version: 2.1.3
+Current version: 2.1.8
 
 Issues
 ------
@@ -46,6 +46,7 @@ The following packages are optional for additional features:
 - nfs-kernel-server (required for racadm and redfish based ISO deployment)
 - ansible (required for iDRAC redfish ISO deployment)
 - kvm (required for building KVM test VM for testing ISO)
+- Use ksvalidator to check kickstart files if available 
 
 For best results:
 
@@ -111,6 +112,7 @@ You can get help using the -h or --help switch:
 
 ```
   Usage: guige.sh [OPTIONS...]
+
     --oldrelease           Old release (used for copying file from an older release ISO)
     --country              Country (used for sources.list mirror - default: us)
     --isourl               Specify ISO URL
@@ -126,7 +128,7 @@ You can get help using the -h or --help switch:
     --layout|--vmsize:     Layout or VM disk size (default: us/20G)
     --bootserverip:        NFS/Bootserver IP
     --cidr:                CIDR (default: 24)
-    --sshkeyfile:          SSH key file to use as SSH key (default: /home/spindler/.ssh/id_rsa.pub)
+    --sshkeyfile:          SSH key file to use as SSH key (default: /Users/spindler/.ssh/id_rsa.pub)
     --dns:                 DNS Server (ddefault: 8.8.8.8)
     --bootdisk:            Boot Disk devices (default: first-disk)
     --locale:              LANGUAGE (default: en_US.UTF-8)
@@ -148,7 +150,7 @@ You can get help using the -h or --help switch:
     --installtarget:       Where the install mounts the target filesystem (default: )
     --installmount:        Where the install mounts the CD during install (default: )
     --bootserverfile       Boot sever file (default: )
-    --nic|--vmnic:         Network device (default: first-net/default)
+    --nic|--vmnic:         Network device (default: first-nic/default)
     --isopackages:         List of packages to install (default: zfsutils-linux zfs-initramfs net-tools curl lftp wget sudo file rsync dialog setserial ansible apt-utils whois squashfs-tools duperemove jq)
     --outputiso:           Output ISO file (default: )
     --password:            Password (default: ubuntu)
@@ -176,7 +178,7 @@ You can get help using the -h or --help switch:
     --zfsfilesystems:      ZFS filesystems (default: /var /var/lib /var/lib/AccountsService /var/lib/apt /var/lib/dpkg /var/lib/NetworkManager /srv /usr /usr/local /var/games /var/log /var/mail /var/snap /var/spool /var/www)
     --userdata:            Use a custom user-data file (default: generate automatically)
     --oeminstall:          OEM Install Type (default: auto)
-    --sourceid:            Source ID (default: ubuntu-server) 
+    --sourceid:            Source ID (default: ubuntu-server)
     --installmode:         Install Mode (default: text)
     --passwordalgorithm:   Password Algorithm (default: sha512)
     --bootloader:          Boot Loader Location (default: mbr)
@@ -188,15 +190,21 @@ You can get help using the -h or --help switch:
     --disableservice       Disable Service (default: cupsd)
     --gecos                GECOS Field Entry (default: cupsd)
     --installsource        Install Source (default: cdrom)
+    --bootsize             Boot partition size (default: 2048)
+    --rootsize             Root partition size (default: -1)
+    --installuser          Temporary install username for remote access during install (default: install)
+    --installpassword      Temporary install password for remote access during install (default: install)
+    --pesize               PE size (default: 32768)
+    --vgname               Volume Group Name (default: system)
 ```
 
 You can get more usage information by using the usage tag with the action switch:
 
 ```
-./guige.sh --action usage
+./guige.sh --usage
 
-  action
-  ------
+  actions
+  -------
 
   checkracadm:            Check RACADM requirements are installed
   runracadm:              Run racadm to deploy image
@@ -220,20 +228,34 @@ You can get more usage information by using the usage tag with the action switch
   listalliso:             List all ISOs
   listiso:                List ISOs
   createkvmvm:            Create KVM VM
-  deletekvmvm             Delete KVM VM
+  deletekvmvm:            Delete KVM VM
 
   options
   -------
 
-  cluster                 Install cluster related packages (pcs, gluster, etc)
-  kvm                     Install KVM related packages (virt-manager, cloud-image-utils, etc)
-  biosdevname:            Enable biosdevname kernel parameters
-  nounmount:              Don't unmount filesystems (useful for troubleshooting)
-  testmode:               Don't execute commands (useful for testing and generating a script)
+  cluster                 Install cluster related packages (pcs, gluster, etc)  (default: false)
+  kvm                     Install KVM related packages (virt-manager, cloud-image-utils, etc) (default: (false)
+  sshkey                  Add SSH key from ~/.ssh if present (default: false)
+  biosdevname:            Enable biosdevname kernel parameters (default: false)
+  nounmount:              Don't unmount filesystems (useful for troubleshooting) (default: false)
+  testmode:               Don't execute commands (useful for testing and generating a script) (deafault: false)
   efi:                    Create UEFI based ISO
   bios:                   Create BIOS based ISO
-  verbose:                Verbose output
-  interactive:            Interactively ask questions
+  verbose:                Verbose output (default: false)
+  interactive:            Interactively ask questions (default: false)
+  autoupgrades:           Allow autoupgrades
+  nohwekernel:            Don't install HWE kernel packages (Ubuntu) (deafault: false)
+  nomultipath:            Don't load multipath kernel module (default: false)
+  plaintextpassword:      Use plaintext password (default: false)
+  mediacheck              Do media check (default: false)
+  nolockroot              Don't lock root account
+  noactivate              Don't activate network
+  noipv4                  Disable IPv4
+  noipv6                  Disable IPv6
+  plaintext               Plain text password
+  nohwekernel             Don't install HWE kernel package
+  staticip                Use static IP
+  dhcp                    Use DHCP
 
   postinstall
   -----------

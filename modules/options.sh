@@ -3,10 +3,44 @@
 # Process option switch
 
 process_options () {
+  if [[ "$OPTIONS" = "user" ]]; then
+    DO_INSTALL_USER="true"
+  fi
+  if [[ "$OPTIONS" =~ "static" ]]; then
+    ISO_BOOT_PROTO="static"
+    DO_DHCP="false"
+  fi
+  if [[ "$OPTIONS" =~ "dhcp" ]]; then
+    ISO_BOOT_PROTO="dhcp"
+    DO_DHCP="true"
+  fi
+  if [[ "$OPTIONS" =~ "mediacheck" ]]; then
+    DO_MEDIA_CHECK="true"
+  fi
+  if [[ "$OPTIONS" =~ "ks" ]] || [[ "$OPTIONS" =~ "kick" ]]; then
+    if [ "$ACTION" = "test" ]; then
+      DO_KS_TEST="true"
+    fi
+  fi
+  if [[ "$OPTIONS" =~ "nolockroot" ]]; then
+    DO_LOCK_ROOT="false"
+  fi
+  if [[ "$OPTIONS" =~ "nodefroute" ]]; then
+    DO_DEFROUTE="true"
+  fi
+  if [[ "$OPTIONS" =~ "noactivate" ]]; then
+    DO_ACTIVATE="false"
+  fi
   if [[ "$OPTIONS" =~ "nohwekernel" ]]; then
     DO_NO_HWE_KERNEL="true"
   else
     DO_NO_HWE_KERNEL="false"
+  fi
+  if [[ "$OPTIONS" =~ "noipv4" ]]; then
+    DO_IPV4="false"
+  fi
+  if [[ "$OPTIONS" =~ "noipv6" ]]; then
+    DO_IPV6="false"
   fi
   if [[ "$OPTIONS" =~ "plaintext" ]]; then
     DO_PLAIN_TEXT_PASSWORD="true"

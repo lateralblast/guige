@@ -228,7 +228,7 @@ update_output_file_name () {
     TEMP_FILE_NAME=$( basename "$OUTPUT_FILE" .iso )
     OUTPUT_FILE="$TEMP_DIR_NAME/$TEMP_FILE_NAME-$ISO_NIC.iso"
   fi
-  if [ "$ISO_DHCP" = "false" ]; then
+  if [ "$DO_DHCP" = "false" ]; then
     if ! [ "$ISO_IP" = "$DEFAULT_ISO_IP" ]; then
       TEMP_DIR_NAME=$( dirname "$OUTPUT_FILE" )
       TEMP_FILE_NAME=$( basename "$OUTPUT_FILE" .iso )
@@ -250,10 +250,10 @@ update_output_file_name () {
     TEMP_FILE_NAME=$( basename "$OUTPUT_FILE" .iso )
     OUTPUT_FILE="$TEMP_DIR_NAME/$TEMP_FILE_NAME-$ISO_USERNAME.iso"
   fi
-  if ! [ "$ISO_DEVICES" = "$DEFAULT_ISO_DEVICES" ]; then
+  if ! [ "$ISO_DISK" = "$DEFAULT_ISO_DISK" ]; then
     TEMP_DIR_NAME=$( dirname "$OUTPUT_FILE" )
     TEMP_FILE_NAME=$( basename "$OUTPUT_FILE" .iso )
-    OUTPUT_FILE="$TEMP_DIR_NAME/$TEMP_FILE_NAME-$ISO_DEVICES.iso"
+    OUTPUT_FILE="$TEMP_DIR_NAME/$TEMP_FILE_NAME-$ISO_DISK.iso"
   fi
   if ! [ "$ISO_PREFIX" = "" ]; then
     TEMP_DIR_NAME=$( dirname "$OUTPUT_FILE" )
@@ -285,7 +285,7 @@ update_output_file_name () {
     TEMP_FILE_NAME=$( basename "$OUTPUT_FILE" .iso )
     OUTPUT_FILE="$TEMP_DIR_NAME/$TEMP_FILE_NAME-sshkey.iso"
   fi
-  if [ "$ISO_DHCP" = "true" ]; then
+  if [ "$DO_DHCP" = "true" ]; then
     TEMP_DIR_NAME=$( dirname "$OUTPUT_FILE" )
     TEMP_FILE_NAME=$( basename "$OUTPUT_FILE" .iso )
     OUTPUT_FILE="$TEMP_DIR_NAME/$TEMP_FILE_NAME-dhcp.iso"

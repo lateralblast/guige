@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Name:         guige (Generic Ubuntu/Unix ISO Generation Engine)
-# Version:      2.1.3
+# Version:      2.1.8
 # Release:      1
 # License:      CC-BA (Creative Commons By Attribution)
 #               http://creativecommons.org/licenses/by/4.0/legalcode
@@ -132,7 +132,7 @@ do
       shift 2
       ;;
     --bootdisk)
-      ISO_DEVICES+="$2"
+      ISO_DISK+="$2"
       shift 2
       ;;
     --locale)
@@ -154,7 +154,7 @@ do
     --gateway)
       ISO_GATEWAY="$2"
       shift 2
-      ISO_DHCP="false"
+      DO_DHCP="false"
       ;;
     --grubmenu|--vmname)
       ISO_GRUB_MENU="$2"
@@ -171,7 +171,7 @@ do
     --ip)
       ISO_IP="$2"
       shift 2
-      ISO_DHCP="false"
+      DO_DHCP="false"
       ;;
     --inputiso|--vmiso)
       INPUT_FILE="$2"
@@ -269,7 +269,7 @@ do
       shift 2
       ;;
     --swapsize|--vmram)
-      ISO_SWAPSIZE="$2"
+      ISO_SWAP_SIZE="$2"
       VM_RAM="$2"
       shift 2
       ;;
@@ -391,6 +391,30 @@ do
       ISO_INSTALL_SOURCE="$2"
       shift 2
       ;;
+    --bootsize)
+      ISO_BOOT_SIZE="$2"
+      shift 2
+      ;;
+    --rootsize)
+      ISO_ROOT_SIZE="$2"
+      shift 2
+      ;;
+    --pesize)
+      ISO_PE_SIZE="$2"
+      shift 2
+      ;;
+    --vgname)
+      ISO_VG_NAME="$2"
+      shift 2
+      ;;
+    --installuser)
+      ISO_INSTALL_USERNAME="$2"
+      shift 2
+      ;;
+    --installpassword)
+      ISO_INSTALL_PASSWORD="$2"
+      shift 2
+      ;;
     --usage)
       print_usage "$2"
       exit
@@ -438,7 +462,10 @@ fi
 
 get_ssh_key
 get_my_ip
-get_password_crypt "$ISO_PASSWORD"
+ISO_PASSWORD_CRYPT=$( get_password_crypt "$ISO_PASSWORD" )
+if [ "$DO_INSTALL_USER" = "true" ]; then
+  ISO_INSTALL_PASSWORD_CRYPT=$( get_password_crypt "$ISO_INSTALL_PASSWORD" )
+fi
 print_env
 
 # If run in interactive mode ask for values for required parameters
@@ -446,6 +473,16 @@ print_env
 
 if [ "$INTERACTIVE_MODE" = "true" ]; then
   get_interactive_input
+fi
+
+# Do test outputs
+
+if [ "$ACTION" = "test" ]; then
+  check_work_dir
+  if [ "$DO_KS_TEST" = "true" ]; then
+    prepare_kickstart_files
+    exit
+  fi
 fi
 
 # Handle specific functions

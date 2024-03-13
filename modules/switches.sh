@@ -3,6 +3,24 @@
 # Process switches
 
 process_switches () {
+  if [ "$ISO_INSTALL_USERNAME" = "" ]; then
+    ISO_INSTALL_USERNAME="$DEFAULT_ISO_INSTALL_USERNAME"
+  fi
+  if [ "$ISO_INSTALL_PASSWORD" = "" ]; then
+    ISO_INSTALL_PASSWORD="$DEFAULT_ISO_INSTALL_PASSWORD"
+  fi
+  if [ "$ISO_VG_NAME" = "" ]; then
+    ISO_VG_NAME="$DEFAULT_ISO_VG_NAME"
+  fi
+  if [ "$ISO_PE_SIZE" = "" ]; then
+    ISO_PE_SIZE="$DEFAULT_ISO_PE_SIZE"
+  fi
+  if [ "$ISO_BOOT_SIZE" = "" ]; then
+    ISO_BOOT_SIZE="$DEFAULT_ISO_BOOT_SIZE"
+  fi
+  if [ "$ISO_ROOT_SIZE" = "" ]; then
+    ISO_ROOT_SIZE="$DEFAULT_ISO_ROOT_SIZE"
+  fi
   if [ "$ISO_SELINUX" = "" ]; then
     ISO_SELINUX="$DEFAULT_ISO_SELINUX"
   fi
@@ -195,11 +213,11 @@ process_switches () {
     ISO_DNS="$DEFAULT_ISO_DNS"
   fi
   if [ "$ISO_IP" = "" ]; then
-    ISO_IP="$DEFAULT_ISO_IP"
-    ISO_BOOT_PROTO="static"
-  else
-    ISO_DHCP="false"
     ISO_BOOT_PROTO="dhcp"
+    DO_DHCP="true"
+  else
+    DO_DHCP="false"
+    ISO_BOOT_PROTO="static"
   fi
   if [ "$ISO_ALLOW_PASSWORD" = "" ]; then
     ISO_ALLOW_PASSWORD="$DEFAULT_ISO_ALLOW_PASSWORD"
@@ -223,10 +241,10 @@ process_switches () {
     ISO_NIC="$DEFAULT_ISO_NIC"
   fi
   if [ "$SWAPSIZE" = "" ]; then
-    ISO_SWAPSIZE="$DEFAULT_ISO_SWAPSIZE"
+    ISO_SWAP_SIZE="$DEFAULT_ISO_SWAP_SIZE"
   fi
-  if [ "$ISO_DEVICES" = "" ]; then
-    ISO_DEVICES="$DEFAULT_ISO_DEVICES"
+  if [ "$ISO_DISK" = "" ]; then
+    ISO_DISK="$DEFAULT_ISO_DISK"
   fi
   if [ "$ISO_BOOT_TYPE" = "bios" ]; then
     if [[ "$OPTIONS" =~ "fs" ]]; then

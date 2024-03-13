@@ -23,7 +23,7 @@ get_password_crypt () {
   handle_output "# Generating password crypt" TEXT
   if [ "$OS_NAME" = "Darwin" ]; then
     if [ "$TEST_MODE" = "false" ]; then
-      ISO_PASSWORD_CRYPT=$( echo -n "$ISO_PASSWORD" |openssl sha512 )
+      ISO_PASSWORD_CRYPT=$( echo -n "$ISO_PASSWORD" |openssl sha512 | awk '{ print $2 }' )
     fi
   else
     if [ ! -f "/usr/bin/mkpasswd" ]; then
@@ -37,6 +37,7 @@ get_password_crypt () {
     warning_message "No Password Hash/Crypt created"
     exit
   fi
+  echo "$ISO_PASSWORD_CRYPT"
 }
 
 # Function: get_my_ip
@@ -167,10 +168,10 @@ get_interactive_input () {
     read -r -p "Enter NIC [$ISO_NIC]: " NEW_ISO_NIC
     ISO_NIC=${NEW_ISO_NIC:-$ISO_NIC}
     # Get DHCP
-    read -r -p "Use DHCP? [$ISO_DHCP]: " NEW_ISO_DHCP
-    ISO_DHCP=${NEW_ISO_DHCP:-$ISO_DHCP}
+    read -r -p "Use DHCP? [$DO_DHCP]: " NEW_DO_DHCP
+    DO_DHCP=${NEW_DO_DHCP:-$DO_DHCP}
     # Get Static IP information if no DHCP
-    if [ "$ISO_DHCP" = "false" ]; then
+    if [ "$DO_DHCP" = "false" ]; then
       # Get IP
       read -r -p "Enter IP [$ISO_IP]: " NEW_ISO_IP
       ISO_IP=${NEW_ISO_IP:-$ISO_IP}
@@ -203,8 +204,8 @@ get_interactive_input () {
     read -r -p "Enter LC_ALL [$ISO_LC_ALL]: " NEW_ISO_LC_ALL
     ISO_LC_ALL=${NEW_ISO_LC_ALL:-$ISO_LC_ALL}
     # Get Root Disk(s)
-    read -r -p "Enter Root Disk(s) [$ISO_DEVICES]: " NEW_ISO_DEVICES
-    ISO_DEVICES=${NEW_ISO_DEVICES:-$ISO_DEVICES}
+    read -r -p "Enter Root Disk(s) [$ISO_DISK]: " NEW_ISO_DISK
+    ISO_DISK=${NEW_ISO_DISK:-$ISO_DISK}
     # Get Volume Managers
     read -r -p "Enter Volume Manager(s) [$ISO_VOLMGRS]: " NEW_ISO_VOLMGRS
     ISO_VOLMGRS=${NEW_ISO_VOLMGRS:-$ISO_VOLMGRS}
@@ -256,8 +257,8 @@ get_interactive_input () {
       fi
     fi
     # Get swap size
-    read -r -p "Enter Swap Size [$ISO_SWAPSIZE]: " NEW_ISO_SWAPSIZE
-    ISO_SWAPSIZE=${NEW_ISO_SWAPSIZE:-$ISO_SWAPSIZE}
+    read -r -p "Enter Swap Size [$ISO_SWAP_SIZE]: " NEW_ISO_SWAP_SIZE
+    ISO_SWAP_SIZE=${NEW_ISO_SWAP_SIZE:-$ISO_SWAP_SIZE}
     # Determine wether we use an SSH key
     read -r -p "Use SSH keys? [$DO_ISO_SSH_KEY]: " NEW_DO_ISO_SSH_KEY
     DO_ISO_SSH_KEY=${NEW_DO_ISO_SSH_KEY:-$DO_ISO_SSH_KEY}
@@ -273,6 +274,15 @@ get_interactive_input () {
       # Install Source
       read -r -p "Install Source? [$ISO_INSTALL_SOURCE]: " NEW_ISO_INSTALL_SOURCE
       ISO_INSTALL_SOURCE=${NEW_ISO_INSTALL_SOURCE:-$ISO_INSTALL_SOURCE}
+      # Install Mode 
+      read -r -p "Install Mode? [$ISO_INSTALL_MODE]: " NEW_ISO_INSTALL_MODE
+      ISO_INSTALL_MODE=${NEW_ISO_INSTALL_MODE:-$ISO_INSTALL_MODE}
+      # Install Username 
+      read -r -p "SSH Install Username? [$ISO_INSTALL_USERNAME]: " NEW_ISO_INSTALL_USERNAME
+      ISO_INSTALL_USERNAME=${NEW_ISO_INSTALL_USERNAME:-$ISO_INSTALL_USERNAME}
+      # Install Username 
+      read -r -p "SSH Install Password? [$ISO_INSTALL_PASSWORD]: " NEW_ISO_INSTALL_PASSWORD
+      ISO_INSTALL_PASSWORD=${NEW_ISO_INSTALL_PASSWORD:-$ISO_INSTALL_PASSWORD}
       # Get Password Algorithm
       read -r -p "Password Algorithm? [$ISO_PASSWORD_ALGORITHM]: " NEW_ISO_PASSWORD_ALGORITHM
       ISO_PASSWORD_ALGORITHM=${NEW_ISO_PASSWORD_ALGORITHM:-$ISO_PASSWORD_ALGORITHM}
@@ -300,6 +310,15 @@ get_interactive_input () {
       # User Groups
       read -r -p "User Groups? [$ISO_GROUPS]: " NEW_ISO_GROUPS
       ISO_GROUPS=${NEW_ISO_GROUPS:-$ISO_GROUPS}
+      # VG Name
+      read -r -p "Volume Group Name? [$ISO_VG_NAME]: " NEW_ISO_VG_NAME
+      ISO_VG_NAME=${NEW_ISO_VG_NAME:-$ISO_VG_NAME}
+      # Boot Partition Size
+      read -r -p "Boot Partition Size? [$ISO_BOOT_SIZE]: " NEW_ISO_BOOT_SIZE
+      ISO_BOOT_SIZE=${NEW_ISO_BOOT_SIZE:-$ISO_BOOT_SIZE}
+      # PE Size
+      read -r -p "PE Size? [$ISO_PE_SIZE]: " NEW_ISO_PE_SIZE
+      ISO_PE_SIZE=${NEW_ISO_PE_SIZE:-$ISO_PE_SIZE}
     fi
     # Get whether to install drivers
     read -r -p "Install Drivers? [$DO_INSTALL_ISO_DRIVERS]: " NEW_INSTALL_ISO_DRIVERS

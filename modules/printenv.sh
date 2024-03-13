@@ -46,8 +46,8 @@ print_env () {
     handle_output "# SSH Key file:              [ISO_SSH_KEY_FILE]               $ISO_SSH_KEY_FILE" TEXT
   fi
   handle_output "# NIC:                       [ISO_NIC]                        $ISO_NIC" TEXT
-  handle_output "# DHCP:                      [ISO_DHCP]                       $ISO_DHCP" TEXT
-  if [ "$ISO_DHCP" = "false" ]; then
+  handle_output "# DHCP:                      [DO_DHCP]                        $DO_DHCP" TEXT
+  if [ "$DO_DHCP" = "false" ]; then
     handle_output "# IP:                        [ISO_IP/ISO_CIDR]                $ISO_IP/$ISO_CIDR" TEXT
     handle_output "# Gateway:                   [ISO_GATEWAY]                    $ISO_GATEWAY" TEXT
     handle_output "# Nameservers:               [ISO_DNS]                        $ISO_DNS" TEXT
@@ -59,7 +59,7 @@ print_env () {
   handle_output "# Keyboard Layout:           [ISO_LAYOUT]                     $ISO_LAYOUT" TEXT
   handle_output "# Locale:                    [ISO_LOCALE]                     $ISO_LOCALE" TEXT
   handle_output "# LC_ALL:                    [ISO_LC_ALL]                     $ISO_LC_ALL" TEXT
-  handle_output "# Root disk(s):              [ISO_DEVICES]                    $ISO_DEVICES" TEXT
+  handle_output "# Root disk(s):              [ISO_DISK]                       $ISO_DISK" TEXT
   handle_output "# Volme Manager(s):          [ISO_VOLMGRS]                    $ISO_VOLMGRS" TEXT
   handle_output "# GRUB Menu:                 [ISO_GRUB_MENU]                  $ISO_GRUB_MENU" TEXT
   handle_output "# GRUB Timeout:              [ISO_GRUB_TIMEOUT]               $ISO_GRUB_TIMEOUT" TEXT
@@ -74,7 +74,7 @@ print_env () {
   handle_output "# Install updates:           [DO_INSTALL_ISO_UPDATE]          $DO_INSTALL_ISO_UPDATE" TEXT
   handle_output "# Install upgrades:          [DO_INSTALL_ISO_UPGRADE]         $DO_INSTALL_ISO_UPGRADE" TEXT
   handle_output "# Dist upgrades:             [DO_INSTALL_ISO_DIST_UPGRADE]    $DO_INSTALL_ISO_DIST_UPGRADE" TEXT
-  handle_output "# Swap size:                 [ISO_SWAPSIZE]                   $ISO_SWAPSIZE" TEXT
+  handle_output "# Swap size:                 [ISO_SWAP_SIZE]                   $ISO_SWAP_SIZE" TEXT
   if [ "$DO_CREATE_EXPORT" = "true" ] || [ "$DO_CREATE_ANSIBLE" = "true" ]; then
     handle_output "# Bootserver IP:             [BOOT_SERVER_IP]                 $BOOT_SERVER_IP" TEXT
     handle_output "# Bootserver file:           [BOOT_SERVER_FILE]               $BOOT_SERVER_FILE" TEXT
@@ -87,19 +87,25 @@ print_env () {
   if [ "$ISO_OS_NAME" = "rocky" ]; then
     handle_output "# Install Mode:              [ISO_INSTALL_MODE]               $ISO_INSTALL_MODE" TEXT
     handle_output "# Install Source:            [ISO_INSTALL_SOURCE]             $ISO_INSTALL_SOURCE" TEXT
+    handle_output "# Install Username:          [ISO_INSTALL_USERNAME]           $ISO_INSTALL_USERNAME" TEXT
+    handle_output "# Install Password:          [ISO_INSTALL_PASSWORD]           $ISO_INSTALL_PASSWORD" TEXT
+    handle_output "# Install Password Crypt:    [ISO_INSTALL_PASSWORD_CRYPT]     $ISO_INSTALL_PASSWORD_CRYPT" TEXT
     handle_output "# Password Algorithm:        [ISO_PASSWORD_ALGORITHM]         $ISO_PASSWORD_ALGORITHM" TEXT
     handle_output "# Bootloader Location:       [ISO_BOOT_LOADER_LOCATION]       $ISO_BOOT_LOADER_LOCATION" TEXT
     handle_output "# SELinux Mode:              [ISO_SELINUX]                    $ISO_SELINUX" TEXT
     handle_output "# Firewall:                  [ISO_FIREWALL]                   $ISO_FIREWALL" TEXT
     handle_output "# Allow Services:            [ISO_ALLOW_SERVICE]              $ISO_ALLOW_SERVICE" TEXT
     handle_output "# Enable Network on boot:    [ISO_ONBOOT]                     $ISO_ONBOOT" TEXT
-    if [ "$ISO_DHCP" = "true" ]; then
-      handle_output "# Network Boot Procol:       [ISO_BOOT_PROTO]                 $ISO_BOOT_PROTO" TEXT
-    fi
+    handle_output "# Network Boot Procol:       [ISO_BOOT_PROTO]                 $ISO_BOOT_PROTO" TEXT
     handle_output "# Enable Services:           [ISO_ENABLE_SERVICE]             $ISO_ENABLE_SERVICE" TEXT
     handle_output "# Disable Services:          [ISO_DISABLE_SERVICE]            $ISO_DISABLE_SERVICE" TEXT
     handle_output "# User GECOS field:          [ISO_GECOS]                      $ISO_GECOS" TEXT
     handle_output "# User Groups:               [ISO_GROUPS]                     $ISO_GROUPS" TEXT
+    handle_output "# Boot Partition Size:       [ISO_BOOT_SIZE]                  $ISO_BOOT_SIZE" TEXT
+    handle_output "# PE Size:                   [ISO_PE_SIZE]                    $ISO_PE_SIZE" TEXT
+    handle_output "# Volume Group Name:         [ISO_VG_NAME]                    $ISO_VG_NAME" TEXT
+    handle_output "# Install SSH User:          [ISO_SSH_USER]                   $ISO_SSH_USER" TEXT
+    handle_output "# Install SSH Password:      [ISO_SSH_PASSWORD]               $ISO_SSH_PASSWORD" TEXT
   fi
   handle_output "# Serial Port:               [ISO_SERIAL_PORT0]               $ISO_SERIAL_PORT0" TEXT
   handle_output "# Serial Port:               [ISO_SERIAL_PORT1]               $ISO_SERIAL_PORT1" TEXT
