@@ -484,6 +484,7 @@ fi
 if [ "$ACTION" = "test" ]; then
   check_work_dir
   if [ "$DO_KS_TEST" = "true" ]; then
+#    prepare_kickstart_iso
     prepare_kickstart_files
     exit
   fi
