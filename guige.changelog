@@ -435,3 +435,5 @@
 # Added support to run ksvalidator if present
 # 2.1.8: Thu 14 Mar 2024 08:13:05 AEDT
 # Updated documentation
+# 2.1.9: Thu 14 Mar 2024 12:53:37 AEDT
+# Updated kickstart file creation

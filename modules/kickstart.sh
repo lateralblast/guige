@@ -34,28 +34,31 @@ prepare_kickstart_files () {
     echo "lang $ISO_LOCALE" >> "$KS_FILE"
     echo "keyboard $ISO_COUNTRY" >> "$KS_FILE"
     echo "timezone --utc $ISO_TIMEZONE" >> "$KS_FILE"
+    echo "firstboot --$DO_ISO_FIRSTBOOT" >> "$KS_FILE"
     if [ "$ISO_DISK" = "first-disk" ]; then
-      echo "bootloader --timeout=$ISO_GRUB_TIMEOUT --location=$ISO_BOOT_LOADER_LOCATION --append=\"\" --boot-drive=\$FIRST_DISK" >> "$KS_FILE"
+      echo "bootloader --timeout=$ISO_GRUB_TIMEOUT --location=$ISO_BOOT_LOADER_LOCATION --append=\"$ISO_KERNEL_ARGS\" --boot-drive=\$FIRST_DISK" >> "$KS_FILE"
       echo "clearpart --all --drives=\$FIRST_DISK" >> "$KS_FILE"
     else
-      echo "bootloader --timeout=$ISO_GRUB_TIMEOUT --location=$ISO_BOOT_LOADER_LOCATION --append=\"\" --boot-drive=$ISO_DISK" >> "$KS_FILE"
+      echo "bootloader --timeout=$ISO_GRUB_TIMEOUT --location=$ISO_BOOT_LOADER_LOCATION --append=\"$ISO_KERNEL_ARGS\" --boot-drive=$ISO_DISK" >> "$KS_FILE"
       echo "clearpart --all --drives=$ISO_DISK" >> "$KS_FILE"
     fi
     if [ "$ISO_VOLMGR" = "lvm" ]; then
       echo "autopart --type=lvm" >> "$KS_FILE"
     else
       if [ "$ISO_DISK" = "first-disk" ]; then
-        echo "part /boot --size $ISO_BOOT_SIZE --asprimary --fstype ext4 --ondrive=\$FIRST_DISK" >> "$KS_FILE"
-        echo "part pv.1 --size 1 --grow --fstype=ext4 --ondrive=\$FIRST_DISK" >> "$KS_FILE"
+        echo "part /boot --size=$ISO_BOOT_SIZE --fstype=\"$ISO_VOLMGR\" --ondisk=\$FIRST_DISK" >> "$KS_FILE"
+        echo "part $ISO_LV_NAME --size=-1 --grow --fstype=\"lvmpv\" --ondisk=\$FIRST_DISK" >> "$KS_FILE"
+        echo "part /boot/efi --size=$ISO_BOOT_SIZE --asprimary --fstype=\"efi\" --ondisk=\$FIRST_DISK" >> "$KS_FILE"
       else
-        echo "part /boot --size $ISO_BOOT_SIZE --asprimary --fstype ext4 --ondrive=$ISO_DISK" >> "$KS_FILE"
-        echo "part pv.1 --size 1 --grow --fstype=ext4 --ondrive=$ISO_DISK" >> "$KS_FILE"
+        echo "part /boot --size=$ISO_BOOT_SIZE --fstype=\"$ISO_VOLMGR\" --ondisk=$ISO_DISK" >> "$KS_FILE"
+        echo "part $ISO_LV_NAME --size=-1 --grow --fstype=\"$ISO_VOLMGR\" --ondisk=$ISO_DISK" >> "$KS_FILE"
+        echo "part /boot/efi --size=$ISO_BOOT_SIZE --asprimary --fstype=\"efi\" --ondisk=$ISO_DISK" >> "$KS_FILE"
       fi
+      echo "volgroup $ISO_VG_NAME --pesize=$ISO_PE_SIZE $ISO_LV_NAME" >> "$KS_FILE"
       echo "logvol / --fstype $ISO_VOLMGR --vgname $ISO_VG_NAME --size=$ISO_ROOT_SIZE --name=root" >> "$KS_FILE"
       echo "logvol swap --vgname $ISO_VG_NAME --size=$ISO_SWAP_SIZE --name=swap" >> "$KS_FILE"
-      echo "" >> "$KS_FILE"
     fi
-    echo "auth --enableshadow --passalgo=$ISO_PASSWORD_ALGORITHM" >> "$KS_FILE"
+#    echo "auth --enableshadow --passalgo=$ISO_PASSWORD_ALGORITHM" >> "$KS_FILE"
     echo "selinux --$ISO_SELINUX" >> "$KS_FILE"
     if [ "$ISO_FIREWALL" = "enabled" ]; then
       echo "firewall --$ISO_FIREWALL --service=$ISO_ALLOW_SERVICE" >> "$KS_FILE"
@@ -95,7 +98,6 @@ prepare_kickstart_files () {
       USER_PW="user --name=$ISO_USERNAME --group=$ISO_GROUPS --password=$ISO_PASSWORD_CRYPT --iscrypted --gecos=\"$ISO_GECOS\"" >> "$KS_FILE"
       SSH_PW="sshpw --username=$ISO_INSTALL_USERNAME --iscrypted --password=$ISO_INSTALL_PASSWORD_CRYPT"
     fi
-    echo "$ROOT_PW" >> "$KS_FILE"
     if [ "$DO_LOCK_ROOT" = "true" ]; then
       ROOT_PW="$ROOT_PW --lock"
     fi

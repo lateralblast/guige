@@ -90,6 +90,7 @@ print_cli_help () {
     --installpassword      Temporary install password for remote access during install (default: $DEFAULT_ISO_INSTALL_PASSWORD)
     --pesize               PE size (default: $DEFAULT_ISO_PE_SIZE)
     --vgname               Volume Group Name (default: $DEFAULT_ISO_VG_NAME)
+    --lvname               Volume Group Name (default: $DEFAULT_ISO_LV_NAME)
 HELP
   exit
 }

@@ -106,6 +106,7 @@ print_env () {
     handle_output "# Volume Group Name:         [ISO_VG_NAME]                    $ISO_VG_NAME" TEXT
     handle_output "# Install SSH User:          [ISO_SSH_USER]                   $ISO_SSH_USER" TEXT
     handle_output "# Install SSH Password:      [ISO_SSH_PASSWORD]               $ISO_SSH_PASSWORD" TEXT
+    handle_output "# Do setup on first boot:    [DO_ISO_FIRSTBOOT]               $DO_ISO_FIRSTBOOT" TEXT
   fi
   handle_output "# Serial Port:               [ISO_SERIAL_PORT0]               $ISO_SERIAL_PORT0" TEXT
   handle_output "# Serial Port:               [ISO_SERIAL_PORT1]               $ISO_SERIAL_PORT1" TEXT

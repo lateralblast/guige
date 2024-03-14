@@ -3,6 +3,9 @@
 # Process switches
 
 process_switches () {
+  if [ "$ISO_LV_NAME" = "" ]; then
+    ISO_LV_NAME="$DEFAULT_ISO_LV_NAME"
+  fi
   if [ "$ISO_INSTALL_USERNAME" = "" ]; then
     ISO_INSTALL_USERNAME="$DEFAULT_ISO_INSTALL_USERNAME"
   fi

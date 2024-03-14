@@ -313,6 +313,9 @@ get_interactive_input () {
       # VG Name
       read -r -p "Volume Group Name? [$ISO_VG_NAME]: " NEW_ISO_VG_NAME
       ISO_VG_NAME=${NEW_ISO_VG_NAME:-$ISO_VG_NAME}
+      # LV Name
+      read -r -p "Logic Volume Name? [$ISO_LV_NAME]: " NEW_ISO_LV_NAME
+      ISO_LV_NAME=${NEW_ISO_LV_NAME:-$ISO_LV_NAME}
       # Boot Partition Size
       read -r -p "Boot Partition Size? [$ISO_BOOT_SIZE]: " NEW_ISO_BOOT_SIZE
       ISO_BOOT_SIZE=${NEW_ISO_BOOT_SIZE:-$ISO_BOOT_SIZE}

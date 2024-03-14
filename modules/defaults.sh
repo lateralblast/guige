@@ -91,6 +91,7 @@ set_defaults () {
   DEFAULT_ISO_INSTALL_USERNAME="install"
   DEFAULT_ISO_INSTALL_PASSWORD="install"
   DEFAULT_ISO_VG_NAME="system"
+  DEFAULT_ISO_LV_NAME="pv.1"
   VM_EXISTS="false"
   DO_DHCP="true"
   TEST_MODE="false"
@@ -132,6 +133,7 @@ reset_defaults () {
     DEFAULT_INPUT_FILE_BASE=$( basename "$DEFAULT_INPUT_FILE" )
     DEFAULT_OUTPUT_FILE_BASE=$( basename "$DEFAULT_OUTPUT_FILE" )
     DEFAULT_ISO_URL="https://download.rockylinux.org/pub/rocky/$DEFAULT_ISO_MAJOR_RELEASE/isos/$DEFAULT_ISO_ARCH/$DEFAULT_INPUT_FILE_BASE"
+    DEFAULT_ISO_INSTALL_PACKAGES="net-tools curl lftp wget sudo file rsync dialog setserial whois squashfs-tools jq"
   fi
 }
 
@@ -195,6 +197,7 @@ set_default_flags () {
   DO_MEDIA_CHECK="false"
   DO_INSTALL_USER="false"
   DO_ISO_SSH_KEY="fales"
+  DO_ISO_FIRSTBOOT="disabled"
 }
 
 # Function: set_default_os_name

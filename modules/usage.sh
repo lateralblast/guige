@@ -41,7 +41,7 @@ print_options () {
   -------
 
   cluster                 Install cluster related packages (pcs, gluster, etc)  (default: $DO_CLUSTER_PACKAGES)
-  kvm                     Install KVM related packages (virt-manager, cloud-image-utils, etc) (def) ($DO_KVM_PACKAGES)
+  kvm                     Install KVM related packages (virt-manager, cloud-image-utils, etc) (deffault: $DO_KVM_PACKAGES)
   sshkey                  Add SSH key from ~/.ssh if present (default $DO_ISO_SSH_KEY)
   biosdevname:            Enable biosdevname kernel parameters (default: $ISO_USE_BIOSDEVNAME)
   nounmount:              Don't unmount filesystems (useful for troubleshooting) (default: $DO_NO_UNMOUNT_ISO)

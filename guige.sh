@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Name:         guige (Generic Ubuntu/Unix ISO Generation Engine)
-# Version:      2.1.8
+# Version:      2.1.9
 # Release:      1
 # License:      CC-BA (Creative Commons By Attribution)
 #               http://creativecommons.org/licenses/by/4.0/legalcode
@@ -405,6 +405,10 @@ do
       ;;
     --vgname)
       ISO_VG_NAME="$2"
+      shift 2
+      ;;
+    --lvname)
+      ISO_LV_NAME="$2"
       shift 2
       ;;
     --installuser)
