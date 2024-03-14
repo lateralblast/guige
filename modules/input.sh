@@ -20,7 +20,6 @@ get_ssh_key () {
 
 get_password_crypt () {
   ISO_PASSWORD="$1"
-  handle_output "# Generating password crypt" TEXT
   if [ "$OS_NAME" = "Darwin" ]; then
     if [ "$TEST_MODE" = "false" ]; then
       ISO_PASSWORD_CRYPT=$( echo -n "$ISO_PASSWORD" |openssl sha512 | awk '{ print $2 }' )
