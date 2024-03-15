@@ -249,6 +249,7 @@ create_autoinstall_iso () {
       echo "# Output file will be at \"$PRE_WORK_DIR/files/$BASE_DOCKER_OUTPUT_FILE\""
     fi
   fi
+  check_file_perms "$OUTPUT_FILE"
 }
 
 # Function: prepare_autoinstall_iso

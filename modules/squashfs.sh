@@ -1,8 +1,21 @@
 # Function: unmount_squashfs
 #
-# Unmount squahfs filesystem
+# Unmount squashfs filesystem
 
 unmount_squashfs () {
+  case "$ISO_OS_NAME" in
+    "ubuntu")
+      unmount_ubuntu_squashfs
+      ;;
+  esac
+}
+
+
+# Function: unmount_ubuntu_squashfs
+#
+# Unmount ubuntu squashfs filesystem
+
+unmount_ubuntu_squashfs () {
   handle_output "# Unmounting squashfs $ISO_NEW_DIR/squashfs" TEXT
   if [ "$TEST_MODE" = "false" ]; then
     sudo umount "$ISO_NEW_DIR/squashfs"

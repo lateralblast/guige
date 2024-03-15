@@ -102,11 +102,11 @@ copy_iso () {
   fi
   if [ "$VERBOSE_MODE" = "true" ]; then
     if [ "$TEST_MODE" = "false" ]; then
-      rsync -av "$ISO_MOUNT_DIR/" "$ISO_NEW_DIR/cd"
+      sudo rsync -av --delete "$ISO_MOUNT_DIR/" "$ISO_NEW_DIR/cd"
     fi
   else
     if [ "$TEST_MODE" = "false" ]; then
-      rsync -a "$ISO_MOUNT_DIR/" "$ISO_NEW_DIR/cd"
+      sudo rsync -a --delete "$ISO_MOUNT_DIR/" "$ISO_NEW_DIR/cd"
     fi
   fi
 }
@@ -125,7 +125,7 @@ unmount_iso () {
   fi
 }
 
-# Function: unmount_old_iso
+# Function: unmounat_old_iso
 #
 # unmount loopback older release ISO filesystem
 #
@@ -290,6 +290,16 @@ get_old_base_iso () {
         wget "$OLD_ISO_URL" -O "$OLD_WORK_DIR/files/$OLD_BASE_INPUT_FILE"
       fi
     fi
+  fi
+}
+
+# Function: get_iso_type
+#
+# Get ISO type
+
+get_iso_type () {
+  if [[ "$INPUT_FILE" =~ "dvd" ]]; then
+    ISO_TYPE="dvd"
   fi
 }
 

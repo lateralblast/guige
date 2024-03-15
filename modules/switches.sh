@@ -362,7 +362,7 @@ process_switches () {
         case $ISO_BUILD_TYPE in
           *)
             INPUT_FILE="$WORK_DIR/files/$ISO_REALNAME-$ISO_RELEASE-$ISO_ARCH-$ISO_BUILD_TYPE.iso"
-            OUTPUT_FILE="$WORK_DIR/files/$$ISO_REALNAME-$ISO_RELEASE-$ISO_ARCH-$ISO_BOOT_TYPE-$ISO_BUILD_TYPE-kickstart.iso"
+            OUTPUT_FILE="$WORK_DIR/files/$ISO_REALNAME-$ISO_RELEASE-$ISO_ARCH-$ISO_BOOT_TYPE-$ISO_BUILD_TYPE-kickstart.iso"
             BOOT_SERVER_FILE="$OUTPUT_FILE"
           ;;
         esac

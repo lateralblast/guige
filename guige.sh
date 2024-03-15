@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Name:         guige (Generic Ubuntu/Unix ISO Generation Engine)
-# Version:      2.1.9
+# Version:      2.2.2
 # Release:      1
 # License:      CC-BA (Creative Commons By Attribution)
 #               http://creativecommons.org/licenses/by/4.0/legalcode
@@ -457,6 +457,7 @@ update_iso_url
 handle_bios
 handle_ubuntu_pro
 copy_custom_user_data
+get_iso_type
 
 # Output variables
 
@@ -484,7 +485,6 @@ fi
 if [ "$ACTION" = "test" ]; then
   check_work_dir
   if [ "$DO_KS_TEST" = "true" ]; then
-#    prepare_kickstart_iso
     prepare_kickstart_files
     exit
   fi

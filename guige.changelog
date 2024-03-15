@@ -437,3 +437,9 @@
 # Updated documentation
 # 2.1.9: Thu 14 Mar 2024 12:53:37 AEDT
 # Updated kickstart file creation
+# 2.2.0: Thu 14 Mar 2024 21:44:54 AEDT
+# Added kickstart ISO copy function
+# 2.2.1: Fri 15 Mar 2024 16:11:20 AEDT
+# Bugfixes
+# 2.2.2: Fri 15 Mar 2024 22:04:40 AEDT
+# Updated KVM code to create Rocky Linux VMs

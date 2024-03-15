@@ -113,13 +113,14 @@ set_defaults () {
 
 reset_defaults () {
   if [[ "$ISO_OS_NAME" =~ "rocky" ]]; then
+    DEFAULT_ISO_VOLMGRS="lvm xfs btrfs"
     DEFAULT_ISO_NIC="link"
     DEFAULT_ISO_ARCH="x86_64"
     CURRENT_ISO_RELEASE="9.3"
     CURRENT_ISO_RELEASE_9="9.3"
     DEFAULT_ISO_RELEASE="$CURRENT_ISO_RELEASE"
-    DEFAULT_ISO_MAJOR_RELEASE=$(echo "$DEFAULT_ISO_RELEASE" |cut -f1 -d.)
-    DEFAULT_ISO_MINOR_RELEASE=$(echo "$DEFAULT_ISO_RELEASE" |cut -f2 -d.)
+    DEFAULT_ISO_MAJOR_RELEASE=$( echo "$DEFAULT_ISO_RELEASE" |cut -f1 -d. )
+    DEFAULT_ISO_MINOR_RELEASE=$( echo "$DEFAULT_ISO_RELEASE" |cut -f2 -d. )
     DEFAULT_ISO_OS_NAME="rocky"
     DEFAULT_ISO_HOSTNAME="rocky"
     DEFAULT_ISO_REALNAME="Rocky"
@@ -364,6 +365,7 @@ set_default_files () {
 # Update default files
 
 reset_default_files () {
+  ISO_VOLID="$ISO_VOLID $ISO_ARCH"
   ISO_GRUB_FILE="$WORK_DIR/grub.cfg"
   if [ "$ISO_MAJOR_RELEASE" -ge "22" ]; then
     ISO_SQUASHFS_FILE="$ISO_MOUNT_DIR/casper/ubuntu-server-minimal.squashfs"

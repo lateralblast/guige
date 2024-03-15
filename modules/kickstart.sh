@@ -3,8 +3,18 @@
 # Create kickstart ISO (e.g. Rocky Linux)
 
 create_kickstart_iso () {
-  # insert code here 
-  echo "" 
+  if [ ! -f "/usr/bin/xorriso" ]; then
+    install_required_packages
+  fi
+  if [ "$TEST_MODE" = "false" ]; then
+    handle_output "# Creating ISO" TEXT
+    check_file_perms "$OUTPUT_FILE"
+    cd $ISO_NEW_DIR/cd 
+    sudo mkisofs -o "$OUTPUT_FILE" -b isolinux/isolinux.bin -c isolinux/boot.cat \
+    -boot-load-size 4 -boot-info-table -no-emul-boot -eltorito-alt-boot \
+    -eltorito-boot images/efiboot.img -no-emul-boot -R -J -V "$ISO_LABEL" -T .
+    check_file_perms "$OUTPUT_FILE"
+  fi
 }
 
 # Function: create_kickstart_file
@@ -12,6 +22,12 @@ create_kickstart_iso () {
 # Create kickstart files (e.g. Rocky Linux)
 
 prepare_kickstart_files () {
+  KS_DIR="$ISO_NEW_DIR/cd/kickstart"
+  if [ "$TEST_MODE" = "false" ]; then
+    if [ ! -d "$KS_DIR" ]; then
+      sudo mkdir -p "$KS_DIR"
+    fi
+  fi
   for ISO_VOLMGR in $ISO_VOLMGRS; do
     KS_FILE="$WORK_DIR/files/$ISO_VOLMGR.ks"
     DATE=$( date )
@@ -19,7 +35,7 @@ prepare_kickstart_files () {
     if [ "$DO_MEDIA_CHECK" = "true" ]; then
       echo "mediacheck" >> "$KS_FILE"
     fi
-    echo "$ISO_INSTALL_MODE" >> "$KS_FILE"
+#    echo "$ISO_INSTALL_MODE" >> "$KS_FILE"
     echo "$ISO_INSTALL_SOURCE" >> "$KS_FILE"
     echo "%pre" >> "$KS_FILE"
     if [ "$ISO_DISK" = "first-disk" ]; then
@@ -111,14 +127,77 @@ prepare_kickstart_files () {
       echo "$PACKAGE" >> "$KS_FILE"
     done
     echo "%end" >> "$KS_FILE"
-    echo "" >> "$KS_FILE"
-    echo "" >> "$KS_FILE"
-    echo "" >> "$KS_FILE"
     print_file "$KS_FILE"
     if ! [ -z "$( command -v ksvalidator )" ]; then
       ksvalidator "$KS_FILE"
     fi
+    if [ "$TEST_MODE" = "false" ]; then
+      sudo cp "$KS_FILE" "$KS_DIR"
+    fi
   done
+}
+
+# Function: prepare_kickstart_grub_menu
+#
+# Prepare kickstart grub, isolinux, etc files
+
+prepare_kickstart_grub_menu () {
+  TMP_LINUX_CFG="$WORK_DIR/files/isolinux.cfg"
+  TMP_GRUB_CFG="$WORK_DIR/files/grub.cfg"
+  ISO_LINUX_CFG="$ISO_NEW_DIR/cd/isolinux/isolinux.cfg"
+  ISO_GRUB_CFG="$ISO_NEW_DIR/cd/EFI/BOOT/grub.cfg"
+  ISO_LABEL="$ISO_OS_NAME-$ISO_MAJOR_RELEASE-$ISO_MINOR_RELEASE-$ISO_ARCH-$ISO_TYPE"
+  echo "default $ISO_GRUB_MENU" > "$TMP_LINUX_CFG"
+  COUNTER=0
+  ISO_KERNEL_SERIAL_ARGS="console=$ISO_SERIAL_PORT0,$ISO_SERIAL_PORT_SPEED0 console=$ISO_SERIAL_PORT1,$ISO_SERIAL_PORT_SPEED1"
+  for ISO_DISK in $ISO_DISK; do
+    for ISO_VOLMGR in $ISO_VOLMGRS; do
+      echo "label $COUNTER" >> "$TMP_LINUX_CFG"
+      echo "  menu label ^$ISO_VOLID:$ISO_VOLMGR:$ISO_DISK:$ISO_NIC ($ISO_KERNEL_ARGS)" >> "$TMP_LINUX_CFG"
+      echo "  kernel vmlinuz" >> "$TMP_LINUX_CFG"
+      echo "  append init.ks=hd:LABEL=$ISO_LABEL/kickstart/$ISO_VOLMGR.ks initrd=initrd.img inst.stage2=hd:LABEL=$ISO_LABEL $ISO_KERNEL_ARGS quiet" >> "$TMP_LINUX_CFG"
+      COUNTER=$(( COUNTER+1 ))
+    done
+  done
+  echo "label rescue" >> "$TMP_LINUX_CFG"
+  echo "  menu label ^Rescue a Rocky Linux system" >> "$TMP_LINUX_CFG"
+  echo "  kernel vmlinuz" >> "$TMP_LINUX_CFG"
+  echo "  append initrd=initrd.img inst.stage2=hd:LABEL=$ISO_LABEL inst.rescue quiet" >> "$TMP_LINUX_CFG"
+  echo "label memtest" >> "$TMP_LINUX_CFG"
+  echo "  menu label Test ^Memory" >> "$TMP_LINUX_CFG"
+  echo "  kernel memtest" >> "$TMP_LINUX_CFG"
+  echo "label hd" >> "$TMP_LINUX_CFG"
+  echo "  menu label ^Boot from first hard drive" >> "$TMP_LINUX_CFG"
+  echo "  localboot 0x80" >> "$TMP_LINUX_CFG"
+  echo "set timeout=$ISO_GRUB_TIMEOUT" > "$TMP_GRUB_CFG"
+  echo "default=$ISO_GRUB_MENU" >> "$TMP_GRUB_CFG"
+  echo "loadfont unicode" >> "$TMP_GRUB_CFG"
+  for ISO_DISK in $ISO_DISK; do
+    for ISO_VOLMGR in $ISO_VOLMGRS; do
+      echo "menuentry '$ISO_VOLID:$ISO_VOLMGR:$ISO_DISK:$ISO_NIC ($ISO_KERNEL_SERIAL_ARGS)' {" >> "$TMP_GRUB_CFG"
+      echo "  linuxefi /images/pxeboot/vmlinuz inst.stage2=hd:LABEL=$ISO_LABEL $ISO_KERNEL_ARGS quiet" >> "$TMP_GRUB_CFG"
+      echo "  initrdefi /images/pxeboot/initrd.img" >> "$TMP_GRUB_CFG"
+      echo "}" >> "$TMP_GRUB_CFG"
+    done
+  done
+  echo "menuentry 'Install $ISO_VOLID ($ISO_KERNEL_SERIAL_ARGS)' {" >> "$TMP_GRUB_CFG"
+  echo "  linuxefi /images/pxeboot/vmlinuz init.ks=hd:LABEL=$ISO_LABEL/kickstart/$ISO_VOLMGR.ks inst.stage2=hd:LABEL=$ISO_LABEL $ISO_KERNEL_SERIAL_ARGS quiet" >> "$TMP_GRUB_CFG"
+  echo "  initrdefi /images/pxeboot/initrd.img" >> "$TMP_GRUB_CFG"
+  echo "}" >> "$TMP_GRUB_CFG"
+  echo "menuentry 'Boot from next volume' {" >> "$TMP_GRUB_CFG"
+  echo "  exit 1" >> "$TMP_GRUB_CFG"
+  echo "}" >> "$TMP_GRUB_CFG"
+  if [[ "$ISO_BOOT_TYPE" =~ "efi" ]]; then
+    echo "menuentry 'UEFI Firmware Settings' {" >> "$TMP_GRUB_CFG"
+    echo "  fwsetup" >> "$TMP_GRUB_CFG"
+    echo "}" >> "$TMP_GRUB_CFG"
+  fi
+  print_file "$TMP_LINUX_CFG"
+  print_file "$TMP_GRUB_CFG"
+  if [ "$TEST_MODE" = "false" ]; then
+    sudo cp $TMP_LINUX_CFG $ISO_LINUX_CFG
+    sudo cp $TMP_GRUB_CFG $ISO_GRUB_CFG
+  fi
 }
 
 # Function: prepare_kickstart_iso
@@ -126,5 +205,10 @@ prepare_kickstart_files () {
 # Prepare kickstart ISO (e.g. Rocky Linux)
 
 prepare_kickstart_iso () {
-  create_kickstart_files
+  mount_iso
+  copy_iso
+  prepare_kickstart_files
+  prepare_kickstart_grub_menu
+  create_kickstart_iso
+  unmount_iso
 }

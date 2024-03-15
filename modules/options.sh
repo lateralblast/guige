@@ -3,10 +3,10 @@
 # Process option switch
 
 process_options () {
-  if [[ "$OPTIONS" = "firstboot" ]]; then
+  if [[ "$OPTIONS" =~ "firstboot" ]]; then
     DO_ISO_FIRSTBOOT="enabled"
   fi
-  if [[ "$OPTIONS" = "user" ]]; then
+  if [[ "$OPTIONS" =~ "user" ]]; then
     DO_INSTALL_USER="true"
   fi
   if [[ "$OPTIONS" =~ "static" ]]; then

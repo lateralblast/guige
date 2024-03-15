@@ -16,7 +16,9 @@ execute_command () {
 
 print_file () {
   FILE_NAME="$1"
-  handle_output "# Contents of file $FILE_NAME"
+  echo ""
+  handle_output "# Contents of file $FILE_NAME" TEXT
+  echo ""
   if [ "$TEST_MODE" = "false" ]; then
     cat "$FILE_NAME"
   fi
@@ -327,7 +329,7 @@ update_output_file_name () {
       fi
     fi
     if [ "$VM_NAME" = "" ]; then
-      VM_NAME="$SCRIPT_NAME-ubuntu-$ISO_RELEASE-$ISO_BOOT_TYPE"
+      VM_NAME="$SCRIPT_NAME-$ISO_OS_NAME-$ISO_RELEASE-$ISO_BOOT_TYPE"
     fi
     if [[ "$ACTION" =~ "create" ]]; then
       if ! [ "$VM_ISO" = "" ]; then

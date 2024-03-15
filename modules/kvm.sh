@@ -50,6 +50,11 @@ create_kvm_vm () {
     IF_TYPE="network"
     CD_BUS="sata"
   fi
+  if [ "$ISO_OS_NAME" = "ubuntu" ]; then
+    OS_INFO_SITE="ubuntu.com"
+  else
+    OS_INFO_SITE="rockylinux.org"
+  fi
   QEMU_DIR="$VIRT_DIR/qemu"
   QEMU_MAC=$( printf '52:54:00:%02X:%02X:%02X\n' $[RANDOM%256] $[RANDOM%256] $[RANDOM%256] )
   NVRAM_DIR="$QEMU_DIR/nvram"
@@ -80,7 +85,7 @@ create_kvm_vm () {
   echo "  <name>$VM_NAME</name>" >> "$XML_FILE"
   echo "  <metadata>" >> "$XML_FILE"
   echo "    <libosinfo:libosinfo xmlns:libosinfo=\"http://libosinfo.org/xmlns/libvirt/domain/1.0\">" >> "$XML_FILE"
-  echo "      <libosinfo:os id=\"http://ubuntu.com/ubuntu/22.04\"/>" >> "$XML_FILE"
+  echo "      <libosinfo:os id=\"http://$OS_INFO_SITE/$ISO_OS_NAME/$ISO_RELEASE\"/>" >> "$XML_FILE"
   echo "    </libosinfo:libosinfo>" >> "$XML_FILE"
   echo "  </metadata>" >> "$XML_FILE"
   echo "  <memory unit='KiB'>$VM_RAM</memory>" >> "$XML_FILE"
