@@ -105,6 +105,7 @@ set_defaults () {
   ISO_SUFFIX=""
   BMC_PORT="443"
   BMC_EXPOSE_DURATION="180"
+  DO_CREATE_ISO="true" 
 }
 
 # Function: reset_defaults 

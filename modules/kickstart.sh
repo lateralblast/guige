@@ -135,6 +135,15 @@ prepare_kickstart_files () {
       sudo cp "$KS_FILE" "$KS_DIR"
     fi
   done
+  if [ "$DO_CUSTOM_AUTO_INSTALL" = "true" ]; then
+    if ! [ -z "$( command -v ksvalidator )" ]; then
+      ksvalidator "$AUTO_INSTALL_FILE"
+    fi
+    print_file "$AUTO_INSTALL_FILE"
+    if [ "$TEST_MODE" = "false" ]; then
+      sudo cp "$AUTO_INSTALL_FILE" "$KS_DIR/custom.ks"
+    fi
+  fi
 }
 
 # Function: prepare_kickstart_grub_menu
@@ -159,6 +168,12 @@ prepare_kickstart_grub_menu () {
       COUNTER=$(( COUNTER+1 ))
     done
   done
+  if [ "$DO_CUSTOM_AUTO_INSTALL" = "true" ]; then
+    echo "label custom" >> "$TMP_LINUX_CFG"
+    echo "  menu label ^$ISO_VOLID:custom ($ISO_KERNEL_ARGS)" >> "$TMP_LINUX_CFG"
+    echo "  kernel vmlinuz" >> "$TMP_LINUX_CFG"
+    echo "  append init.ks=hd:LABEL=$ISO_LABEL/kickstart/custom.ks initrd=initrd.img inst.stage2=hd:LABEL=$ISO_LABEL $ISO_KERNEL_ARGS quiet" >> "$TMP_LINUX_CFG"
+  fi
   echo "label rescue" >> "$TMP_LINUX_CFG"
   echo "  menu label ^Rescue a Rocky Linux system" >> "$TMP_LINUX_CFG"
   echo "  kernel vmlinuz" >> "$TMP_LINUX_CFG"
@@ -175,11 +190,17 @@ prepare_kickstart_grub_menu () {
   for ISO_DISK in $ISO_DISK; do
     for ISO_VOLMGR in $ISO_VOLMGRS; do
       echo "menuentry '$ISO_VOLID:$ISO_VOLMGR:$ISO_DISK:$ISO_NIC ($ISO_KERNEL_SERIAL_ARGS)' {" >> "$TMP_GRUB_CFG"
-      echo "  linuxefi /images/pxeboot/vmlinuz inst.stage2=hd:LABEL=$ISO_LABEL $ISO_KERNEL_ARGS quiet" >> "$TMP_GRUB_CFG"
+      echo "  linuxefi /images/pxeboot/vmlinuz init.ks=hd:LABEL=$ISO_LABEL/kickstart/$ISO_VOLMGR.ks inst.stage2=hd:LABEL=$ISO_LABEL $ISO_KERNEL_ARGS quiet" >> "$TMP_GRUB_CFG"
       echo "  initrdefi /images/pxeboot/initrd.img" >> "$TMP_GRUB_CFG"
       echo "}" >> "$TMP_GRUB_CFG"
     done
   done
+  if [ "$DO_CUSTOM_AUTO_INSTALL" = "true" ]; then
+    echo "menuentry '$ISO_VOLID:custom ($ISO_KERNEL_SERIAL_ARGS)' {" >> "$TMP_GRUB_CFG"
+    echo "  linuxefi /images/pxeboot/vmlinuz init.ks=hd:LABEL=$ISO_LABEL/kickstart/custom.ks inst.stage2=hd:LABEL=$ISO_LABEL $ISO_KERNEL_ARGS quiet" >> "$TMP_GRUB_CFG"
+    echo "  initrdefi /images/pxeboot/initrd.img" >> "$TMP_GRUB_CFG"
+    echo "}" >> "$TMP_GRUB_CFG"
+  fi
   echo "menuentry 'Install $ISO_VOLID ($ISO_KERNEL_SERIAL_ARGS)' {" >> "$TMP_GRUB_CFG"
   echo "  linuxefi /images/pxeboot/vmlinuz init.ks=hd:LABEL=$ISO_LABEL/kickstart/$ISO_VOLMGR.ks inst.stage2=hd:LABEL=$ISO_LABEL $ISO_KERNEL_SERIAL_ARGS quiet" >> "$TMP_GRUB_CFG"
   echo "  initrdefi /images/pxeboot/initrd.img" >> "$TMP_GRUB_CFG"
@@ -205,10 +226,6 @@ prepare_kickstart_grub_menu () {
 # Prepare kickstart ISO (e.g. Rocky Linux)
 
 prepare_kickstart_iso () {
-  mount_iso
-  copy_iso
   prepare_kickstart_files
   prepare_kickstart_grub_menu
-  create_kickstart_iso
-  unmount_iso
 }

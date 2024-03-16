@@ -3,6 +3,9 @@
 # Process option switch
 
 process_options () {
+  if [[ "$OPTIONS" =~ "noiso" ]]; then
+    DO_CREATE_ISO="false"
+  fi
   if [[ "$OPTIONS" =~ "firstboot" ]]; then
     DO_ISO_FIRSTBOOT="enabled"
   fi

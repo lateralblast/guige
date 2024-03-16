@@ -443,3 +443,5 @@
 # Bugfixes
 # 2.2.2: Fri 15 Mar 2024 22:04:40 AEDT
 # Updated KVM code to create Rocky Linux VMs
+# 2.2.3: Sat 16 Mar 2024 14:42:26 AEDT
+# Added code to import an external custom kickstart file

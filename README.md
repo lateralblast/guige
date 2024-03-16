@@ -11,7 +11,7 @@ used to hang a shield on the shoulder or neck when not in use.
 Version
 -------
 
-Current version: 2.2.2
+Current version: 2.2.3
 
 Issues
 ------
@@ -104,6 +104,9 @@ to get more complex layouts working without issue.
 
 This script can also be used to create a KVM/QEMU VM to test the ISO created.
 This is useful for troubleshooting by connecting to the KVM VM in console mode and watching install.
+
+I've started collecting manual install configs to help with troubleshooting.
+These are located in the configs directory
 
 Usage
 -----

@@ -77,14 +77,16 @@ update_iso_packages () {
 # Prepare ISO
 
 create_iso () {
-  case "$ISO_OS_NAME" in
-    "ubuntu")
-      create_autoinstall_iso
-      ;;
-    "rocky")
-      create_kickstart_iso
-      ;;
-  esac
+  if [ "$DO_CREATE_ISO" = "true" ]; then
+    case "$ISO_OS_NAME" in
+      "ubuntu")
+        create_autoinstall_iso
+        ;;
+      "rocky")
+        create_kickstart_iso
+        ;;
+    esac
+  fi
 }
 
 # Function: copy_iso
