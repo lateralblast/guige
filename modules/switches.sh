@@ -354,7 +354,7 @@ process_switches () {
             ;;
           *)
             INPUT_FILE="$WORK_DIR/files/$ISO_OS_NAME-$ISO_RELEASE-live-server-$ISO_ARCH.iso"
-            OUTPUT_FILE="$WORK_DIR/files/$$ISO_OS_NAME-$ISO_RELEASE-live-server-$ISO_ARCH-$ISO_BOOT_TYPE-autoinstall.iso"
+            OUTPUT_FILE="$WORK_DIR/files/$ISO_OS_NAME-$ISO_RELEASE-live-server-$ISO_ARCH-$ISO_BOOT_TYPE-autoinstall.iso"
             BOOT_SERVER_FILE="$OUTPUT_FILE"
             ;;
         esac
