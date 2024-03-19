@@ -445,3 +445,5 @@
 # Updated KVM code to create Rocky Linux VMs
 # 2.2.3: Sat 16 Mar 2024 14:42:26 AEDT
 # Added code to import an external custom kickstart file
+# 2.2.4: Tue Mar 19 22:03:40 AEDT 2024
+# Added handling for 22.04.3/4

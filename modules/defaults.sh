@@ -137,6 +137,9 @@ reset_defaults () {
     DEFAULT_ISO_URL="https://download.rockylinux.org/pub/rocky/$DEFAULT_ISO_MAJOR_RELEASE/isos/$DEFAULT_ISO_ARCH/$DEFAULT_INPUT_FILE_BASE"
     DEFAULT_ISO_INSTALL_PACKAGES="net-tools curl lftp wget sudo file rsync dialog setserial whois squashfs-tools jq"
   fi
+  if [[ "$ISO_OS_NAME" =~ "rocky" ]]; then
+    REQUIRED_PACKAGES="apt-utils $REQUIRED_PACKAGES"
+  fi
 }
 
 # Function: set_default_flags

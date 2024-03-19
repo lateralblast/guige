@@ -29,7 +29,15 @@ update_iso_url () {
       *)
         if [ "$ISO_ARCH" = "amd64" ]; then
           URL_RELEASE=$( echo "$ISO_RELEASE" |awk -F. '{print $1"."$2}' )
-          ISO_URL="https://releases.ubuntu.com/$URL_RELEASE/$BASE_INPUT_FILE"
+          if [ "$URL_RELEASE" = "22.04" ]; then
+            if "$ISO_RELEASE" = "22.04.4" ]; then
+              ISO_URL="https://releases.ubuntu.com/$URL_RELEASE/$BASE_INPUT_FILE"
+            else
+              ISO_URL="https://old-releases.ubuntu.com/releases/$URL_RELEASE/$BASE_INPUT_FILE"
+            fi
+          else
+            ISO_URL="https://releases.ubuntu.com/$URL_RELEASE/$BASE_INPUT_FILE"
+          fi
         else
           ISO_URL="https://cdimage.ubuntu.com/releases/$ISO_RELEASE/release/$BASE_INPUT_FILE"
         fi
@@ -342,7 +350,7 @@ get_info_from_iso () {
       ;;
     "kinetic")
       ISO_RELEASE="$CURRENT_ISO_RELEASE_2210"
-      ;;
+      ;;releases/22.04.3/
     "lunar")
       ISO_RELEASE="$CURRENT_ISO_RELEASE_2304"
       ;;
