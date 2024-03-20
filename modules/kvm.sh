@@ -14,6 +14,22 @@ check_kvm_vm_exists () {
   fi
 }
 
+# Function: check_kvm_user
+#
+# Check user KVM permissions
+
+check_kvm_user () {
+  KVM_GROUPS="kvm libvirt libvirt-qemu libvirt-dnsmasq"
+  for KVM_GROUP in "$KVM_GROUPS"; do
+    GROUP_MEMBERS=$( cat /etc/group |grep "^$KVM_GROUP" |cut -f2 -d: ) 
+    if [ ! -z "$GROUP_MEMBERS" ]; then
+      if ! [[ "$KVM_GROUP" =~ "$USER" ]]; then
+        sudo usermod -a -G $KVM_GROUP $USER
+      fi
+    fi
+  done
+}
+
 # Function: create_kvm_vm
 #
 # Create a KVM VM for testing an ISO
@@ -22,6 +38,7 @@ create_kvm_vm () {
   if [ -z "$( command -v virsh )" ]; then
     install_required_packages  
   fi
+  check_kvm_user
   if [ "$OS_NAME" = "Darwin" ]; then
     VIRT_DIR="/opt/homebrew/var/lib/libvirt"
     QEMU_VER=$(brew info qemu --json |jq -r ".[0].versions.stable")
@@ -95,7 +112,8 @@ create_kvm_vm () {
     echo "  <os>" >> "$XML_FILE"
     echo "    <type arch='$QEMU_ARCH' machine='$MACHINE'>hvm</type>" >> "$XML_FILE"
   else
-    echo "  <os firmware='efi'>" >> "$XML_FILE"
+    echo "  <os>" >> "$XML_FILE"
+#    echo "  <os firmware='efi'>" >> "$XML_FILE"
     echo "    <type arch='$QEMU_ARCH' machine='$MACHINE'>hvm</type>" >> "$XML_FILE"
     echo "    <firmware>" >> "$XML_FILE"
     echo "      <feature enabled='no' name='enrolled-keys'/>" >> "$XML_FILE"

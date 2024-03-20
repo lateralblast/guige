@@ -447,3 +447,5 @@
 # Added code to import an external custom kickstart file
 # 2.2.4: Tue Mar 19 22:03:40 AEDT 2024
 # Added handling for 22.04.3/4
+# 2.2.5: Wed Mar 20 15:38:48 AEDT 2024
+# Added group check for KVM
