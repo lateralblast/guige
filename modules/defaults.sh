@@ -203,6 +203,7 @@ set_default_flags () {
   DO_INSTALL_USER="false"
   DO_ISO_SSH_KEY="fales"
   DO_ISO_FIRSTBOOT="disabled"
+  DO_SECURE_BOOT="true"
 }
 
 # Function: set_default_os_name

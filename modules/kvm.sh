@@ -41,7 +41,7 @@ create_kvm_vm () {
   check_kvm_user
   if [ "$OS_NAME" = "Darwin" ]; then
     VIRT_DIR="/opt/homebrew/var/lib/libvirt"
-    QEMU_VER=$(brew info qemu --json |jq -r ".[0].versions.stable")
+    QEMU_VER=$( brew info qemu --json |jq -r ".[0].versions.stable" )
     VARS_FILE="/opt/homebrew/Cellar/qemu/$QEMU_VER/share/qemu/edk2-arm-vars.fd"
     BIOS_FILE="/opt/homebrew/Cellar/qemu/$QEMU_VER/share/qemu/edk2-aarch64-code.fd"
     QEMU_ARCH="aarch64"
@@ -55,12 +55,18 @@ create_kvm_vm () {
     CD_BUS="scsi"
   else
     VIRT_DIR="/var/lib/libvirt"
-    VARS_FILE="/usr/share/OVMF/OVMF_VARS.fd"
-    BIOS_FILE="/usr/share/OVMF/OVMF_CODE.fd"
+    QEMU_VER=$( qemu-system-amd64 --version |head -1 |awk '{print $4}' |awk -F"." '{print $1"."$2}' )
+    if [ "$DO_SECURE_BOOT" = "true" ]; then
+      VARS_FILE="/usr/share/OVMF/OVMF_VARS_4M.ms.fd"
+      BIOS_FILE="/usr/share/OVMF/OVMF_CODE_4M.ms.fd"
+    else
+      VARS_FILE="/usr/share/OVMF/OVMF_VARS.fd"
+      BIOS_FILE="/usr/share/OVMF/OVMF_CODE.fd"
+    fi
     QEMU_ARCH="x86_64"
     QEMU_EMU="/usr/bin/qemu-system-x86_64"
     DOM_TYPE="kvm"
-    MACHINE="pc-q35-8.1"
+    MACHINE="pc-q35-$QEMU_VER"
     VIDEO="qxl"
     SERIAL="isa-serial"
     INPUT_BUS="ps2"
@@ -102,7 +108,7 @@ create_kvm_vm () {
   echo "  <name>$VM_NAME</name>" >> "$XML_FILE"
   echo "  <metadata>" >> "$XML_FILE"
   echo "    <libosinfo:libosinfo xmlns:libosinfo=\"http://libosinfo.org/xmlns/libvirt/domain/1.0\">" >> "$XML_FILE"
-  echo "      <libosinfo:os id=\"http://$OS_INFO_SITE/$ISO_OS_NAME/$ISO_RELEASE\"/>" >> "$XML_FILE"
+  echo "      <libosinfo:os id=\"http://$OS_INFO_SITE/$ISO_OS_NAME/$ISO_MAJOR_RELEASE.$ISO_MINOR_RELEASE\"/>" >> "$XML_FILE"
   echo "    </libosinfo:libosinfo>" >> "$XML_FILE"
   echo "  </metadata>" >> "$XML_FILE"
   echo "  <memory unit='KiB'>$VM_RAM</memory>" >> "$XML_FILE"
@@ -112,15 +118,23 @@ create_kvm_vm () {
     echo "  <os>" >> "$XML_FILE"
     echo "    <type arch='$QEMU_ARCH' machine='$MACHINE'>hvm</type>" >> "$XML_FILE"
   else
-    echo "  <os>" >> "$XML_FILE"
-#    echo "  <os firmware='efi'>" >> "$XML_FILE"
+#    echo "  <os>" >> "$XML_FILE"
+    echo "  <os firmware='efi'>" >> "$XML_FILE"
     echo "    <type arch='$QEMU_ARCH' machine='$MACHINE'>hvm</type>" >> "$XML_FILE"
     echo "    <firmware>" >> "$XML_FILE"
-    echo "      <feature enabled='no' name='enrolled-keys'/>" >> "$XML_FILE"
-    echo "      <feature enabled='no' name='secure-boot'/>" >> "$XML_FILE"
-    echo "    </firmware>" >> "$XML_FILE"
-    echo "    <loader readonly='yes' type='pflash'>$BIOS_FILE</loader>" >> "$XML_FILE"
-    echo "    <nvram template='$VARS_FILE'>$NVRAM_FILE</nvram>" >> "$XML_FILE"
+    if [ "$DO_SECURE_BOOT" = "true" ]; then
+      echo "      <feature enabled='yes' name='enrolled-keys'/>" >> "$XML_FILE"
+      echo "      <feature enabled='yes' name='secure-boot'/>" >> "$XML_FILE"
+      echo "    </firmware>" >> "$XML_FILE"
+      echo "    <loader readonly='yes' secure='yes' type='pflash'>$BIOS_FILE</loader>" >> "$XML_FILE"
+      echo "    <nvram template='$VARS_FILE'>$NVRAM_FILE</nvram>" >> "$XML_FILE"
+    else
+      echo "      <feature enabled='no' name='enrolled-keys'/>" >> "$XML_FILE"
+      echo "      <feature enabled='no' name='secure-boot'/>" >> "$XML_FILE"
+      echo "    </firmware>" >> "$XML_FILE"
+      echo "    <loader readonly='yes' type='pflash'>$BIOS_FILE</loader>" >> "$XML_FILE"
+      echo "    <nvram template='$VARS_FILE'>$NVRAM_FILE</nvram>" >> "$XML_FILE"
+    fi
     echo "    <bootmenu enable='yes'/>" >> "$XML_FILE"
   fi
   echo "  </os>" >> "$XML_FILE"

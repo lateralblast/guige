@@ -30,7 +30,7 @@ update_iso_url () {
         if [ "$ISO_ARCH" = "amd64" ]; then
           URL_RELEASE=$( echo "$ISO_RELEASE" |awk -F. '{print $1"."$2}' )
           if [ "$URL_RELEASE" = "22.04" ]; then
-            if "$ISO_RELEASE" = "22.04.4" ]; then
+            if [ "$ISO_RELEASE" = "22.04.4" ]; then
               ISO_URL="https://releases.ubuntu.com/$URL_RELEASE/$BASE_INPUT_FILE"
             else
               ISO_URL="https://old-releases.ubuntu.com/releases/$URL_RELEASE/$BASE_INPUT_FILE"
