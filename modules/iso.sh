@@ -350,7 +350,7 @@ get_info_from_iso () {
       ;;
     "kinetic")
       ISO_RELEASE="$CURRENT_ISO_RELEASE_2210"
-      ;;releases/22.04.3/
+      ;;
     "lunar")
       ISO_RELEASE="$CURRENT_ISO_RELEASE_2304"
       ;;
