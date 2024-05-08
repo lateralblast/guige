@@ -159,6 +159,9 @@ process_switches () {
   else
     if [ "$ISO_OS_NAME" = "ubuntu" ]; then
       case "$ISO_RELEASE" in
+        "24.04")
+          ISO_RELEASE="$CURRENT_ISO_RELEASE_2404"
+          ;;
         "22.04")
           ISO_RELEASE="$CURRENT_ISO_RELEASE_2204"
           ;;

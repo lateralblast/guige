@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Name:         guige (Generic Ubuntu/Unix ISO Generation Engine)
-# Version:      2.2.6
+# Version:      2.2.8
 # Release:      1
 # License:      CC-BA (Creative Commons By Attribution)
 #               http://creativecommons.org/licenses/by/4.0/legalcode
@@ -341,6 +341,16 @@ do
     --userdata|--autoinstall|--kickstart)
       DO_CUSTOM_AUTO_INSTALL="true"
       AUTO_INSTALL_FILE="$2"
+      shift 2
+      ;;
+    --isolinux)
+      DO_CUSTOM_ISOLINUX="true"
+      ISOLINUX_FILE="$2"
+      shift 2
+      ;;
+    --grub)
+      DO_CUSTOM_GRUB="true"
+      GRUB_FILE="$2"
       shift 2
       ;;
     --oeminstall)

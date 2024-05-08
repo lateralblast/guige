@@ -12,6 +12,12 @@ process_options () {
   if [[ "$OPTIONS" =~ "firstboot" ]]; then
     DO_ISO_FIRSTBOOT="enabled"
   fi
+  if [[ "$OPTIONS" =~ "quiet" ]]; then
+    DO_KS_QUIET="true"
+  fi
+  if [[ "$OPTIONS" =~ "text" ]]; then
+    DO_KS_TEXT="true"
+  fi
   if [[ "$OPTIONS" =~ "user" ]]; then
     DO_INSTALL_USER="true"
   fi

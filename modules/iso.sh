@@ -110,13 +110,19 @@ copy_iso () {
   if [ ! -f "/usr/bin/rsync" ]; then
     install_required_packages
   fi
-  if [ "$VERBOSE_MODE" = "true" ]; then
-    if [ "$TEST_MODE" = "false" ]; then
-      sudo rsync -av --delete "$ISO_MOUNT_DIR/" "$ISO_NEW_DIR/cd"
-    fi
+  TEST_DIR="$ISO_MOUNT_DIR/EFI"
+  if [ ! -d "$TEST_DIR" ]; then
+    warning_message "ISO $INPUT_FILE not mounted"
+    exit
   else
-    if [ "$TEST_MODE" = "false" ]; then
-      sudo rsync -a --delete "$ISO_MOUNT_DIR/" "$ISO_NEW_DIR/cd"
+    if [ "$VERBOSE_MODE" = "true" ]; then
+      if [ "$TEST_MODE" = "false" ]; then
+        sudo rsync -av --delete "$ISO_MOUNT_DIR/" "$ISO_NEW_DIR/cd"
+      fi
+    else
+      if [ "$TEST_MODE" = "false" ]; then
+        sudo rsync -a --delete "$ISO_MOUNT_DIR/" "$ISO_NEW_DIR/cd"
+      fi
     fi
   fi
 }

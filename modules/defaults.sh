@@ -115,7 +115,6 @@ set_defaults () {
 reset_defaults () {
   if [[ "$ISO_OS_NAME" =~ "rocky" ]]; then
     DEFAULT_ISO_VOLMGRS="lvm xfs btrfs"
-    DEFAULT_ISO_NIC="link"
     DEFAULT_ISO_ARCH="x86_64"
     CURRENT_ISO_RELEASE="9.3"
     CURRENT_ISO_RELEASE_9="9.3"
@@ -204,6 +203,10 @@ set_default_flags () {
   DO_ISO_SSH_KEY="fales"
   DO_ISO_FIRSTBOOT="disabled"
   DO_SECURE_BOOT="true"
+  DO_CUSTOM_ISOLINUX="false"
+  DO_CUSTOM_GRUB="false"
+  DO_KS_QUIET="false"
+  DO_KS_TEXT="false"
 }
 
 # Function: set_default_os_name

@@ -94,21 +94,21 @@ process_actions () {
       DO_EXECUTE_ISO_CHROOT_SCRIPT="true"
       DO_CREATE_AUTOINSTALL_ISO_FULL="true"
       ;;
-    'createkvmvm')
+    "createkvm")
       VM_TYPE="kvm"
       DO_INSTALL_REQUIRED_PACKAGES="true"
       DO_CREATE_VM="true"
       ;;
-    'deletekvmvm')
+    "deletekvm")
       VM_TYPE="kvm"
       DO_INSTALL_REQUIRED_PACKAGES="true"
       DO_DELETE_VM="true"
       ;;
-    'createvm')
+    "createvm")
       DO_INSTALL_REQUIRED_PACKAGES="true"
       DO_CREATE_VM="true"
       ;;
-    'deletevm')
+    "deletevm")
       DO_INSTALL_REQUIRED_PACKAGES="true"
       DO_DELETE_VM="true"
       ;;

@@ -451,3 +451,7 @@
 # Added group check for KVM
 # 2.2.6: Wed Mar 20 16:26:28 AEDT 2024
 # Bug fixes and improved handling of KVM XML generation
+# 2.2.7: Thu Mar 21 11:16:01 AEDT 2024
+# Added check that ISO is mounted
+# 2.2.8: Fri Mar 22 14:17:43 AEDT 2024
+# Updates to kickstart creation
