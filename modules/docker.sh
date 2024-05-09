@@ -1,3 +1,8 @@
+#!/usr/bin/env bash
+
+# shellcheck disable=SC2129
+# shellcheck disable=SC2034
+
 # Function: create_docker_config
 #
 # Create a docker config so we can run this from a non Linux platform

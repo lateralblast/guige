@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Name:         guige (Generic Ubuntu/Unix ISO Generation Engine)
-# Version:      2.3.0
+# Version:      2.3.1
 # Release:      1
 # License:      CC-BA (Creative Commons By Attribution)
 #               http://creativecommons.org/licenses/by/4.0/legalcode
@@ -14,6 +14,9 @@
 # Description:  Shell script designed to simplify creation of custom Ubuntu Install ISOs
 
 # shellcheck disable=SC2129
+# shellcheck disable=SC2034
+# shellcheck disable=SC2045
+# shellcheck disable=SC1090
 
 SCRIPT_ARGS="$*"
 SCRIPT_FILE="$0"
@@ -35,7 +38,7 @@ if [ -d "$MODULE_PATH" ]; then
     if [[ "$SCRIPT_ARGS" =~ "verbose" ]]; then
       echo "Loading Module: $MODULE"
     fi
-    . $MODULE
+    . "$MODULE"
   done
 fi
 
@@ -379,10 +382,6 @@ do
       ;;
     --firewall)
       ISO_FIREWALL="$2"
-      shift 2
-      ;;
-    --allow)
-      ISO_ALLOW_SERVICE="$2"
       shift 2
       ;;
     --onboot)

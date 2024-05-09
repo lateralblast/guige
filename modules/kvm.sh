@@ -1,3 +1,9 @@
+#!/usr/bin/env bash
+
+# shellcheck disable=SC2129
+# shellcheck disable=SC2034
+# shellcheck disable=SC2007
+
 # Function: check_kvm_vm_existd
 # 
 # Check if KVM VM exists
@@ -20,11 +26,11 @@ check_kvm_vm_exists () {
 
 check_kvm_user () {
   KVM_GROUPS="kvm libvirt libvirt-qemu libvirt-dnsmasq"
-  for KVM_GROUP in "$KVM_GROUPS"; do
-    GROUP_MEMBERS=$( cat /etc/group |grep "^$KVM_GROUP" |cut -f2 -d: ) 
-    if [ ! -z "$GROUP_MEMBERS" ]; then
-      if ! [[ "$KVM_GROUP" =~ "$USER" ]]; then
-        sudo usermod -a -G $KVM_GROUP $USER
+  for KVM_GROUP in $KVM_GROUPS; do
+    GROUP_MEMBERS=$( grep "^$KVM_GROUP" /etc/group |cut -f2 -d: ) 
+    if [ -n "$GROUP_MEMBERS" ]; then
+      if ! [[ "$KVM_GROUP" =~ $USER ]]; then
+        sudo usermod -a -G "$KVM_GROUP" "$USER"
       fi
     fi
   done

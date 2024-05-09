@@ -1,3 +1,7 @@
+#!/usr/bin/env bash
+
+# shellcheck disable=SC2129
+
 # Function: check_ansible
 #
 # Check ansible

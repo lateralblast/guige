@@ -1,3 +1,8 @@
+#!/usr/bin/env bash
+
+# shellcheck disable=SC2129
+# shellcheck disable=SC2034
+
 # Function: process_switches
 #
 # Process switches

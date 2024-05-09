@@ -1,3 +1,7 @@
+#!/usr/bin/env bash
+
+# shellcheck disable=SC2129
+
 # Function: execute_racadm
 #
 # Execute racadm commands

@@ -1,3 +1,8 @@
+#!/usr/bin/env bash
+
+# shellcheck disable=SC2129
+# shellcheck disable=SC2001
+
 # Function: execute_command
 #
 # Execute a command

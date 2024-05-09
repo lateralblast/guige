@@ -459,3 +459,5 @@
 # Bug fixes and improvements
 # 2.3.0: Thu May  9 16:31:28 AEST 2024
 # Some updates for 24.04
+# 2.3.1: Thu May  9 17:50:13 AEST 2024
+# Cleanup after running shellcheck

@@ -1,3 +1,7 @@
+#!/usr/bin/env bash
+
+# shellcheck disable=SC2034
+
 # Function: install_required_packages
 #
 # Install required packages
@@ -11,7 +15,7 @@ install_required_packages () {
     PACKAGE_VERSION=""
     verbose_message "# Package: $PACKAGE" TEXT
     if [ "$OS_NAME" = "Darwin" ]; then
-      PACKAGE_VERSION=$( brew info $PACKAGE --json |jq -r ".[0].versions.stable" )
+      PACKAGE_VERSION=$( brew info "$PACKAGE" --json |jq -r ".[0].versions.stable" )
     else
       if [[ "$LSB_RELEASE" =~ "Arch" ]] || [[ "$LSB_RELEASE" =~ "Endeavour" ]]; then
         PACKAGE_VERSION=$( sudo pacman -Q "$PACKAGE" 2>&1 |awk '{print $2}' )

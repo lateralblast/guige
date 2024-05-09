@@ -1,3 +1,9 @@
+#!/usr/bin/env bash
+
+# shellcheck disable=SC2129
+# shellcheck disable=SC2034
+# shellcheck disable=SC2153
+
 # Function: create_kickstart_iso
 #
 # Create kickstart ISO (e.g. Rocky Linux)
@@ -9,7 +15,7 @@ create_kickstart_iso () {
   if [ "$TEST_MODE" = "false" ]; then
     handle_output "# Creating ISO" TEXT
     check_file_perms "$OUTPUT_FILE"
-    cd $ISO_NEW_DIR/cd 
+    cd "$ISO_NEW_DIR/cd" || exit
     sudo mkisofs -o "$OUTPUT_FILE" -b isolinux/isolinux.bin -c isolinux/boot.cat \
     -boot-load-size 4 -boot-info-table -no-emul-boot -eltorito-alt-boot \
     -eltorito-boot images/efiboot.img -no-emul-boot -R -J -V "$ISO_LABEL" -T .
@@ -135,7 +141,7 @@ prepare_kickstart_files () {
       done
       echo "%end" >> "$KS_FILE"
       print_file "$KS_FILE"
-      if ! [ -z "$( command -v ksvalidator )" ]; then
+      if [ -n "$( command -v ksvalidator )" ]; then
         ksvalidator "$KS_FILE"
       fi
       if [ "$TEST_MODE" = "false" ]; then
@@ -143,7 +149,7 @@ prepare_kickstart_files () {
       fi
     done
     if [ "$DO_CUSTOM_AUTO_INSTALL" = "true" ]; then
-      if ! [ -z "$( command -v ksvalidator )" ]; then
+      if [ -n "$( command -v ksvalidator )" ]; then
         ksvalidator "$AUTO_INSTALL_FILE"
       fi
       print_file "$AUTO_INSTALL_FILE"
@@ -178,8 +184,8 @@ prepare_kickstart_grub_menu () {
     print_file "$ISOLINUX_FILE"
     print_file "$GRUB_FILE"
     if [ "$TEST_MODE" = "false" ]; then
-      sudo cp $ISOLINUX_FILE $ISO_LINUX_CFG
-      sudo cp $GRUB_FILE $ISO_GRUB_CFG
+      sudo cp "$ISOLINUX_FILE" "$ISO_LINUX_CFG"
+      sudo cp "$GRUB_FILE" "$ISO_GRUB_CFG"
     fi
   else
     for ISO_DISK in $ISO_DISK; do
@@ -215,7 +221,7 @@ prepare_kickstart_grub_menu () {
     echo "  localboot 0x80" >> "$TMP_LINUX_CFG"
     print_file "$TMP_LINUX_CFG"
     if [ "$TEST_MODE" = "false" ]; then
-      sudo cp $TMP_LINUX_CFG $ISO_LINUX_CFG
+      sudo cp "$TMP_LINUX_CFG" "$ISO_LINUX_CFG"
     fi
     echo "set timeout=$ISO_GRUB_TIMEOUT" > "$TMP_GRUB_CFG"
     echo "set default=$ISO_GRUB_MENU" >> "$TMP_GRUB_CFG"
@@ -269,7 +275,7 @@ prepare_kickstart_grub_menu () {
     fi
     print_file "$TMP_GRUB_CFG"
     if [ "$TEST_MODE" = "false" ]; then
-      sudo cp $TMP_GRUB_CFG $ISO_GRUB_CFG
+      sudo cp "$TMP_GRUB_CFG" "$ISO_GRUB_CFG"
     fi
   fi
 }

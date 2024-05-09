@@ -1,83 +1,88 @@
+#!/usr/bin/env bash
+
+# shellcheck disable=SC2129
+# shellcheck disable=SC2034
+
 # Function: process_actions
 #
 # Process action switch
 
 process_actions () {
   case $ACTION in
-    "help"|"printhelp")
+    help|printhelp)
       print_help
       ;;
-    "usage"|"printusage")
+    usage|printusage)
       print_usage
       ;;
-    "checkracadm")
+    checkracadm)
       DO_CHECK_RACADM="true"
       ;;
-    "runracadm")
+    runracadm)
       DO_CHECK_RACADM="true"
       DO_EXECUTE_RACADM="true"
       ;;
-    "listvm")
+    listvm)
       DO_LIST_VM="true"
       ;;
-    "createexport")
+    createexport)
       DO_CHECK_WORK_DIR="true"
       DO_INSTALL_REQUIRED_PACKAGES="true"
       DO_CREATE_EXPORT="true"
       ;;
-    "createansible")
+    createansible)
       DO_CHECK_WORK_DIR="true"
       DO_INSTALL_REQUIRED_PACKAGES="true"
       DO_CREATE_ANSIBLE="true"
       ;;
-    "runansible")
+    runansible)
       DO_CHECK_WORK_DIR="true"
       DO_INSTALL_REQUIRED_PACKAGES="true"
       DO_CREATE_EXPORT="true"
       DO_CREATE_ANSIBLE="true"
       DO_INSTALL_SERVER="true"
       ;;
-    "printenv")
+    printenv)
       DO_PRINT_ENV="true"
       ;;
-    "checkdocker")
+    checkdocker)
       DO_DOCKER="false"
       DO_CHECK_DOCKER="true"
       DO_CHECK_WORK_DIR="true"
       ;;
-    "getiso")
+    getiso)
       DO_CHECK_WORK_DIR="true"
       DO_GET_BASE_ISO="true"
       ;;
-    "installrequired"|"checkrequired")
+    installrequired|checkrequired)
       DO_INSTALL_REQUIRED_PACKAGES="true"
       ;;
-    "checkdirs")
+    checkdirs)
       DO_CHECK_WORK_DIR="true"
       ;;
-    "justiso")
+    justiso)
       DO_CREATE_AUTOINSTALL_ISO_ONLY="true"
       ;;
-    "createautoinstall")
+    createautoinstall)
       DO_PREPARE_AUTOINSTALL_ISO_ONLY="true"
       ;;
-    "runchrootscript")
+    runchrootscript)
       DO_EXECUTE_ISO_CHROOT_SCRIPT="true"
       ;;
-    "createiso")
+    createiso)
       DO_CHECK_WORK_DIR="true"
       DO_INSTALL_REQUIRED_PACKAGES="true"
       DO_EXECUTE_ISO_CHROOT_SCRIPT="true"
       DO_CREATE_AUTOINSTALL_ISO_FULL="true"
       ;;
-    "createisoandsquashfs")
+    createisoandsquashfs)
       DO_ISO_SQUASHFS_UPDATE="true"
       DO_CHECK_WORK_DIR="true"
       DO_INSTALL_REQUIRED_PACKAGES="true"
       DO_EXECUTE_ISO_CHROOT_SCRIPT="true"
       DO_CREATE_AUTOINSTALL_ISO_FULL="true"
      ;;
-    "createdockeriso")
+    createdockeriso)
       DO_DOCKER="true"
       DO_CHECK_DOCKER="true"
       DO_CHECK_WORK_DIR="true"
@@ -85,7 +90,7 @@ process_actions () {
       DO_EXECUTE_ISO_CHROOT_SCRIPT="true"
       DO_CREATE_AUTOINSTALL_ISO_FULL="true"
       ;;
-    "createdockerisoandsquashfs")
+    createdockerisoandsquashfs)
       DO_ISO_SQUASHFS_UPDATE="true"
       DO_DOCKER="true"
       DO_CHECK_DOCKER="true"
@@ -94,37 +99,37 @@ process_actions () {
       DO_EXECUTE_ISO_CHROOT_SCRIPT="true"
       DO_CREATE_AUTOINSTALL_ISO_FULL="true"
       ;;
-    "createkvm")
+    createkvm)
       VM_TYPE="kvm"
       DO_INSTALL_REQUIRED_PACKAGES="true"
       DO_CREATE_VM="true"
       ;;
-    "deletekvm")
+    deletekvm)
       VM_TYPE="kvm"
       DO_INSTALL_REQUIRED_PACKAGES="true"
       DO_DELETE_VM="true"
       ;;
-    "createvm")
+    createvm)
       DO_INSTALL_REQUIRED_PACKAGES="true"
       DO_CREATE_VM="true"
       ;;
-    "deletevm")
+    deletevm)
       DO_INSTALL_REQUIRED_PACKAGES="true"
       DO_DELETE_VM="true"
       ;;
-    "queryiso")
+    queryiso)
       DO_ISO_QUERY="true"
       ;;
-    "unmount")
+    unmount)
       DO_UMOUNT_ISO="true"
       ;;
-    "oldinstaller")
+    oldinstaller)
       DO_OLD_INSTALLER="true"
       ;;
-    ""listalliso"|listallisos"|"listiso"|"listisos")
+    listalliso|listallisos|listiso|listisos)
       DO_LIST_ISOS="true"
       ;;
-    "test")
+    test)
       DO_TEST="true"
       ;;
     *)
@@ -133,10 +138,10 @@ process_actions () {
       ;;
   esac
   case $DELETE in
-    "files")
+    files)
       FORCE_MODE="true"
       ;;
-    "all")
+    all)
       FULL_FORCE_MODE="true"
       ;;
     *)

@@ -1,3 +1,9 @@
+#!/usr/bin/env bash
+
+# shellcheck disable=SC2129
+# shellcheck disable=SC2034
+# shellcheck disable=SC2153
+
 # Funtion update_iso_url
 #
 # Update ISO URL
