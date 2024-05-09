@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Name:         guige (Generic Ubuntu/Unix ISO Generation Engine)
-# Version:      2.2.8
+# Version:      2.3.0
 # Release:      1
 # License:      CC-BA (Creative Commons By Attribution)
 #               http://creativecommons.org/licenses/by/4.0/legalcode
@@ -445,7 +445,6 @@ do
 done
 
 # Setup functions
-reset_defaults
 set_default_os_name
 set_default_arch
 set_default_release
@@ -453,6 +452,7 @@ set_default_codename
 set_default_old_url
 set_default_docker_arch
 set_default_dirs
+reset_defaults
 process_switches
 reset_default_dirs
 set_default_files

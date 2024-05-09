@@ -455,3 +455,7 @@
 # Added check that ISO is mounted
 # 2.2.8: Fri Mar 22 14:17:43 AEDT 2024
 # Updates to kickstart creation
+# 2.2.9: Thu May  9 00:20:38 AEST 2024
+# Bug fixes and improvements
+# 2.3.0: Thu May  9 16:31:28 AEST 2024
+# Some updates for 24.04

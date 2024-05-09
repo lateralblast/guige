@@ -114,6 +114,9 @@ create_kvm_vm () {
   echo "  <memory unit='KiB'>$VM_RAM</memory>" >> "$XML_FILE"
   echo "  <currentMemory unit='KiB'>$VM_RAM</currentMemory>" >> "$XML_FILE"
   echo "  <vcpu placement='static'>$VM_CPUS</vcpu>" >> "$XML_FILE"
+  echo "  <resource>" >> "$XML_FILE"
+  echo "    <partition>/machine</partition>" >> "$XML_FILE"
+  echo "  </resource>" >> "$XML_FILE"
   if [ "$ISO_BOOT_TYPE" = "bios" ]; then
     echo "  <os>" >> "$XML_FILE"
     echo "    <type arch='$QEMU_ARCH' machine='$MACHINE'>hvm</type>" >> "$XML_FILE"
@@ -175,7 +178,7 @@ create_kvm_vm () {
   echo "      <driver name='qemu' type='qcow2' discard='unmap'/>" >> "$XML_FILE"
   echo "      <source file='$VM_DISK'/>" >> "$XML_FILE"
   echo "      <target dev='vda' bus='virtio'/>" >> "$XML_FILE"
-  echo "      <boot order='2'/>" >> "$XML_FILE"
+#  echo "      <boot order='2'/>" >> "$XML_FILE"
   echo "      <address type='pci' domain='0x0000' bus='0x04' slot='0x00' function='0x0'/>" >> "$XML_FILE"
   echo "    </disk>" >> "$XML_FILE"
   if [ "$OS_NAME" = "Darwin" ]; then
@@ -185,7 +188,7 @@ create_kvm_vm () {
     echo "      <backingStore/>" >> "$XML_FILE"
     echo "      <target dev='sda' bus='$CD_BUS'/>" >> "$XML_FILE"
     echo "      <readonly/>" >> "$XML_FILE"
-    echo "      <boot order='1'/>" >> "$XML_FILE"
+#    echo "      <boot order='1'/>" >> "$XML_FILE"
     echo "      <alias name='scsi0-0-0-0'/>" >> "$XML_FILE"
     echo "      <address type='drive' controller='0' bus='0' target='0' unit='0'/>" >> "$XML_FILE"
     echo "    </disk>" >> "$XML_FILE"

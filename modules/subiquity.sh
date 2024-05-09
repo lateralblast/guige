@@ -222,7 +222,7 @@ create_autoinstall_iso () {
   BOOT_IMAGE=$( xorriso -indev "$INPUT_FILE" -report_el_torito as_mkisofs |grep "^-b " |tail -1 |awk '{print $2}' |cut -f2 -d"'" 2>&1 )
   UEFI_BOOT_SIZE=$( xorriso -indev "$INPUT_FILE" -report_el_torito as_mkisofs |grep "^-boot-load-size" |tail -1 |awk '{print $2}' |cut -f2 -d"'" 2>&1 )
   DOS_BOOT_SIZE=$( xorriso -indev "$INPUT_FILE" -report_el_torito as_mkisofs |grep "^-boot-load-size" |head -1 |awk '{print $2}' |cut -f2 -d"'" 2>&1 )
-  if [ "$ISO_MAJOR_RELEASE" = "22" ]; then
+  if [ "$ISO_MAJOR_RELEASE" > "22" ]; then
     APPEND_PART=$( xorriso -indev "$INPUT_FILE" -report_el_torito as_mkisofs |grep append_partition |tail -1 |awk '{print $3}' 2>&1 )
     UEFI_IMAGE="--interval:appended_partition_2:::"
   else
@@ -367,9 +367,11 @@ prepare_autoinstall_iso () {
       echo "  linux /casper/vmlinuz $ISO_KERNEL_SERIAL_ARGS fsck.mode=skip quiet ---" >> "$ISO_SOURCE_DIR/boot/grub/grub.cfg"
       echo "  initrd  /casper/initrd" >> "$ISO_SOURCE_DIR/boot/grub/grub.cfg"
       echo "}" >> "$ISO_SOURCE_DIR/boot/grub/grub.cfg"
-      echo "menuentry 'Boot from next volume' {" >> "$ISO_SOURCE_DIR/boot/grub/grub.cfg"
-      echo "  exit 1" >> "$ISO_SOURCE_DIR/boot/grub/grub.cfg"
-      echo "}" >> "$ISO_SOURCE_DIR/boot/grub/grub.cfg"
+      if [ "$ISO_MAJOR_RELEASE" -lt 24 ]; then
+        echo "menuentry 'Boot from next volume' {" >> "$ISO_SOURCE_DIR/boot/grub/grub.cfg"
+        echo "  exit 1" >> "$ISO_SOURCE_DIR/boot/grub/grub.cfg"
+        echo "}" >> "$ISO_SOURCE_DIR/boot/grub/grub.cfg"
+      fi
       if [[ "$ISO_BOOT_TYPE" =~ "efi" ]]; then
         echo "menuentry 'UEFI Firmware Settings' {" >> "$ISO_SOURCE_DIR/boot/grub/grub.cfg"
         echo "  fwsetup" >> "$ISO_SOURCE_DIR/boot/grub/grub.cfg"

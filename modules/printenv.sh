@@ -74,7 +74,8 @@ print_env () {
   handle_output "# Install updates:           [DO_INSTALL_ISO_UPDATE]          $DO_INSTALL_ISO_UPDATE" TEXT
   handle_output "# Install upgrades:          [DO_INSTALL_ISO_UPGRADE]         $DO_INSTALL_ISO_UPGRADE" TEXT
   handle_output "# Dist upgrades:             [DO_INSTALL_ISO_DIST_UPGRADE]    $DO_INSTALL_ISO_DIST_UPGRADE" TEXT
-  handle_output "# Swap size:                 [ISO_SWAP_SIZE]                   $ISO_SWAP_SIZE" TEXT
+  handle_output "# Swap size:                 [ISO_SWAP_SIZE]                  $ISO_SWAP_SIZE" TEXT
+  handle_output "# VM Memory size:            [ISO_VM_RAM]                     $ISO_VM_RAM" TEXT
   if [ "$DO_CREATE_EXPORT" = "true" ] || [ "$DO_CREATE_ANSIBLE" = "true" ]; then
     handle_output "# Bootserver IP:             [BOOT_SERVER_IP]                 $BOOT_SERVER_IP" TEXT
     handle_output "# Bootserver file:           [BOOT_SERVER_FILE]               $BOOT_SERVER_FILE" TEXT

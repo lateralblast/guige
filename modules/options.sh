@@ -158,3 +158,15 @@ process_options () {
     DO_ISO_APT_NEWS="false";
   fi
 }
+
+# Function: get_release_info
+#
+# Get release information
+
+get_release_info () {
+  if [ ! "$ISO_RELEASE" = "" ]; then
+    ISO_MAJOR_RELEASE=$(echo "$ISO_RELEASE" |cut -f1 -d.)
+    ISO_MINOR_RELEASE=$(echo "$ISO_RELEASE" |cut -f2 -d.)
+    ISO_POINT_RELEASE=$(echo "$ISO_RELEASE" |cut -f3 -d.)
+  fi
+}

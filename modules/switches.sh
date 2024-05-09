@@ -197,9 +197,7 @@ process_switches () {
   if [ "$OLD_ISO_RELEASE" = "" ]; then
     OLD_ISO_RELEASE="$CURRENT_OLD_ISO_RELEASE"
   fi
-  ISO_MAJOR_RELEASE=$(echo "$ISO_RELEASE" |cut -f1 -d.)
-  ISO_MINOR_RELEASE=$(echo "$ISO_RELEASE" |cut -f2 -d.)
-  ISO_POINT_RELEASE=$(echo "$ISO_RELEASE" |cut -f3 -d.)
+  get_release_info
   if [ "$ISO_CODENAME" = "" ]; then
     get_code_name
   fi
@@ -383,5 +381,8 @@ process_switches () {
   fi
   if [ "$OLD_INPUT_FILE" = "" ]; then
     OLD_INPUT_FILE="$DEFAULT_OLD_INPUT_FILE"
+  fi
+  if [ "$VM_RAM" = "" ]; then
+    VM_RAM="$DEFAULT_VM_RAM"
   fi
 }

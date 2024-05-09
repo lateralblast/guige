@@ -14,7 +14,7 @@ set_defaults () {
   CURRENT_ISO_RELEASE_2404="24.04"
   CURRENT_ISO_RELEASE="22.04.3"
   CURRENT_OLD_ISO_RELEASE="23.04"
-  CURRENT_ISO_DEV_RELEASE="24.04"
+  CURRENT_ISO_DEV_RELEASE="24.10"
   CURRENT_ISO_OS_NAME="ubuntu"
   CURRENT_DOCKER_UBUNTU_RELEASE="22.04"
   CURRENT_ISO_CODENAME="jammy"
@@ -113,6 +113,7 @@ set_defaults () {
 # Reset defaults
 
 reset_defaults () {
+  get_release_info
   if [[ "$ISO_OS_NAME" =~ "rocky" ]]; then
     DEFAULT_ISO_VOLMGRS="lvm xfs btrfs"
     DEFAULT_ISO_ARCH="x86_64"
@@ -139,6 +140,11 @@ reset_defaults () {
   if [[ "$ISO_OS_NAME" =~ "rocky" ]]; then
     REQUIRED_PACKAGES="apt-utils $REQUIRED_PACKAGES"
   fi
+#  if [ "$ISO_OS_NAME" = "ubuntu" ] || [ "$DEFAULT_ISO_OS_NAME" = "ubuntu" ]; then
+#    if [ $ISO_MAJOR_RELEASE -gt 23 ]; then
+#      DEFAULT_VM_RAM="3072000"
+#    fi
+#  fi
 }
 
 # Function: set_default_flags
