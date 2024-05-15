@@ -475,3 +475,5 @@
 # Added updates switch
 # 2.3.8: Wed May 15 12:51:11 AEST 2024
 # Bug fixes
+# 2.3.9: Wed 15 May 2024 13:59:39 AEST
+# Fix for default arch on arm64

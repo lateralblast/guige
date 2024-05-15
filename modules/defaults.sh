@@ -25,6 +25,7 @@ set_defaults () {
   CURRENT_DOCKER_UBUNTU_RELEASE="22.04"
   CURRENT_ISO_CODENAME="jammy"
   CURRENT_ISO_ARCH="amd64"
+  DEFAULT_ISO_ARCH=$( uname -m |sed "s/aarch64/arm64/g" |sed "s/x86_64/amd64/g" |sed "s/x86/amd64/g" )
   DEFAULT_ISO_INSTALL_SOURCE="cdrom"
   DEFAULT_ISO_SOURCE_ID="ubuntu-server"
   DEFAULT_ISO_FALLBACK="offline-install"
