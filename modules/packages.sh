@@ -10,8 +10,9 @@
 # sudo apt install -y p7zip-full lftp wget xorriso
 
 install_required_packages () {
+  PACKAGE_LIST="$1"
   handle_output "# Checking required packages are installed" TEXT
-  for PACKAGE in $REQUIRED_PACKAGES; do
+  for PACKAGE in $PACKAGE_LIST; do
     PACKAGE_VERSION=""
     verbose_message "# Package: $PACKAGE" TEXT
     if [ "$OS_NAME" = "Darwin" ]; then

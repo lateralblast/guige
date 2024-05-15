@@ -463,3 +463,15 @@
 # Cleanup after running shellcheck
 # 2.3.2: Thu May  9 18:35:00 AEST 2024
 # Added build type to VM name
+# 2.3.3: Fri May 10 15:53:56 AEST 2024
+# Added reorder_uefi
+# 2.3.4: Sun May 12 14:20:50 AEST 2024
+# Added additional required packages
+# 2.3.5: Mon May 13 13:12:14 AEST 2024
+# Added nochroot option
+# 2.3.6: Tue May 14 20:53:47 AEST 2024
+# Initial support for Ubuntu 24.10
+# 2.3.7: Tue May 14 23:13:38 AEST 2024
+# Added updates switch
+# 2.3.8: Wed May 15 12:51:11 AEST 2024
+# Bug fixes

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Name:         guige (Generic Ubuntu/Unix ISO Generation Engine)
-# Version:      2.3.2
+# Version:      2.3.8
 # Release:      1
 # License:      CC-BA (Creative Commons By Attribution)
 #               http://creativecommons.org/licenses/by/4.0/legalcode
@@ -28,7 +28,7 @@ SCRIPT_VERSION=$( grep '^# Version' < "$0" | awk '{print $3}' )
 OS_NAME=$( uname )
 OS_ARCH=$( uname -m |sed "s/aarch64/arm64/g" |sed "s/x86_64/amd64/g")
 OS_USER="$USER"
-MY_USERNAME=$(whoami)
+OS_GROUP=$(groups |awk '{ print $2 }')
 MODULE_PATH="$START_PATH/modules"
 
 # Load modules
@@ -58,7 +58,8 @@ do
     exit
   fi
   if [ "$2" = "" ]; then
-    if ! [[ "$1" =~ "version" ]] && ! [[ "$1" =~ "help" ]] && ! [[ "$1" =~ "usage" ]]; then
+    PATTERN="[version|help|usage]"
+    if ! [[ $1 =~ $PATTERN ]]; then
       warning_message "No $1 specified"
       exit
     fi
@@ -134,7 +135,7 @@ do
       ISO_DNS="$2"
       shift 2
       ;;
-    --bootdisk)
+    --bootdisk|--disk|--installdisk)
       ISO_DISK+="$2"
       shift 2
       ;;
@@ -152,6 +153,10 @@ do
       ;;
     --delete)
       DELETE="$2"
+      shift 2
+      ;;
+    --fallback)
+      ISO_FALLBACK="$2"
       shift 2
       ;;
     --gateway)
@@ -210,6 +215,8 @@ do
           fi
           ;;
       esac
+      get_code_name
+      get_build_type
       ;;
     --bmcip)
       BMC_IP="$2"
@@ -228,7 +235,7 @@ do
       DO_CUSTOM_BOOT_SERVER_FILE="true"
       shift 2
       ;;
-    --nic|--vmnic)
+    --nic|--vmnic|--installnic|--bootnic)
       ISO_NIC="$2"
       VM_NIC="$2"
       shift 2
@@ -333,8 +340,8 @@ do
       OPTIONS="$2";
       shift 2
       ;;
-    --volumemanager)
-      ISO_VOLMGR="$2"
+    --volumemanager|--volumemanagers)
+      ISO_VOLMGRS="$2"
       shift 2
       ;;
     --zfsfilesystems)
@@ -343,6 +350,7 @@ do
       ;;
     --userdata|--autoinstall|--kickstart)
       DO_CUSTOM_AUTO_INSTALL="true"
+      ISO_VOLMGRS="custom"
       AUTO_INSTALL_FILE="$2"
       shift 2
       ;;
@@ -426,6 +434,10 @@ do
       ;;
     --installpassword)
       ISO_INSTALL_PASSWORD="$2"
+      shift 2
+      ;;
+    --updates)
+      ISO_UPDATES="$2"
       shift 2
       ;;
     --usage)
@@ -536,7 +548,7 @@ if [ "$DO_CHECK_WORK_DIR" = "true" ]; then
 fi
 if [ "$DO_INSTALL_REQUIRED_PACKAGES" = "true" ]; then
   DO_PRINT_HELP="false"
-  install_required_packages
+  install_required_packages "$REQUIRED_PACKAGES"
 fi
 if [ "$DO_CREATE_EXPORT" = "true" ]; then
   create_export

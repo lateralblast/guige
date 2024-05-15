@@ -24,7 +24,7 @@ print_env () {
   handle_output "# ISO input file:            [INPUT_FILE]                     $INPUT_FILE" TEXT
   handle_output "# Required packages:         [REQUIRED_PACKAGES]              $REQUIRED_PACKAGES" TEXT
   handle_output "# ISO output file:           [OUTPUT_FILE]                    $OUTPUT_FILE" TEXT
-  handle_output "# SCP command:               [SCP_COMMAND]                    $MY_USERNAME@$MY_IP:$OUTPUT_FILE" TEXT
+  handle_output "# SCP command:               [SCP_COMMAND]                    $BMC_USERNAME@$MY_IP:$OUTPUT_FILE" TEXT
   handle_output "# ISO Release:               [ISO_RELEASE]                    $ISO_RELEASE" TEXT
   handle_output "# ISO Release (Major):       [ISO_MAJOR_RELEASE]              $ISO_MAJOR_RELEASE" TEXT
   handle_output "# ISO Release (Minor):       [ISO_MINOR_RELEASE]              $ISO_MINOR_RELEASE" TEXT
@@ -72,6 +72,7 @@ print_env () {
   handle_output "# Install mount:             [ISO_INSTALL_MOUNT]              $ISO_INSTALL_MOUNT" TEXT
   handle_output "# Install target:            [ISO_TARGET_MOUNT]               $ISO_TARGET_MOUNT" TEXT
   handle_output "# Recreate squashfs:         [DO_ISO_SQUASHFS_UPDATE]         $DO_ISO_SQUASHFS_UPDATE" TEXT
+  handle_output "# Run chroot script:         [DO_CHROOT]                      $DO_CHROOT" TEXT
   handle_output "# Squashfs packages:         [ISO_CHROOT_PACKAGES]            $ISO_CHROOT_PACKAGES" TEXT
   handle_output "# Additional packages:       [ISO_INSTALL_PACKAGES]           $ISO_INSTALL_PACKAGES" TEXT
   handle_output "# Network updates:           [DO_INSTALL_ISO_NETWORK_UPDATES] $DO_INSTALL_ISO_NETWORK_UPDATES" TEXT
@@ -113,6 +114,8 @@ print_env () {
     handle_output "# Install SSH User:          [ISO_SSH_USER]                   $ISO_SSH_USER" TEXT
     handle_output "# Install SSH Password:      [ISO_SSH_PASSWORD]               $ISO_SSH_PASSWORD" TEXT
     handle_output "# Do setup on first boot:    [DO_ISO_FIRSTBOOT]               $DO_ISO_FIRSTBOOT" TEXT
+  else
+    handle_output "# Fallback:                  [ISO_FALLBACK]                   $ISO_FALLBACK" TEXT
   fi
   handle_output "# Serial Port:               [ISO_SERIAL_PORT0]               $ISO_SERIAL_PORT0" TEXT
   handle_output "# Serial Port:               [ISO_SERIAL_PORT1]               $ISO_SERIAL_PORT1" TEXT

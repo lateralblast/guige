@@ -51,7 +51,7 @@ copy_squashfs () {
 copy_ubuntu_squashfs () {
   handle_output "# Copying squashfs files" TEXT
   if [ ! -f "/usr/bin/rsync" ]; then
-    install_required_packages
+    install_required_packages "$REQUIRED_PACKAGES"
   fi
   CURRENT_KERNEL=$( uname -r )
   if [ -f "$CURRENT_KERNEL" ]; then

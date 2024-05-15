@@ -8,6 +8,12 @@
 # Process switches
 
 process_switches () {
+  if [ "$ISO_UPDATES" = "" ]; then
+    ISO_UPDATES="$DEFAULT_ISO_UPDATES"
+  fi
+  if [ "$ISO_FALLBACK" = "" ]; then
+    ISO_FALLBACK="$DEFAULT_ISO_FALLBACK"
+  fi
   if [ "$ISO_LV_NAME" = "" ]; then
     ISO_LV_NAME="$DEFAULT_ISO_LV_NAME"
   fi
@@ -163,29 +169,7 @@ process_switches () {
     ISO_RELEASE="$DEFAULT_ISO_RELEASE"
   else
     if [ "$ISO_OS_NAME" = "ubuntu" ]; then
-      case "$ISO_RELEASE" in
-        "24.04")
-          ISO_RELEASE="$CURRENT_ISO_RELEASE_2404"
-          ;;
-        "22.04")
-          ISO_RELEASE="$CURRENT_ISO_RELEASE_2204"
-          ;;
-        "20.04")
-          ISO_RELEASE="$CURRENT_ISO_RELEASE_2004"
-          ;;
-        "18.04")
-          ISO_RELEASE="$CURRENT_ISO_RELEASE_1804"
-          ;;
-        "16.04")
-          ISO_RELEASE="$CURRENT_ISO_RELEASE_1604"
-          ;;
-        "14.04")
-          ISO_RELEASE="$CURRENT_ISO_RELEASE_1404"
-          ;;
-        *)
-          ISO_RELEASE="$CURRENT_ISO_RELEASE"
-          ;;
-      esac
+      get_current_release
     else
       if [ "$ISO_OS_NAME" = "rocky" ]; then
         case "$ISO_RELEASE" in

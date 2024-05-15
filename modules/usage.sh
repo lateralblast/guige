@@ -67,6 +67,8 @@ print_options () {
   nohwekernel             Don't install HWE kernel package
   staticip                Use static IP
   dhcp                    Use DHCP
+  nochroot                Don't run chroot script
+  chroot                  Run chroot script
 OPTIONS
 }
 

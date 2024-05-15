@@ -10,7 +10,7 @@
 
 create_kickstart_iso () {
   if [ ! -f "/usr/bin/xorriso" ]; then
-    install_required_packages
+    install_required_packages "$REQUIRED_PACKAGES"
   fi
   if [ "$TEST_MODE" = "false" ]; then
     handle_output "# Creating ISO" TEXT

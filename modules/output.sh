@@ -93,6 +93,22 @@ handle_output () {
   fi
 }
 
+# Function: sudo_chown
+#
+# Change ownership
+
+sudo_chown () {
+  OBJECT="$1"
+  USER=$2
+  GROUP=$3
+  handle_output "# Checking ownership of $OBJECT is $USER:$GROUP"
+  if [ "$TEST_MODE" = "false" ]; then
+    if [ ! -f "/.dockerenv" ]; then
+      sudo chown $USER:$GROUP $OBJECT
+    fi
+  fi
+}
+
 # Function: create_dir
 #
 # Create directory

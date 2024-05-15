@@ -8,6 +8,24 @@
 # Process option switch
 
 process_options () {
+  if [[ "$OPTIONS" =~ "chroot" ]]; then
+    DO_CHROOT="true"
+  fi
+  if [[ "$OPTIONS" =~ "nochroot" ]]; then
+    DO_CHROOT="false"
+  fi
+  if [[ "$OPTIONS" =~ "geoip" ]]; then
+    DO_GEOIP="true"
+  fi
+  if [[ "$OPTIONS" =~ "nogeoip" ]]; then
+    DO_GEOIP="false"
+  fi
+  if [[ "$OPTIONS" =~ "reorderuefi" ]]; then
+    DO_REORDER_UEFI="true"
+  fi
+  if [[ "$OPTIONS" =~ "noreorderuefi" ]]; then
+    DO_REORDER_UEFI="false"
+  fi
   if [[ "$OPTIONS" =~ "nosecure" ]]; then
     DO_SECURE_BOOT="false"
   fi

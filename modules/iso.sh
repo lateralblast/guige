@@ -114,7 +114,7 @@ create_iso () {
 copy_iso () {
   handle_output "# Copying ISO files from $ISO_MOUNT_DIR to $ISO_NEW_DIR/cd" TEXT
   if [ ! -f "/usr/bin/rsync" ]; then
-    install_required_packages
+    install_required_packages "$REQUIRED_PACKAGES"
   fi
   TEST_DIR="$ISO_MOUNT_DIR/EFI"
   if [ ! -d "$TEST_DIR" ]; then
@@ -206,7 +206,7 @@ list_isos () {
   fi
   for FILE_NAME in $FILE_LIST; do
     if [ "$DO_SCP_HEADER" = "true" ]; then
-      handle_output "$MY_USERNAME@$MY_IP:$FILE_NAME" TEXT
+      handle_output "$BMC_USERNAME@$MY_IP:$FILE_NAME" TEXT
     else
       handle_output "$FILE_NAME" TEXT
     fi
@@ -332,7 +332,11 @@ get_iso_type () {
 prepare_iso () {
   case "$ISO_OS_NAME" in
     "ubuntu")
-      prepare_autoinstall_iso
+      if [[ "$ISO_BUILD_TYPE" =~ "desktop" ]]; then
+        prepare_autoinstall_desktop_iso
+      else
+        prepare_autoinstall_server_iso
+      fi
       ;;
     "rocky")
       prepare_kickstart_iso
@@ -371,6 +375,9 @@ get_info_from_iso () {
       ;;
     "nobile")
       ISO_RELEASE="$CURRENT_ISO_RELEASE_2404"
+      ;;
+    "oracular")
+      ISO_RELEASE="$CURRENT_ISO_RELEASE_2410"
       ;;
     "ubuntu")
       ISO_RELEASE=$(echo "$TEST_FILE" |cut -f2 -d- )

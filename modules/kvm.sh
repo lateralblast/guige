@@ -42,7 +42,7 @@ check_kvm_user () {
 
 create_kvm_vm () {
   if [ -z "$( command -v virsh )" ]; then
-    install_required_packages  
+    install_required_packages "$REQUIRED_KVM_PACKAGES"
   fi
   check_kvm_user
   if [ "$OS_NAME" = "Darwin" ]; then
@@ -333,6 +333,7 @@ create_kvm_vm () {
   else
     echo "      <model type='$VIDEO' ram='65536' vram='65536' vgamem='16384' heads='1' primary='yes'/>" >> "$XML_FILE"
   fi
+  echo "      <alias name='video0'/>" >> "$XML_FILE"
   echo "      <address type='pci' domain='0x0000' bus='0x00' slot='0x01' function='0x0'/>" >> "$XML_FILE"
   echo "    </video>" >> "$XML_FILE"
   if [ ! "$OS_NAME" = "Darwin" ]; then
@@ -341,8 +342,8 @@ create_kvm_vm () {
     echo "      <target type='virtio' name='com.redhat.spice.0'/>" >> "$XML_FILE"
     echo "      <address type='virtio-serial' controller='0' bus='0' port='2'/>" >> "$XML_FILE"
     echo "    </channel>" >> "$XML_FILE"
-    echo "    <graphics type='spice' autoport='yes'>" >> "$XML_FILE"
-    echo "      <listen type='address'/>" >> "$XML_FILE"
+    echo "    <graphics type='spice' autoport='yes' listen='127.0.0.1'>" >> "$XML_FILE"
+    echo "      <listen type='address' address='127.0.0.1'/>" >> "$XML_FILE"
     echo "      <image compression='off'/>" >> "$XML_FILE"
     echo "    </graphics>" >> "$XML_FILE"
     echo "    <redirdev bus='usb' type='spicevmc'>" >> "$XML_FILE"
@@ -387,7 +388,7 @@ create_kvm_vm () {
 
 delete_kvm_vm () {
   if [ -z "$( command -v virsh )" ]; then
-    install_required_packages  
+    install_required_packages "$REQUIRED_KVM_PACKAGES" 
   fi
   if [ "$TEST_MODE" = "false" ]; then
     if [ "$OS_NAME" = "Darwin" ]; then
@@ -410,7 +411,7 @@ delete_kvm_vm () {
 
 list_kvm_vm () {
   if [ -z "$( command -v virsh )" ]; then
-    install_required_packages  
+    install_required_packages "$REQUIRED_KVM_PACKAGES" 
   fi
   if [ "$OS_NAME" = "Darwin" ]; then
     virsh list --all

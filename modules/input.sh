@@ -31,7 +31,7 @@ get_password_crypt () {
     fi
   else
     if [ ! -f "/usr/bin/mkpasswd" ]; then
-      install_required_packages
+      install_required_packages "$REQUIRED_PACKAGES"
     fi
     if [ "$TEST_MODE" = "false" ]; then
       ISO_PASSWORD_CRYPT=$( echo "$ISO_PASSWORD" |mkpasswd --method=SHA-512 --stdin )
@@ -60,42 +60,107 @@ get_my_ip () {
   fi
 }
 
+# Function: get_current_release
+#
+# Get current release
+
+get_current_release () {
+  case "$ISO_RELEASE" in
+    "24.10")
+      ISO_RELEASE="$CURRENT_ISO_RELEASE_2410"
+      ;;
+    "24.04")
+      ISO_RELEASE="$CURRENT_ISO_RELEASE_2404"
+      ;;
+    "23.10")
+      ISO_RELEASE="$CURRENT_ISO_RELEASE_2310"
+      ;;
+    "23.04")
+      ISO_RELEASE="$CURRENT_ISO_RELEASE_2304"
+      ;;
+    "22.04")
+      ISO_RELEASE="$CURRENT_ISO_RELEASE_2204"
+      ;;
+    "20.04")
+      ISO_RELEASE="$CURRENT_ISO_RELEASE_2004"
+      ;;
+    "18.04")
+      ISO_RELEASE="$CURRENT_ISO_RELEASE_1804"
+      ;;
+    "16.04")
+      ISO_RELEASE="$CURRENT_ISO_RELEASE_1604"
+      ;;
+    "14.04")
+      ISO_RELEASE="$CURRENT_ISO_RELEASE_1404"
+      ;;
+    *)
+      ISO_RELEASE="$CURRENT_ISO_RELEASE"
+      ;;
+  esac
+}
+
 # Function: get_codename
 #
 # Get Ubuntu relase codename
 
-get_code_name() {
+get_code_name () {
   RELEASE_NO="$ISO_MAJOR_RELEASE.$ISO_MINOR_RELEASE"
   if [ "$RELEASE_NO" = "." ]; then
     RELEASE_NO="$ISO_RELEASE"
   fi
   case $RELEASE_NO in
     "20.04")
+      DEFAULT_ISO_CODENAME="focal"
       ISO_CODENAME="focal"
       ;;
     "20.10")
+      DEFAULT_ISO_CODENAME="groovy"
       ISO_CODENAME="groovy"
       ;;
     "21.04")
+      DEFAULT_ISO_CODENAME="hirsute"
       ISO_CODENAME="hirsute"
       ;;
     "21.10")
+      DEFAULT_ISO_CODENAME="impish"
       ISO_CODENAME="impish"
       ;;
     "22.04")
+      DEFAULT_ISO_CODENAME="jammy"
       ISO_CODENAME="jammy"
       ;;
     "22.10")
+      DEFAULT_ISO_CODENAME="kinetic"
       ISO_CODENAME="kinetic"
       ;;
     "23.04")
+      DEFAULT_ISO_CODENAME="lunar"
       ISO_CODENAME="lunar"
       ;;
     "23.10")
+      DEFAULT_ISO_CODENAME="mantic"
       ISO_CODENAME="mantic"
       ;;
     "24.04")
+      DEFAULT_ISO_CODENAME="noble"
       ISO_CODENAME="noble"
+      ;;
+    "24.10")
+      DEFAULT_ISO_CODENAME="oracular"
+      ISO_CODENAME="oracular"
+      ;;
+  esac
+}
+
+# Function: get_build_type
+#
+# Get build type based on release
+
+get_build_type () {
+  case $ISO_CODENAME in
+    "oracular")
+      DEFAULT_ISO_BUILD_TYPE="daily-live"
+      ISO_BUILD_TYPE="daily-live"
       ;;
   esac
 }

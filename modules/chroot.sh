@@ -22,9 +22,11 @@ execute_chroot_script () {
 # sudo chroot ./isonew/custom
 
 execute_ubuntu_chroot_script () {
-  handle_output "# Executing chroot script" TEXT
-  if [ "$TEST_MODE" = "false" ]; then
-    sudo chroot "$ISO_NEW_DIR/custom" "/tmp/modify_chroot.sh"
+  if [ "$DO_CHROOT" = "true" ]; then
+    handle_output "# Executing chroot script" TEXT
+    if [ "$TEST_MODE" = "false" ]; then
+      sudo chroot "$ISO_NEW_DIR/custom" "/tmp/modify_chroot.sh"
+    fi
   fi
 }
 
@@ -33,11 +35,13 @@ execute_ubuntu_chroot_script () {
 # Create chroot script
 
 create_chroot_script () {
-  case "$ISO_OS_NAME" in
-    "ubuntu")
-      create_ubuntu_chroot_script
-      ;;
-  esac
+  if [ "$DO_CHROOT" = "true" ]; then
+    case "$ISO_OS_NAME" in
+      "ubuntu")
+        create_ubuntu_chroot_script
+        ;;
+    esac
+  fi
 }
 
 # Function: create_ubuntu_chroot_script
