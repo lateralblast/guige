@@ -4,7 +4,7 @@
 # shellcheck disable=SC2153
 # shellcheck disable=SC2028
 
-# Function: create_autoinstall_iso
+# Function: prepare_autoinstall_server_iso
 #
 # Uncompress ISO and copy autoinstall files into it
 #
@@ -174,92 +174,6 @@
 #   version: 1
 # EOF
 #
-# get ISO formatting information
-#
-# xorriso -indev ubuntu-22.04.1-live-server-amd64.iso -report_el_torito as_mkisofs
-# xorriso 1.5.4 : RockRidge filesystem manipulator, libburnia project.
-#
-# xorriso : NOTE : Loading ISO image tree from LBA 0
-# xorriso : UPDATE :     803 nodes read in 1 seconds
-# libisofs: NOTE : Found hidden El-Torito image for EFI.
-# libisofs: NOTE : EFI image start and size: 717863 * 2048 , 8496 * 512
-# xorriso : NOTE : Detected El-Torito boot information which currently is set to be discarded
-# Drive current: -indev 'ubuntu-22.04.1-live-server-amd64.iso'
-# Media current: stdio file, overwriteable
-# Media status : is written , is appendable
-# Boot record  : El Torito , MBR protective-msdos-label grub2-mbr cyl-align-off GPT
-# Media summary: 1 session, 720153 data blocks, 1407m data,  401g free
-# Volume id    : 'Ubuntu-Server 22.04.1 LTS amd64'
-# -V 'Ubuntu-Server 22.04.1 LTS amd64'
-# --modification-date='2022080916483300'
-# --grub2-mbr --interval:local_fs:0s-15s:zero_mbrpt,zero_gpt:'ubuntu-22.04.1-live-server-amd64.iso'
-# --protective-msdos-label
-# -partition_cyl_align off
-# -partition_offset 16
-# --mbr-force-bootable
-# -append_partition 2 28732ac11ff8d211ba4b00a0c93ec93b --interval:local_fs:2871452d-2879947d::'ubuntu-22.04.1-live-server-amd64.iso'
-# -appended_part_as_gpt
-# -iso_mbr_part_type a2a0d0ebe5b9334487c068b6b72699c7
-# -c '/boot.catalog'
-# -b '/boot/grub/i386-pc/eltorito.img'
-# -no-emul-boot
-# -boot-load-size 4
-# -boot-info-table
-# --grub2-boot-info
-# -eltorito-alt-boot
-# -e '--interval:appended_partition_2_start_717863s_size_8496d:all::'
-# -no-emul-boot
-# -boot-load-size 8496
-#
-# export APPEND_PARTITION=$(xorriso -indev ubuntu-22.04.1-live-server-amd64.iso -report_el_torito as_mkisofs |grep append_partition |tail -1 |awk '{print $3}' 2>&1)
-# export ISO_MBR_PART_TYPE=$(xorriso -indev ubuntu-22.04.1-live-server-amd64.iso -report_el_torito as_mkisofs |grep iso_mbr_part_type |tail -1 |awk '{print $2}' 2>&1)
-# xorriso -as mkisofs -r -V 'Ubuntu-Server 22.04.1 LTS arm64' -o ../ubuntu-22.04-autoinstall-arm64.iso --grub2-mbr \
-# ../BOOT/Boot-NoEmul.img -partition_offset 16 --mbr-force-bootable -append_partition 2 $APPEND_PARTITION ../BOOT/Boot-NoEmul.img \
-# -appended_part_as_gpt -iso_mbr_part_type $ISO_MBR_PART_TYPE -c '/boot/boot.cat' -e '--interval:appended_partition_2:::' -no-emul-boot
-
-create_autoinstall_iso () {
-  if [ ! -f "/usr/bin/xorriso" ]; then
-    install_required_packages "$REQUIRED_PACKAGES"
-  fi
-  check_file_perms "$OUTPUT_FILE"
-  handle_output "# Creating ISO" TEXT
-  ISO_MBR_PART_TYPE=$( xorriso -indev "$INPUT_FILE" -report_el_torito as_mkisofs |grep iso_mbr_part_type |tail -1 |awk '{print $2}' 2>&1 )
-  BOOT_CATALOG=$( xorriso -indev "$INPUT_FILE" -report_el_torito as_mkisofs |grep "^-c " |tail -1 |awk '{print $2}' |cut -f2 -d"'" 2>&1 )
-  BOOT_IMAGE=$( xorriso -indev "$INPUT_FILE" -report_el_torito as_mkisofs |grep "^-b " |tail -1 |awk '{print $2}' |cut -f2 -d"'" 2>&1 )
-  UEFI_BOOT_SIZE=$( xorriso -indev "$INPUT_FILE" -report_el_torito as_mkisofs |grep "^-boot-load-size" |tail -1 |awk '{print $2}' |cut -f2 -d"'" 2>&1 )
-  DOS_BOOT_SIZE=$( xorriso -indev "$INPUT_FILE" -report_el_torito as_mkisofs |grep "^-boot-load-size" |head -1 |awk '{print $2}' |cut -f2 -d"'" 2>&1 )
-  if [ "$ISO_MAJOR_RELEASE" -gt 22 ]; then
-    APPEND_PART=$( xorriso -indev "$INPUT_FILE" -report_el_torito as_mkisofs |grep append_partition |tail -1 |awk '{print $3}' 2>&1 )
-    UEFI_IMAGE="--interval:appended_partition_2:::"
-  else
-    APPEND_PART="0xef"
-    UEFI_IMAGE=$( xorriso -indev "$INPUT_FILE" -report_el_torito as_mkisofs |grep "^-e " |tail -1 |awk '{print $2}' |cut -f2 -d"'" 2>&1 )
-  fi
-  if [ "$TEST_MODE" = "false" ]; then
-    if [ "$ISO_ARCH" = "amd64" ]; then
-      xorriso -as mkisofs -r -V "$ISO_VOLID" -o "$OUTPUT_FILE" \
-      --grub2-mbr "$WORK_DIR/BOOT/1-Boot-NoEmul.img" --protective-msdos-label -partition_cyl_align off \
-      -partition_offset 16 --mbr-force-bootable -append_partition 2 "$APPEND_PART" "$WORK_DIR/BOOT/2-Boot-NoEmul.img" \
-      -appended_part_as_gpt -iso_mbr_part_type "$ISO_MBR_PART_TYPE" -c "$BOOT_CATALOG" -b "$BOOT_IMAGE" \
-      -no-emul-boot -boot-load-size "$DOS_BOOT_SIZE" -boot-info-table --grub2-boot-info -eltorito-alt-boot \
-      -e "$UEFI_IMAGE" -no-emul-boot -boot-load-size "$UEFI_BOOT_SIZE" "$ISO_SOURCE_DIR"
-    else
-      xorriso -as mkisofs -r -V "$ISO_VOLID" -o "$OUTPUT_FILE" \
-      -partition_cyl_align all -partition_offset 16 -partition_hd_cyl 86 -partition_sec_hd 32 \
-      -append_partition 2 "$APPEND_PART" "$WORK_DIR/BOOT/Boot-NoEmul.img" -G "$WORK_DIR/BOOT/Boot-NoEmul.img" \
-      -iso_mbr_part_type "$ISO_MBR_PART_TYPE" -c "$BOOT_CATALOG" \
-      -e "$UEFI_IMAGE" -no-emul-boot -boot-load-size "$UEFI_BOOT_SIZE" "$ISO_SOURCE_DIR"
-    fi
-    if [ "$DO_DOCKER" = "true" ]; then
-      BASE_DOCKER_OUTPUT_FILE=$( basename "$OUTPUT_FILE" )
-      echo "# Output file will be at \"$PRE_WORK_DIR/files/$BASE_DOCKER_OUTPUT_FILE\""
-    fi
-  fi
-  check_file_perms "$OUTPUT_FILE"
-}
-
-# Function: prepare_autoinstall_server_iso
-#
 # Prepare Ubuntu autoinstall server ISO
 
 prepare_autoinstall_server_iso () {
@@ -400,23 +314,24 @@ prepare_autoinstall_server_iso () {
         else
           echo "#cloud-config" > "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
           echo "autoinstall:" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
+          echo "  version: 1" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
           echo "  apt:" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
-          echo "    disable_components: []" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
-          echo "    fallback: $ISO_FALLBACK" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
-          echo "    geoip: $DO_GEOIP" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
+          echo "    preserve_sources_list: $DO_ISO_PRESERVE_SOURCES" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
           echo "    preferences:" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
           echo "      - package: \"*\"" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
           echo "        pin: \"release a=$ISO_CODENAME-security\"" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
           echo "        pin-priority: 200" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
-          echo "    mirror-selection:" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
-          echo "      primary:" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
-          echo "      - arches:" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
-          echo "        - $ISO_ARCH" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
-          echo "        uri: http://archive.ubuntu.com/ubuntu" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
-          echo "      - arches:" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
-          echo "        - default" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
-          echo "        uri: http://ports.ubuntu.com/ubuntu-ports" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
-          echo "    preserve_sources_list: $DO_ISO_PRESERVE_SOURCES" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
+#          echo "    disable_components: []" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
+#          echo "    mirror-selection:" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
+          echo "    primary:" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
+          echo "    - arches:" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
+          echo "      - $ISO_ARCH" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
+          echo "      uri: http://archive.ubuntu.com/ubuntu" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
+          echo "    - arches:" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
+          echo "      - default" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
+          echo "      uri: http://ports.ubuntu.com/ubuntu-ports" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
+          echo "    fallback: $ISO_FALLBACK" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
+          echo "    geoip: $DO_GEOIP" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
           echo "    security:" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
           echo "    - arches:" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
           echo "      - $ISO_ARCH" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
@@ -426,19 +341,19 @@ prepare_autoinstall_server_iso () {
           echo "      uri: http://ports.ubuntu.com/ubuntu-ports" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
           echo "    package_update: $DO_INSTALL_ISO_UPDATE" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
           echo "    package_upgrade: $DO_INSTALL_ISO_UPGRADE" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
-          echo "  codecs:" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
-          echo "    install: $DO_INSTALL_ISO_CODECS" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
-          echo "  drivers:" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
-          echo "    install: $DO_INSTALL_ISO_DRIVERS" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
-          echo "  user-data:" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
-          echo "    timezone: $ISO_TIMEZONE" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
+#          echo "  codecs:" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
+#          echo "    install: $DO_INSTALL_ISO_CODECS" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
+#          echo "  drivers:" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
+#          echo "    install: $DO_INSTALL_ISO_DRIVERS" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
+#          echo "  user-data:" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
+#          echo "    timezone: $ISO_TIMEZONE" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
           echo "  identity:" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
           echo "    hostname: $ISO_HOSTNAME" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
           echo "    password: \"$ISO_PASSWORD_CRYPT\"" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
           echo "    realname: $ISO_REALNAME" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
           echo "    username: $ISO_USERNAME" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
-          echo "  kernel:" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
-          echo "    package: $ISO_KERNEL" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
+#          echo "  kernel:" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
+#          echo "    package: $ISO_KERNEL" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
           echo "  keyboard:" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
           echo "    layout: $ISO_LAYOUT" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
           echo "  locale: $ISO_LOCALE" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
@@ -458,11 +373,13 @@ prepare_autoinstall_server_iso () {
             echo "          - $ISO_DNS" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
           fi
           echo "    version: 2" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
-          echo "  oem:" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
-          echo "    install: $ISO_OEM_INSTALL" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
-          echo "  source:" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
-          echo "    id: $ISO_SOURCE_ID" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
-          echo "    search_drivers: $DO_ISO_SEARCH_DRIVERS" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
+#          echo "  refresh-installer:" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
+#          echo "    update: $DO_REFRESH_INSTALLER" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
+#          echo "  oem:" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
+#          echo "    install: $ISO_OEM_INSTALL" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
+#          echo "  source:" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
+#          echo "    id: $ISO_SOURCE_ID" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
+#          echo "    search_drivers: $DO_ISO_SEARCH_DRIVERS" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
           echo "  ssh:" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
           echo "    allow-pw: $ISO_ALLOW_PASSWORD" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
           echo "    authorized-keys: [ \"$ISO_SSH_KEY\" ]" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
@@ -476,7 +393,7 @@ prepare_autoinstall_server_iso () {
               echo "      wipe: superblock-recursive" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
               echo "      preserve: false" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
               echo "      name: ''" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
-              echo "      grub_device: false" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
+              echo "      grub_device: true" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
               echo "      type: disk" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
               echo "      id: disk-$ISO_DISK" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
               echo "    - device: disk-$ISO_DISK" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
@@ -688,7 +605,7 @@ prepare_autoinstall_server_iso () {
                 echo "      wipe: superblock-recursive" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
                 echo "      preserve: false" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
                 echo "      name: ''" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
-                echo "      grub_device: false" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
+                echo "      grub_device: true" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
                 echo "      type: disk" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
                 echo "      id: disk1" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
                 echo "    - device: disk1" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
@@ -955,8 +872,7 @@ prepare_autoinstall_server_iso () {
               fi
             fi
           fi
-          echo "  updates: $ISO_UPDATES" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
-          echo "  version: 1" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
+#          echo "  updates: $ISO_UPDATES" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
           print_file "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
         fi
       fi

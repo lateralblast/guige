@@ -477,3 +477,19 @@
 # Bug fixes
 # 2.3.9: Wed 15 May 2024 13:59:39 AEST
 # Fix for default arch on arm64
+# 2.4.0: Wed 15 May 2024 22:53:35 AEST
+# Fixed module path when creating ISOs in docker
+# 2.4.1: Thu 16 May 2024 00:46:50 AEST
+# Updated docker version
+# 2.4.2: Thu 16 May 2024 09:57:26 AEST
+# Improved mount check for ISO
+# 3.4.3: Thu 16 May 2024 22:58:53 AEST
+# Improved output for ISO creation
+# 2.4.4: Sun 19 May 2024 15:36:59 AEST
+# Added refresh-install option
+# 2.4.5: Mon 20 May 2024 16:15:55 AEST
+# Fixed ZFS install on 22.04.3
+# 2.4.6: Mon 20 May 2024 17:05:15 AEST
+# Cleaned up options
+# 2.4.7: Mon 20 May 2024 21:57:15 AEST
+# Updated failback option

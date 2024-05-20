@@ -351,9 +351,9 @@ update_output_file_name () {
     fi
     if [ "$VM_NAME" = "" ]; then
       if [ "$ISO_BUILD_TYPE" = "" ]; then
-        VM_NAME="$SCRIPT_NAME-$ISO_OS_NAME-$ISO_RELEASE-$ISO_BOOT_TYPE"
+        VM_NAME="$SCRIPT_NAME-$ISO_OS_NAME-$ISO_RELEASE-$ISO_BOOT_TYPE-$ISO_ARCH"
       else
-        VM_NAME="$SCRIPT_NAME-$ISO_OS_NAME-$ISO_BUILD_TYPE-$ISO_RELEASE-$ISO_BOOT_TYPE"
+        VM_NAME="$SCRIPT_NAME-$ISO_OS_NAME-$ISO_BUILD_TYPE-$ISO_RELEASE-$ISO_BOOT_TYPE-$ISO_ARCH"
       fi
     fi
     if [[ "$ACTION" =~ "create" ]]; then

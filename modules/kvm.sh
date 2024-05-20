@@ -48,17 +48,26 @@ create_kvm_vm () {
   if [ "$OS_NAME" = "Darwin" ]; then
     VIRT_DIR="/opt/homebrew/var/lib/libvirt"
     QEMU_VER=$( brew info qemu --json |jq -r ".[0].versions.stable" )
-    VARS_FILE="/opt/homebrew/Cellar/qemu/$QEMU_VER/share/qemu/edk2-arm-vars.fd"
-    BIOS_FILE="/opt/homebrew/Cellar/qemu/$QEMU_VER/share/qemu/edk2-aarch64-code.fd"
-    QEMU_ARCH="aarch64"
-    QEMU_EMU="/opt/homebrew/bin/qemu-system-aarch64"
-    DOM_TYPE="hvf"
-    MACHINE="virt-8.2"
+    VIRT_VER=$( echo "$QEMU_VER" |awk -F. '{print $1"."$2}' )
+    if [ "$ISO_ARCH" = "amd64" ] || [ "$ISO_ARCH" = "x86_64" ]; then
+      VARS_FILE="/opt/homebrew/Cellar/qemu/$QEMU_VER/share/qemu/edk2-i386-vars.fd"
+      BIOS_FILE="/opt/homebrew/Cellar/qemu/$QEMU_VER/share/qemu/edk2-x86_64-code.fd"
+      QEMU_ARCH="x86_64"
+      QEMU_EMU="/opt/homebrew/bin/qemu-system-x86_64"
+    else
+      VARS_FILE="/opt/homebrew/Cellar/qemu/$QEMU_VER/share/qemu/edk2-arm-vars.fd"
+      BIOS_FILE="/opt/homebrew/Cellar/qemu/$QEMU_VER/share/qemu/edk2-aarch64-code.fd"
+      QEMU_ARCH="aarch64"
+      QEMU_EMU="/opt/homebrew/bin/qemu-system-aarch64"
+    fi
+    DOM_TYPE="qemu"
+    MACHINE="virt-$VIRT_VER"
     VIDEO="vga"
     SERIAL="system-serial"
     INPUT_BUS="usb"
     IF_TYPE="user"
     CD_BUS="scsi"
+    DO_SECURE_BOOT="false"
   else
     VIRT_DIR="/var/lib/libvirt"
     QEMU_VER=$( qemu-system-amd64 --version |head -1 |awk '{print $4}' |awk -F"." '{print $1"."$2}' )
@@ -393,7 +402,8 @@ delete_kvm_vm () {
   if [ "$TEST_MODE" = "false" ]; then
     if [ "$OS_NAME" = "Darwin" ]; then
       information_message "Stopping KVM VM $VM_NAME"
-      execute_command "virsh -c \"qemu:///session\" destroy $VM_NAME"
+      execute_message "virsh -c \"qemu:///session\" destroy $VM_NAME"
+      virsh -c "qemu:///session" destroy "$VM_NAME"
       information_message "Deleting VM $VM_NAME"
       execute_command "virsh undefine $VM_NAME --nvram"
     else

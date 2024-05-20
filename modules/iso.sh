@@ -80,7 +80,7 @@ update_required_packages () {
 
 update_iso_packages () {
   if [ "$ISO_OS_NAME" = "ubuntu" ]; then
-    if [ "$DO_NO_HWE_KERNEL" = "false" ]; then
+    if [ "$DO_HWE_KERNEL" = "true" ]; then
       ISO_INSTALL_PACKAGES="$ISO_INSTALL_PACKAGES linux-image-generic-hwe-$ISO_MAJOR_RELEASE.$ISO_MINOR_RELEASE"
     fi
   fi
@@ -116,8 +116,9 @@ copy_iso () {
   if [ ! -f "/usr/bin/rsync" ]; then
     install_required_packages "$REQUIRED_PACKAGES"
   fi
-  TEST_DIR="$ISO_MOUNT_DIR/EFI"
-  if [ ! -d "$TEST_DIR" ]; then
+  UC_TEST_DIR="$ISO_MOUNT_DIR/EFI"
+  LC_TEST_DIR="$ISO_MOUNT_DIR/efi"
+  if [ ! -d "$UC_TEST_DIR" ] && [ ! -d "$LC_TEST_DIR" ]; then
     warning_message "ISO $INPUT_FILE not mounted"
     exit
   else
@@ -408,4 +409,103 @@ get_info_from_iso () {
   handle_output "# Codename:      $ISO_CODENAME" TEXT
   handle_output "# Architecture:  $ISO_ARCH" TEXT
   handle_output "# Output ISO:    $OUTPUT_FILE" TEXT
+}
+
+# Function: create_autoinstall_iso
+#
+# get ISO formatting information
+#
+# xorriso -indev ubuntu-22.04.1-live-server-amd64.iso -report_el_torito as_mkisofs
+# xorriso 1.5.4 : RockRidge filesystem manipulator, libburnia project.
+#
+# xorriso : NOTE : Loading ISO image tree from LBA 0
+# xorriso : UPDATE :     803 nodes read in 1 seconds
+# libisofs: NOTE : Found hidden El-Torito image for EFI.
+# libisofs: NOTE : EFI image start and size: 717863 * 2048 , 8496 * 512
+# xorriso : NOTE : Detected El-Torito boot information which currently is set to be discarded
+# Drive current: -indev 'ubuntu-22.04.1-live-server-amd64.iso'
+# Media current: stdio file, overwriteable
+# Media status : is written , is appendable
+# Boot record  : El Torito , MBR protective-msdos-label grub2-mbr cyl-align-off GPT
+# Media summary: 1 session, 720153 data blocks, 1407m data,  401g free
+# Volume id    : 'Ubuntu-Server 22.04.1 LTS amd64'
+# -V 'Ubuntu-Server 22.04.1 LTS amd64'
+# --modification-date='2022080916483300'
+# --grub2-mbr --interval:local_fs:0s-15s:zero_mbrpt,zero_gpt:'ubuntu-22.04.1-live-server-amd64.iso'
+# --protective-msdos-label
+# -partition_cyl_align off
+# -partition_offset 16
+# --mbr-force-bootable
+# -append_partition 2 28732ac11ff8d211ba4b00a0c93ec93b --interval:local_fs:2871452d-2879947d::'ubuntu-22.04.1-live-server-amd64.iso'
+# -appended_part_as_gpt
+# -iso_mbr_part_type a2a0d0ebe5b9334487c068b6b72699c7
+# -c '/boot.catalog'
+# -b '/boot/grub/i386-pc/eltorito.img'
+# -no-emul-boot
+# -boot-load-size 4
+# -boot-info-table
+# --grub2-boot-info
+# -eltorito-alt-boot
+# -e '--interval:appended_partition_2_start_717863s_size_8496d:all::'
+# -no-emul-boot
+# -boot-load-size 8496
+#
+# export APPEND_PARTITION=$(xorriso -indev ubuntu-22.04.1-live-server-amd64.iso -report_el_torito as_mkisofs |grep append_partition |tail -1 |awk '{print $3}' 2>&1)
+# export ISO_MBR_PART_TYPE=$(xorriso -indev ubuntu-22.04.1-live-server-amd64.iso -report_el_torito as_mkisofs |grep iso_mbr_part_type |tail -1 |awk '{print $2}' 2>&1)
+# xorriso -as mkisofs -r -V 'Ubuntu-Server 22.04.1 LTS arm64' -o ../ubuntu-22.04-autoinstall-arm64.iso --grub2-mbr \
+# ../BOOT/Boot-NoEmul.img -partition_offset 16 --mbr-force-bootable -append_partition 2 $APPEND_PARTITION ../BOOT/Boot-NoEmul.img \
+# -appended_part_as_gpt -iso_mbr_part_type $ISO_MBR_PART_TYPE -c '/boot/boot.cat' -e '--interval:appended_partition_2:::' -no-emul-boot
+
+create_autoinstall_iso () {
+  if [ ! -f "/usr/bin/xorriso" ]; then
+    install_required_packages "$REQUIRED_PACKAGES"
+  fi
+  check_file_perms "$OUTPUT_FILE"
+  handle_output "# Creating ISO" TEXT
+  ISO_MBR_PART_TYPE=$( xorriso -indev "$INPUT_FILE" -report_el_torito as_mkisofs |grep iso_mbr_part_type |tail -1 |awk '{print $2}' 2>&1 )
+  BOOT_CATALOG=$( xorriso -indev "$INPUT_FILE" -report_el_torito as_mkisofs |grep "^-c " |tail -1 |awk '{print $2}' |cut -f2 -d"'" 2>&1 )
+  BOOT_IMAGE=$( xorriso -indev "$INPUT_FILE" -report_el_torito as_mkisofs |grep "^-b " |tail -1 |awk '{print $2}' |cut -f2 -d"'" 2>&1 )
+  UEFI_BOOT_SIZE=$( xorriso -indev "$INPUT_FILE" -report_el_torito as_mkisofs |grep "^-boot-load-size" |tail -1 |awk '{print $2}' |cut -f2 -d"'" 2>&1 )
+  DOS_BOOT_SIZE=$( xorriso -indev "$INPUT_FILE" -report_el_torito as_mkisofs |grep "^-boot-load-size" |head -1 |awk '{print $2}' |cut -f2 -d"'" 2>&1 )
+  if [ "$ISO_MAJOR_RELEASE" -gt 22 ]; then
+    APPEND_PART=$( xorriso -indev "$INPUT_FILE" -report_el_torito as_mkisofs |grep append_partition |tail -1 |awk '{print $3}' 2>&1 )
+    UEFI_IMAGE="--interval:appended_partition_2:::"
+  else
+    APPEND_PART="0xef"
+    UEFI_IMAGE=$( xorriso -indev "$INPUT_FILE" -report_el_torito as_mkisofs |grep "^-e " |tail -1 |awk '{print $2}' |cut -f2 -d"'" 2>&1 )
+  fi
+  if [ "$TEST_MODE" = "false" ]; then
+    if [ "$ISO_ARCH" = "amd64" ]; then
+      verbose_message "# Executing:"
+      verbose_message "xorriso -as mkisofs -r -V \"$ISO_VOLID\" -o \"$OUTPUT_FILE\" \\"
+      verbose_message "--grub2-mbr \"$WORK_DIR/BOOT/1-Boot-NoEmul.img\" --protective-msdos-label -partition_cyl_align off \\"
+      verbose_message "-partition_offset 16 --mbr-force-bootable -append_partition 2 \"$APPEND_PART\" \"$WORK_DIR/BOOT/2-Boot-NoEmul.img\" \\"
+      verbose_message "-appended_part_as_gpt -iso_mbr_part_type \"$ISO_MBR_PART_TYPE\" -c \"$BOOT_CATALOG\" -b \"$BOOT_IMAGE\" \\"
+      verbose_message "-no-emul-boot -boot-load-size \"$DOS_BOOT_SIZE\" -boot-info-table --grub2-boot-info -eltorito-alt-boot \\"
+      verbose_message "-e \"$UEFI_IMAGE\" -no-emul-boot -boot-load-size \"$UEFI_BOOT_SIZE\" \"$ISO_SOURCE_DIR\""
+      xorriso -as mkisofs -r -V "$ISO_VOLID" -o "$OUTPUT_FILE" \
+      --grub2-mbr "$WORK_DIR/BOOT/1-Boot-NoEmul.img" --protective-msdos-label -partition_cyl_align off \
+      -partition_offset 16 --mbr-force-bootable -append_partition 2 "$APPEND_PART" "$WORK_DIR/BOOT/2-Boot-NoEmul.img" \
+      -appended_part_as_gpt -iso_mbr_part_type "$ISO_MBR_PART_TYPE" -c "$BOOT_CATALOG" -b "$BOOT_IMAGE" \
+      -no-emul-boot -boot-load-size "$DOS_BOOT_SIZE" -boot-info-table --grub2-boot-info -eltorito-alt-boot \
+      -e "$UEFI_IMAGE" -no-emul-boot -boot-load-size "$UEFI_BOOT_SIZE" "$ISO_SOURCE_DIR"
+    else
+      verbose_message "# Executing:"
+      verbose_message "xorriso -as mkisofs -r -V \"$ISO_VOLID\" -o \"$OUTPUT_FILE\" \\"
+      verbose_message "-partition_cyl_align all -partition_offset 16 -partition_hd_cyl 86 -partition_sec_hd 32 \\"
+      verbose_message "-append_partition 2 \"$APPEND_PART\" \"$WORK_DIR/BOOT/Boot-NoEmul.img\" -G \"$WORK_DIR/BOOT/Boot-NoEmul.img\" \\"
+      verbose_message "-iso_mbr_part_type \"$ISO_MBR_PART_TYPE\" -c \"$BOOT_CATALOG\" \\"
+      verbose_message "-e \"$UEFI_IMAGE\" -no-emul-boot -boot-load-size \"$UEFI_BOOT_SIZE\" \"$ISO_SOURCE_DIR\""
+      xorriso -as mkisofs -r -V "$ISO_VOLID" -o "$OUTPUT_FILE" \
+      -partition_cyl_align all -partition_offset 16 -partition_hd_cyl 86 -partition_sec_hd 32 \
+      -append_partition 2 "$APPEND_PART" "$WORK_DIR/BOOT/Boot-NoEmul.img" -G "$WORK_DIR/BOOT/Boot-NoEmul.img" \
+      -iso_mbr_part_type "$ISO_MBR_PART_TYPE" -c "$BOOT_CATALOG" \
+      -e "$UEFI_IMAGE" -no-emul-boot -boot-load-size "$UEFI_BOOT_SIZE" "$ISO_SOURCE_DIR"
+    fi
+    if [ "$DO_DOCKER" = "true" ]; then
+      BASE_DOCKER_OUTPUT_FILE=$( basename "$OUTPUT_FILE" )
+      echo "# Output file will be at \"$PRE_WORK_DIR/files/$BASE_DOCKER_OUTPUT_FILE\""
+    fi
+  fi
+  check_file_perms "$OUTPUT_FILE"
 }

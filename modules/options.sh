@@ -8,6 +8,12 @@
 # Process option switch
 
 process_options () {
+  if [[ "$OPTIONS" =~ "refreshinstaller" ]]; then
+    DO_REFRESH_INSTALLER="true"
+  fi
+  if [[ "$OPTIONS" =~ "norefreshinstaller" ]]; then
+    DO_REFRESH_INSTALLER="false"
+  fi
   if [[ "$OPTIONS" =~ "chroot" ]]; then
     DO_CHROOT="true"
   fi
@@ -69,10 +75,11 @@ process_options () {
   if [[ "$OPTIONS" =~ "noactivate" ]]; then
     DO_ACTIVATE="false"
   fi
+  if [[ "$OPTIONS" =~ "hwekernel" ]]; then
+    DO_HWE_KERNEL="true"
+  fi
   if [[ "$OPTIONS" =~ "nohwekernel" ]]; then
-    DO_NO_HWE_KERNEL="true"
-  else
-    DO_NO_HWE_KERNEL="false"
+    DO_HWE_KERNEL="false"
   fi
   if [[ "$OPTIONS" =~ "noipv4" ]]; then
     DO_IPV4="false"

@@ -55,8 +55,10 @@ print_options () {
   verbose:                Verbose output (default: $VERBOSE_MODE)
   interactive:            Interactively ask questions (default: $INTERACTIVE_MODE)
   autoupgrades:           Allow autoupgrades
-  nohwekernel:            Don't install HWE kernel packages (Ubuntu) (deafault: $DO_NO_HWE_KERNEL)
-  nomultipath:            Don't load multipath kernel module (default: $DO_NO_MULTIPATH)
+  hwekernel:              Don't install HWE kernel packages (Ubuntu) (default: $DO_HWE_KERNEL)
+  nohwekernel:            Don't install HWE kernel packages
+  multipath:              Don't load multipath kernel module (default: $DO_MULTIPATH)
+  nomultipath:            Don't load multipath kernel module
   plaintextpassword:      Use plaintext password (default: $DO_PLAIN_TEXT_PASSWORD)
   mediacheck              Do media check (default: $DO_MEDIA_CHECK)
   nolockroot              Don't lock root account
@@ -64,7 +66,6 @@ print_options () {
   noipv4                  Disable IPv4
   noipv6                  Disable IPv6
   plaintext               Plain text password
-  nohwekernel             Don't install HWE kernel package
   staticip                Use static IP
   dhcp                    Use DHCP
   nochroot                Don't run chroot script

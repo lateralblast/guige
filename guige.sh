@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Name:         guige (Generic Ubuntu/Unix ISO Generation Engine)
-# Version:      2.3.8
+# Version:      2.4.7
 # Release:      1
 # License:      CC-BA (Creative Commons By Attribution)
 #               http://creativecommons.org/licenses/by/4.0/legalcode
@@ -29,7 +29,13 @@ OS_NAME=$( uname )
 OS_ARCH=$( uname -m |sed "s/aarch64/arm64/g" |sed "s/x86_64/amd64/g")
 OS_USER="$USER"
 OS_GROUP=$(groups |awk '{ print $2 }')
-MODULE_PATH="$START_PATH/modules"
+
+if [ -f /.dockerenv ]; then
+  START_PATH=$( dirname "$0" )
+  MODULE_PATH="$START_PATH/modules"
+else
+  MODULE_PATH="$START_PATH/modules"
+fi
 
 # Load modules
 
@@ -135,7 +141,7 @@ do
       ISO_DNS="$2"
       shift 2
       ;;
-    --bootdisk|--disk|--installdisk)
+    --bootdisk|--disk|--installdisk|--firstdisk)
       ISO_DISK+="$2"
       shift 2
       ;;
@@ -235,7 +241,7 @@ do
       DO_CUSTOM_BOOT_SERVER_FILE="true"
       shift 2
       ;;
-    --nic|--vmnic|--installnic|--bootnic)
+    --nic|--vmnic|--installnic|--bootnic|--firstnic)
       ISO_NIC="$2"
       VM_NIC="$2"
       shift 2
@@ -324,11 +330,11 @@ do
       ISO_VOLID="$2"
       shift 2
       ;;
-    --grubtimeout)
+    --grubtimeout|--grub-timeout)
       ISO_GRUB_TIMEOUT="$2"
       shift 2
       ;;
-    --allowpassword)
+    --allowpassword|--allow-password)
       ISO_ALLOW_PASSWORD="true"
       shift
       ;;
@@ -372,11 +378,11 @@ do
       ISO_SOURCE_ID="$2"
       shift 2
       ;;
-    --installmode)
+    --installmode|--install-mode)
       ISO_INSTALL_MODE="$2"
       shift 2
       ;;
-    --passwordalgorithm)
+    --passwordalgorithm|--password-algorithm)
       ISO_PASSWORD_ALGORITHM="$2"
       shift 2
       ;;
@@ -404,7 +410,7 @@ do
       ISO_GROUPS="$2"
       shift 2
       ;;
-    --installsource)
+    --installsource|--install-source)
       ISO_INSTALL_SOURCE="$2"
       shift 2
       ;;
@@ -428,11 +434,11 @@ do
       ISO_LV_NAME="$2"
       shift 2
       ;;
-    --installuser)
+    --installuser|--install-user)
       ISO_INSTALL_USERNAME="$2"
       shift 2
       ;;
-    --installpassword)
+    --installpassword|--install-password|--installpass|--install-pass)
       ISO_INSTALL_PASSWORD="$2"
       shift 2
       ;;
