@@ -169,7 +169,9 @@ process_switches () {
     ISO_RELEASE="$DEFAULT_ISO_RELEASE"
   else
     if [ "$ISO_OS_NAME" = "ubuntu" ]; then
-      get_current_release
+      if [ "$ISO_DOT_RELEASE" = "" ]; then 
+        get_current_release
+      fi
     else
       if [ "$ISO_OS_NAME" = "rocky" ]; then
         case "$ISO_RELEASE" in

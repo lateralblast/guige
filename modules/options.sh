@@ -195,8 +195,10 @@ process_options () {
 
 get_release_info () {
   if [ ! "$ISO_RELEASE" = "" ]; then
-    ISO_MAJOR_RELEASE=$(echo "$ISO_RELEASE" |cut -f1 -d.)
-    ISO_MINOR_RELEASE=$(echo "$ISO_RELEASE" |cut -f2 -d.)
-    ISO_POINT_RELEASE=$(echo "$ISO_RELEASE" |cut -f3 -d.)
+    set -- $(echo "$ISO_RELEASE" | awk 'BEGIN { FS="[:\t.]"; } {print $1, $2, $3 }' )
+    ISO_MAJOR_RELEASE="$1"
+    ISO_MINOR_RELEASE="$2"
+    ISO_DOT_RELEASE="$3"
   fi
 }
+
