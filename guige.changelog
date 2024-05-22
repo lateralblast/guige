@@ -495,3 +495,5 @@
 # Updated failback option
 # 2.4.8: Mon 20 May 2024 22:44:47 AEST
 # Added better handling for release switch
+# 2.4.9: Wed 22 May 2024 10:55:06 AEST
+# Added some handling for older/Intel versions of MacOS

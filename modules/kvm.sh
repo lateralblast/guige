@@ -46,19 +46,27 @@ create_kvm_vm () {
   fi
   check_kvm_user
   if [ "$OS_NAME" = "Darwin" ]; then
-    VIRT_DIR="/opt/homebrew/var/lib/libvirt"
+    BREW_DIR="/opt/homebrew/Cellar"
+    if [ ! -d "$BREW_DIR" ]; then
+      BREW_DIR="/usr/local/Cellar"
+      VIRT_DIR="$BREW_DIR/libvirt"
+      BIN_DIR="/usr/local/bin" 
+    else
+      VIRT_DIR="/opt/homebrew/var/lib/libvirt"
+      BIN_DIR="/opt/homebrew/bin" 
+    fi
     QEMU_VER=$( brew info qemu --json |jq -r ".[0].versions.stable" )
     VIRT_VER=$( echo "$QEMU_VER" |awk -F. '{print $1"."$2}' )
     if [ "$ISO_ARCH" = "amd64" ] || [ "$ISO_ARCH" = "x86_64" ]; then
-      VARS_FILE="/opt/homebrew/Cellar/qemu/$QEMU_VER/share/qemu/edk2-i386-vars.fd"
-      BIOS_FILE="/opt/homebrew/Cellar/qemu/$QEMU_VER/share/qemu/edk2-x86_64-code.fd"
+      VARS_FILE="$BREW_DIR/qemu/$QEMU_VER/share/qemu/edk2-i386-vars.fd"
+      BIOS_FILE="$BREW_DIR/qemu/$QEMU_VER/share/qemu/edk2-x86_64-code.fd"
       QEMU_ARCH="x86_64"
-      QEMU_EMU="/opt/homebrew/bin/qemu-system-x86_64"
+      QEMU_EMU="$BIN_DIR/qemu-system-x86_64"
     else
-      VARS_FILE="/opt/homebrew/Cellar/qemu/$QEMU_VER/share/qemu/edk2-arm-vars.fd"
-      BIOS_FILE="/opt/homebrew/Cellar/qemu/$QEMU_VER/share/qemu/edk2-aarch64-code.fd"
+      VARS_FILE="$BREW_DIR/qemu/$QEMU_VER/share/qemu/edk2-arm-vars.fd"
+      BIOS_FILE="$BREW_DIR/qemu/$QEMU_VER/share/qemu/edk2-aarch64-code.fd"
       QEMU_ARCH="aarch64"
-      QEMU_EMU="/opt/homebrew/bin/qemu-system-aarch64"
+      QEMU_EMU="$BIN_DIR/qemu-system-aarch64"
     fi
     DOM_TYPE="qemu"
     MACHINE="virt-$VIRT_VER"
@@ -105,7 +113,7 @@ create_kvm_vm () {
   fi
   if ! [ -f "$BIOS_FILE" ]; then
     TEMP_VERBOSE_MODE="true"
-    warning_message "Could not find BIOS file"
+    warning_message "Could not find BIOS file (tried $BIOS_FILE)"
     exit
   fi
   information_message "Creating VM disk $VM_DISK"

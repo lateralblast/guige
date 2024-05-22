@@ -64,7 +64,6 @@ set_defaults () {
   DEFAULT_ISO_INSTALL_MODE="text"
   DEFAULT_ISO_INSTALL_PACKAGES="zfsutils-linux zfs-initramfs xfsprogs btrfs-progs net-tools curl lftp wget sudo file rsync dialog setserial ansible apt-utils whois squashfs-tools duperemove jq"
   REQUIRED_PACKAGES="binwalk casper genisoimage live-boot live-boot-initramfs-tools p7zip-full lftp wget xorriso whois squashfs-tools sudo file rsync net-tools nfs-kernel-server ansible dialog apt-utils jq"
-  REQUIRED_KVM_PACKAGES="libvirt-clients libvirt-daemon-system libguestfs-tools qemu-kvm virt-manager"
   DEFAULT_DOCKER_ARCH="amd64 arm64"
   DEFAULT_ISO_SSH_KEY_FILE="$HOME/.ssh/id_rsa.pub"
   MASKED_DEFAULT_ISO_SSH_KEY_FILE="$HOME/.ssh/id_rsa.pub"
@@ -121,6 +120,11 @@ set_defaults () {
   BMC_EXPOSE_DURATION="180"
   DO_CREATE_ISO="true" 
   DO_REORDER_UEFI="true"
+  if [ "$OS_NAME" = "Linux" ]; then
+    REQUIRED_KVM_PACKAGES="libvirt-clients libvirt-daemon-system libguestfs-tools qemu-kvm virt-manager"
+  else
+    REQUIRED_KVM_PACKAGES="libvirt-glib libvirt qemu qemu-kvm virt-manager"
+  fi
 }
 
 # Function: reset_defaults 
