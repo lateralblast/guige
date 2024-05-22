@@ -497,3 +497,5 @@
 # Added better handling for release switch
 # 2.4.9: Wed 22 May 2024 10:55:06 AEST
 # Added some handling for older/Intel versions of MacOS
+# 2.5.0: Wed May 22 12:12:49 AEST 2024
+# Added handling for NVMe device naming

@@ -788,6 +788,7 @@ prepare_autoinstall_server_iso () {
           fi
           if [ "$ISO_NIC" = "first-nic" ]; then
             echo "    - \"sed -i \\\"s/first-nic/\$(lshw -class network -short |awk '{print \$2}' |grep ^e |head -1)/g\\\" /autoinstall.yaml\"" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
+            echo "    - \"sed -i \\\"s/nvme\\\([0-9]\\\)n\\\([0-9]\\\)\\\([0-9]\\\)/nvme\\\1n\\\2p\\\3/g\\\" /autoinstall.yaml\"" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
           fi
           NO_DEBS=$( find "$PACKAGE_DIR" "*.deb" |wc -l)
           if [ ! "$NO_DEBS" = "0" ]; then
@@ -1490,6 +1491,7 @@ prepare_autoinstall_desktop_iso () {
           fi
           if [ "$ISO_NIC" = "first-nic" ]; then
             echo "    - \"sed -i \\\"s/first-nic/\$(lshw -class network -short |awk '{print \$2}' |grep ^e |head -1)/g\\\" /autoinstall.yaml\"" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
+            echo "    - \"sed -i \\\"s/nvme\\\([0-9]\\\)n\\\([0-9]\\\)\\\([0-9]\\\)/nvme\\\1n\\\2p\\\3/g\\\" /autoinstall.yaml" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
           fi
           NO_DEBS=$( find "$PACKAGE_DIR" "*.deb" |wc -l)
           if [ ! "$NO_DEBS" = "0" ]; then
