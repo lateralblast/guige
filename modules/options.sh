@@ -14,6 +14,12 @@ process_options () {
   if [[ "$OPTIONS" =~ "norefreshinstaller" ]]; then
     DO_REFRESH_INSTALLER="false"
   fi
+  if [[ "$OPTIONS" =~ "nvme" ]]; then
+    DO_NVME="true"
+  fi
+  if [[ "$OPTIONS" =~ "nonvme" ]]; then
+    DO_NVME="false"
+  fi
   if [[ "$OPTIONS" =~ "chroot" ]]; then
     DO_CHROOT="true"
   fi

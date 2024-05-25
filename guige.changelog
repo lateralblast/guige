@@ -499,3 +499,11 @@
 # Added some handling for older/Intel versions of MacOS
 # 2.5.0: Wed May 22 12:12:49 AEST 2024
 # Added handling for NVMe device naming
+# 2.5.1: Fri 24 May 2024 13:14:47 AEST
+# Some improvements to subiquity
+# 2.5.2: Fri 24 May 2024 18:44:44 AEST
+# Added brtfs-compsize to installed packages
+# 2.5.3: Sat 25 May 2024 09:16:16 AEST
+# Added NVMe option
+# 2.5.4: Sat 25 May 2024 15:41:56 AEST
+# Added WWN and serial information to subiquity NVMe stanze

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Name:         guige (Generic Ubuntu/Unix ISO Generation Engine)
-# Version:      2.5.0
+# Version:      2.5.4
 # Release:      1
 # License:      CC-BA (Creative Commons By Attribution)
 #               http://creativecommons.org/licenses/by/4.0/legalcode
@@ -281,6 +281,14 @@ do
       ISO_REALNAME="$2"
       shift 2
       ;;
+    --diskserial)
+      ISO_DISK_SERIAL="$2"
+      shift 2
+      ;;
+    --diskwwn)
+      ISO_DISK_WWN="$2"
+      shift 2
+      ;;
     --serialportspeed)
       ISO_SERIAL_PORT_SPEED0="$2"
       shift 2
@@ -347,7 +355,7 @@ do
       OPTIONS="$2";
       shift 2
       ;;
-    --volumemanager|--volumemanagers)
+    --volumemanager|--volumemanagers|--volmgr|--volmgrs)
       ISO_VOLMGRS="$2"
       shift 2
       ;;

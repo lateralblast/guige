@@ -8,6 +8,12 @@
 # Process switches
 
 process_switches () {
+  if [ "$ISO_DISK_SERIAL" = "" ]; then
+    ISO_DISK_SERIAL="$DEFAULT_ISO_DISK_SERIAL"
+  fi
+  if [ "$ISO_DISK_WWN" = "" ]; then
+    ISO_DISK_WWN="$DEFAULT_ISO_DISK_WWN"
+  fi
   if [ "$ISO_UPDATES" = "" ]; then
     ISO_UPDATES="$DEFAULT_ISO_UPDATES"
   fi

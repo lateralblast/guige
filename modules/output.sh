@@ -308,6 +308,11 @@ update_output_file_name () {
     TEMP_FILE_NAME=$( basename "$OUTPUT_FILE" .iso )
     OUTPUT_FILE="$TEMP_DIR_NAME/$TEMP_FILE_NAME-sshkey.iso"
   fi
+  if [ "$DO_NVME" = "true" ]; then
+    TEMP_DIR_NAME=$( dirname "$OUTPUT_FILE" )
+    TEMP_FILE_NAME=$( basename "$OUTPUT_FILE" .iso )
+    OUTPUT_FILE="$TEMP_DIR_NAME/$TEMP_FILE_NAME-nvme.iso"
+  fi
   if [ "$DO_DHCP" = "true" ]; then
     TEMP_DIR_NAME=$( dirname "$OUTPUT_FILE" )
     TEMP_FILE_NAME=$( basename "$OUTPUT_FILE" .iso )
