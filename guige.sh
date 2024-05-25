@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Name:         guige (Generic Ubuntu/Unix ISO Generation Engine)
-# Version:      2.5.4
+# Version:      2.5.5
 # Release:      1
 # License:      CC-BA (Creative Commons By Attribution)
 #               http://creativecommons.org/licenses/by/4.0/legalcode
@@ -170,8 +170,11 @@ do
       shift 2
       DO_DHCP="false"
       ;;
-    --grubmenu|--vmname)
+    --grubmenu)
       ISO_GRUB_MENU="$2"
+      shift 2
+      ;;
+    --vmname)
       VM_NAME="$2"
       shift 2
       ;;
@@ -200,13 +203,19 @@ do
       ISO_AUTOINSTALL_DIR="$2"
       shift 2
       ;;
-    --kernel|--vmtype)
+    --kernel)
       ISO_KERNEL="$2"
+      shift 2
+      ;;
+    --vmtype)
       VM_TYPE="$2"
       shift 2
       ;;
-    --kernelargs|--vmcpus)
+    --kernelargs)
       ISO_KERNEL_ARGS="$2"
+      shift 2
+      ;;
+    --vmcpus)
       VM_CPUS="$2"
       shift 2
       ;;

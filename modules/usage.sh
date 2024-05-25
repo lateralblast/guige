@@ -68,8 +68,16 @@ print_options () {
   plaintext               Plain text password
   staticip                Use static IP
   dhcp                    Use DHCP
-  nochroot                Don't run chroot script
+  nochroot                Don't run chroot script (default: $DO_CHROOT)
   chroot                  Run chroot script
+  refreshinstaller:       Refresh installer (default: $DO_REFRESH_INSTALLER)
+  norefreshinstaller:     Don't refresh installer
+  nvme:                   Additional NVMe config (default: $DO_NVME)
+  nonvme:                 No additional NVMe config
+  geoip:                  Use Geo IP (default: $DO_GEOIP)
+  nogeoip:                Don't use Geo IP
+  reorderuefi:            Reorder UEFI devices on reboot ($DO_REORDER_UEFI)
+  noreorderuefi:          Don't reorder UEFI devices on reboot
 OPTIONS
 }
 

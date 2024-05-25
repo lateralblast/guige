@@ -11,7 +11,7 @@ used to hang a shield on the shoulder or neck when not in use.
 Version
 -------
 
-Current version: 2.5.4
+Current version: 2.5.5
 
 Issues
 ------
@@ -115,91 +115,98 @@ Usage
 You can get help using the -h or --help switch:
 
 ```
-  Usage: guige.sh [OPTIONS...]
+    Usage: guige.sh [OPTIONS...]
 
-    --oldrelease           Old release (used for copying file from an older release ISO)
-    --country              Country (used for sources.list mirror - default: us)
-    --isourl               Specify ISO URL
-    --prefix               Prefix to add to ISO name
-    --suffix               Suffix to add to ISO name
-    --block                Block kernel module(s)
-    --allow                Load additional kernel modules(s)
-    --oldisourl            Old release ISO URL (used with --oldrelease)
-    --oldinputfile         Old release ISO (used with --oldrelease)
-    --search               Search output for value (eg --action listallisos --search efi)
-    --codename|--disto     Linux release codename or distribution
-    --action:              Action to perform (e.g. createiso, justiso, runchrootscript, checkdocker, installrequired)
-    --layout|--vmsize:     Layout or VM disk size (default: us/20G)
-    --bootserverip:        NFS/Bootserver IP
-    --cidr:                CIDR (default: 24)
-    --sshkeyfile:          SSH key file to use as SSH key (default: /Users/spindler/.ssh/id_rsa.pub)
-    --dns:                 DNS Server (ddefault: 8.8.8.8)
-    --bootdisk:            Boot Disk devices (default: first-disk)
-    --locale:              LANGUAGE (default: en_US.UTF-8)
-    --lcall:               LC_ALL (default: en_US)
-    --bmcusername:         BMC/iDRAC User (default: root)
-    --delete:              Remove previously created files (default: false)
-    --gateway:             Gateway (default 192.168.1.254)
-    --grubmenu|--vmname:   Set default grub menu or VM name (default: 0/guige)
-    --hostname             Hostname (default: ubuntu)
-    --help                 Help/Usage Information
-    --ip:                  IP Address (default: 192.168.1.2)
-    --inputiso|--vmiso:    Input/base ISO file
-    --grubfile             GRUB file
-    --autoinstalldir       Directory where autoinstall config files are stored on ISO
-    --kernel|--vmtype:     Kernel package or VM type (default: linux-generic/kvm)
-    --kernelargs|--vmcpus: Kernel arguments (default: console=tty0 console=vt0)
-    --release:             LSB release (default: )
-    --bmcip:               BMC/iDRAC IP (default: 192.168.1.3)
-    --installtarget:       Where the install mounts the target filesystem (default: )
-    --installmount:        Where the install mounts the CD during install (default: )
-    --bootserverfile       Boot sever file (default: )
-    --nic|--vmnic:         Network device (default: first-nic/default)
-    --isopackages:         List of packages to install (default: zfsutils-linux zfs-initramfs net-tools curl lftp wget sudo file rsync dialog setserial ansible apt-utils whois squashfs-tools duperemove jq)
-    --outputiso:           Output ISO file (default: )
-    --password:            Password (default: ubuntu)
-    --chrootpackages:      List of packages to add to ISO (default: )
-    --build:               Type of ISO to build (default: live-server)
-    --arch:                Architecture (default: )
-    --realname:            Realname (default Ubuntu)
-    --serialportspeed:     Serial Port Speed (default: 115200,115200)
-    --swapsize|--vmram:    Swap or VM memory size (default 2G/2048000)
-    --squashfsfile:        Squashfs file (default: )
-    --timezone:            Timezone (default: Australia/Melbourne)
-    --serialportaddress:   Serial Port Address (default: 0x03f8,0x02f8)
-    --username:            Username (default: ubuntu)
-    --postinstall:         Postinstall action (e.g. installpackages, upgrade, distupgrade, installdrivers, all, autoupgrades)
-    --version              Display Script Version
-    --serialport:          Serial Port (default: ttyS0,ttyS1)
-    --workdir:             Work directory
-    --preworkdir:          Docker work directory (used internally)
-    --isovolid:            ISO Volume ID
-    --grubtimeout:         Grub timeout (default: 10)
-    --allowpassword        Allow password access via SSH (default: false)
-    --bmcpassword:         BMC/iDRAC password (default: calvin)
-    --options:             Options (e.g. nounmount, testmode, bios, uefi, verbose, interactive)
-    --volumemanager:       Volume Managers (default: zfs lvm xfs btrfs)
-    --zfsfilesystems:      ZFS filesystems (default: /var /var/lib /var/lib/AccountsService /var/lib/apt /var/lib/dpkg /var/lib/NetworkManager /srv /usr /usr/local /var/games /var/log /var/mail /var/snap /var/spool /var/www)
-    --userdata:            Use a custom user-data file (default: generate automatically)
-    --oeminstall:          OEM Install Type (default: auto)
-    --sourceid:            Source ID (default: ubuntu-server)
-    --installmode:         Install Mode (default: text)
-    --passwordalgorithm:   Password Algorithm (default: sha512)
-    --bootloader:          Boot Loader Location (default: mbr)
-    --selinux:             SELinux Mode (default: enforcing)
-    --firewall:            Firewall (default: enabled)
-    --allow:               Allow Services (default: ssh)
-    --onboot:              Enable Network on Boot (default: on)
-    --enableservice        Enable Service (default: sshd)
-    --disableservice       Disable Service (default: cupsd)
-    --gecos                GECOS Field Entry (default: cupsd)
-    --installsource        Install Source (default: cdrom)
-    --bootsize             Boot partition size (default: 2048)
-    --rootsize             Root partition size (default: -1)
-    --installuser          Temporary install username for remote access during install (default: install)
-    --installpassword      Temporary install password for remote access during install (default: install)
-    --pesize               PE size (default: 32768)
-    --vgname               Volume Group Name (default: system)
+    --oldrelease            Old release (used for copying file from an older release ISO)
+    --country               Country (used for sources.list mirror - default: us)
+    --isourl                Specify ISO URL
+    --prefix                Prefix to add to ISO name
+    --suffix                Suffix to add to ISO name
+    --block                 Block kernel module(s)
+    --allow                 Load additional kernel modules(s)
+    --oldisourl             Old release ISO URL (used with --oldrelease)
+    --oldinputfile          Old release ISO (used with --oldrelease)
+    --search                Search output for value (eg --action listallisos --search efi)
+    --codename|--disto      Linux release codename or distribution
+    --action:               Action to perform (e.g. createiso, justiso, runchrootscript, checkdocker, installrequired)
+    --layout|--vmsize:      Layout or VM disk size (default: us/20G)
+    --bootserverip:         NFS/Bootserver IP
+    --cidr:                 CIDR (default: 24)
+    --sshkeyfile:           SSH key file to use as SSH key (default: /Users/spindler/.ssh/id_rsa.pub)
+    --dns:                  DNS Server (ddefault: 8.8.8.8)
+    --bootdisk:             Boot Disk devices (default: first-disk)
+    --locale:               LANGUAGE (default: en_US.UTF-8)
+    --lcall:                LC_ALL (default: en_US)
+    --bmcusername:          BMC/iDRAC User (default: root)
+    --delete:               Remove previously created files (default: false)
+    --fallback:             Installation fallback (default: continue-anyway)
+    --gateway:              Gateway (default 192.168.1.254)
+    --grubmenu:             Set default grub menu (default: 0)
+    --vmname:               Set VM name (default: )
+    --hostname              Hostname (default: ubuntu)
+    --help                  Help/Usage Information
+    --ip:                   IP Address (default: 192.168.1.2)
+    --inputiso|--vmiso:     Input/base ISO file
+    --grubfile              GRUB file
+    --autoinstalldir        Directory where autoinstall config files are stored on ISO
+    --kernel:               Kernel (default: linux-generic)
+    --vmtype:               VM type (default: kvm)
+    --kernelargs:           Kernel arguments (default: console=tty0 console=vt0)
+    --vmcpus:               No ov VM CPUs (default: 2)
+    --release:              LSB release (default: )
+    --bmcip:                BMC/iDRAC IP (default: 192.168.1.3)
+    --installtarget:        Where the install mounts the target filesystem (default: )
+    --installmount:         Where the install mounts the CD during install (default: )
+    --bootserverfile        Boot sever file (default: )
+    --nic|--vmnic:          Network device (default: first-nic/default)
+    --isopackages:          List of packages to install (default: zfsutils-linux zfs-initramfs xfsprogs btrfs-progs net-tools curl lftp wget sudo file rsync dialog setserial ansible apt-utils whois squashfs-tools duperemove jq brtfs-compsize)
+    --outputiso:            Output ISO file (default: )
+    --password:             Password (default: ubuntu)
+    --chrootpackages:       List of packages to add to ISO (default: )
+    --build:                Type of ISO to build (default: live-server)
+    --arch:                 Architecture (default: arm64)
+    --realname:             Realname (default Ubuntu)
+    --diskwwn:              Disk WWN
+    --diskserial:           Disk Serial
+    --serialportspeed:      Serial Port Speed (default: 115200,115200)
+    --swapsize|--vmram:     Swap or VM memory size (default 2G/2048000)
+    --squashfsfile:         Squashfs file (default: )
+    --timezone:             Timezone (default: Australia/Melbourne)
+    --serialportaddress:    Serial Port Address (default: 0x03f8,0x02f8)
+    --username:             Username (default: ubuntu)
+    --postinstall:          Postinstall action (e.g. installpackages, upgrade, distupgrade, installdrivers, all, autoupgrades)
+    --version               Display Script Version
+    --serialport:           Serial Port (default: ttyS0,ttyS1)
+    --workdir:              Work directory
+    --preworkdir:           Docker work directory (used internally)
+    --isovolid:             ISO Volume ID
+    --grubtimeout:          Grub timeout (default: 10)
+    --allowpassword         Allow password access via SSH (default: false)
+    --bmcpassword:          BMC/iDRAC password (default: calvin)
+    --options:              Options (e.g. nounmount, testmode, bios, uefi, verbose, interactive)
+    --volumemanager:        Volume Managers (default: zfs zfs-lvm lvm-auto xfs btrfs)
+    --zfsfilesystems:       ZFS filesystems (default: /var /var/lib /var/lib/AccountsService /var/lib/apt /var/lib/dpkg /var/lib/NetworkManager /srv /usr /usr/local /var/games /var/log /var/mail /var/snap /var/spool /var/www)
+    --userdata:             Use a custom user-data file (default: generate automatically)
+    --oeminstall:           OEM Install Type (default: auto)
+    --sourceid:             Source ID (default: ubuntu-server)
+    --installmode:          Install Mode (default: text)
+    --passwordalgorithm:    Password Algorithm (default: sha512)
+    --bootloader:           Boot Loader Location (default: mbr)
+    --selinux:              SELinux Mode (default: enforcing)
+    --firewall:             Firewall (default: enabled)
+    --allow:                Allow Services (default: ssh)
+    --onboot:               Enable Network on Boot (default: on)
+    --enableservice         Enable Service (default: sshd)
+    --disableservice        Disable Service (default: cupsd)
+    --gecos                 GECOS Field Entry (default: cupsd)
+    --installsource         Install Source (default: cdrom)
+    --bootsize              Boot partition size (default: 2048)
+    --rootsize              Root partition size (default: -1)
+    --installuser           Temporary install username for remote access during install (default: install)
+    --installpassword       Temporary install password for remote access during install (default: install)
+    --pesize                PE size (default: 32768)
+    --vgname                Volume Group Name (default: system)
+    --lvname                Volume Group Name (default: pv.1)
 ```
 
 You can get more usage information by using the usage tag with the action switch:
@@ -238,8 +245,8 @@ You can get more usage information by using the usage tag with the action switch
   -------
 
   cluster                 Install cluster related packages (pcs, gluster, etc)  (default: false)
-  kvm                     Install KVM related packages (virt-manager, cloud-image-utils, etc) (default: (false)
-  sshkey                  Add SSH key from ~/.ssh if present (default: false)
+  kvm                     Install KVM related packages (virt-manager, cloud-image-utils, etc) (deffault: false)
+  sshkey                  Add SSH key from ~/.ssh if present (default fales)
   biosdevname:            Enable biosdevname kernel parameters (default: false)
   nounmount:              Don't unmount filesystems (useful for troubleshooting) (default: false)
   testmode:               Don't execute commands (useful for testing and generating a script) (deafault: false)
@@ -248,8 +255,10 @@ You can get more usage information by using the usage tag with the action switch
   verbose:                Verbose output (default: false)
   interactive:            Interactively ask questions (default: false)
   autoupgrades:           Allow autoupgrades
-  nohwekernel:            Don't install HWE kernel packages (Ubuntu) (deafault: false)
-  nomultipath:            Don't load multipath kernel module (default: false)
+  hwekernel:              Don't install HWE kernel packages (Ubuntu) (default: true)
+  nohwekernel:            Don't install HWE kernel packages
+  multipath:              Don't load multipath kernel module (default: )
+  nomultipath:            Don't load multipath kernel module
   plaintextpassword:      Use plaintext password (default: false)
   mediacheck              Do media check (default: false)
   nolockroot              Don't lock root account
@@ -257,9 +266,18 @@ You can get more usage information by using the usage tag with the action switch
   noipv4                  Disable IPv4
   noipv6                  Disable IPv6
   plaintext               Plain text password
-  nohwekernel             Don't install HWE kernel package
   staticip                Use static IP
   dhcp                    Use DHCP
+  nochroot                Don't run chroot script (default: true)
+  chroot                  Run chroot script
+  refreshinstaller:       Refresh installer (default: )
+  norefreshinstaller:     Don't refresh installer
+  nvme:                   Additional NVMe config (default: false)
+  nonvme:                 No additional NVMe config
+  geoip:                  Use Geo IP (default: true)
+  nogeoip:                Don't use Geo IP
+  reorderuefi:            Reorder UEFI devices on reboot (true)
+  noreorderuefi:          Don't reorder UEFI devices on reboot
 
   postinstall
   -----------

@@ -507,3 +507,5 @@
 # Added NVMe option
 # 2.5.4: Sat 25 May 2024 15:41:56 AEST
 # Added WWN and serial information to subiquity NVMe stanze
+# 2.5.5: Sat 25 May 2024 16:37:20 AEST
+# Some documentation updates
