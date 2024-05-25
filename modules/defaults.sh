@@ -61,7 +61,7 @@ set_defaults () {
   DEFAULT_ISO_SERIAL_PORT_ADDRESS1="0x02f8"
   DEFAULT_ISO_SERIAL_PORT_SPEED1="115200"
   DEFAULT_ISO_INSTALL_MODE="text"
-  DEFAULT_ISO_INSTALL_PACKAGES="zfsutils-linux zfs-initramfs xfsprogs btrfs-progs net-tools curl lftp wget sudo file rsync dialog setserial ansible apt-utils whois squashfs-tools duperemove jq brtfs-compsize"
+  DEFAULT_ISO_INSTALL_PACKAGES="zfsutils-linux zfs-initramfs xfsprogs btrfs-progs net-tools curl lftp wget sudo file rsync dialog setserial ansible apt-utils whois squashfs-tools duperemove jq btrfs-compsize"
   REQUIRED_PACKAGES="binwalk casper genisoimage live-boot live-boot-initramfs-tools p7zip-full lftp wget xorriso whois squashfs-tools sudo file rsync net-tools nfs-kernel-server ansible dialog apt-utils jq"
   DEFAULT_DOCKER_ARCH="amd64 arm64"
   DEFAULT_ISO_SSH_KEY_FILE="$HOME/.ssh/id_rsa.pub"
