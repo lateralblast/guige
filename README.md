@@ -11,7 +11,7 @@ used to hang a shield on the shoulder or neck when not in use.
 Version
 -------
 
-Current version: 2.5.5
+Current version: 2.5.6
 
 Issues
 ------
@@ -76,6 +76,10 @@ By default this script creates a DHCP based install ISO with four additonal inst
 - LVM based install to the first non USB drive available using the first network device with link (EXT4 root filesystem)
 - LVM based install to the first non USB drive available using the first network device with link (XFS root filesystem)
 - LVM based install to the first non USB drive available using the first network device with link (BTRFS root filesystem)
+
+There is an option for compression with btrfs on the root disk. 
+If this option is specified the root disk is remounted during installation and compression applied.
+The fstab entry is updated and compression will be anabled after the reboot at the end of the installation.
 
 A custom cloud-init user-data file can be used by using the --userdata switch with the location of the file.
 This will copy the file into the image, create a boot menu entry called custom, and set that to default.
@@ -202,6 +206,7 @@ You can get help using the -h or --help switch:
     --installsource         Install Source (default: cdrom)
     --bootsize              Boot partition size (default: 2048)
     --rootsize              Root partition size (default: -1)
+    --compression           Compression algorithm (default: lzo)
     --installuser           Temporary install username for remote access during install (default: install)
     --installpassword       Temporary install password for remote access during install (default: install)
     --pesize                PE size (default: 32768)
@@ -238,8 +243,8 @@ You can get more usage information by using the usage tag with the action switch
   queryiso:               Query ISO for information
   listalliso:             List all ISOs
   listiso:                List ISOs
-  createkvmvm:            Create KVM VM
-  deletekvmvm:            Delete KVM VM
+  createvm:               Create VM (default: KVM)
+  deletevm:               Delete VM (default: KVM)
 
   options
   -------
@@ -278,6 +283,8 @@ You can get more usage information by using the usage tag with the action switch
   nogeoip:                Don't use Geo IP
   reorderuefi:            Reorder UEFI devices on reboot (true)
   noreorderuefi:          Don't reorder UEFI devices on reboot
+  compression:            Compress filesystem(s) if supported (default: true)
+  nocompression:          Don't compress filesystem(s)
 
   postinstall
   -----------

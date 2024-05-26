@@ -8,6 +8,9 @@
 # Process switches
 
 process_switches () {
+  if [ "$ISO_COMPRESSION" = "" ]; then
+    ISO_COMPRESSION="$DEFAULT_ISO_COMPRESSION"
+  fi
   if [ "$ISO_DISK_SERIAL" = "" ]; then
     ISO_DISK_SERIAL="$DEFAULT_ISO_DISK_SERIAL"
   fi

@@ -97,6 +97,7 @@ print_cli_help () {
     --installsource         Install Source (default: $DEFAULT_ISO_INSTALL_SOURCE)
     --bootsize              Boot partition size (default: $DEFAULT_ISO_BOOT_SIZE)
     --rootsize              Root partition size (default: $DEFAULT_ISO_ROOT_SIZE)
+    --compression           Compression algorithm (default: $DEFAULT_ISO_COMPRESSION)
     --installuser           Temporary install username for remote access during install (default: $DEFAULT_ISO_INSTALL_USERNAME)
     --installpassword       Temporary install password for remote access during install (default: $DEFAULT_ISO_INSTALL_PASSWORD)
     --pesize                PE size (default: $DEFAULT_ISO_PE_SIZE)

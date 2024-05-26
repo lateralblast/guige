@@ -509,3 +509,5 @@
 # Added WWN and serial information to subiquity NVMe stanze
 # 2.5.5: Sat 25 May 2024 16:37:20 AEST
 # Some documentation updates
+# 2.5.6: Sun 26 May 2024 10:31:28 AEST
+# Added compression option for btrfs

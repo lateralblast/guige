@@ -826,6 +826,13 @@ prepare_autoinstall_server_iso () {
               echo "    - \"echo 'export DEBIAN_FRONTEND=\\\"noninteractive\\\" && dpkg $ISO_DPKG_CONF $ISO_DPKG_OVERWRITE --auto-deconfigure $ISO_DPKG_DEPENDS -i /var/postinstall/packages/*.deb' >> $ISO_TARGET_MOUNT/tmp/post.sh\"" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
               echo "    - \"chmod +x $ISO_TARGET_MOUNT/tmp/post.sh\"" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
             fi
+            if [ "$ISO_VOLMGR" = "btrfs" ] && [ "$DO_COMPRESSION" = "true" ]; then
+              echo "    - \"mount -o remount,compress=$ISO_COMPRESSION,ssd /\`mount |grep $ISO_VOLMGR |awk '{ print \$1 }'\` /target -t $ISO_VOLMGR\"" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
+              echo "    - \"sed -i \\\"s/$ISO_VOLMGR defaults/$ISO_VOLMGR compress=$ISO_COMPRESSION,ssd/g\\\" $ISO_TARGET_MOUNT/etc/fstab\"" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
+              echo "    - \"echo '#!/bin/bash' > $ISO_TARGET_MOUNT/tmp/post.sh\"" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
+              echo "    - \"echo '$ISO_VOLMGR filesystem defragment -rc$ISO_COMPRESSION /' > $ISO_TARGET_MOUNT/tmp/post.sh\"" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
+              echo "    - \"chmod +x $ISO_TARGET_MOUNT/tmp/post.sh\"" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
+            fi
           fi
           echo "    - \"echo '$ISO_TIMEZONE' > $ISO_TARGET_MOUNT/etc/timezone\"" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
           echo "    - \"rm $ISO_TARGET_MOUNT/etc/localtime\"" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
@@ -836,6 +843,10 @@ prepare_autoinstall_server_iso () {
           if [ ! "$NO_DEBS" = "0" ]; then
             if [ ! "$ISO_VOLMGR" = "btrfs" ] && [ ! "$ISO_VOLMGR" = "xfs" ]; then
               echo "    - \"curtin in-target --target=$ISO_TARGET_MOUNT -- /tmp/post.sh\"" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
+            else
+              if [ "$ISO_VOLMGR" = "btrfs" ] && [ "$DO_COMPRESSION" = "true" ]; then
+                echo "    - \"curtin in-target --target=$ISO_TARGET_MOUNT -- /tmp/post.sh\"" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
+              fi
             fi
           fi
           if [ "$DO_SERIAL" = "true" ]; then

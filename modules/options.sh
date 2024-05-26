@@ -14,6 +14,12 @@ process_options () {
   if [[ "$OPTIONS" =~ "norefreshinstaller" ]]; then
     DO_REFRESH_INSTALLER="false"
   fi
+  if [[ "$OPTIONS" =~ "compress" ]]; then
+    DO_COMPRESSION="true"
+  fi
+  if [[ "$OPTIONS" =~ "nocompress" ]]; then
+    DO_COMPRESSION="false"
+  fi
   if [[ "$OPTIONS" =~ "nvme" ]]; then
     DO_NVME="true"
   fi

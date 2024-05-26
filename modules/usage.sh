@@ -78,6 +78,8 @@ print_options () {
   nogeoip:                Don't use Geo IP
   reorderuefi:            Reorder UEFI devices on reboot ($DO_REORDER_UEFI)
   noreorderuefi:          Don't reorder UEFI devices on reboot
+  compression:            Compress filesystem(s) if supported (default: $DO_COMPRESSION)
+  nocompression:          Don't compress filesystem(s)
 OPTIONS
 }
 
