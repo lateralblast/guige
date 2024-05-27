@@ -310,6 +310,10 @@ prepare_autoinstall_server_iso () {
       fi
       if [ "$TEST_MODE" = "false" ]; then
         if [ "$ISO_VOLMGR" = "custom" ]; then
+          if [ -f "$WORK_DIR/files/user-data" ]; then
+            sudo_chown "$WORK_DIR/files/user-data" $OS_USER $OS_GROUP
+            chmod +w "$WORK_DIR/files/user-data"
+          fi
           cp "$WORK_DIR/files/user-data" "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
           print_file "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
         else
