@@ -30,6 +30,7 @@ print_cli_help () {
     --sshkeyfile:           SSH key file to use as SSH key (default: $MASKED_DEFAULT_ISO_SSH_KEY_FILE)
     --dns:                  DNS Server (ddefault: $DEFAULT_ISO_DNS)
     --bootdisk:             Boot Disk devices (default: $DEFAULT_ISO_DISK)
+    --firstoption:          First menu option (default: $DEFAULT_ISO_OPTION)
     --locale:               LANGUAGE (default: $DEFAULT_ISO_LOCALE)
     --lcall:                LC_ALL (default: $DEFAULT_ISO_LC_ALL)
     --bmcusername:          BMC/iDRAC User (default: $DEFAULT_BMC_USERNAME)

@@ -511,3 +511,5 @@
 # Some documentation updates
 # 2.5.6: Sun 26 May 2024 10:31:28 AEST
 # Added compression option for btrfs
+# 2.5.7: Tue May 28 14:14:46 AEST 2024
+# Added firstoption switch to set first choice in grub menu

@@ -262,6 +262,15 @@ process_switches () {
   fi
   if [ "$ISO_VOLMGRS" = "" ]; then
     ISO_VOLMGRS="$DEFAULT_ISO_VOLMGRS"
+    if [ "$ISO_OPTION" = "" ]; then
+      ISO_OPTION="$DEFAULT_ISO_OPTION"
+    else
+      reset_volmgrs
+    fi
+  else
+    if [ ! "$ISO_OPTION" = "" ]; then
+      reset_volmgrs
+    fi
   fi
   if [ "$GRUB_MENU" = "" ]; then
     ISO_GRUB_MENU="$DEFAULT_ISO_GRUB_MENU"

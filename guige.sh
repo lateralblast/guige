@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Name:         guige (Generic Ubuntu/Unix ISO Generation Engine)
-# Version:      2.5.6
+# Version:      2.5.7
 # Release:      1
 # License:      CC-BA (Creative Commons By Attribution)
 #               http://creativecommons.org/licenses/by/4.0/legalcode
@@ -142,7 +142,11 @@ do
       shift 2
       ;;
     --bootdisk|--disk|--installdisk|--firstdisk)
-      ISO_DISK+="$2"
+      ISO_DISK="$2"
+      shift 2
+      ;;
+    --firstoption|--first-option)
+      ISO_OPTION="$2"
       shift 2
       ;;
     --locale)

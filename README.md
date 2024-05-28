@@ -11,7 +11,7 @@ used to hang a shield on the shoulder or neck when not in use.
 Version
 -------
 
-Current version: 2.5.6
+Current version: 2.5.7
 
 Issues
 ------
@@ -139,6 +139,7 @@ You can get help using the -h or --help switch:
     --sshkeyfile:           SSH key file to use as SSH key (default: /Users/spindler/.ssh/id_rsa.pub)
     --dns:                  DNS Server (ddefault: 8.8.8.8)
     --bootdisk:             Boot Disk devices (default: first-disk)
+    --firstoption:          First menu option (default: btrfs)
     --locale:               LANGUAGE (default: en_US.UTF-8)
     --lcall:                LC_ALL (default: en_US)
     --bmcusername:          BMC/iDRAC User (default: root)

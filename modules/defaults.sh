@@ -104,6 +104,7 @@ set_defaults () {
   DEFAULT_ISO_DISK_SERIAL="first-serial"
   DEFAULT_ISO_DISK_WWN="first-wwn"
   DEFAULT_ISO_COMPRESSION="lzo"
+  DEFAULT_ISO_OPTION="btrfs"
   DO_REFRESH_INSTALL="false"
   VM_EXISTS="false"
   DO_DHCP="true"
@@ -411,4 +412,13 @@ reset_default_files () {
     ISO_SQUASHFS_FILE="$ISO_MOUNT_DIR/casper/filesystem.squashfs"
     NEW_SQUASHFS_FILE="$ISO_SOURCE_DIR/casper/filesystem.squashfs"
   fi
+}
+
+# Function: reset_volmgrs
+#
+# Update order of volmgrs based on --firstoption switch
+
+reset_volmgrs () {
+  TEMP_VOLMGRS=$(echo "$ISO_VOLMGRS" |sed "s/$ISO_VOLMGRS/$ISO_OPTION/g")
+  ISO_VOLMGRS="$ISO_OPTION $TEMP_VOLMGRS"
 }
