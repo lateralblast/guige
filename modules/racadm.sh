@@ -30,17 +30,17 @@ check_racadm () {
       if [ -n "$PIP_TEST" ]; then
         PIP_TEST=$( pip list |grep rac |awk '{print $1}')
         if [ -z "$PIP_TEST" ]; then
-          handle_output "pip install --user rac"
+          handle_output "pip install --user rac" ""
           if [ "$TEST_MODE" = "false" ]; then
             pip install --user rac
             RACADM_BIN="$HOME/.local/bin/racadm"
           else
-            handle_output "# No racadm found" TEXT
+            handle_output "# No racadm found" "TEXT"
             exit
           fi
         else
-          handle_output "# No racadm found" TEXT
-          handle_output "# No pip found to install Python racadm module" TEXT
+          handle_output "# No racadm found" "TEXT"
+          handle_output "# No pip found to install Python racadm module" "TEXT"
           exit
         fi
       fi

@@ -180,7 +180,7 @@ prepare_autoinstall_server_iso () {
   if [ -z "$(command -v 7z)" ]; then
     install_required_packages
   fi
-  handle_output "# Preparing autoinstall server ISO" TEXT
+  handle_output "# Preparing autoinstall server ISO" "TEXT"
   PACKAGE_DIR="$ISO_SOURCE_DIR/$ISO_AUTOINSTALL_DIR/packages"
   CASPER_DIR="$ISO_SOURCE_DIR/casper"
   SCRIPT_DIR="$ISO_SOURCE_DIR/$ISO_AUTOINSTALL_DIR/scripts"
@@ -194,21 +194,21 @@ prepare_autoinstall_server_iso () {
     create_dir "$FILES_DIR"
     for ISO_DISK in $ISO_DISK; do
       for ISO_VOLMGR in $ISO_VOLMGRS; do
-        handle_output "# Creating directory $CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK" TEXT
+        handle_output "# Creating directory $CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK" "TEXT"
         create_dir "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK"
-        handle_output "# Creating $CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/meta-data"
+        handle_output "# Creating $CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/meta-data" "TEXT"
         touch "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/meta-data"
       done
     done
     sudo rm "$PACKAGE_DIR"/*.deb
-    handle_output "# Copying packages to $PACKAGE_DIR" TEXT
+    handle_output "# Copying packages to $PACKAGE_DIR" "TEXT"
     if [ "$VERBOSE_MODE" = "true" ]; then
       sudo cp -v "$ISO_NEW_DIR"/custom/var/cache/apt/archives/*.deb "$PACKAGE_DIR"
     else
       sudo cp "$ISO_NEW_DIR"/custom/var/cache/apt/archives/*.deb "$PACKAGE_DIR"
     fi
     if [ "$DO_OLD_INSTALLER" = "true" ]; then
-      handle_output "# Copying old installer files from $OLD_ISO_MOUNT_DIR/casper/ to $CASPER_DIR"
+      handle_output "# Copying old installer files from $OLD_ISO_MOUNT_DIR/casper/ to $CASPER_DIR" "TEXT"
       mount_old_iso
       sudo cp "$OLD_ISO_MOUNT_DIR"/casper/*installer* "$CASPER_DIR/"
       umount_old_iso
@@ -233,7 +233,7 @@ prepare_autoinstall_server_iso () {
     fi
   fi
   if [ -f "$WORK_DIR/grub.cfg" ]; then
-    handle_output "cp \"$WORK_DIR/grub.cfg\" \"$ISO_SOURCE_DIR/boot/grub/grub.cfg\""
+    handle_output "cp \"$WORK_DIR/grub.cfg\" \"$ISO_SOURCE_DIR/boot/grub/grub.cfg\"" "TEXT"
     if [ "$TEST_MODE" = "false" ]; then
       cp "$WORK_DIR/grub.cfg" "$ISO_SOURCE_DIR/boot/grub/grub.cfg"
     fi
@@ -912,7 +912,7 @@ prepare_autoinstall_desktop_iso () {
   if [ -z "$(command -v 7z)" ]; then
     install_required_packages
   fi
-  handle_output "# Preparing autoinstall ISO" TEXT
+  handle_output "# Preparing autoinstall ISO" "TEXT"
   PACKAGE_DIR="$ISO_SOURCE_DIR/$ISO_AUTOINSTALL_DIR/packages"
   CASPER_DIR="$ISO_SOURCE_DIR/casper"
   SCRIPT_DIR="$ISO_SOURCE_DIR/$ISO_AUTOINSTALL_DIR/scripts"
@@ -926,21 +926,21 @@ prepare_autoinstall_desktop_iso () {
     create_dir "$FILES_DIR"
     for ISO_DISK in $ISO_DISK; do
       for ISO_VOLMGR in $ISO_VOLMGRS; do
-        handle_output "# Creating directory $CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK" TEXT
+        handle_output "# Creating directory $CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK" "TEXT"
         create_dir "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK"
-        handle_output "# Creating $CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/meta-data"
+        handle_output "# Creating $CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/meta-data" "TEXT"
         touch "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/meta-data"
       done
     done
     sudo rm "$PACKAGE_DIR"/*.deb
-    handle_output "# Copying packages to $PACKAGE_DIR" TEXT
+    handle_output "# Copying packages to $PACKAGE_DIR" "TEXT"
     if [ "$VERBOSE_MODE" = "true" ]; then
       sudo cp -v "$ISO_NEW_DIR"/custom/var/cache/apt/archives/*.deb "$PACKAGE_DIR"
     else
       sudo cp "$ISO_NEW_DIR"/custom/var/cache/apt/archives/*.deb "$PACKAGE_DIR"
     fi
     if [ "$DO_OLD_INSTALLER" = "true" ]; then
-      handle_output "# Copying old installer files from $OLD_ISO_MOUNT_DIR/casper/ to $CASPER_DIR"
+      handle_output "# Copying old installer files from $OLD_ISO_MOUNT_DIR/casper/ to $CASPER_DIR" "TEXT"
       mount_old_iso
       sudo cp "$OLD_ISO_MOUNT_DIR"/casper/*installer* "$CASPER_DIR/"
       umount_old_iso
@@ -965,7 +965,7 @@ prepare_autoinstall_desktop_iso () {
     fi
   fi
   if [ -f "$WORK_DIR/grub.cfg" ]; then
-    handle_output "cp \"$WORK_DIR/grub.cfg\" \"$ISO_SOURCE_DIR/boot/grub/grub.cfg\""
+    handle_output "cp \"$WORK_DIR/grub.cfg\" \"$ISO_SOURCE_DIR/boot/grub/grub.cfg\"" ""
     if [ "$TEST_MODE" = "false" ]; then
       cp "$WORK_DIR/grub.cfg" "$ISO_SOURCE_DIR/boot/grub/grub.cfg"
     fi

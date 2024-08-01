@@ -112,7 +112,7 @@ create_iso () {
 # rsync -av ./isomount/ ./isonew/cd
 
 copy_iso () {
-  handle_output "# Copying ISO files from $ISO_MOUNT_DIR to $ISO_NEW_DIR/cd" TEXT
+  handle_output "# Copying ISO files from $ISO_MOUNT_DIR to $ISO_NEW_DIR/cd" "TEXT"
   if [ ! -f "/usr/bin/rsync" ]; then
     install_required_packages "$REQUIRED_PACKAGES"
   fi
@@ -142,7 +142,7 @@ copy_iso () {
 # sudo umount -l /home/user/ubuntu-iso/isomount
 
 unmount_iso () {
-  handle_output "sudo umount -l $ISO_MOUNT_DIR"
+  handle_output "sudo umount -l $ISO_MOUNT_DIR" ""
   if [ "$TEST_MODE" = "false" ]; then
     sudo umount -l "$ISO_MOUNT_DIR"
   fi
@@ -156,7 +156,7 @@ unmount_iso () {
 # sudo umount -l /home/user/ubuntu-old-iso/isomount
 
 unmount_old_iso () {
-  handle_output "sudo umount -l $OLD_ISO_MOUNT_DIR"
+  handle_output "sudo umount -l $OLD_ISO_MOUNT_DIR" ""
   if [ "$TEST_MODE" = "false" ]; then
     sudo umount -l "$OLD_ISO_MOUNT_DIR"
   fi
@@ -172,7 +172,7 @@ unmount_old_iso () {
 mount_iso () {
   get_base_iso
   check_base_iso_file
-  handle_output "sudo mount -o loop \"$WORK_DIR/files/$BASE_INPUT_FILE\" \"$ISO_MOUNT_DIR\""
+  handle_output "sudo mount -o loop \"$WORK_DIR/files/$BASE_INPUT_FILE\" \"$ISO_MOUNT_DIR\"" ""
   if [ "$TEST_MODE" = "false" ]; then
     sudo mount -o loop "$WORK_DIR/files/$BASE_INPUT_FILE" "$ISO_MOUNT_DIR"
   fi
@@ -188,7 +188,7 @@ mount_iso () {
 mount_old_iso () {
   get_old_base_iso
   check_old_base_iso_file
-  handle_output "$ Mounting ISO $OLD_WORK_DIR/files/$OLD_BASE_INPUT_FILE at $OLD_ISO_MOUNT_DIR" TEXT
+  handle_output "# Mounting ISO $OLD_WORK_DIR/files/$OLD_BASE_INPUT_FILE at $OLD_ISO_MOUNT_DIR" "TEXT"
   if [ "$TEST_MODE" = "false" ]; then
     sudo mount -o loop "$OLD_WORK_DIR/files/$OLD_BASE_INPUT_FILE" "$OLD_ISO_MOUNT_DIR"
   fi
@@ -207,9 +207,9 @@ list_isos () {
   fi
   for FILE_NAME in $FILE_LIST; do
     if [ "$DO_SCP_HEADER" = "true" ]; then
-      handle_output "$BMC_USERNAME@$MY_IP:$FILE_NAME" TEXT
+      handle_output "$BMC_USERNAME@$MY_IP:$FILE_NAME" "TEXT"
     else
-      handle_output "$FILE_NAME" TEXT
+      handle_output "$FILE_NAME" "TEXT"
     fi
   done
   TEMP_VERBOSE_MODE="false"
@@ -271,10 +271,10 @@ check_old_base_iso_file () {
 #
 
 get_base_iso () {
-  handle_output "# Check source ISO exists and grab it if it doesn't" TEXT
+  handle_output "# Check source ISO exists and grab it if it doesn't" "TEXT"
   BASE_INPUT_FILE=$( basename "$INPUT_FILE" )
   if [ "$FULL_FORCE_MODE" = "true" ]; then
-    handle_output "rm $WORK_DIR/files/$BASE_INPUT_FILE"
+    handle_output "rm $WORK_DIR/files/$BASE_INPUT_FILE" ""
     if [ "$TEST_MODE" = "false" ]; then
       rm "$WORK_DIR/files/$BASE_INPUT_FILE"
     fi
@@ -296,10 +296,10 @@ get_base_iso () {
 # Get old base ISO
 
 get_old_base_iso () {
-  handle_output "# Check old source ISO exists and grab it if it doesn't" TEXT
+  handle_output "# Check old source ISO exists and grab it if it doesn't" "TEXT"
   OLD_BASE_INPUT_FILE=$( basename "$OLD_INPUT_FILE" )
   if [ "$FULL_FORCE_MODE" = "true" ]; then
-    handle_output "rm $WORK_DIR/files/$OLD_BASE_INPUT_FILE"
+    handle_output "rm $WORK_DIR/files/$OLD_BASE_INPUT_FILE" ""
     if [ "$TEST_MODE" = "false" ]; then
       rm "$OLD_WORK_DIR/files/$OLD_BASE_INPUT_FILE"
     fi
@@ -350,7 +350,7 @@ prepare_iso () {
 # Get info from iso
 
 get_info_from_iso () {
-  handle_output "# Analysing $INPUT_FILE" TEXT
+  handle_output "# Analysing $INPUT_FILE" "TEXT"
   TEST_FILE=$( basename "$INPUT_FILE" )
   TEST_NAME=$( echo "$TEST_FILE" | cut -f1 -d- )
   TEST_TYPE=$( echo "$TEST_FILE" | cut -f2 -d- )
@@ -403,12 +403,12 @@ get_info_from_iso () {
     fi
   fi
   OUTPUT_FILE="$WORK_DIR/files/$TEST_NAME-$ISO_RELEASE-$TEST_TYPE-$ISO_ARCH.iso"
-  handle_output "# Input ISO:     $INPUT_FILE" TEXT
-  handle_output "# Distribution:  $ISO_DISTRO" TEXT
-  handle_output "# Release:       $ISO_RELEASE" TEXT
-  handle_output "# Codename:      $ISO_CODENAME" TEXT
-  handle_output "# Architecture:  $ISO_ARCH" TEXT
-  handle_output "# Output ISO:    $OUTPUT_FILE" TEXT
+  handle_output "# Input ISO:     $INPUT_FILE"   "TEXT"
+  handle_output "# Distribution:  $ISO_DISTRO"   "TEXT"
+  handle_output "# Release:       $ISO_RELEASE"  "TEXT"
+  handle_output "# Codename:      $ISO_CODENAME" "TEXT"
+  handle_output "# Architecture:  $ISO_ARCH"     "TEXT"
+  handle_output "# Output ISO:    $OUTPUT_FILE"  "TEXT"
 }
 
 # Function: create_autoinstall_iso
@@ -461,7 +461,7 @@ create_autoinstall_iso () {
     install_required_packages "$REQUIRED_PACKAGES"
   fi
   check_file_perms "$OUTPUT_FILE"
-  handle_output "# Creating ISO" TEXT
+  handle_output "# Creating ISO" "TEXT"
   ISO_MBR_PART_TYPE=$( xorriso -indev "$INPUT_FILE" -report_el_torito as_mkisofs |grep iso_mbr_part_type |tail -1 |awk '{print $2}' 2>&1 )
   BOOT_CATALOG=$( xorriso -indev "$INPUT_FILE" -report_el_torito as_mkisofs |grep "^-c " |tail -1 |awk '{print $2}' |cut -f2 -d"'" 2>&1 )
   BOOT_IMAGE=$( xorriso -indev "$INPUT_FILE" -report_el_torito as_mkisofs |grep "^-b " |tail -1 |awk '{print $2}' |cut -f2 -d"'" 2>&1 )

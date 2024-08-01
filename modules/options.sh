@@ -14,6 +14,18 @@ process_options () {
   if [[ "$OPTIONS" =~ "norefreshinstaller" ]]; then
     DO_REFRESH_INSTALLER="false"
   fi
+  if [[ "$OPTIONS" =~ "debug" ]]; then
+    DO_DEBUG="true"
+  fi
+  if [[ "$OPTIONS" =~ "nodebug" ]]; then
+    DO_DEBUG="false"
+  fi
+  if [[ "$OPTIONS" =~ "strict" ]]; then
+    DO_STRICT="true"
+  fi
+  if [[ "$OPTIONS" =~ "nostrict" ]]; then
+    DO_STRICT="false"
+  fi
   if [[ "$OPTIONS" =~ "compress" ]]; then
     DO_COMPRESSION="true"
   fi
@@ -198,6 +210,12 @@ process_options () {
     DO_ISO_APT_NEWS="true";
   else
     DO_ISO_APT_NEWS="false";
+  fi
+  if [ "$DO_DEBUG" = "true" ]; then
+    set -x
+  fi
+  if [ "$DO_STRICT" = "true" ]; then
+    set -eu
   fi
 }
 

@@ -21,7 +21,7 @@ unmount_squashfs () {
 # Unmount ubuntu squashfs filesystem
 
 unmount_ubuntu_squashfs () {
-  handle_output "# Unmounting squashfs $ISO_NEW_DIR/squashfs" TEXT
+  handle_output "# Unmounting squashfs $ISO_NEW_DIR/squashfs" "TEXT"
   if [ "$TEST_MODE" = "false" ]; then
     sudo umount "$ISO_NEW_DIR/squashfs"
   fi
@@ -49,7 +49,7 @@ copy_squashfs () {
 # sudo cp /etc/resolv.conf /etc/hosts ./isonew/custom/etc/
 
 copy_ubuntu_squashfs () {
-  handle_output "# Copying squashfs files" TEXT
+  handle_output "# Copying squashfs files" "TEXT"
   if [ ! -f "/usr/bin/rsync" ]; then
     install_required_packages "$REQUIRED_PACKAGES"
   fi
@@ -94,7 +94,7 @@ update_iso_squashfs () {
 # Update Ubuntu ISO squashfs
 
 update_ubuntu_iso_squashfs () {
-  handle_output "# Making squashfs (this will take a while)" TEXT
+  handle_output "# Making squashfs (this will take a while)" "TEXT"
   if [ "$TEST_MODE" = "false" ]; then
     sudo mksquashfs "$ISO_NEW_DIR/custom" "$ISO_NEW_DIR/mksquash/filesystem.squashfs" -noappend
     sudo cp "$ISO_NEW_DIR/mksquash/filesystem.squashfs" "$NEW_SQUASHFS_FILE"

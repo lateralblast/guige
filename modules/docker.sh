@@ -28,15 +28,15 @@
 
 check_docker_config () {
   if ! [ -f "/.dockerenv" ]; then
-    handle_output "# Checking Docker configs" TEXT
+    handle_output "# Checking Docker configs" "TEXT"
     for DIR_ARCH in $DOCKER_ARCH; do
       if ! [ -d "$WORK_DIR/$DIR_ARCH" ]; then
-        handle_output "Creating directory $WORK_DIR/$DIR_ARCH" TEXT
+        handle_output "Creating directory $WORK_DIR/$DIR_ARCH" "TEXT"
         create_dir "$WORK_DIR/$DIR_ARCH"
       fi
-      handle_output "# Checking docker images" TEXT
+      handle_output "# Checking docker images" "TEXT"
       DOCKER_IMAGE_CHECK=$( docker images |grep "^$SCRIPT_NAME-$CURRENT_DOCKER_UBUNTU_RELEASE-$DIR_ARCH" |awk '{print $1}' )
-      handle_output "# Checking volume images" TEXT
+      handle_output "# Checking volume images" "TEXT"
       DOCKER_VOLUME_CHECK=$( docker volume list |grep "^$SCRIPT_NAME-$CURRENT_DOCKER_UBUNTU_RELEASE-$DIR_ARCH" |awk '{print $1}' )
       if ! [ "$DOCKER_VOLUME_CHECK" = "$SCRIPT_NAME-$CURRENT_DOCKER_UBUNTU_RELEASE-$DIR_ARCH" ]; then
         if [ "$TEST_MODE" = "false" ]; then
@@ -45,7 +45,7 @@ check_docker_config () {
       fi
       if ! [ "$DOCKER_IMAGE_CHECK" = "$SCRIPT_NAME-$CURRENT_DOCKER_UBUNTU_RELEASE-$DIR_ARCH" ]; then
         if [ "$TEST_MODE" = "false" ]; then
-          handle_output "# Creating Docker compose file $WORK_DIR/$DIR_ARCH/docker-compose.yml" TEXT
+          handle_output "# Creating Docker compose file $WORK_DIR/$DIR_ARCH/docker-compose.yml" "TEXT"
           echo "version: \"3\"" > "$WORK_DIR/$DIR_ARCH/docker-compose.yml"
           echo "" >> "$WORK_DIR/$DIR_ARCH/docker-compose.yml"
           echo "services:" >> "$WORK_DIR/$DIR_ARCH/docker-compose.yml"
@@ -61,11 +61,11 @@ check_docker_config () {
           echo "    volumes:" >> "$WORK_DIR/$DIR_ARCH/docker-compose.yml"
           echo "      - /docker/$SCRIPT_NAME-$CURRENT_DOCKER_UBUNTU_RELEASE-$DIR_ARCH/:/root/$SCRIPT_NAME/" >> "$WORK_DIR/$DIR_ARCH/docker-compose.yml"
           print_file "$WORK_DIR/$DIR_ARCH/docker-compose.yml"
-          handle_output "# Creating Docker config $WORK_DIR/$DIR_ARCH/Dockerfile" TEXT
+          handle_output "# Creating Docker config $WORK_DIR/$DIR_ARCH/Dockerfile" "TEXT"
           echo "FROM ubuntu:$CURRENT_DOCKER_UBUNTU_RELEASE" > "$WORK_DIR/$DIR_ARCH/Dockerfile"
           echo "RUN apt-get update && apt-get -o Dpkg::Options::=\"--force-overwrite\" install -y $REQUIRED_PACKAGES" >> "$WORK_DIR/$DIR_ARCH/Dockerfile"
           print_file "$WORK_DIR/$DIR_ARCH/Dockerfile"
-          handle_output "# Building docker image $SCRIPT_NAME-$CURRENT_DOCKER_UBUNTU_RELEASE-$DIR_ARCH" TEXT
+          handle_output "# Building docker image $SCRIPT_NAME-$CURRENT_DOCKER_UBUNTU_RELEASE-$DIR_ARCH" "TEXT"
           docker build "$WORK_DIR/$DIR_ARCH" --tag "$SCRIPT_NAME-$CURRENT_DOCKER_UBUNTU_RELEASE-$DIR_ARCH" --platform "linux/$DIR_ARCH"
         fi
       fi
@@ -94,7 +94,7 @@ create_docker_iso () {
       check_old_work_dir
     fi
     check_docker_config
-    handle_output
+    handle_output "" ""
     if [ "$DO_DOCKER" = "false" ]; then
       exit
     fi

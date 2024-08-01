@@ -133,7 +133,7 @@ process_actions () {
       DO_TEST="true"
       ;;
     *)
-      handle_output "Action: $ACTION is not a valid action"
+      handle_output "Action: $ACTION is not a valid action" ""
       exit
       ;;
   esac

@@ -513,3 +513,9 @@
 # Added compression option for btrfs
 # 2.5.7: Tue May 28 14:14:46 AEST 2024
 # Added firstoption switch to set first choice in grub menu
+# 2.5.8: Wed 17 Jul 2024 16:56:13 AEST
+# Added -eu to shell
+# 2.5.9: Thu  1 Aug 2024 01:03:39 AEST
+# Added debug switch
+# 2.6.0: Thu  1 Aug 2024 13:56:59 AEST
+# Added strict switch

@@ -22,7 +22,7 @@ execute_command () {
 print_file () {
   FILE_NAME="$1"
   echo ""
-  handle_output "# Contents of file $FILE_NAME" TEXT
+  handle_output "# Contents of file $FILE_NAME" "TEXT"
   echo ""
   if [ "$TEST_MODE" = "false" ]; then
     cat "$FILE_NAME"
@@ -36,7 +36,7 @@ print_file () {
 execution_message () {
   OUTPUT_TEXT="$1"
   OUTPUT_TYPE="COMMAND"
-  handle_output "$OUTPUT_TEXT" $OUTPUT_TYPE
+  handle_output "$OUTPUT_TEXT" "$OUTPUT_TYPE"
 }
 
 # Function: information_message
@@ -46,7 +46,7 @@ execution_message () {
 information_message () {
   OUTPUT_TEXT="$1"
   OUTPUT_TYPE="TEXT"
-  handle_output "# Information: $OUTPUT_TEXT" $OUTPUT_TYPE
+  handle_output "# Information: $OUTPUT_TEXT" "$OUTPUT_TYPE"
 }
 
 # Function: verbose_message
@@ -57,7 +57,7 @@ verbose_message () {
   OUTPUT_TEXT="$1"
   OUTPUT_TYPE="TEXT"
   TEMP_VERBOSE_MODE="true"
-  handle_output "$OUTPUT_TEXT" $OUTPUT_TYPE
+  handle_output "$OUTPUT_TEXT" "$OUTPUT_TYPE"
   TEMP_VERBOSE_MODE="false"
 }
 
@@ -69,7 +69,7 @@ warning_message () {
   OUTPUT_TEXT="$1"
   OUTPUT_TYPE="TEXT"
   TEMP_VERBOSE_MODE="true"
-  handle_output "# Warning: $OUTPUT_TEXT" $OUTPUT_TYPE
+  handle_output "# Warning: $OUTPUT_TEXT" "$OUTPUT_TYPE"
   TEMP_VERBOSE_MODE="false"
 }
 
@@ -101,7 +101,7 @@ sudo_chown () {
   OBJECT="$1"
   USER=$2
   GROUP=$3
-  handle_output "# Checking ownership of $OBJECT is $USER:$GROUP"
+  handle_output "# Checking ownership of $OBJECT is $USER:$GROUP" "TEXT"
   if [ "$TEST_MODE" = "false" ]; then
     if [ ! -f "/.dockerenv" ]; then
       sudo chown $USER:$GROUP $OBJECT
@@ -115,7 +115,7 @@ sudo_chown () {
 
 create_dir () {
   CREATE_DIR="$1"
-  handle_output "# Checking directory $CREATE_DIR exists"
+  handle_output "# Checking directory $CREATE_DIR exists" "TEXT"
   if [ ! -d "$CREATE_DIR" ]; then
     if [ "$TEST_MODE" = "false" ]; then
       mkdir -p "$CREATE_DIR"
@@ -129,7 +129,7 @@ create_dir () {
 
 sudo_create_dir () {
   CREATE_DIR="$1"
-  handle_output "# Checking directory $CREATE_DIR exists"
+  handle_output "# Checking directory $CREATE_DIR exists" "TEXT"
   if [ ! -d "$CREATE_DIR" ]; then
     if [ "$TEST_MODE" = "false" ]; then
       if [ -f "/.dockerenv" ]; then
@@ -147,7 +147,7 @@ sudo_create_dir () {
 
 remove_dir () {
   REMOVE_DIR="$1"
-  handle_output "# Checking directory $REMOVE_DIR exists"
+  handle_output "# Checking directory $REMOVE_DIR exists" "TEXT"
   if [ ! "$REMOVE_DIR" = "/" ]; then
     if [[ $REMOVE_DIR =~ [0-9a-zA-Z] ]]; then
       if [ -d "$REMOVE_DIR" ]; then
@@ -167,9 +167,9 @@ remove_dir () {
 # mkdir -p ./isomount ./isonew/squashfs ./isonew/cd ./isonew/custom
 
 check_work_dir () {
-  handle_output "# Check work directories" TEXT
+  handle_output "# Check work directories" "TEXT"
   for ISO_DIR in $ISO_MOUNT_DIR $ISO_NEW_DIR/squashfs $ISO_NEW_DIR/mksquash $ISO_NEW_DIR/cd $ISO_NEW_DIR/custom $WORK_DIR/bin $WORK_DIR/files; do
-    handle_output "# Check directory $ISO_DIR exists" TEXT
+    handle_output "# Check directory $ISO_DIR exists" "TEXT"
     if [ "$FORCE_MODE" = "true" ]; then
       remove_dir "$ISO_DIR"
     fi
@@ -183,7 +183,7 @@ check_work_dir () {
 # Used when copying files from old release to a new release
 
 check_old_work_dir () {
-  handle_output "# Check old release work directories exist" TEXT
+  handle_output "# Check old release work directories exist" "TEXT"
   for ISO_DIR in $OLD_ISO_MOUNT_DIR $OLD_WORK_DIR/files; do
     if [ "$FORCE_MODE" = "true" ]; then
       remove_dir "$ISO_DIR"
@@ -197,7 +197,7 @@ check_old_work_dir () {
 # Check file permissions of file
 
 check_file_perms () {
-  handle_output "# Checking file permissions for $CHECK_FILE" TEXT
+  handle_output "# Checking file permissions for $CHECK_FILE" "TEXT"
   CHECK_FILE="$1"
   if [ -f "$CHECK_FILE" ]; then
     MY_USER="$USER"
@@ -217,7 +217,7 @@ check_file_perms () {
 create_export () {
   NFS_DIR="$WORK_DIR/files"
   EXPORTS_FILE="/etc/exports"
-  handle_output "# Check NFS export is enabled" TEXT
+  handle_output "# Check NFS export is enabled" "TEXT"
   if [ -f "$EXPORTS_FILE" ]; then
     EXPORT_CHECK=$( grep -v "^#" < "$EXPORTS_FILE" |grep "$NFS_DIR" |grep "$BMC_IP" |awk '{print $1}' | head -1 )
   else

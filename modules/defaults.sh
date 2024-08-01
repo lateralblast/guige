@@ -19,6 +19,10 @@ set_defaults () {
   CURRENT_ISO_RELEASE_2404="24.04"
   CURRENT_ISO_RELEASE_2410="24.10"
   CURRENT_ISO_RELEASE="22.04.3"
+  DEFAULT_ISO_OS_NAME="ubuntu"
+  DEFAULT_ISO_RELEASE="$CURRENT_ISO_RELEASE"
+  DEFAULT_ISO_MAJOR_RELEASE=$( echo "$DEFAULT_ISO_RELEASE" |cut -f1 -d. )
+  DEFAULT_ISO_MINOR_RELEASE=$( echo "$DEFAULT_ISO_RELEASE" |cut -f2 -d. )
   CURRENT_OLD_ISO_RELEASE="23.04"
   CURRENT_ISO_DEV_RELEASE="24.10"
   CURRENT_ISO_OS_NAME="ubuntu"
@@ -125,6 +129,7 @@ set_defaults () {
   BMC_EXPOSE_DURATION="180"
   DO_CREATE_ISO="true" 
   DO_REORDER_UEFI="true"
+  DEFAULT_VM_NAME="$SCRIPT_NAME"
   if [ "$OS_NAME" = "Linux" ]; then
     REQUIRED_KVM_PACKAGES="libvirt-clients libvirt-daemon-system libguestfs-tools qemu-kvm virt-manager"
   else
@@ -138,14 +143,14 @@ set_defaults () {
 
 reset_defaults () {
   get_release_info
+  if [ "$ISO_OS_NAME" = "" ]; then
+    ISO_OS_NAME="$DEFAULT_ISO_OS_NAME"
+  fi
   if [[ "$ISO_OS_NAME" =~ "rocky" ]]; then
     DEFAULT_ISO_VOLMGRS="lvm xfs btrfs"
     DEFAULT_ISO_ARCH="x86_64"
     CURRENT_ISO_RELEASE="9.3"
     CURRENT_ISO_RELEASE_9="9.3"
-    DEFAULT_ISO_RELEASE="$CURRENT_ISO_RELEASE"
-    DEFAULT_ISO_MAJOR_RELEASE=$( echo "$DEFAULT_ISO_RELEASE" |cut -f1 -d. )
-    DEFAULT_ISO_MINOR_RELEASE=$( echo "$DEFAULT_ISO_RELEASE" |cut -f2 -d. )
     DEFAULT_ISO_OS_NAME="rocky"
     DEFAULT_ISO_HOSTNAME="rocky"
     DEFAULT_ISO_REALNAME="Rocky"
@@ -160,8 +165,6 @@ reset_defaults () {
     DEFAULT_OUTPUT_FILE_BASE=$( basename "$DEFAULT_OUTPUT_FILE" )
     DEFAULT_ISO_URL="https://download.rockylinux.org/pub/rocky/$DEFAULT_ISO_MAJOR_RELEASE/isos/$DEFAULT_ISO_ARCH/$DEFAULT_INPUT_FILE_BASE"
     DEFAULT_ISO_INSTALL_PACKAGES="net-tools curl lftp wget sudo file rsync dialog setserial whois squashfs-tools jq"
-  fi
-  if [[ "$ISO_OS_NAME" =~ "rocky" ]]; then
     REQUIRED_PACKAGES="apt-utils $REQUIRED_PACKAGES"
   fi
 #  if [ "$ISO_OS_NAME" = "ubuntu" ] || [ "$DEFAULT_ISO_OS_NAME" = "ubuntu" ]; then

@@ -7,7 +7,7 @@
 # Check ansible
 
 check_ansible () {
-  handle_output "# Checking ansible is installed" TEXT
+  handle_output "# Checking ansible is installed" "TEXT"
   ANSIBLE_BIN=$( which ansible )
   ANSIBLE_CHECK=$( basename "$ANSIBLE_BIN" )
   if [ "$OS_NAME" = "Darwin" ]; then
@@ -15,13 +15,13 @@ check_ansible () {
   else
     COMMAND="sudo apt install -y ansible"
   fi
-  handle_output "$COMMAND"
+  handle_output "$COMMAND" ""
   if ! [ "$ANSIBLE_CHECK" = "ansible" ]; then
     if [ "$TEST_MODE" = "false" ]; then
       $COMMAND
     fi
   fi
-  handle_output "# Checking ansible collection dellemc.openmanage is installed" TEXT
+  handle_output "# Checking ansible collection dellemc.openmanage is installed" "TEXT"
   ANSIBLE_CHECK=$( ansible-galaxy collection list |grep "dellemc.openmanage" |awk '{print $1}' |uniq )
   if ! [ "$ANSIBLE_CHECK" = "dellemc.openmanage" ]; then
     if [ "$TEST_MODE" = "false" ]; then
@@ -36,7 +36,7 @@ check_ansible () {
 
 create_ansible () {
   HOSTS_YAML="$WORK_DIR/hosts.yaml"
-  handle_output "# Creating ansible hosts file $HOSTS_YAML"
+  handle_output "# Creating ansible hosts file $HOSTS_YAML" "TEXT"
   if [ "$TEST_MODE" = "false" ]; then
     echo "---" > "$HOSTS_YAML"
     echo "idrac:" >> "$HOSTS_YAML"
@@ -163,7 +163,7 @@ create_ansible () {
 install_server () {
   HOSTS_YAML="$WORK_DIR/hosts.yaml"
   IDRAC_YAML="$WORK_DIR/idrac.yaml"
-  handle_output "# Executing ansible playbook $IDRAC_YAML" TEXT
+  handle_output "# Executing ansible playbook $IDRAC_YAML" "TEXT"
   if [ "$TEST_MODE" = "false" ]; then
     ansible-playbook "$IDRAC_YAML" -i "$HOSTS_YAML"
   fi

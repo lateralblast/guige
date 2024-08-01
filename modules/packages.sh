@@ -11,7 +11,7 @@
 
 install_required_packages () {
   PACKAGE_LIST="$1"
-  handle_output "# Checking required packages are installed" TEXT
+  handle_output "# Checking required packages are installed" "TEXT"
   for PACKAGE in $PACKAGE_LIST; do
     PACKAGE_VERSION=""
     verbose_message "# Package: $PACKAGE" TEXT

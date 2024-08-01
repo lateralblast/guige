@@ -23,7 +23,7 @@ execute_chroot_script () {
 
 execute_ubuntu_chroot_script () {
   if [ "$DO_CHROOT" = "true" ]; then
-    handle_output "# Executing chroot script" TEXT
+    handle_output "# Executing chroot script" "TEXT"
     if [ "$TEST_MODE" = "false" ]; then
       sudo chroot "$ISO_NEW_DIR/custom" "/tmp/modify_chroot.sh"
     fi
@@ -66,7 +66,7 @@ create_ubuntu_chroot_script () {
   ORIG_SCRIPT="$WORK_DIR/files/modify_chroot.sh"
   ISO_CHROOT_SCRIPT="$ISO_NEW_DIR/custom/tmp/modify_chroot.sh"
   check_file_perms "$ORIG_SCRIPT"
-  handle_output "# Creating chroot script $ISO_CHROOT_SCRIPT" TEXT
+  handle_output "# Creating chroot script $ISO_CHROOT_SCRIPT" "TEXT"
   if [ "$TEST_MODE" = "false" ]; then
     echo "#!/usr/bin/bash" > "$ORIG_SCRIPT"
     echo "mount -t proc none /proc/" >> "$ORIG_SCRIPT"

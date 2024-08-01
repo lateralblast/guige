@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Name:         guige (Generic Ubuntu/Unix ISO Generation Engine)
-# Version:      2.5.7
+# Version:      2.6.0
 # Release:      1
 # License:      CC-BA (Creative Commons By Attribution)
 #               http://creativecommons.org/licenses/by/4.0/legalcode
@@ -30,6 +30,24 @@ OS_ARCH=$( uname -m |sed "s/aarch64/arm64/g" |sed "s/x86_64/amd64/g")
 OS_USER="$USER"
 OS_GROUP=$(groups |awk '{ print $2 }')
 
+# Handle verbose and debug early so it's enabled early
+
+if [[ "$*" =~ "verbose" ]]; then
+  DO_VERBOSE="true"
+  set -eu
+else
+  DO_VERBOSE="false"
+fi
+
+if [[ "$*" =~ "debug" ]]; then
+  DO_VERBOSE="true"
+  set -x
+else
+  DO_VERBOSE="false"
+fi
+
+# Check if we are running inside docker
+
 if [ -f /.dockerenv ]; then
   START_PATH=$( dirname "$0" )
   MODULE_PATH="$START_PATH/modules"
@@ -49,6 +67,10 @@ if [ -d "$MODULE_PATH" ]; then
 fi
 
 set_defaults
+set_default_os_name
+set_default_release
+set_default_dirs
+set_default_files
 set_default_flags
 
 # Function: Handle command line arguments
@@ -59,17 +81,17 @@ fi
 
 while test $# -gt 0
 do
-  if [ "$1" = "-h" ]; then
-    print_help "$2"
-    exit
-  fi
-  if [ "$2" = "" ]; then
-    PATTERN="[version|help|usage]"
-    if ! [[ $1 =~ $PATTERN ]]; then
-      warning_message "No $1 specified"
-      exit
-    fi
-  fi
+#  if [ "$1" = "-h" ]; then
+#    print_help "$2"
+#    exit
+#  fi
+#  if [ "$2" = "" ]; then
+#    PATTERN="[version|help|usage]"
+#    if ! [[ "$1" =~ $PATTERN ]]; then
+#      warning_message "No $1 specified"
+#      exit
+#    fi
+#  fi
   case $1 in
     --oldrelease)
       OLD_ISO_RELEASE="$2"
@@ -186,8 +208,8 @@ do
       ISO_HOSTNAME="$2"
       shift 2
       ;;
-    --help)
-      print_help
+    -h|--help)
+      print_help ""
       ;;
     --ip)
       ISO_IP="$2"
@@ -331,7 +353,7 @@ do
       ISO_POSTINSTALL="$2"
       shift 2
       ;;
-    --version)
+    -V|--version)
       echo "$SCRIPT_VERSION"
       shift
       exit
@@ -482,13 +504,14 @@ do
       break
       ;;
     *)
-      print_help "$2"
+      print_help ""
       exit
       ;;
   esac
 done
 
 # Setup functions
+
 set_default_os_name
 set_default_arch
 set_default_release

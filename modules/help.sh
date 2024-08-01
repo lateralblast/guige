@@ -13,6 +13,7 @@ print_cli_help () {
   Usage: ${0##*/} [OPTIONS...]
   
     --oldrelease            Old release (used for copying file from an older release ISO)
+    --debug                 Set debug flag (set -x)
     --country               Country (used for sources.list mirror - default: $DEFAULT_ISO_COUNTRY)
     --isourl                Specify ISO URL
     --prefix                Prefix to add to ISO name
@@ -58,7 +59,7 @@ print_cli_help () {
     --isopackages:          List of packages to install (default: $DEFAULT_ISO_INSTALL_PACKAGES)
     --outputiso:            Output ISO file (default: $DEFAULT_OUTPUT_FILE_BASE)
     --password:             Password (default: $DEFAULT_ISO_PASSWORD)
-    --chrootpackages:       List of packages to add to ISO (default: $DEFAULT_PACKAGES)
+    --chrootpackages:       List of packages to add to ISO (default: $DEFAULT_ISO_INSTALL_PACKAGES)
     --build:                Type of ISO to build (default: $DEFAULT_ISO_BUILD_TYPE)
     --arch:                 Architecture (default: $DEFAULT_ISO_ARCH)
     --realname:             Realname (default $DEFAULT_ISO_REALNAME)

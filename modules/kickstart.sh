@@ -13,7 +13,7 @@ create_kickstart_iso () {
     install_required_packages "$REQUIRED_PACKAGES"
   fi
   if [ "$TEST_MODE" = "false" ]; then
-    handle_output "# Creating ISO" TEXT
+    handle_output "# Creating ISO" "TEXT"
     check_file_perms "$OUTPUT_FILE"
     cd "$ISO_NEW_DIR/cd" || exit
     sudo mkisofs -o "$OUTPUT_FILE" -b isolinux/isolinux.bin -c isolinux/boot.cat \
