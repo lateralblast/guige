@@ -190,7 +190,7 @@ prepare_autoinstall_server_iso () {
   if [ "$TEST_MODE" = "false" ]; then
     7z -y x "$WORK_DIR/files/$BASE_INPUT_FILE" -o"$ISO_SOURCE_DIR"
     create_dir "$PACKAGE_DIR"
-    cheate_dir "$SCRIPT_DIR"
+    create_dir "$SCRIPT_DIR"
     create_dir "$FILES_DIR"
     for ISO_DISK in $ISO_DISK; do
       for ISO_VOLMGR in $ISO_VOLMGRS; do
@@ -240,7 +240,7 @@ prepare_autoinstall_server_iso () {
   else
     if [ "$TEST_MODE" = "false" ]; then
       sudo_create_dir "$ISO_SOURCE_DIR/isolinux"
-      sudo_chown "$ISO_SOURCE_DIR/isolinux" $OS_USER $OS_GROUP
+      sudo_chown "$ISO_SOURCE_DIR/isolinux" "$OS_USER" "$OS_GROUP"
       echo "default $ISO_GRUB_MENU" > "$ISO_SOURCE_DIR/isolinux/txt.cfg"
       COUNTER=0
       ISO_KERNEL_SERIAL_ARGS="console=$ISO_SERIAL_PORT0,$ISO_SERIAL_PORT_SPEED0 console=$ISO_SERIAL_PORT1,$ISO_SERIAL_PORT_SPEED1"
@@ -922,7 +922,7 @@ prepare_autoinstall_desktop_iso () {
   if [ "$TEST_MODE" = "false" ]; then
     7z -y x "$WORK_DIR/files/$BASE_INPUT_FILE" -o"$ISO_SOURCE_DIR"
     create_dir "$PACKAGE_DIR"
-    cheate_dir "$SCRIPT_DIR"
+    create_dir "$SCRIPT_DIR"
     create_dir "$FILES_DIR"
     for ISO_DISK in $ISO_DISK; do
       for ISO_VOLMGR in $ISO_VOLMGRS; do
@@ -972,7 +972,7 @@ prepare_autoinstall_desktop_iso () {
   else
     if [ "$TEST_MODE" = "false" ]; then
       sudo_create_dir "$ISO_SOURCE_DIR/isolinux"
-      sudo_chown "$ISO_SOURCE_DIR/isolinux" $MY_USER_ID $MY_GROUP_ID
+      sudo_chown "$ISO_SOURCE_DIR/isolinux" "$OS_USER" "$OS_GROUP"
       echo "default $ISO_GRUB_MENU" > "$ISO_SOURCE_DIR/isolinux/txt.cfg"
       COUNTER=0
       ISO_KERNEL_SERIAL_ARGS="console=$ISO_SERIAL_PORT0,$ISO_SERIAL_PORT_SPEED0 console=$ISO_SERIAL_PORT1,$ISO_SERIAL_PORT_SPEED1"

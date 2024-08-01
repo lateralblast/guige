@@ -142,6 +142,7 @@ set_defaults () {
 # Reset defaults
 
 reset_defaults () {
+  set_ssh_key
   get_release_info
   if [ "$ISO_OS_NAME" = "" ]; then
     ISO_OS_NAME="$DEFAULT_ISO_OS_NAME"
@@ -424,4 +425,31 @@ reset_default_files () {
 reset_volmgrs () {
   TEMP_VOLMGRS=$(echo "$ISO_VOLMGRS" |sed "s/$ISO_VOLMGRS/$ISO_OPTION/g")
   ISO_VOLMGRS="$ISO_OPTION $TEMP_VOLMGRS"
+}
+
+# Function: set_ssh_key
+#
+# Find SSH key file and read it into a variable
+
+set_ssh_key () {
+  if ! [ -f "/.dockerenv" ]; then
+    if [ "$DO_ISO_SSH_KEY" = "true" ]; then
+      if [ ! "$ISO_SSH_KEY_FILE" = "" ]; then
+        if [ -f "$ISO_SSH_KEY_FILE" ]; then
+          ISO_SSH_KEY=$( cat "$ISO_SSH_KEY_FILE" )
+        else
+          ISO_SSH_KEY=""
+        fi
+      else
+        for KEY_TYPE in id_ed25519 rsa; do
+          KEY_FILE="$HOME/.ssh/id_$KEY_TYPE.pub"
+          if [ -f "$KEY_FILE" ]; then
+            ISO_SSH_KEY=$( cat "$KEY_FILE" )
+          fi
+        done
+      fi
+    else
+      ISO_SSH_KEY=""
+    fi
+  fi
 }

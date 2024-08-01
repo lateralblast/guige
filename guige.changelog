@@ -527,3 +527,5 @@
 # Fixes for chroot script permissions
 # 2.6.4: Thu  1 Aug 2024 16:59:29 AEST
 # Updated documentation
+# 2.6.5: Thu  1 Aug 2024 22:07:57 AEST
+# Improved SSH key determination

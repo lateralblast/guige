@@ -172,13 +172,13 @@ unmount_old_iso () {
 #
 # Mount base ISO as loopback device so contents can be copied
 #
-# sudo mount -o loop ./ubuntu-22.04.1-live-server-arm64.iso ./isomount
-# sudo mount -o loop ./ubuntu-22.04.1-live-server-amd64.iso ./isomount
+# sudo mount -o loop ./ubuntu-22.04.1-live-server-arm64.iso ./isomount 2> /dev/null
 
 mount_iso () {
   get_base_iso
   check_base_iso_file
-  handle_output "sudo mount -o loop \"$WORK_DIR/files/$BASE_INPUT_FILE\" \"$ISO_MOUNT_DIR\"" ""
+  handle_output "# Mounting ISO $WORK_DIR/files/$BASE_INPUT_FILE at $ISO_MOUNT_DIR" "TEXT"
+  handle_output "sudo mount -o loop \"$WORK_DIR/files/$BASE_INPUT_FILE\" \"$ISO_MOUNT_DIR\" 2> /dev/null" ""
   if [ "$TEST_MODE" = "false" ]; then
     sudo mount -o loop "$WORK_DIR/files/$BASE_INPUT_FILE" "$ISO_MOUNT_DIR" 2> /dev/null
   fi
@@ -188,13 +188,13 @@ mount_iso () {
 #
 # Mount older revision base ISO as loopback device so contents can be copied
 #
-# sudo mount -o loop ./ubuntu-22.04.1-live-server-arm64.iso ./isomount
-# sudo mount -o loop ./ubuntu-22.04.1-live-server-amd64.iso ./isomount
+# sudo mount -o loop ./ubuntu-22.04.1-live-server-arm64.iso ./isomount 2> /dev/null
 
 mount_old_iso () {
   get_old_base_iso
   check_old_base_iso_file
   handle_output "# Mounting ISO $OLD_WORK_DIR/files/$OLD_BASE_INPUT_FILE at $OLD_ISO_MOUNT_DIR" "TEXT"
+  handle_output "sudo mount -o loop \"$OLD_WORK_DIR/files/$OLD_BASE_INPUT_FILE\" \"$OLD_ISO_MOUNT_DIR\" 2> /dev/null" ""
   if [ "$TEST_MODE" = "false" ]; then
     sudo mount -o loop "$OLD_WORK_DIR/files/$OLD_BASE_INPUT_FILE" "$OLD_ISO_MOUNT_DIR" 2> /dev/null
   fi
