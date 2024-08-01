@@ -113,6 +113,10 @@ This is useful for troubleshooting by connecting to the KVM VM in console mode a
 I've started collecting manual install configs to help with troubleshooting.
 These are located in the configs directory
 
+I've added a strict option (does a set -eu) and a debug option (does a set -x)
+to help with debugging and finding bugs. I also periodically run shellcheck
+against the script to help find bugs.
+
 Usage
 -----
 
