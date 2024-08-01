@@ -23,7 +23,10 @@ unmount_squashfs () {
 unmount_ubuntu_squashfs () {
   handle_output "# Unmounting squashfs $ISO_NEW_DIR/squashfs" "TEXT"
   if [ "$TEST_MODE" = "false" ]; then
-    sudo umount "$ISO_NEW_DIR/squashfs"
+    MOUNT_TEST=$( mount | grep "$ISO_NEW_DIR/squashfs" | wc -l )
+    if [ ! "$MOUNT_TEST" = "0" ]; then
+      sudo umount "$ISO_NEW_DIR/squashfs"
+    fi
   fi
 }
 

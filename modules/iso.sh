@@ -144,7 +144,10 @@ copy_iso () {
 unmount_iso () {
   handle_output "sudo umount -l $ISO_MOUNT_DIR" ""
   if [ "$TEST_MODE" = "false" ]; then
-    sudo umount -l "$ISO_MOUNT_DIR"
+    MOUNT_TEST=$( mount | grep "$ISO_MOUNT_DIR" | wc -l )
+    if [ ! "$MOUNT_TEST" = "0" ]; then
+      sudo umount -l "$ISO_MOUNT_DIR"
+    fi
   fi
 }
 
@@ -158,7 +161,10 @@ unmount_iso () {
 unmount_old_iso () {
   handle_output "sudo umount -l $OLD_ISO_MOUNT_DIR" ""
   if [ "$TEST_MODE" = "false" ]; then
-    sudo umount -l "$OLD_ISO_MOUNT_DIR"
+    MOUNT_TEST=$( mount | grep "$OLD_ISO_MOUNT_DIR" | wc -l )
+    if [ ! "$MOUNT_TEST" = "0" ]; then
+      sudo umount -l "$OLD_ISO_MOUNT_DIR"
+    fi
   fi
 }
 
