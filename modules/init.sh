@@ -6,8 +6,8 @@
 # Initialise variables
 
 WORK_DIR=""
-DO_DEBUG=""
-DO_STRICT=""
+DO_DEBUG="false"
+DO_STRICT="false"
 ISO_RELEASE=""
 ISO_OS_NAME=""
 ISO_COMPRESSION=""
@@ -104,3 +104,5 @@ OLD_ISO_URL=""
 ISO_VM_RAM=""
 DOCKER_WORK_DIR=""
 TEST_MODE=""
+DO_MULTIPATH="false"
+DO_REFRESH_INSTALLER="false"

@@ -11,7 +11,7 @@ used to hang a shield on the shoulder or neck when not in use.
 Version
 -------
 
-Current version: 2.6.3
+Current version: 2.6.4
 
 Issues
 ------
@@ -251,11 +251,11 @@ You can get more usage information by using the usage tag with the action switch
   -------
 
   cluster                 Install cluster related packages (pcs, gluster, etc)  (default: false)
-  kvm                     Install KVM related packages (virt-manager, cloud-image-utils, etc) (deffault: false)
+  kvm                     Install KVM related packages (virt-manager, cloud-image-utils, etc) (default: false)
   sshkey                  Add SSH key from ~/.ssh if present (default fales)
   biosdevname:            Enable biosdevname kernel parameters (default: false)
   nounmount:              Don't unmount filesystems (useful for troubleshooting) (default: false)
-  testmode:               Don't execute commands (useful for testing and generating a script) (deafault: false)
+  testmode:               Don't execute commands (useful for testing and generating a script) (default: false)
   efi:                    Create UEFI based ISO
   bios:                   Create BIOS based ISO
   verbose:                Verbose output (default: false)
@@ -263,7 +263,7 @@ You can get more usage information by using the usage tag with the action switch
   autoupgrades:           Allow autoupgrades
   hwekernel:              Don't install HWE kernel packages (Ubuntu) (default: true)
   nohwekernel:            Don't install HWE kernel packages
-  multipath:              Don't load multipath kernel module (default: )
+  multipath:              Don't load multipath kernel module (default: false)
   nomultipath:            Don't load multipath kernel module
   plaintextpassword:      Use plaintext password (default: false)
   mediacheck              Do media check (default: false)
@@ -276,16 +276,20 @@ You can get more usage information by using the usage tag with the action switch
   dhcp                    Use DHCP
   nochroot                Don't run chroot script (default: true)
   chroot                  Run chroot script
-  refreshinstaller:       Refresh installer (default: )
+  refreshinstaller:       Refresh installer (default: false)
   norefreshinstaller:     Don't refresh installer
   nvme:                   Additional NVMe config (default: false)
   nonvme:                 No additional NVMe config
   geoip:                  Use Geo IP (default: true)
   nogeoip:                Don't use Geo IP
-  reorderuefi:            Reorder UEFI devices on reboot (true)
+  reorderuefi:            Reorder UEFI devices on reboot (default: true)
   noreorderuefi:          Don't reorder UEFI devices on reboot
   compression:            Compress filesystem(s) if supported (default: true)
   nocompression:          Don't compress filesystem(s)
+  strict                  Enable -eu shell options (useful for debuging) (default: false)
+  nostrict                Disable -eu shell options
+  debug                   Enable -x shell option (useful for debuging)   (default: false)
+  nodebug                 Disable -x shell option
 
   postinstall
   -----------

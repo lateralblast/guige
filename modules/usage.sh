@@ -45,11 +45,11 @@ print_options () {
   -------
 
   cluster                 Install cluster related packages (pcs, gluster, etc)  (default: $DO_CLUSTER_PACKAGES)
-  kvm                     Install KVM related packages (virt-manager, cloud-image-utils, etc) (deffault: $DO_KVM_PACKAGES)
+  kvm                     Install KVM related packages (virt-manager, cloud-image-utils, etc) (default: $DO_KVM_PACKAGES)
   sshkey                  Add SSH key from ~/.ssh if present (default $DO_ISO_SSH_KEY)
   biosdevname:            Enable biosdevname kernel parameters (default: $ISO_USE_BIOSDEVNAME)
   nounmount:              Don't unmount filesystems (useful for troubleshooting) (default: $DO_NO_UNMOUNT_ISO)
-  testmode:               Don't execute commands (useful for testing and generating a script) (deafault: $TEST_MODE)
+  testmode:               Don't execute commands (useful for testing and generating a script) (default: $TEST_MODE)
   efi:                    Create UEFI based ISO
   bios:                   Create BIOS based ISO
   verbose:                Verbose output (default: $VERBOSE_MODE)
@@ -76,10 +76,14 @@ print_options () {
   nonvme:                 No additional NVMe config
   geoip:                  Use Geo IP (default: $DO_GEOIP)
   nogeoip:                Don't use Geo IP
-  reorderuefi:            Reorder UEFI devices on reboot ($DO_REORDER_UEFI)
+  reorderuefi:            Reorder UEFI devices on reboot (default: $DO_REORDER_UEFI)
   noreorderuefi:          Don't reorder UEFI devices on reboot
   compression:            Compress filesystem(s) if supported (default: $DO_COMPRESSION)
   nocompression:          Don't compress filesystem(s)
+  strict                  Enable -eu shell options (useful for debuging) (default: $DO_STRICT)
+  nostrict                Disable -eu shell options
+  debug                   Enable -x shell option (useful for debuging)   (default: $DO_DEBUG)
+  nodebug                 Disable -x shell option
 OPTIONS
 }
 

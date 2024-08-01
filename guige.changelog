@@ -523,5 +523,7 @@
 # Improvements for ISO and squashfs unmount checks
 # 2.6.2: Thu  1 Aug 2024 16:18:57 AEST
 # Improvements for squashfs mount
-# 3.6.3: Thu 01 Aug 2024 16:41:19 AEST
+# 2.6.3: Thu 01 Aug 2024 16:41:19 AEST
 # Fixes for chroot script permissions
+# 2.6.4: Thu  1 Aug 2024 16:59:29 AEST
+# Updated documentation
