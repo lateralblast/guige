@@ -197,10 +197,10 @@ check_old_work_dir () {
 # Check file permissions of file
 
 check_file_perms () {
-  handle_output "# Checking file permissions for $CHECK_FILE" "TEXT"
   CHECK_FILE="$1"
+  handle_output "# Checking file permissions for $CHECK_FILE" "TEXT"
   if [ -f "$CHECK_FILE" ]; then
-    MY_USER="$USER"
+    MY_USER="$OS_USER"
     MY_GROUP=$(groups |awk '{print $1}')
     FILE_USER=$(find "$OUTPUT_FILE" -ls |awk '{print $5}')
     if [ ! "$FILE_USER" = "$MY_USER" ]; then

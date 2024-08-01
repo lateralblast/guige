@@ -180,7 +180,7 @@ mount_iso () {
   check_base_iso_file
   handle_output "sudo mount -o loop \"$WORK_DIR/files/$BASE_INPUT_FILE\" \"$ISO_MOUNT_DIR\"" ""
   if [ "$TEST_MODE" = "false" ]; then
-    sudo mount -o loop "$WORK_DIR/files/$BASE_INPUT_FILE" "$ISO_MOUNT_DIR"
+    sudo mount -o loop "$WORK_DIR/files/$BASE_INPUT_FILE" "$ISO_MOUNT_DIR" 2> /dev/null
   fi
 }
 
@@ -196,7 +196,7 @@ mount_old_iso () {
   check_old_base_iso_file
   handle_output "# Mounting ISO $OLD_WORK_DIR/files/$OLD_BASE_INPUT_FILE at $OLD_ISO_MOUNT_DIR" "TEXT"
   if [ "$TEST_MODE" = "false" ]; then
-    sudo mount -o loop "$OLD_WORK_DIR/files/$OLD_BASE_INPUT_FILE" "$OLD_ISO_MOUNT_DIR"
+    sudo mount -o loop "$OLD_WORK_DIR/files/$OLD_BASE_INPUT_FILE" "$OLD_ISO_MOUNT_DIR" 2> /dev/null
   fi
 }
 

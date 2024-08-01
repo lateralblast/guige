@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Name:         guige (Generic Ubuntu/Unix ISO Generation Engine)
-# Version:      2.6.1
+# Version:      2.6.3
 # Release:      1
 # License:      CC-BA (Creative Commons By Attribution)
 #               http://creativecommons.org/licenses/by/4.0/legalcode
@@ -27,7 +27,7 @@ SCRIPT_FILE="$START_PATH/$SCRIPT_BIN"
 SCRIPT_VERSION=$( grep '^# Version' < "$0" | awk '{print $3}' )
 OS_NAME=$( uname )
 OS_ARCH=$( uname -m |sed "s/aarch64/arm64/g" |sed "s/x86_64/amd64/g")
-OS_USER="$USER"
+OS_USER=$( whoami )
 OS_GROUP=$(groups |awk '{ print $2 }')
 
 # Handle verbose and debug early so it's enabled early
