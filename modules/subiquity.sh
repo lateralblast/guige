@@ -200,7 +200,12 @@ prepare_autoinstall_server_iso () {
         touch "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/meta-data"
       done
     done
-    sudo rm "$PACKAGE_DIR"/*.deb
+    if [ -f "$PACKAGE_DIR" ]; then
+      if [ ! "$PACKAGE_DIR" = "" ]; then
+        sudo rm -rf "$PACKAGE_DIR"
+        sudo mkdir -p "$PACKAGE_DIR"
+      fi
+    fi
     handle_output "# Copying packages to $PACKAGE_DIR" "TEXT"
     if [ "$VERBOSE_MODE" = "true" ]; then
       sudo cp -v "$ISO_NEW_DIR"/custom/var/cache/apt/archives/*.deb "$PACKAGE_DIR"

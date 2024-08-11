@@ -529,3 +529,9 @@
 # Updated documentation
 # 2.6.5: Thu  1 Aug 2024 22:07:57 AEST
 # Improved SSH key determination
+# 2.6.6 Sun 11 Aug 2024 13:35:14 AEST
+# Added check to see if an action has been set
+# 2.6.7: Sun 11 Aug 2024 16:00:51 AEST
+# Added code to set volume managers based on Ubuntu release
+# 2.6.8:Sun 11 Aug 2024 21:48:38 AEST
+# Fixed package directory cleanup

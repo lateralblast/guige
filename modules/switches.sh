@@ -178,7 +178,7 @@ process_switches () {
     ISO_RELEASE="$DEFAULT_ISO_RELEASE"
   else
     if [ "$ISO_OS_NAME" = "ubuntu" ]; then
-      if [ "$ISO_DOT_RELEASE" = "" ]; then 
+      if [ "$ISO_DOT_RELEASE" = "" ]; then
         get_current_release
       fi
     else
@@ -260,18 +260,7 @@ process_switches () {
   if [ "$DO_CUSTOM_AUTO_INSTALL" = "true" ]; then
     DEFAULT_ISO_VOLMGRS="custom $DEFAULT_ISO_VOLMGRS"
   fi
-  if [ "$ISO_VOLMGRS" = "" ]; then
-    ISO_VOLMGRS="$DEFAULT_ISO_VOLMGRS"
-    if [ "$ISO_OPTION" = "" ]; then
-      ISO_OPTION="$DEFAULT_ISO_OPTION"
-    else
-      reset_volmgrs
-    fi
-  else
-    if [ ! "$ISO_OPTION" = "" ]; then
-      reset_volmgrs
-    fi
-  fi
+  reset_volmgrs
   if [ "$GRUB_MENU" = "" ]; then
     ISO_GRUB_MENU="$DEFAULT_ISO_GRUB_MENU"
   fi

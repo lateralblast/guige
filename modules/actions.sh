@@ -8,6 +8,10 @@
 # Process action switch
 
 process_actions () {
+  if [ "$ACTION" = "" ]; then
+    warning_message "No action specified" "warn"
+    exit
+  fi
   case $ACTION in
     help|printhelp)
       print_help

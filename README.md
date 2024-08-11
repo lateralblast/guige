@@ -11,7 +11,7 @@ used to hang a shield on the shoulder or neck when not in use.
 Version
 -------
 
-Current version: 2.6.5
+Current version: 2.6.8
 
 Issues
 ------
@@ -77,7 +77,7 @@ By default this script creates a DHCP based install ISO with four additonal inst
 - LVM based install to the first non USB drive available using the first network device with link (XFS root filesystem)
 - LVM based install to the first non USB drive available using the first network device with link (BTRFS root filesystem)
 
-There is an option for compression with btrfs on the root disk. 
+There is an option for compression with btrfs on the root disk.
 If this option is specified the root disk is remounted during installation and compression applied.
 The fstab entry is updated and compression will be anabled after the reboot at the end of the installation.
 

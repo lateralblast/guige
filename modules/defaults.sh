@@ -3,8 +3,8 @@
 # shellcheck disable=SC2129
 # shellcheck disable=SC2034
 
-# Function: set_defaults 
-# 
+# Function: set_defaults
+#
 # Set defaults
 
 set_defaults () {
@@ -127,7 +127,7 @@ set_defaults () {
   ISO_SUFFIX=""
   BMC_PORT="443"
   BMC_EXPOSE_DURATION="180"
-  DO_CREATE_ISO="true" 
+  DO_CREATE_ISO="true"
   DO_REORDER_UEFI="true"
   DEFAULT_VM_NAME="$SCRIPT_NAME"
   if [ "$OS_NAME" = "Linux" ]; then
@@ -137,8 +137,8 @@ set_defaults () {
   fi
 }
 
-# Function: reset_defaults 
-# 
+# Function: reset_defaults
+#
 # Reset defaults
 
 reset_defaults () {
@@ -168,16 +168,11 @@ reset_defaults () {
     DEFAULT_ISO_INSTALL_PACKAGES="net-tools curl lftp wget sudo file rsync dialog setserial whois squashfs-tools jq"
     REQUIRED_PACKAGES="apt-utils $REQUIRED_PACKAGES"
   fi
-#  if [ "$ISO_OS_NAME" = "ubuntu" ] || [ "$DEFAULT_ISO_OS_NAME" = "ubuntu" ]; then
-#    if [ $ISO_MAJOR_RELEASE -gt 23 ]; then
-#      DEFAULT_VM_RAM="3072000"
-#    fi
-#  fi
 }
 
 # Function: set_default_flags
 #
-# Set default flags 
+# Set default flags
 
 set_default_flags () {
   DO_IPV4="true"
@@ -423,8 +418,27 @@ reset_default_files () {
 # Update order of volmgrs based on --firstoption switch
 
 reset_volmgrs () {
-  TEMP_VOLMGRS=$(echo "$ISO_VOLMGRS" |sed "s/$ISO_VOLMGRS/$ISO_OPTION/g")
-  ISO_VOLMGRS="$ISO_OPTION $TEMP_VOLMGRS"
+  if [ "$ISO_VOLMGRS" = "" ]; then
+    if [ "$ISO_OS_NAME" = "ubuntu" ]; then
+      if [ "$ISO_MAJOR_RELEASE" -gt 22 ]; then
+        ISO_VOLMGRS="btrfs lvm"
+      else
+        if [ "$ISO_MAJOR_RELEASE" -lt 22 ]; then
+          ISO_VOLMGRS="zfs btrfs lvm"
+        else
+          if [ "$ISO_DOT_RELEASE" -le 3 ]; then
+            ISO_VOLMGRS="zfs btrfs lvm"
+          else
+            ISO_VOLMGRS="btrfs lvm"
+          fi
+        fi
+      fi
+    fi
+  fi
+  if [ ! "$ISO_OPTION" = "" ]; then
+    TEMP_VOLMGRS=$(echo "$ISO_VOLMGRS" |sed "s/$ISO_VOLMGRS/$ISO_OPTION/g")
+    ISO_VOLMGRS="$ISO_OPTION $TEMP_VOLMGRS"
+  fi
 }
 
 # Function: set_ssh_key
