@@ -225,10 +225,14 @@ process_options () {
 
 get_release_info () {
   if [ ! "$ISO_RELEASE" = "" ]; then
+    TEST=$( echo "$ISO_RELEASE" | grep -c "." |sed "s/ //g" )
     set -- $(echo "$ISO_RELEASE" | awk 'BEGIN { FS="[:\t.]"; } {print $1, $2, $3 }' )
     ISO_MAJOR_RELEASE="$1"
     ISO_MINOR_RELEASE="$2"
-    ISO_DOT_RELEASE="$3"
+    if [ "$TEST" = "2" ]; then
+      ISO_DOT_RELEASE="$3"
+    else
+      ISO_DOT_RELEASE=""
+    fi
   fi
 }
-

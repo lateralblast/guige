@@ -535,3 +535,5 @@
 # Added code to set volume managers based on Ubuntu release
 # 2.6.8:Sun 11 Aug 2024 21:48:38 AEST
 # Fixed package directory cleanup
+# 2.6.9: Sun 11 Aug 2024 22:50:41 AEST
+# Fixed release handling for major release numbers
