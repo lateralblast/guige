@@ -129,6 +129,7 @@ set_defaults () {
   BMC_EXPOSE_DURATION="180"
   DO_CREATE_ISO="true"
   DO_REORDER_UEFI="true"
+  VM_NAME=""
   DEFAULT_VM_NAME="$SCRIPT_NAME"
   if [ "$OS_NAME" = "Linux" ]; then
     REQUIRED_KVM_PACKAGES="libvirt-clients libvirt-daemon-system libguestfs-tools qemu-kvm virt-manager"
@@ -420,16 +421,18 @@ reset_default_files () {
 reset_volmgrs () {
   if [ "$ISO_VOLMGRS" = "" ]; then
     if [ "$ISO_OS_NAME" = "ubuntu" ]; then
-      if [ "$ISO_MAJOR_RELEASE" -gt 22 ]; then
+      if [ "$ISO_MAJOR_RELEASE" -gt "22" ]; then
         ISO_VOLMGRS="btrfs xfs lvm-auto lvm"
       else
-        if [ "$ISO_MAJOR_RELEASE" -lt 22 ]; then
+        if [ "$ISO_MAJOR_RELEASE" -lt "22" ]; then
           ISO_VOLMGRS="zfs btrfs xfs lvm-auto lvm"
         else
-          if [ "$ISO_DOT_RELEASE" -le 3 ]; then
-            ISO_VOLMGRS="zfs btrfs zfs lvm-auto lvm"
-          else
-            ISO_VOLMGRS="btrfs xfs lvm-auto lvm"
+          if [ ! "$ISO_DOT_RELEASE" = "" ]; then
+            if [ "$ISO_DOT_RELEASE" -lt "4" ]; then
+              ISO_VOLMGRS="zfs btrfs zfs lvm-auto lvm"
+            else
+              ISO_VOLMGRS="btrfs xfs lvm-auto lvm"
+            fi
           fi
         fi
       fi

@@ -539,3 +539,5 @@
 # Fixed release handling for major release numbers
 # 2.7.0: Mon 12 Aug 2024 15:45:52 AEST
 # Update filesystem defaults
+# 2.7.1: Mon 12 Aug 2024 16:54:40 AEST
+# Fixed release version handling
