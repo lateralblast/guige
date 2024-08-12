@@ -5,16 +5,16 @@
 # shellcheck disable=SC2007
 
 # Function: check_kvm_vm_existd
-# 
+#
 # Check if KVM VM exists
 
 check_kvm_vm_exists () {
   if [ "$OS_NAME" = "Darwin" ]; then
-    KVM_TEST=$(virsh list --all |awk '{ print $2 }' |grep "^$VM_NAME")
+    KVM_TEST=$(virsh list --all |awk '{ print $2 }' |grep "^$VM_NAME" |wc -l |sed "s/ //g" )
   else
-    KVM_TEST=$(sudo virsh list --all |awk '{ print $2 }' |grep "^$VM_NAME")
+    KVM_TEST=$(sudo virsh list --all |awk '{ print $2 }' |grep "^$VM_NAME" |wc -l |sed "s/ //g" )
   fi
-  if [ "$KVM_TEST" = "$VM_NAME" ]; then
+  if [ ! "$KVM_TEST" = "0" ]; then
     warning_message "KVM VM $VM_NAME exists"
     VM_EXISTS="true"
   fi
@@ -27,7 +27,7 @@ check_kvm_vm_exists () {
 check_kvm_user () {
   KVM_GROUPS="kvm libvirt libvirt-qemu libvirt-dnsmasq"
   for KVM_GROUP in $KVM_GROUPS; do
-    GROUP_MEMBERS=$( grep "^$KVM_GROUP" /etc/group |cut -f2 -d: ) 
+    GROUP_MEMBERS=$( grep "^$KVM_GROUP" /etc/group |cut -f2 -d: )
     if [ -n "$GROUP_MEMBERS" ]; then
       if ! [[ "$KVM_GROUP" =~ $USER ]]; then
         sudo usermod -a -G "$KVM_GROUP" "$USER"
@@ -50,10 +50,10 @@ create_kvm_vm () {
     if [ ! -d "$BREW_DIR" ]; then
       BREW_DIR="/usr/local/Cellar"
       VIRT_DIR="$BREW_DIR/libvirt"
-      BIN_DIR="/usr/local/bin" 
+      BIN_DIR="/usr/local/bin"
     else
       VIRT_DIR="/opt/homebrew/var/lib/libvirt"
-      BIN_DIR="/opt/homebrew/bin" 
+      BIN_DIR="/opt/homebrew/bin"
     fi
     QEMU_VER=$( brew info qemu --json |jq -r ".[0].versions.stable" )
     VIRT_VER=$( echo "$QEMU_VER" |awk -F. '{print $1"."$2}' )
@@ -405,7 +405,7 @@ create_kvm_vm () {
 
 delete_kvm_vm () {
   if [ -z "$( command -v virsh )" ]; then
-    install_required_packages "$REQUIRED_KVM_PACKAGES" 
+    install_required_packages "$REQUIRED_KVM_PACKAGES"
   fi
   if [ "$TEST_MODE" = "false" ]; then
     if [ "$OS_NAME" = "Darwin" ]; then
@@ -429,7 +429,7 @@ delete_kvm_vm () {
 
 list_kvm_vm () {
   if [ -z "$( command -v virsh )" ]; then
-    install_required_packages "$REQUIRED_KVM_PACKAGES" 
+    install_required_packages "$REQUIRED_KVM_PACKAGES"
   fi
   if [ "$OS_NAME" = "Darwin" ]; then
     virsh list --all

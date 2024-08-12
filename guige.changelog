@@ -541,3 +541,5 @@
 # Update filesystem defaults
 # 2.7.1: Mon 12 Aug 2024 16:54:40 AEST
 # Fixed release version handling
+# 2.7.2: Mon 12 Aug 2024 17:30:27 AEST
+# Fixed routine to determine if VM exists
