@@ -537,3 +537,5 @@
 # Fixed package directory cleanup
 # 2.6.9: Sun 11 Aug 2024 22:50:41 AEST
 # Fixed release handling for major release numbers
+# 2.7.0: Mon 12 Aug 2024 15:45:52 AEST
+# Update filesystem defaults

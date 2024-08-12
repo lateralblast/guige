@@ -421,15 +421,15 @@ reset_volmgrs () {
   if [ "$ISO_VOLMGRS" = "" ]; then
     if [ "$ISO_OS_NAME" = "ubuntu" ]; then
       if [ "$ISO_MAJOR_RELEASE" -gt 22 ]; then
-        ISO_VOLMGRS="btrfs lvm"
+        ISO_VOLMGRS="btrfs xfs lvm-auto lvm"
       else
         if [ "$ISO_MAJOR_RELEASE" -lt 22 ]; then
-          ISO_VOLMGRS="zfs btrfs lvm"
+          ISO_VOLMGRS="zfs btrfs xfs lvm-auto lvm"
         else
           if [ "$ISO_DOT_RELEASE" -le 3 ]; then
-            ISO_VOLMGRS="zfs btrfs lvm"
+            ISO_VOLMGRS="zfs btrfs zfs lvm-auto lvm"
           else
-            ISO_VOLMGRS="btrfs lvm"
+            ISO_VOLMGRS="btrfs xfs lvm-auto lvm"
           fi
         fi
       fi
