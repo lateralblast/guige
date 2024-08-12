@@ -130,6 +130,7 @@ set_defaults () {
   DO_CREATE_ISO="true"
   DO_REORDER_UEFI="true"
   VM_NAME=""
+  XML_FILE=""
   DEFAULT_VM_NAME="$SCRIPT_NAME"
   if [ "$OS_NAME" = "Linux" ]; then
     REQUIRED_KVM_PACKAGES="libvirt-clients libvirt-daemon-system libguestfs-tools qemu-kvm virt-manager"

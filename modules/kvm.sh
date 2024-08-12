@@ -62,14 +62,15 @@ create_kvm_vm () {
       BIOS_FILE="$BREW_DIR/qemu/$QEMU_VER/share/qemu/edk2-x86_64-code.fd"
       QEMU_ARCH="x86_64"
       QEMU_EMU="$BIN_DIR/qemu-system-x86_64"
+      MACHINE="pc-q35-$VIRT_VER"
     else
       VARS_FILE="$BREW_DIR/qemu/$QEMU_VER/share/qemu/edk2-arm-vars.fd"
       BIOS_FILE="$BREW_DIR/qemu/$QEMU_VER/share/qemu/edk2-aarch64-code.fd"
       QEMU_ARCH="aarch64"
       QEMU_EMU="$BIN_DIR/qemu-system-aarch64"
+      MACHINE="virt-$VIRT_VER"
     fi
     DOM_TYPE="qemu"
-    MACHINE="virt-$VIRT_VER"
     VIDEO="vga"
     SERIAL="system-serial"
     INPUT_BUS="usb"
@@ -144,7 +145,6 @@ create_kvm_vm () {
     echo "  <os>" >> "$XML_FILE"
     echo "    <type arch='$QEMU_ARCH' machine='$MACHINE'>hvm</type>" >> "$XML_FILE"
   else
-#    echo "  <os>" >> "$XML_FILE"
     echo "  <os firmware='efi'>" >> "$XML_FILE"
     echo "    <type arch='$QEMU_ARCH' machine='$MACHINE'>hvm</type>" >> "$XML_FILE"
     echo "    <firmware>" >> "$XML_FILE"
@@ -167,7 +167,9 @@ create_kvm_vm () {
   echo "  <features>" >> "$XML_FILE"
   if [ "$OS_NAME" = "Darwin" ]; then
     echo "    <acpi/>" >> "$XML_FILE"
-    echo "    <gic version='2'/>" >> "$XML_FILE"
+    if [ ! "$ISO_ARCH" = "amd64" ] && [ ! "$ISO_ARCH" = "x86_64" ]; then
+      echo "    <gic version='2'/>" >> "$XML_FILE"
+    fi
     echo "  </features>" >> "$XML_FILE"
     echo "  <cpu mode='custom' match='exact' check='partial'>" >> "$XML_FILE"
     echo "    <model fallback='forbid'>cortex-a57</model>" >> "$XML_FILE"

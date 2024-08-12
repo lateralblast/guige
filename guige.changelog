@@ -543,3 +543,5 @@
 # Fixed release version handling
 # 2.7.2: Mon 12 Aug 2024 17:30:27 AEST
 # Fixed routine to determine if VM exists
+# 2.7.3: Mon 12 Aug 2024 21:47:45 AEST
+# Fixed KVM VM creation of MacOS x86
