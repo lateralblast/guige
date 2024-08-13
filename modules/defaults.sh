@@ -440,7 +440,7 @@ reset_volmgrs () {
     fi
   fi
   if [ ! "$ISO_OPTION" = "" ]; then
-    TEMP_VOLMGRS=$(echo "$ISO_VOLMGRS" |sed "s/$ISO_VOLMGRS/$ISO_OPTION/g")
+    TEMP_VOLMGRS=$(echo "$ISO_VOLMGRS" |sed "s/$ISO_OPTION//g" |sed "s/^ //g" |sed "s/ $//g" )
     ISO_VOLMGRS="$ISO_OPTION $TEMP_VOLMGRS"
   fi
 }
