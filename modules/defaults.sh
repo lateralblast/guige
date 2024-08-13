@@ -131,6 +131,9 @@ set_defaults () {
   DO_REORDER_UEFI="true"
   VM_NAME=""
   XML_FILE=""
+  ISO_MAJOR_RELEASE=""
+  ISO_MINOR_RELEASE=""
+  ISO_DOT_RELEASE=""
   DEFAULT_VM_NAME="$SCRIPT_NAME"
   if [ "$OS_NAME" = "Linux" ]; then
     REQUIRED_KVM_PACKAGES="libvirt-clients libvirt-daemon-system libguestfs-tools qemu-kvm virt-manager"
@@ -430,10 +433,12 @@ reset_volmgrs () {
         else
           if [ ! "$ISO_DOT_RELEASE" = "" ]; then
             if [ "$ISO_DOT_RELEASE" -lt "4" ]; then
-              ISO_VOLMGRS="zfs btrfs zfs lvm-auto lvm"
+              ISO_VOLMGRS="zfs btrfs xfs lvm-auto lvm"
             else
               ISO_VOLMGRS="btrfs xfs lvm-auto lvm"
             fi
+          else
+            ISO_VOLMGRS="btrfs xfs lvm-auto lvm"
           fi
         fi
       fi
