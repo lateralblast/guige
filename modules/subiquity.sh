@@ -392,7 +392,9 @@ prepare_autoinstall_server_iso () {
 #          echo "    search_drivers: $DO_ISO_SEARCH_DRIVERS" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
           echo "  ssh:" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
           echo "    allow-pw: $ISO_ALLOW_PASSWORD" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
-          echo "    authorized-keys: [ \"$ISO_SSH_KEY\" ]" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
+          if [ ! "$ISO_SSH_KEY" = "" ]; then
+            echo "    authorized-keys: [ \"$ISO_SSH_KEY\" ]" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
+          fi
           echo "    install-server: true" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
           echo "  storage:" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
           if [[ "$ISO_VOLMGR" =~ "auto" ]]; then
@@ -1113,7 +1115,9 @@ prepare_autoinstall_desktop_iso () {
           echo "    search_drivers: $DO_ISO_SEARCH_DRIVERS" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
           echo "  ssh:" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
           echo "    allow-pw: $ISO_ALLOW_PASSWORD" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
-          echo "    authorized-keys: [ \"$ISO_SSH_KEY\" ]" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
+          if [ ! "$ISO_SSH_KEY" = "" ]; then
+            echo "    authorized-keys: [ \"$ISO_SSH_KEY\" ]" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
+          fi
           echo "    install-server: true" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
           echo "  storage:" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
           if [[ "$ISO_VOLMGR" =~ "auto" ]]; then
