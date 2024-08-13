@@ -9,9 +9,9 @@
 
 execute_command () {
   COMMAND="$1"
-  execution_message "$COMMAND"
+  execute_message "$COMMAND"
   if [ "$TEST_MODE" = "false" ]; then
-    $COMMAND
+    eval "$COMMAND"
   fi
 }
 
@@ -29,11 +29,11 @@ print_file () {
   fi
 }
 
-# Function: execution_message
+# Function: execute_message
 #
 #  Print command
 
-execution_message () {
+execute_message () {
   OUTPUT_TEXT="$1"
   OUTPUT_TYPE="COMMAND"
   handle_output "$OUTPUT_TEXT" "$OUTPUT_TYPE"

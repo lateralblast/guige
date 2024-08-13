@@ -55,6 +55,10 @@ create_kvm_vm () {
       VIRT_DIR="/opt/homebrew/var/lib/libvirt"
       BIN_DIR="/opt/homebrew/bin"
     fi
+    if [ ! -d "$VIRT_DIR" ]; then
+      sudo_create_dir "$VIRT_DIR"
+      sudo_chown "$VIRT_DIR" "$OS_USER" "$OS_GROUP"
+    fi
     QEMU_VER=$( brew info qemu --json |jq -r ".[0].versions.stable" )
     VIRT_VER=$( echo "$QEMU_VER" |awk -F. '{print $1"."$2}' )
     if [ "$ISO_ARCH" = "amd64" ] || [ "$ISO_ARCH" = "x86_64" ]; then
@@ -63,16 +67,17 @@ create_kvm_vm () {
       QEMU_ARCH="x86_64"
       QEMU_EMU="$BIN_DIR/qemu-system-x86_64"
       MACHINE="pc-q35-$VIRT_VER"
+      SERIAL="isa-serial"
     else
       VARS_FILE="$BREW_DIR/qemu/$QEMU_VER/share/qemu/edk2-arm-vars.fd"
       BIOS_FILE="$BREW_DIR/qemu/$QEMU_VER/share/qemu/edk2-aarch64-code.fd"
       QEMU_ARCH="aarch64"
       QEMU_EMU="$BIN_DIR/qemu-system-aarch64"
       MACHINE="virt-$VIRT_VER"
+      SERIAL="system-serial"
     fi
     DOM_TYPE="qemu"
     VIDEO="vga"
-    SERIAL="system-serial"
     INPUT_BUS="usb"
     IF_TYPE="user"
     CD_BUS="scsi"
@@ -105,6 +110,10 @@ create_kvm_vm () {
   QEMU_DIR="$VIRT_DIR/qemu"
   QEMU_MAC=$( printf '52:54:00:%02X:%02X:%02X\n' $[RANDOM%256] $[RANDOM%256] $[RANDOM%256] )
   NVRAM_DIR="$QEMU_DIR/nvram"
+  if [ ! -d "$NVRAM_DIR" ]; then
+    sudo_create_dir "$NVRAM_DIR"
+    sudo_chown "$NVRAM_DIR" "$OS_USER" "$OS_GROUP"
+  fi
   NVRAM_FILE="$NVRAM_DIR/${VM_NAME}_VARS.fd"
   IMAGE_DIR="$VIRT_DIR/images"
   VM_DISK="$WORK_DIR/$VM_NAME.qcow2"
@@ -118,7 +127,7 @@ create_kvm_vm () {
     exit
   fi
   information_message "Creating VM disk $VM_DISK"
-  execution_message "sudo qemu-img create -f qcow2 $VM_DISK $VM_SIZE"
+  execute_message "sudo qemu-img create -f qcow2 $VM_DISK $VM_SIZE"
   if [ "$TEST_MODE" = "false" ]; then
     if [ "$OS_NAME" = "Darwin" ]; then
       qemu-img create -f qcow2 "$VM_DISK" "$VM_SIZE"
@@ -167,12 +176,15 @@ create_kvm_vm () {
   echo "  <features>" >> "$XML_FILE"
   if [ "$OS_NAME" = "Darwin" ]; then
     echo "    <acpi/>" >> "$XML_FILE"
-    if [ ! "$ISO_ARCH" = "amd64" ] && [ ! "$ISO_ARCH" = "x86_64" ]; then
+    if [ "$ISO_ARCH" = "amd64" ] || [ "$ISO_ARCH" = "x86_64" ]; then
+      CPU_FALLBACK="qemu64"
+    else
       echo "    <gic version='2'/>" >> "$XML_FILE"
+      CPU_FALLBACK="cortex-a57"
     fi
     echo "  </features>" >> "$XML_FILE"
     echo "  <cpu mode='custom' match='exact' check='partial'>" >> "$XML_FILE"
-    echo "    <model fallback='forbid'>cortex-a57</model>" >> "$XML_FILE"
+    echo "    <model fallback='forbid'>$CPU_FALLBACK</model>" >> "$XML_FILE"
     echo "  </cpu>" >> "$XML_FILE"
     echo "  <clock offset='utc'/>" >> "$XML_FILE"
     echo "  <on_poweroff>destroy</on_poweroff>" >> "$XML_FILE"
@@ -324,11 +336,7 @@ create_kvm_vm () {
   echo "    </interface>" >> "$XML_FILE"
   echo "    <serial type='pty'>" >> "$XML_FILE"
   echo "      <target type='$SERIAL' port='0'>" >> "$XML_FILE"
-  if [ "$OS_NAME" = "Darwin" ]; then
-    echo "        <alias name='$SERIAL'/>" >> "$XML_FILE"
-  else
-    echo "        <model name='$SERIAL'/>" >> "$XML_FILE"
-  fi
+  echo "        <alias name='$SERIAL'/>" >> "$XML_FILE"
   echo "      </target>" >> "$XML_FILE"
   echo "    </serial>" >> "$XML_FILE"
   echo "    <console type='pty'>" >> "$XML_FILE"
@@ -386,13 +394,13 @@ create_kvm_vm () {
   information_message "Importing VM config $XML_FILE"
   if [ "$TEST_MODE" = "false" ]; then
     if [ "$OS_NAME" = "Darwin" ]; then
-      execution_message "virsh define $XML_FILE"
+      execute_message "virsh define $XML_FILE"
       virsh define "$XML_FILE"
       verbose_message "To start the VM and connect to console run the following command:" TEXT
       verbose_message "" TEXT
       verbose_message "virsh start $VM_NAME ; virsh console $VM_NAME" TEXT
     else
-      execution_message "sudo virsh define $XML_FILE"
+      execute_message "sudo virsh define $XML_FILE"
       sudo virsh define "$XML_FILE"
       verbose_message "To start the VM and connect to console run the following command:" TEXT
       verbose_message "" TEXT
@@ -410,17 +418,21 @@ delete_kvm_vm () {
     install_required_packages "$REQUIRED_KVM_PACKAGES"
   fi
   if [ "$TEST_MODE" = "false" ]; then
+    VM_STATUS=$( virsh list --all |grep "shut off" |wc -l |sed "s/ //g" )
     if [ "$OS_NAME" = "Darwin" ]; then
-      information_message "Stopping KVM VM $VM_NAME"
-      execute_message "virsh -c \"qemu:///session\" destroy $VM_NAME"
-      virsh -c "qemu:///session" destroy "$VM_NAME"
+      if [ "$VM_STATUS" = "0" ]; then
+        information_message "Stopping KVM VM $VM_NAME"
+        execute_command "virsh -c \"qemu:///session\" shutdown $VM_NAME 2> /dev/null"
+      fi
       information_message "Deleting VM $VM_NAME"
-      execute_command "virsh undefine $VM_NAME --nvram"
+      execute_command "virsh -c \"qemu:///session\" undefine $VM_NAME --nvram 2> /dev/null"
     else
-      information_message "Stopping KVM VM $VM_NAME"
-      execute_command "sudo virsh destroy $VM_NAME"
+      if [ "$VM_STATUS" = "0" ]; then
+        information_message "Stopping KVM VM $VM_NAME"
+        execute_command "sudo virsh shutdown $VM_NAME 2> /dev/null"
+      fi
       information_message "Deleting VM $VM_NAME"
-      execute_command "sudo virsh undefine $VM_NAME --nvram"
+      execute_command "sudo virsh undefine $VM_NAME --nvram 2> /dev/null"
     fi
   fi
 }
