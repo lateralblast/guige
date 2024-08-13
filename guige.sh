@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Name:         guige (Generic Ubuntu/Unix ISO Generation Engine)
-# Version:      2.7.5
+# Version:      2.7.7
 # Release:      1
 # License:      CC-BA (Creative Commons By Attribution)
 #               http://creativecommons.org/licenses/by/4.0/legalcode
@@ -93,102 +93,136 @@ do
 #    fi
 #  fi
   case $1 in
-    --oldrelease)
-      OLD_ISO_RELEASE="$2"
-      shift 2
-      ;;
-    --country)
-      ISO_COUNTRY="$2"
-      shift 2
-      ;;
-    --isourl)
-      ISO_URL="$2"
-      shift 2
-      ;;
-    --prefix)
-      ISO_PREFIX="$2"
-      shift 2
-      ;;
-    --suffix)
-      ISO_SUFFIX="$2"
-      shift 2
-      ;;
-    --block)
-      ISO_BLOCKLIST="$2"
+    --action)
+      ACTION="$2"
       shift 2
       ;;
     --allow)
       ISO_ALLOWLIST="$2"
       shift 2
       ;;
-    --oldisourl)
-      OLD_ISO_URL="$2"
+    --allowpassword|--allow-password)
+      ISO_ALLOW_PASSWORD="true"
+      shift
+      ;;
+    --allowservice|--service)
+      ISO_ALLOW_SERVICE="$2"
       shift 2
       ;;
-    --oldinputfile)
-      OLD_INPUT_FILE="$2"
+    --arch)
+      ISO_ARCH="$2"
+      shift 2
+      ISO_ARCH=$( echo "$ISO_ARCH" |sed "s/aarch64/arm64/g" |sed "s/x86_64/amd64/g" |sed "s/x86/amd64/g" )
+      ;;
+    --autoinstalldir)
+      ISO_AUTOINSTALL_DIR="$2"
       shift 2
       ;;
-    --search)
-      ISO_SEARCH="$2"
+    --block)
+      ISO_BLOCKLIST="$2"
       shift 2
       ;;
-    --codename|--distro)
-      ISO_OS_NAME="$2"
+    --bmcip)
+      BMC_IP="$2"
       shift 2
       ;;
-    --action)
-      ACTION="$2"
-      shift 2
-      ;;
-    --layout|--vmsize)
-      ISO_LAYOUT="$2"
-      VM_SIZE=$2
-      shift 2
-      ;;
-    --bootserverip)
-      BOOT_SERVER_IP="$2"
-      shift 2
-      ;;
-    --cidr)
-      ISO_CIDR="$2"
-      shift 2
-      ;;
-    --sshkeyfile)
-      ISO_SSH_KEY_FILE="$2"
-      DO_ISO_SSH_KEY="true"
-      shift 2
-      ;;
-    --dns|--nameserver)
-      ISO_DNS="$2"
-      shift 2
-      ;;
-    --bootdisk|--disk|--installdisk|--firstdisk)
-      ISO_DISK="$2"
-      shift 2
-      ;;
-    --firstoption|--first-option)
-      ISO_OPTION="$2"
-      shift 2
-      ;;
-    --locale)
-      ISO_LOCALE="$2"
-      shift 2
-      ;;
-    --lcall)
-      ISO_LC_ALL="$2"
+    --bmcpassword)
+      BMC_PASSWORD="$2"
       shift 2
       ;;
     --bmcusername)
       BMC_USERNAME="$2"
       shift 2
       ;;
+    --bootdisk|--disk|--installdisk|--firstdisk)
+      ISO_DISK="$2"
+      shift 2
+      ;;
+    --bootloader)
+      ISO_BOOT_LOADER_LOCATION="$2"
+      shift 2
+      ;;
+    --bootserverfile)
+      BOOT_SERVER_FILE="$2"
+      DO_CUSTOM_BOOT_SERVER_FILE="true"
+      shift 2
+      ;;
+    --bootserverip)
+      BOOT_SERVER_IP="$2"
+      shift 2
+      ;;
+    --bootsize)
+      ISO_BOOT_SIZE="$2"
+      shift 2
+      ;;
+    --build)
+      ISO_BUILD_TYPE="$2"
+      case "$ISO_BUILD_TYPE" in
+        "daily")
+          DO_DAILY_ISO="true"
+          ;;
+      esac
+      shift 2
+      ;;
+    --chrootpackages)
+      ISO_CHROOT_PACKAGES="$2"
+      shift 2
+      ;;
+    --cidr)
+      ISO_CIDR="$2"
+      shift 2
+      ;;
+    --codename|--distro)
+      ISO_OS_NAME="$2"
+      shift 2
+      ;;
+    --compression)
+      DO_COMPRESSION="true"
+      ISO_COMPRESSION="$2"
+      shift 2
+      ;;
+    --country)
+      ISO_COUNTRY="$2"
+      shift 2
+      ;;
+    --debug)
+      set -x
+      shift
+      ;;
     --delete)
       DELETE="$2"
       shift 2
       ;;
+    --disableservice|--disable)
+      ISO_DISABLE_SERVICE="$2"
+      shift 2
+      ;;
+    --diskserial)
+      ISO_DISK_SERIAL="$2"
+      shift 2
+      ;;
+    --diskwwn)
+      ISO_DISK_WWN="$2"
+      shift 2
+      ;;
+    --dns|--nameserver)
+      ISO_DNS="$2"
+      shift 2
+      ;;
+    --enableservice|--enable)
+      ISO_ENABLE_SERVICE="$2"
+      shift 2
+      ;;
     --fallback)
       ISO_FALLBACK="$2"
+      shift 2
+      ;;
+    --firewall)
+      ISO_FIREWALL="$2"
+      shift 2
+      ;;
+    --firstoption|--first-option)
+      ISO_OPTION="$2"
       shift 2
       ;;
     --gateway)
@@ -196,53 +230,173 @@ do
       shift 2
       DO_DHCP="false"
       ;;
-    --grubmenu)
-      ISO_GRUB_MENU="$2"
+    --gecos)
+      ISO_GECOS="$2"
       shift 2
       ;;
-    --vmname)
-      VM_NAME="$2"
+    --groups)
+      ISO_GROUPS="$2"
       shift 2
       ;;
-    --hostname)
-      ISO_HOSTNAME="$2"
-      shift 2
-      ;;
-    -h|--help)
-      print_help ""
-      ;;
-    --ip)
-      ISO_IP="$2"
-      shift 2
-      DO_DHCP="false"
-      ;;
-    --inputiso|--vmiso)
-      INPUT_FILE="$2"
-      VM_ISO="$2"
+    --grub)
+      DO_CUSTOM_GRUB="true"
+      GRUB_FILE="$2"
       shift 2
       ;;
     --grubfile)
       ISO_GRUB_FILE="$2"
       shift 2
       ;;
-    --autoinstalldir)
-      ISO_AUTOINSTALL_DIR="$2"
+    --grubmenu)
+      ISO_GRUB_MENU="$2"
+      shift 2
+      ;;
+    --grubtimeout|--grub-timeout)
+      ISO_GRUB_TIMEOUT="$2"
+      shift 2
+      ;;
+    -h|--help)
+      print_help ""
+      ;;
+    --hostname)
+      ISO_HOSTNAME="$2"
+      shift 2
+      ;;
+    --inputiso|--vmiso)
+      INPUT_FILE="$2"
+      VM_ISO="$2"
+      shift 2
+      ;;
+    --installmode|--install-mode)
+      ISO_INSTALL_MODE="$2"
+      shift 2
+      ;;
+    --installmount)
+      ISO_INSTALL_MOUNT="$2"
+      shift 2
+      ;;
+    --installpassword|--install-password|--installpass|--install-pass)
+      ISO_INSTALL_PASSWORD="$2"
+      shift 2
+      ;;
+    --installsource|--install-source)
+      ISO_INSTALL_SOURCE="$2"
+      shift 2
+      ;;
+    --installtarget)
+      ISO_TARGET_MOUNT="$2"
+      shift 2
+      ;;
+    --installuser|--install-user)
+      ISO_INSTALL_USERNAME="$2"
+      shift 2
+      ;;
+    --ip)
+      ISO_IP="$2"
+      shift 2
+      DO_DHCP="false"
+      ;;
+    --isolinux)
+      DO_CUSTOM_ISOLINUX="true"
+      ISOLINUX_FILE="$2"
+      shift 2
+      ;;
+    --isopackages)
+      ISO_INSTALL_PACKAGES="$2"
+      shift 2
+      ;;
+    --isourl)
+      ISO_URL="$2"
+      shift 2
+      ;;
+    --isovolid)
+      ISO_VOLID="$2"
       shift 2
       ;;
     --kernel)
       ISO_KERNEL="$2"
       shift 2
       ;;
-    --vmtype)
-      VM_TYPE="$2"
-      shift 2
-      ;;
     --kernelargs)
       ISO_KERNEL_ARGS="$2"
       shift 2
       ;;
-    --vmcpus)
-      VM_CPUS="$2"
+    --layout|--vmsize)
+      ISO_LAYOUT="$2"
+      VM_SIZE=$2
+      shift 2
+      ;;
+    --lcall)
+      ISO_LC_ALL="$2"
+      shift 2
+      ;;
+    --locale)
+      ISO_LOCALE="$2"
+      shift 2
+      ;;
+    --lvname)
+      ISO_LV_NAME="$2"
+      shift 2
+      ;;
+    --nic|--vmnic|--installnic|--bootnic|--firstnic)
+      ISO_NIC="$2"
+      VM_NIC="$2"
+      shift 2
+      ;;
+    --oeminstall)
+      ISO_OEM_INSTALL="$2"
+      shift 2
+      ;;
+    --oldinputfile)
+      OLD_INPUT_FILE="$2"
+      shift 2
+      ;;
+    --oldisourl)
+      OLD_ISO_URL="$2"
+      shift 2
+      ;;
+    --oldrelease)
+      OLD_ISO_RELEASE="$2"
+      shift 2
+      ;;
+    --onboot)
+      ISO_ONBOOT="$2"
+      shift 2
+      ;;
+    --options)
+      OPTIONS="$2";
+      shift 2
+      ;;
+    --outputiso)
+      OUTPUT_FILE="$2"
+      shift 2
+      ;;
+    --password)
+      ISO_PASSWORD="$2"
+      shift 2
+      ;;
+    --passwordalgorithm|--password-algorithm)
+      ISO_PASSWORD_ALGORITHM="$2"
+      shift 2
+      ;;
+    --pesize)
+      ISO_PE_SIZE="$2"
+      shift 2
+      ;;
+    --postinstall)
+      ISO_POSTINSTALL="$2"
+      shift 2
+      ;;
+    --prefix)
+      ISO_PREFIX="$2"
+      shift 2
+      ;;
+    --preworkdir)
+      PRE_WORK_DIR="$2"
+      shift 2
+      ;;
+    --realname)
+      ISO_REALNAME="$2"
       shift 2
       ;;
     --release)
@@ -260,72 +414,45 @@ do
       get_code_name
       get_build_type
       ;;
-    --bmcip)
-      BMC_IP="$2"
+    --rootsize)
+      ISO_ROOT_SIZE="$2"
       shift 2
       ;;
-    --installtarget)
-      ISO_TARGET_MOUNT="$2"
+    --search)
+      ISO_SEARCH="$2"
       shift 2
       ;;
-    --installmount)
-      ISO_INSTALL_MOUNT="$2"
+    --selinux)
+      ISO_SELINUX="$2"
       shift 2
       ;;
-    --bootserverfile)
-      BOOT_SERVER_FILE="$2"
-      DO_CUSTOM_BOOT_SERVER_FILE="true"
+    --serialport)
+      ISO_SERIAL_PORT0="$2"
       shift 2
       ;;
-    --nic|--vmnic|--installnic|--bootnic|--firstnic)
-      ISO_NIC="$2"
-      VM_NIC="$2"
-      shift 2
-      ;;
-    --isopackages)
-      ISO_INSTALL_PACKAGES="$2"
-      shift 2
-      ;;
-    --outputiso)
-      OUTPUT_FILE="$2"
-      shift 2
-      ;;
-    --password)
-      ISO_PASSWORD="$2"
-      shift 2
-      ;;
-    --chrootpackages)
-      ISO_CHROOT_PACKAGES="$2"
-      shift 2
-      ;;
-    --build)
-      ISO_BUILD_TYPE="$2"
-      case "$ISO_BUILD_TYPE" in
-        "daily")
-          DO_DAILY_ISO="true"
-          ;;
-      esac
-      shift 2
-      ;;
-    --arch)
-      ISO_ARCH="$2"
-      shift 2
-      ISO_ARCH=$( echo "$ISO_ARCH" |sed "s/aarch64/arm64/g" |sed "s/x86_64/amd64/g" |sed "s/x86/amd64/g" )
-      ;;
-    --realname)
-      ISO_REALNAME="$2"
-      shift 2
-      ;;
-    --diskserial)
-      ISO_DISK_SERIAL="$2"
-      shift 2
-      ;;
-    --diskwwn)
-      ISO_DISK_WWN="$2"
+    --serialportaddress)
+      ISO_SERIAL_PORT_ADDRESS0="$2"
       shift 2
       ;;
     --serialportspeed)
       ISO_SERIAL_PORT_SPEED0="$2"
+      shift 2
+      ;;
+    --sourceid)
+      ISO_SOURCE_ID="$2"
+      shift 2
+      ;;
+    --squashfsfile)
+      ISO_SQUASHFS_FILE="$2"
+      shift 2
+      ;;
+    --sshkeyfile)
+      ISO_SSH_KEY_FILE="$2"
+      DO_ISO_SSH_KEY="true"
+      shift 2
+      ;;
+    --suffix)
+      ISO_SUFFIX="$2"
       shift 2
       ;;
     --swapsize|--vmram)
@@ -333,69 +460,12 @@ do
       VM_RAM="$2"
       shift 2
       ;;
-    --squashfsfile)
-      ISO_SQUASHFS_FILE="$2"
-      shift 2
-      ;;
     --timezone)
       ISO_TIMEZONE="$2"
       shift 2
       ;;
-    --serialportaddress)
-      ISO_SERIAL_PORT_ADDRESS0="$2"
-      shift 2
-      ;;
-    --username)
-      ISO_USERNAME="$2"
-      shift 2
-      ;;
-    --postinstall)
-      ISO_POSTINSTALL="$2"
-      shift 2
-      ;;
-    -V|--version)
-      echo "$SCRIPT_VERSION"
-      shift
-      exit
-      ;;
-    --serialport)
-      ISO_SERIAL_PORT0="$2"
-      shift 2
-      ;;
-    --workdir)
-      WORK_DIR="$2"
-      shift 2
-      ;;
-    --preworkdir)
-      PRE_WORK_DIR="$2"
-      shift 2
-      ;;
-    --isovolid)
-      ISO_VOLID="$2"
-      shift 2
-      ;;
-    --grubtimeout|--grub-timeout)
-      ISO_GRUB_TIMEOUT="$2"
-      shift 2
-      ;;
-    --allowpassword|--allow-password)
-      ISO_ALLOW_PASSWORD="true"
-      shift
-      ;;
-    --bmcpassword)
-      BMC_PASSWORD="$2"
-      shift 2
-      ;;
-    --options)
-      OPTIONS="$2";
-      shift 2
-      ;;
-    --volumemanager|--volumemanagers|--volmgr|--volmgrs)
-      ISO_VOLMGRS="$2"
-      shift 2
-      ;;
-    --zfsfilesystems)
-      ZFS_FILESYSTEMS="$2"
+    --updates)
+      ISO_UPDATES="$2"
       shift 2
       ;;
     --userdata|--autoinstall|--kickstart)
@@ -404,100 +474,46 @@ do
       AUTO_INSTALL_FILE="$2"
       shift 2
       ;;
-    --isolinux)
-      DO_CUSTOM_ISOLINUX="true"
-      ISOLINUX_FILE="$2"
-      shift 2
-      ;;
-    --grub)
-      DO_CUSTOM_GRUB="true"
-      GRUB_FILE="$2"
-      shift 2
-      ;;
-    --oeminstall)
-      ISO_OEM_INSTALL="$2"
-      shift 2
-      ;;
-    --sourceid)
-      ISO_SOURCE_ID="$2"
-      shift 2
-      ;;
-    --installmode|--install-mode)
-      ISO_INSTALL_MODE="$2"
-      shift 2
-      ;;
-    --passwordalgorithm|--password-algorithm)
-      ISO_PASSWORD_ALGORITHM="$2"
-      shift 2
-      ;;
-    --bootloader)
-      ISO_BOOT_LOADER_LOCATION="$2"
-      shift 2
-      ;;
-    --selinux)
-      ISO_SELINUX="$2"
-      shift 2
-      ;;
-    --firewall)
-      ISO_FIREWALL="$2"
-      shift 2
-      ;;
-    --onboot)
-      ISO_ONBOOT="$2"
-      shift 2
-      ;;
-    --gecos)
-      ISO_GECOS="$2"
-      shift 2
-      ;;
-    --groups)
-      ISO_GROUPS="$2"
-      shift 2
-      ;;
-    --installsource|--install-source)
-      ISO_INSTALL_SOURCE="$2"
-      shift 2
-      ;;
-    --bootsize)
-      ISO_BOOT_SIZE="$2"
-      shift 2
-      ;;
-    --rootsize)
-      ISO_ROOT_SIZE="$2"
-      shift 2
-      ;;
-    --pesize)
-      ISO_PE_SIZE="$2"
-      shift 2
-      ;;
-    --vgname)
-      ISO_VG_NAME="$2"
-      shift 2
-      ;;
-    --lvname)
-      ISO_LV_NAME="$2"
-      shift 2
-      ;;
-    --compression)
-      DO_COMPRESSION="true"
-      ISO_COMPRESSION="$2"
-      shift 2
-      ;;
-    --installuser|--install-user)
-      ISO_INSTALL_USERNAME="$2"
-      shift 2
-      ;;
-    --installpassword|--install-password|--installpass|--install-pass)
-      ISO_INSTALL_PASSWORD="$2"
-      shift 2
-      ;;
-    --updates)
-      ISO_UPDATES="$2"
+    --username)
+      ISO_USERNAME="$2"
       shift 2
       ;;
     --usage)
       print_usage "$2"
       exit
+      ;;
+    -V|--version)
+      echo "$SCRIPT_VERSION"
+      shift
+      exit
+      ;;
+    --vgname)
+      ISO_VG_NAME="$2"
+      shift 2
+      ;;
+    --vmcpus)
+      VM_CPUS="$2"
+      shift 2
+      ;;
+    --vmname)
+      VM_NAME="$2"
+      shift 2
+      ;;
+    --vmtype)
+      VM_TYPE="$2"
+      shift 2
+      ;;
+    --volumemanager|--volumemanagers|--volmgr|--volmgrs)
+      ISO_VOLMGRS="$2"
+      shift 2
+      ;;
+    --workdir)
+      WORK_DIR="$2"
+      shift 2
+      ;;
+    --zfsfilesystems)
+      ZFS_FILESYSTEMS="$2"
+      shift 2
       ;;
     --)
       shift
