@@ -17,6 +17,21 @@ delete_vm () {
   fi
 }
 
+# Function: create_ci_vm
+#
+# Create a VM for testing cloud init
+
+create_ci_vm () {
+  if [ "$VM_TYPE" = "kvm" ]; then
+    check_kvm_vm_exists
+    if [ "$VM_EXISTS" = "false" ]; then
+      create_kvm_ci_vm
+    else
+      information_message "KVM VM $VM_NAME already exists"
+    fi
+  fi
+}
+
 # Function: create_iso_vm
 #
 # Create a VM for testing an ISO

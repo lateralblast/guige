@@ -36,15 +36,23 @@ check_kvm_user () {
   done
 }
 
-# Function: create_kvm_iso_vm
+# Function: check_kvm_config
 #
-# Create a KVM VM for testing an ISO
+# Check KVM VM config
 
-create_kvm_iso_vm () {
+check_kvm_config () {
   if [ -z "$( command -v virsh )" ]; then
     install_required_packages "$REQUIRED_KVM_PACKAGES"
-  fi
-  check_kvm_user
+    fi
+    check_kvm_user
+}
+
+# Function: create_kvm_ci_vm
+#
+# Create a KVM VM for testing cloud init
+
+create_kvm_ci_vm () {
+  check_kvm_config
   if [ "$OS_NAME" = "Darwin" ]; then
     BREW_DIR="/opt/homebrew/Cellar"
     if [ ! -d "$BREW_DIR" ]; then
@@ -55,10 +63,35 @@ create_kvm_iso_vm () {
       VIRT_DIR="/opt/homebrew/var/lib/libvirt"
       BIN_DIR="/opt/homebrew/bin"
     fi
+    IMAGE_DIR="$VIRT_DIR/images"
     if [ ! -d "$VIRT_DIR" ]; then
       sudo_create_dir "$VIRT_DIR"
       sudo_chown "$VIRT_DIR" "$OS_USER" "$OS_GROUP"
     fi
+    if [ ! -d "$IMAGE_DIR" ]; then
+      sudo_create_dir "$IMAGE_DIR"
+      sudo_chown "$IMAGE_DIR" "$OS_USER" "$OS_GROUP"
+    fi
+  else
+    VIRT_DIR="/var/lib/libvirt"
+    IMAGE_DIR="$VIRT_DIR/images"
+    if [ ! -d "$VIRT_DIR" ]; then
+      sudo_create_dir "$VIRT_DIR"
+    fi
+    if [ ! -d "$IMAGE_DIR" ]; then
+      sudo_create_dir "$IMAGE_DIR"
+    fi
+  fi
+  VM_DISK="$WORK_DIR/$VM_NAME.qcow2"
+}
+
+# Function: create_kvm_iso_vm
+#
+# Create a KVM VM for testing an ISO
+
+create_kvm_iso_vm () {
+  check_kvm_config
+  if [ "$OS_NAME" = "Darwin" ]; then
     QEMU_VER=$( brew info qemu --json |jq -r ".[0].versions.stable" )
     VIRT_VER=$( echo "$QEMU_VER" |awk -F. '{print $1"."$2}' )
     if [ "$ISO_ARCH" = "amd64" ] || [ "$ISO_ARCH" = "x86_64" ]; then
@@ -83,7 +116,6 @@ create_kvm_iso_vm () {
     CD_BUS="scsi"
     DO_SECURE_BOOT="false"
   else
-    VIRT_DIR="/var/lib/libvirt"
     QEMU_VER=$( qemu-system-amd64 --version |head -1 |awk '{print $4}' |awk -F"." '{print $1"."$2}' )
     if [ "$DO_SECURE_BOOT" = "true" ]; then
       VARS_FILE="/usr/share/OVMF/OVMF_VARS_4M.ms.fd"
@@ -115,8 +147,6 @@ create_kvm_iso_vm () {
     sudo_chown "$NVRAM_DIR" "$OS_USER" "$OS_GROUP"
   fi
   NVRAM_FILE="$NVRAM_DIR/${VM_NAME}_VARS.fd"
-  IMAGE_DIR="$VIRT_DIR/images"
-  VM_DISK="$WORK_DIR/$VM_NAME.qcow2"
   if ! [ -f "$BIOS_FILE" ]; then
     BIOS_FILE="/usr/share/edk2/x64/OVMF_CODE.fd"
     VARS_FILE="/usr/share/edk2/x64/OVMF_VARS.fd"
