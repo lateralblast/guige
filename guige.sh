@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Name:         guige (Generic Ubuntu/Unix ISO Generation Engine)
-# Version:      2.7.9
+# Version:      2.8.0
 # Release:      1
 # License:      CC-BA (Creative Commons By Attribution)
 #               http://creativecommons.org/licenses/by/4.0/legalcode
@@ -597,9 +597,13 @@ if [ "$DO_DELETE_VM" = "true" ]; then
   delete_vm
   exit
 fi
-if [ "$DO_CREATE_VM" = "true" ]; then
+if [ "$DO_CREATE_ISO_VM" = "true" ]; then
   get_info_from_iso
-  create_vm
+  create_iso_vm
+  exit
+fi
+if [ "$DO_CREATE_CI_VM" = "true" ]; then
+  create_ci_vm
   exit
 fi
 if [ "$DO_CHECK_RACADM" = "true" ]; then

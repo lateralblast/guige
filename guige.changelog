@@ -557,3 +557,5 @@
 # Fixed firstoption switch
 # 2.7.9: Tue 13 Aug 2024 23:11:49 AEST
 # Fixed release number processing and volume manager selection
+# 2.8.0: Sun 18 Aug 2024 16:40:40 AEST
+# Adjusted KVM VM creation to allow for cloud init VM creation

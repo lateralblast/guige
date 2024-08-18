@@ -3,7 +3,7 @@
 # shellcheck disable=SC2129
 
 # Function: delete_vm
-# 
+#
 # Delete a VM
 
 delete_vm () {
@@ -17,11 +17,11 @@ delete_vm () {
   fi
 }
 
-# Function: create_vm
+# Function: create_iso_vm
 #
 # Create a VM for testing an ISO
 
-create_vm () {
+create_iso_vm () {
   if [ "$VM_ISO" = "" ]; then
     if ! [ "$OUTPUT_FILE" = "" ]; then
       VM_ISO="$OUTPUT_FILE"
@@ -30,7 +30,7 @@ create_vm () {
   if [ "$VM_TYPE" = "kvm" ]; then
     check_kvm_vm_exists
     if [ "$VM_EXISTS" = "false" ]; then
-      create_kvm_vm
+      create_kvm_iso_vm
     else
       information_message "KVM VM $VM_NAME already exists"
     fi
@@ -44,5 +44,5 @@ create_vm () {
 list_vm () {
   if [ "$VM_TYPE" = "kvm" ]; then
     list_kvm_vm
-  fi  
+  fi
 }

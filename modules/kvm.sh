@@ -36,11 +36,11 @@ check_kvm_user () {
   done
 }
 
-# Function: create_kvm_vm
+# Function: create_kvm_iso_vm
 #
 # Create a KVM VM for testing an ISO
 
-create_kvm_vm () {
+create_kvm_iso_vm () {
   if [ -z "$( command -v virsh )" ]; then
     install_required_packages "$REQUIRED_KVM_PACKAGES"
   fi

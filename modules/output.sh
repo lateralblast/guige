@@ -318,7 +318,7 @@ update_output_file_name () {
     TEMP_FILE_NAME=$( basename "$OUTPUT_FILE" .iso )
     OUTPUT_FILE="$TEMP_DIR_NAME/$TEMP_FILE_NAME-dhcp.iso"
   fi
-  if [ "$DO_CREATE_VM" = "true" ]; then
+  if [ "$DO_CREATE_ISO_VM" = "true" ] || [ "$DO_CREATE_CI_VM" = "true" ]; then
     if [ "$VM_TYPE" = "kvm" ]; then
       if [ "$OS_NAME" = "Darwin" ]; then
         REQUIRED_PACKAGES="$REQUIRED_PACKAGES qemu libvirt dnsmasq libosinfo virt-manager"
