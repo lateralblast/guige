@@ -204,14 +204,23 @@ get_interactive_input () {
     read -r -p "Enter Work directory [$WORK_DIR]: " NEW_WORK_DIR
     WORK_DIR=${NEW_WORK_DIR:-$WORK_DIR}
     # Get ISO input file
-    read -r -p "Enter ISO input file [$INPUT_FILE]: " NEW_INPUT_FILE
-    INPUT_FILE=${NEW_INPUT_FILE:-$INPUT_FILE}
-    # Get output file
-    read -r -p "Enter ISO output file [$OUTPUT_FILE]: " NEW_OUTPUT_FILE
-    OUTPUT_FILE=${NEW_OUTPUT_FILE:-$OUTPUT_FILE}
+    read -r -p "Enter ISO input file [$ISO_INPUT_FILE]: " NEW_ISO_INPUT_FILE
+    ISO_INPUT_FILE=${NEW_ISO_INPUT_FILE:-$ISO_INPUT_FILE}
+    # Get CI input file
+    read -r -p "Enter CI input file [$CI_INPUT_FILE]: " NEW_CI_INPUT_FILE
+    CI_INPUT_FILE=${NEW_CI_INPUT_FILE:-$CI_INPUT_FILE}
+    # Get ISO output file
+    read -r -p "Enter ISO output file [$ISO_OUTPUT_FILE]: " NEW_ISO_OUTPUT_FILE
+    ISO_OUTPUT_FILE=${NEW_ISO_OUTPUT_FILE:-$ISO_OUTPUT_FILE}
+    # Get CI output file
+    read -r -p "Enter CI output file [$CI_OUTPUT_FILE]: " NEW_CI_OUTPUT_FILE
+    CI_OUTPUT_FILE=${NEW_CI_OUTPUT_FILE:-$CI_OUTPUT_FILE}
     # Get ISO URL
     read -r -p "Enter ISO URL [$ISO_URL]: " NEW_ISO_URL
     ISO_URL=${NEW_ISO_URL:-$ISO_URL}
+    # Get CI URL
+    read -r -p "Enter ISO URL [$CI_URL]: " NEW_CI_URL
+    CI_URL=${NEW_CI_URL:-$CI_URL}
     # Get ISO Volume ID
     read -r -p "Enter ISO Volume ID [$ISO_VOLID]: " NEW_ISO_VOLID
     ISO_VOLID=${NEW_ISO_VOLID:-$ISO_VOLID}
@@ -343,13 +352,13 @@ get_interactive_input () {
       # Install Source
       read -r -p "Install Source? [$ISO_INSTALL_SOURCE]: " NEW_ISO_INSTALL_SOURCE
       ISO_INSTALL_SOURCE=${NEW_ISO_INSTALL_SOURCE:-$ISO_INSTALL_SOURCE}
-      # Install Mode 
+      # Install Mode
       read -r -p "Install Mode? [$ISO_INSTALL_MODE]: " NEW_ISO_INSTALL_MODE
       ISO_INSTALL_MODE=${NEW_ISO_INSTALL_MODE:-$ISO_INSTALL_MODE}
-      # Install Username 
+      # Install Username
       read -r -p "SSH Install Username? [$ISO_INSTALL_USERNAME]: " NEW_ISO_INSTALL_USERNAME
       ISO_INSTALL_USERNAME=${NEW_ISO_INSTALL_USERNAME:-$ISO_INSTALL_USERNAME}
-      # Install Username 
+      # Install Username
       read -r -p "SSH Install Password? [$ISO_INSTALL_PASSWORD]: " NEW_ISO_INSTALL_PASSWORD
       ISO_INSTALL_PASSWORD=${NEW_ISO_INSTALL_PASSWORD:-$ISO_INSTALL_PASSWORD}
       # Get Password Algorithm
@@ -367,7 +376,7 @@ get_interactive_input () {
       # Allow services
       read -r -p "Allow Services? [$ISO_ALLOW_SERVICE]: " NEW_ISO_ALLOW_SERVICE
       ISO_ALLOW_SERVICE=${NEW_ISO_ALLOW_SERVICE:-$ISO_ALLOW_SERVICE}
-      # Network boot protocol 
+      # Network boot protocol
       read -r -p "Network Boot Protocol? [$ISO_BOOT_PROTO]: " NEW_ISO_BOOT_PROTO
       ISO_BOOT_PROTO=${NEW_ISO_BOOT_PROTO:-$ISO_BOOT_PROTO}
       # Enable Network on boot

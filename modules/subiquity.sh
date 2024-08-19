@@ -186,9 +186,9 @@ prepare_autoinstall_server_iso () {
   SCRIPT_DIR="$ISO_SOURCE_DIR/$ISO_AUTOINSTALL_DIR/scripts"
   CONFIG_DIR="$ISO_SOURCE_DIR/$ISO_AUTOINSTALL_DIR/configs"
   FILES_DIR="$ISO_SOURCE_DIR/$ISO_AUTOINSTALL_DIR/files"
-  BASE_INPUT_FILE=$( basename "$INPUT_FILE" )
+  BASE_ISO_INPUT_FILE=$( basename "$ISO_INPUT_FILE" )
   if [ "$TEST_MODE" = "false" ]; then
-    7z -y x "$WORK_DIR/files/$BASE_INPUT_FILE" -o"$ISO_SOURCE_DIR"
+    7z -y x "$WORK_DIR/files/$BASE_ISO_INPUT_FILE" -o"$ISO_SOURCE_DIR"
     create_dir "$PACKAGE_DIR"
     create_dir "$SCRIPT_DIR"
     create_dir "$FILES_DIR"
@@ -925,9 +925,9 @@ prepare_autoinstall_desktop_iso () {
   SCRIPT_DIR="$ISO_SOURCE_DIR/$ISO_AUTOINSTALL_DIR/scripts"
   CONFIG_DIR="$ISO_SOURCE_DIR/$ISO_AUTOINSTALL_DIR/configs"
   FILES_DIR="$ISO_SOURCE_DIR/$ISO_AUTOINSTALL_DIR/files"
-  BASE_INPUT_FILE=$( basename "$INPUT_FILE" )
+  BASE_ISO_INPUT_FILE=$( basename "$ISO_INPUT_FILE" )
   if [ "$TEST_MODE" = "false" ]; then
-    7z -y x "$WORK_DIR/files/$BASE_INPUT_FILE" -o"$ISO_SOURCE_DIR"
+    7z -y x "$WORK_DIR/files/$BASE_ISO_INPUT_FILE" -o"$ISO_SOURCE_DIR"
     create_dir "$PACKAGE_DIR"
     create_dir "$SCRIPT_DIR"
     create_dir "$FILES_DIR"

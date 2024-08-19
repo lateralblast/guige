@@ -102,8 +102,8 @@ create_docker_iso () {
       echo "#!/bin/bash" > "$LOCAL_SCRIPT"
       echo "$DOCKER_WORK_DIR/files/$SCRIPT_BIN $SCRIPT_ARGS --workdir $DOCKER_WORK_DIR --preworkdir $WORK_DIR" >> "$LOCAL_SCRIPT"
       if [ "$DO_DOCKER" = "true" ]; then
-        BASE_DOCKER_OUTPUT_FILE=$( basename "$OUTPUT_FILE" )
-        echo "# Output file will be at \"$WORK_DIR/files/$BASE_DOCKER_OUTPUT_FILE\""
+        BASE_DOCKER_ISO_OUTPUT_FILE=$( basename "$ISO_OUTPUT_FILE" )
+        echo "# Output file will be at \"$WORK_DIR/files/$BASE_DOCKER_ISO_OUTPUT_FILE\""
       fi
       verbose_message "# Executing: exec docker run --privileged=true --cap-add=CAP_MKNOD --device-cgroup-rule=\"b 7:* rmw\" --platform \"linux/$ISO_ARCH\" --mount source=\"$SCRIPT_NAME-$CURRENT_DOCKER_UBUNTU_RELEASE-$ISO_ARCH,target=/root/$SCRIPT_NAME\" --mount type=bind,source=\"$WORK_DIR/files,target=/root/$SCRIPT_NAME/$NEW_DIR/files\"  \"$SCRIPT_NAME-$CURRENT_DOCKER_UBUNTU_RELEASE-$ISO_ARCH\" /bin/bash \"$DOCKER_SCRIPT\""
       exec docker run --privileged=true --cap-add=CAP_MKNOD --device-cgroup-rule="b 7:* rmw" --platform "linux/$ISO_ARCH" --mount source="$SCRIPT_NAME-$CURRENT_DOCKER_UBUNTU_RELEASE-$ISO_ARCH,target=/root/$SCRIPT_NAME" --mount type=bind,source="$WORK_DIR/files,target=/root/$SCRIPT_NAME/$NEW_DIR/files"  "$SCRIPT_NAME-$CURRENT_DOCKER_UBUNTU_RELEASE-$ISO_ARCH" /bin/bash "$DOCKER_SCRIPT"

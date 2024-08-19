@@ -561,3 +561,5 @@
 # Adjusted KVM VM creation to allow for cloud init VM creation
 # 2.8.1: Sun 18 Aug 2024 17:26:02 AEST
 # Split out code to check KVM config into separate routine
+# 2.8.2: Mon 19 Aug 2024 13:21:06 AEST
+# Split out CI and ISO variables

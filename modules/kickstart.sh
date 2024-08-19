@@ -14,12 +14,12 @@ create_kickstart_iso () {
   fi
   if [ "$TEST_MODE" = "false" ]; then
     handle_output "# Creating ISO" "TEXT"
-    check_file_perms "$OUTPUT_FILE"
+    check_file_perms "$ISO_OUTPUT_FILE"
     cd "$ISO_NEW_DIR/cd" || exit
-    sudo mkisofs -o "$OUTPUT_FILE" -b isolinux/isolinux.bin -c isolinux/boot.cat \
+    sudo mkisofs -o "$ISO_OUTPUT_FILE" -b isolinux/isolinux.bin -c isolinux/boot.cat \
     -boot-load-size 4 -boot-info-table -no-emul-boot -eltorito-alt-boot \
     -eltorito-boot images/efiboot.img -no-emul-boot -R -J -V "$ISO_LABEL" -T .
-    check_file_perms "$OUTPUT_FILE"
+    check_file_perms "$ISO_OUTPUT_FILE"
   fi
 }
 
@@ -55,7 +55,7 @@ prepare_kickstart_files () {
           echo "echo \"part /boot --size=$ISO_BOOT_SIZE --fstype=\\\"$ISO_VOLMGR\\\" --ondisk=/dev/\\$FIRST_DISK\" >> $INCLUDE_DISK_FILE" >> "$KS_FILE"
           echo "echo \"part $ISO_LV_NAME --size=-1 --grow --fstype=\\\"lvmpv\\\" --ondisk=/dev/\\$FIRST_DISK\" >> $INCLUDE_DISK_FILE" >> "$KS_FILE"
           echo "echo \"part /boot/efi --size=$ISO_BOOT_SIZE --asprimary --fstype=\\\"efi\\\" --ondisk=/dev/\\$FIRST_DISK\" >> $INCLUDE_DISK_FILE" >> "$KS_FILE"
-        fi 
+        fi
       fi
       if [ "$ISO_NIC" = "first-nic" ]; then
         echo "echo\"# First NIC\" > $INCLUDE_NIC_FILE" >> "$KS_FILE"
@@ -113,7 +113,7 @@ prepare_kickstart_files () {
       fi
       if [ "$ISO_NIC" = "first-nic" ]; then
         echo "%include $INCLUDE_NIC_FILE" >> "$KS_FILE"
-        echo "echo \"$NETWORK\" >> $INCLUDE_NIC_FILE" >> "$KS_FILE" 
+        echo "echo \"$NETWORK\" >> $INCLUDE_NIC_FILE" >> "$KS_FILE"
       else
         echo "$NETWORK" >> "$KS_FILE"
       fi

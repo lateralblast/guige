@@ -52,6 +52,7 @@ print_cli_help () {
   --help                  Help/Usage Information
   --hostname              Hostname (default: $DEFAULT_ISO_HOSTNAME)
   --inputiso|--vmiso      Input/base ISO file
+  --inputci|--vmci        Input/base Cloud Image file
   --installmode           Install Mode (default: $DEFAULT_ISO_INSTALL_MODE)
   --installmount          Where the install mounts the CD during install (default: $DEFAULT_ISO_INSTALL_MOUNT)
   --installpassword       Temporary install password for remote access during install (default: $DEFAULT_ISO_INSTALL_PASSWORD)
@@ -76,7 +77,8 @@ print_cli_help () {
   --oldrelease            Old release (used for copying file from an older release ISO)
   --onboot                Enable Network on Boot (default: $DEFAULT_ISO_ONBOOT)
   --options               Options (e.g. nounmount, testmode, bios, uefi, verbose, interactive)
-  --outputiso             Output ISO file (default: $DEFAULT_OUTPUT_FILE_BASE)
+  --outputci              Output Cloud Image file (default: $DEFAULT_CI_OUTPUT_FILE_BASE)
+  --outputiso             Output ISO file (default: $DEFAULT_ISO_OUTPUT_FILE_BASE)
   --password              Password (default: $DEFAULT_ISO_PASSWORD)
   --passwordalgorithm     Password Algorithm (default: $DEFAULT_ISO_PASSWORD_ALGORITHM)
   --pesize                PE size (default: $DEFAULT_ISO_PE_SIZE)

@@ -238,8 +238,11 @@ process_switches () {
   if [ "$ISO_TIMEZONE" = "" ]; then
     ISO_TIMEZONE="$DEFAULT_ISO_TIMEZONE"
   fi
-  if [ "$OUTPUT_FILE" = "" ]; then
-    OUTPUT_FILE="$DEFAULT_OUTPUT_FILE"
+  if [ "$ISO_OUTPUT_FILE" = "" ]; then
+    ISO_OUTPUT_FILE="$DEFAULT_ISO_OUTPUT_FILE"
+  fi
+  if [ "$CI_OUTPUT_FILE" = "" ]; then
+    CI_OUTPUT_FILE="$DEFAULT_CI_OUTPUT_FILE"
   fi
   if [ "$ISO_NIC" = "" ]; then
     ISO_NIC="$DEFAULT_ISO_NIC"
@@ -327,8 +330,11 @@ process_switches () {
         ;;
     esac
   fi
-  if [ "$INPUT_FILE" = "" ]; then
-    INPUT_FILE="$DEFAULT_INPUT_FILE"
+  if [ "$ISO_INPUT_FILE" = "" ]; then
+    ISO_INPUT_FILE="$DEFAULT_ISO_INPUT_FILE"
+  fi
+  if [ "$CI_INPUT_FILE" = "" ]; then
+    CI_INPUT_FILE="$DEFAULT_CI_INPUT_FILE"
   fi
   if [ "$DO_ISO_QUERY" = "true" ]; then
     get_info_from_iso
@@ -337,32 +343,36 @@ process_switches () {
       if [ "$ISO_OS_NAME" = "ubuntu" ]; then
         case $ISO_BUILD_TYPE in
           "daily-live"|"daily-live-server")
-            INPUT_FILE="$WORK_DIR/files/$ISO_CODENAME-live-server-$ISO_ARCH.iso"
-            OUTPUT_FILE="$WORK_DIR/files/$ISO_CODENAME-live-server-$ISO_ARCH-$ISO_BOOT_TYPE-autoinstall.iso"
-            BOOT_SERVER_FILE="$OUTPUT_FILE"
+            ISO_INPUT_FILE="$WORK_DIR/files/$ISO_CODENAME-live-server-$ISO_ARCH.iso"
+            ISO_OUTPUT_FILE="$WORK_DIR/files/$ISO_CODENAME-live-server-$ISO_ARCH-$ISO_BOOT_TYPE-autoinstall.iso"
+            CI_INPUT_FILE="$WORK_DIR/files/$ISO_CODENAME-server-cloudimg-$ISO_ARCH.img"
+            CI_OUTPUT_FILE="$WORK_DIR/files/$ISO_CODENAME-server-cloudimg-$ISO_ARCH.img"
+            BOOT_SERVER_FILE="$ISO_OUTPUT_FILE"
             ;;
           "daily-desktop")
-            INPUT_FILE="$WORK_DIR/files/$ISO_CODENAME-desktop-$ISO_ARCH.iso"
-            OUTPUT_FILE="$WORK_DIR/files/$ISO_CODENAME-desktop-$ISO_ARCH-$ISO_BOOT_TYPE-autoinstall.iso"
-            BOOT_SERVER_FILE="$OUTPUT_FILE"
+            ISO_INPUT_FILE="$WORK_DIR/files/$ISO_CODENAME-desktop-$ISO_ARCH.iso"
+            ISO_OUTPUT_FILE="$WORK_DIR/files/$ISO_CODENAME-desktop-$ISO_ARCH-$ISO_BOOT_TYPE-autoinstall.iso"
+            BOOT_SERVER_FILE="$ISO_OUTPUT_FILE"
             ;;
          "desktop")
-            INPUT_FILE="$WORK_DIR/files/$ISO_OS_NAME-$ISO_RELEASE-desktop-$ISO_ARCH.iso"
-            OUTPUT_FILE="$WORK_DIR/files/$ISO_OS_NAME-$ISO_RELEASE-desktop-$ISO_ARCH-$ISO_BOOT_TYPE-autoinstall.iso"
-            BOOT_SERVER_FILE="$OUTPUT_FILE"
+            ISO_INPUT_FILE="$WORK_DIR/files/$ISO_OS_NAME-$ISO_RELEASE-desktop-$ISO_ARCH.iso"
+            ISO_OUTPUT_FILE="$WORK_DIR/files/$ISO_OS_NAME-$ISO_RELEASE-desktop-$ISO_ARCH-$ISO_BOOT_TYPE-autoinstall.iso"
+            BOOT_SERVER_FILE="$ISO_OUTPUT_FILE"
             ;;
           *)
-            INPUT_FILE="$WORK_DIR/files/$ISO_OS_NAME-$ISO_RELEASE-live-server-$ISO_ARCH.iso"
-            OUTPUT_FILE="$WORK_DIR/files/$ISO_OS_NAME-$ISO_RELEASE-live-server-$ISO_ARCH-$ISO_BOOT_TYPE-autoinstall.iso"
-            BOOT_SERVER_FILE="$OUTPUT_FILE"
+            ISO_INPUT_FILE="$WORK_DIR/files/$ISO_OS_NAME-$ISO_RELEASE-live-server-$ISO_ARCH.iso"
+            ISO_OUTPUT_FILE="$WORK_DIR/files/$ISO_OS_NAME-$ISO_RELEASE-live-server-$ISO_ARCH-$ISO_BOOT_TYPE-autoinstall.iso"
+            BOOT_SERVER_FILE="$ISO_OUTPUT_FILE"
             ;;
         esac
       else
         case $ISO_BUILD_TYPE in
           *)
-            INPUT_FILE="$WORK_DIR/files/$ISO_REALNAME-$ISO_RELEASE-$ISO_ARCH-$ISO_BUILD_TYPE.iso"
-            OUTPUT_FILE="$WORK_DIR/files/$ISO_REALNAME-$ISO_RELEASE-$ISO_ARCH-$ISO_BOOT_TYPE-$ISO_BUILD_TYPE-kickstart.iso"
-            BOOT_SERVER_FILE="$OUTPUT_FILE"
+            ISO_INPUT_FILE="$WORK_DIR/files/$ISO_REALNAME-$ISO_RELEASE-$ISO_ARCH-$ISO_BUILD_TYPE.iso"
+            ISO_OUTPUT_FILE="$WORK_DIR/files/$ISO_REALNAME-$ISO_RELEASE-$ISO_ARCH-$ISO_BOOT_TYPE-$ISO_BUILD_TYPE-kickstart.iso"
+            CI_INPUT_FILE="$WORK_DIR/files/ubuntu-$ISO_RELEASE-server-cloudimg-$ISO_ARCH.img"
+            CI_OUTPUT_FILE="$WORK_DIR/files/ubuntu-$ISO_RELEASE-server-cloudimg-$ISO_ARCH.img"
+            BOOT_SERVER_FILE="$ISO_OUTPUT_FILE"
           ;;
         esac
       fi
@@ -377,8 +387,8 @@ process_switches () {
   if [ "$ISO_USE_BIOSDEVNAME" = "true" ]; then
     ISO_KERNEL_ARGS="$ISO_KERNEL_ARGS net.ifnames=0 biosdevname=0"
   fi
-  if [ "$OLD_INPUT_FILE" = "" ]; then
-    OLD_INPUT_FILE="$DEFAULT_OLD_INPUT_FILE"
+  if [ "$OLD_ISO_INPUT_FILE" = "" ]; then
+    OLD_ISO_INPUT_FILE="$DEFAULT_OLD_ISO_INPUT_FILE"
   fi
   if [ "$VM_RAM" = "" ]; then
     VM_RAM="$DEFAULT_VM_RAM"

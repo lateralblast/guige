@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Name:         guige (Generic Ubuntu/Unix ISO Generation Engine)
-# Version:      2.8.1
+# Version:      2.8.2
 # Release:      1
 # License:      CC-BA (Creative Commons By Attribution)
 #               http://creativecommons.org/licenses/by/4.0/legalcode
@@ -263,8 +263,12 @@ do
       shift 2
       ;;
     --inputiso|--vmiso)
-      INPUT_FILE="$2"
+      ISO_INPUT_FILE="$2"
       VM_ISO="$2"
+      shift 2
+      ;;
+    --inputci|--vmci)
+      CI_INPUT_FILE="$2"
       shift 2
       ;;
     --installmode|--install-mode)
@@ -348,7 +352,7 @@ do
       shift 2
       ;;
     --oldinputfile)
-      OLD_INPUT_FILE="$2"
+      OLD_ISO_INPUT_FILE="$2"
       shift 2
       ;;
     --oldisourl)
@@ -368,7 +372,11 @@ do
       shift 2
       ;;
     --outputiso)
-      OUTPUT_FILE="$2"
+      ISO_OUTPUT_FILE="$2"
+      shift 2
+      ;;
+    --outputci)
+      CI_OUTPUT_FILE="$2"
       shift 2
       ;;
     --password)

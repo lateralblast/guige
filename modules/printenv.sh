@@ -4,7 +4,7 @@
 # shellcheck disable=SC2034
 
 # Function: print_env
-# 
+#
 # Print environment
 
 print_env () {
@@ -17,20 +17,23 @@ print_env () {
   fi
   if [ "$DO_OLD_INSTALLER" = "true" ]; then
     handle_output "# Old Work directory:        [OLD_WORK_DIR]                   $OLD_WORK_DIR"       "TEXT"
-    handle_output "# Old ISO input file:        [OLD_INPUT_FILE]                 $OLD_INPUT_FILE"     "TEXT"
+    handle_output "# Old ISO input file:        [OLD_ISO_INPUT_FILE]             $OLD_ISO_INPUT_FILE" "TEXT"
     handle_output "# Old ISO URL:               [OLD_ISO_URL]                    $OLD_ISO_URL"        "TEXT"
   fi
-  handle_output "# ISO URL:                   [ISO_URL]                        $ISO_URL"                          "TEXT"
-  handle_output "# ISO input file:            [INPUT_FILE]                     $INPUT_FILE"                       "TEXT"
-  handle_output "# Required packages:         [REQUIRED_PACKAGES]              $REQUIRED_PACKAGES"                "TEXT"
-  handle_output "# ISO output file:           [OUTPUT_FILE]                    $OUTPUT_FILE"                      "TEXT"
-  handle_output "# SCP command:               [SCP_COMMAND]                    $BMC_USERNAME@$MY_IP:$OUTPUT_FILE" "TEXT"
-  handle_output "# ISO Release:               [ISO_RELEASE]                    $ISO_RELEASE"                      "TEXT"
-  handle_output "# ISO Release (Major):       [ISO_MAJOR_RELEASE]              $ISO_MAJOR_RELEASE"                "TEXT"
-  handle_output "# ISO Release (Minor):       [ISO_MINOR_RELEASE]              $ISO_MINOR_RELEASE"                "TEXT"
-  handle_output "# ISO Build:                 [ISO_BUILD_TYPE]                 $ISO_BUILD_TYPE"                   "TEXT"
-  handle_output "# ISO Volume ID:             [ISO_VOLID]                      $ISO_VOLID"                        "TEXT"
-  handle_output "# ISO mount directory:       [ISO_MOUNT_DIR]                  $ISO_MOUNT_DIR"                    "TEXT"
+  handle_output "# ISO URL:                   [ISO_URL]                        $ISO_URL"                              "TEXT"
+  handle_output "# Cloud Image URL:           [CI_URL]                         $CI_URL"                               "TEXT"
+  handle_output "# ISO input file:            [ISO_INPUT_FILE]                 $ISO_INPUT_FILE"                       "TEXT"
+  handle_output "# Cloud Image input file:    [CI_INPUT_FILE]                  $CI_INPUT_FILE"                        "TEXT"
+  handle_output "# Required packages:         [REQUIRED_PACKAGES]              $REQUIRED_PACKAGES"                    "TEXT"
+  handle_output "# ISO output file:           [ISO_OUTPUT_FILE]                $ISO_OUTPUT_FILE"                      "TEXT"
+  handle_output "# Cloud Image output file:   [CI_OUTPUT_FILE]                 $CI_OUTPUT_FILE"                       "TEXT"
+  handle_output "# SCP command:               [SCP_COMMAND]                    $BMC_USERNAME@$MY_IP:$ISO_OUTPUT_FILE" "TEXT"
+  handle_output "# ISO Release:               [ISO_RELEASE]                    $ISO_RELEASE"                          "TEXT"
+  handle_output "# ISO Release (Major):       [ISO_MAJOR_RELEASE]              $ISO_MAJOR_RELEASE"                    "TEXT"
+  handle_output "# ISO Release (Minor):       [ISO_MINOR_RELEASE]              $ISO_MINOR_RELEASE"                    "TEXT"
+  handle_output "# ISO Build:                 [ISO_BUILD_TYPE]                 $ISO_BUILD_TYPE"                       "TEXT"
+  handle_output "# ISO Volume ID:             [ISO_VOLID]                      $ISO_VOLID"                            "TEXT"
+  handle_output "# ISO mount directory:       [ISO_MOUNT_DIR]                  $ISO_MOUNT_DIR"                        "TEXT"
   if [ "$DO_OLD_INSTALLER" = "true" ]; then
     handle_output "# Old ISO mount directory:   [OLD_ISO_MOUNT_DIR]              $OLD_ISO_MOUNT_DIR"              "TEXT"
     handle_output "# Old install squashfs file: [OLD_INSTALL_SQUASHFS_FILE]      $OLD_INSTALL_SQUASHFS_FILE"      "TEXT"
