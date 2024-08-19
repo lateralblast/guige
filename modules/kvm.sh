@@ -83,6 +83,7 @@ create_kvm_ci_vm () {
     fi
   fi
   VM_DISK="$WORK_DIR/$VM_NAME.qcow2"
+  get_base_ci
 }
 
 # Function: create_kvm_iso_vm

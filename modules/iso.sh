@@ -19,8 +19,7 @@ update_iso_url () {
           ISO_URL="https://cdimage.ubuntu.com/ubuntu-server/$ISO_CODENAME/daily-live/current/$BASE_ISO_INPUT_FILE"
         fi
         NEW_DIR="$ISO_OS_NAME/$ISO_CODENAME"
-        CI_URL="https://cloud-images.ubuntu.com/daily/server/$ISO_CODENAME/current/$BASE_ISO_INPUT_FILE"
-       ;;
+        ;;
       "daily-desktop")
         if [ "$ISO_RELEASE" = "$CURRENT_ISO_DEV_RELEASE" ] || [ "$ISO_CODENAME" = "$CURRENT_ISO_CODENAME" ]; then
           ISO_URL="https://cdimage.ubuntu.com/daily-live/current/$BASE_ISO_INPUT_FILE"
@@ -48,7 +47,6 @@ update_iso_url () {
         else
           ISO_URL="https://cdimage.ubuntu.com/releases/$ISO_RELEASE/release/$BASE_ISO_INPUT_FILE"
         fi
-        CI_URL="https://cloud-images.ubuntu.com/releases/$ISO_RELEASE/release/$BASE_ISO_INPUT_FILE"
         NEW_DIR="$ISO_OS_NAME/$ISO_RELEASE"
         ;;
     esac
@@ -230,8 +228,8 @@ list_isos () {
 check_base_iso_file () {
   if [ -f "$ISO_INPUT_FILE" ]; then
     BASE_ISO_INPUT_FILE=$( basename "$ISO_INPUT_FILE" )
-    FILE_TYPE=$( file "$WORK_DIR/files/$BASE_ISO_INPUT_FILE" |cut -f2 -d: |grep -E "MBR|ISO")
-    if [ -z "$FILE_TYPE" ]; then
+    FILE_TYPE=$( file "$WORK_DIR/files/$BASE_ISO_INPUT_FILE" |cut -f2 -d: |grep -E "MBR|ISO" |wc -l |sed "s/ //g" )
+    if [ "$FILE_TYPE" = "0" ]; then
       warning_message "$WORK_DIR/files/$BASE_ISO_INPUT_FILE is not a valid ISO file"
       exit
     fi

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Name:         guige (Generic Ubuntu/Unix ISO Generation Engine)
-# Version:      2.8.2
+# Version:      2.8.4
 # Release:      1
 # License:      CC-BA (Creative Commons By Attribution)
 #               http://creativecommons.org/licenses/by/4.0/legalcode
@@ -555,6 +555,7 @@ update_required_packages
 update_iso_packages
 update_output_file_name
 update_iso_url
+update_ci_url
 handle_bios
 handle_ubuntu_pro
 copy_custom_user_data
