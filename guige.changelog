@@ -567,3 +567,5 @@
 # Added code to get base CI file
 # 2.8.4: Mon 19 Aug 2024 16:40:39 AEST
 # Updated code to get base CI file
+# 2.8.5: Tue 20 Aug 2024 19:43:19 AEST
+# Fixed KVM config check

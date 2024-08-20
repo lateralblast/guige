@@ -135,6 +135,9 @@ set_defaults () {
   ISO_MAJOR_RELEASE=""
   ISO_MINOR_RELEASE=""
   ISO_DOT_RELEASE=""
+  BREW_DIR=""
+  BIN_DIR=""
+  VIRT_DIR=""
   DEFAULT_VM_NAME="$SCRIPT_NAME"
   if [ "$OS_NAME" = "Linux" ]; then
     REQUIRED_KVM_PACKAGES="libvirt-clients libvirt-daemon-system libguestfs-tools qemu-kvm virt-manager"

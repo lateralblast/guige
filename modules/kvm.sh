@@ -43,16 +43,7 @@ check_kvm_user () {
 check_kvm_config () {
   if [ -z "$( command -v virsh )" ]; then
     install_required_packages "$REQUIRED_KVM_PACKAGES"
-    fi
-    check_kvm_user
-}
-
-# Function: create_kvm_ci_vm
-#
-# Create a KVM VM for testing cloud init
-
-create_kvm_ci_vm () {
-  check_kvm_config
+  fi
   if [ "$OS_NAME" = "Darwin" ]; then
     BREW_DIR="/opt/homebrew/Cellar"
     if [ ! -d "$BREW_DIR" ]; then
@@ -83,6 +74,15 @@ create_kvm_ci_vm () {
     fi
   fi
   VM_DISK="$WORK_DIR/$VM_NAME.qcow2"
+  check_kvm_user
+}
+
+# Function: create_kvm_ci_vm
+#
+# Create a KVM VM for testing cloud init
+
+create_kvm_ci_vm () {
+  check_kvm_config
   get_base_ci
 }
 
