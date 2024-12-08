@@ -66,6 +66,9 @@ get_my_ip () {
 
 get_current_release () {
   case "$ISO_RELEASE" in
+    "25.04")
+      ISO_RELEASE="$CURRENT_ISO_RELEASE_2504"
+      ;;
     "24.10")
       ISO_RELEASE="$CURRENT_ISO_RELEASE_2410"
       ;;
@@ -148,6 +151,10 @@ get_code_name () {
     "24.10")
       DEFAULT_ISO_CODENAME="oracular"
       ISO_CODENAME="oracular"
+      ;;
+    "25.04")
+      DEFAULT_ISO_CODENAME="plucky"
+      ISO_CODENAME="plucky"
       ;;
   esac
 }

@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
 
 # Name:         guige (Generic Ubuntu/Unix ISO Generation Engine)
-# Version:      2.8.5
+# Version:      2.8.6
 # Release:      1
 # License:      CC-BA (Creative Commons By Attribution)
 #               http://creativecommons.org/licenses/by/4.0/legalcode
 # Group:        System
-# Source:       N/A
+# Source:       N/  A
 # URL:          http://lateralblast.com.au/
 # Distribution: Ubuntu Linux
 # Vendor:       UNIX

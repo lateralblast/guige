@@ -380,11 +380,14 @@ get_info_from_iso () {
     "mantic")
       ISO_RELEASE="$CURRENT_ISO_RELEASE_2310"
       ;;
-    "nobile")
+    "noble")
       ISO_RELEASE="$CURRENT_ISO_RELEASE_2404"
       ;;
     "oracular")
       ISO_RELEASE="$CURRENT_ISO_RELEASE_2410"
+      ;;
+    "plucky")
+      ISO_RELEASE="$CURRENT_ISO_RELEASE_2504"
       ;;
     "ubuntu")
       ISO_RELEASE=$(echo "$TEST_FILE" |cut -f2 -d- )

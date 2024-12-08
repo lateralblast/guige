@@ -569,3 +569,5 @@
 # Updated code to get base CI file
 # 2.8.5: Tue 20 Aug 2024 19:43:19 AEST
 # Fixed KVM config check
+# 2.8.6: Sun  8 Dec 2024 11:11:56 AEDT
+# Added support for Ubuntu 25.04
