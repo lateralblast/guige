@@ -11,7 +11,7 @@ used to hang a shield on the shoulder or neck when not in use.
 Version
 -------
 
-Current version: 2.8.6
+Current version: 2.8.7
 
 Issues
 ------
@@ -182,6 +182,7 @@ Usage: guige.sh [OPTIONS...]
 --lcall                 LC_ALL (default: en_US)
 --locale                LANGUAGE (default: en_US.UTF-8)
 --lvname                Volume Group Name (default: pv.1)
+--netmask               Netmask (default: 255.255.252.0)
 --nic|--vmnic           Network device (default: first-nic/default)
 --oeminstall            OEM Install Type (default: auto)
 --oldinputfile          Old release ISO (used with --oldrelease)

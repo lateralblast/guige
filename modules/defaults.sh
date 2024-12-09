@@ -136,6 +136,7 @@ set_defaults () {
   ISO_MAJOR_RELEASE=""
   ISO_MINOR_RELEASE=""
   ISO_DOT_RELEASE=""
+  ISO_NETMASK=""
   BREW_DIR=""
   BIN_DIR=""
   VIRT_DIR=""
@@ -145,6 +146,7 @@ set_defaults () {
   else
     REQUIRED_KVM_PACKAGES="libvirt-glib libvirt qemu qemu-kvm virt-manager"
   fi
+  set_default_cidr
 }
 
 # Function: reset_defaults
@@ -193,6 +195,7 @@ reset_defaults () {
 # Set default flags
 
 set_default_flags () {
+  DO_ZFS="false"
   DO_IPV4="true"
   DO_IPV6="true"
   DO_NO_MULTIPATH="false"
@@ -446,7 +449,11 @@ reset_volmgrs () {
   if [ "$ISO_VOLMGRS" = "" ]; then
     if [ "$ISO_OS_NAME" = "ubuntu" ]; then
       if [ "$ISO_MAJOR_RELEASE" -gt "22" ]; then
-        ISO_VOLMGRS="btrfs xfs lvm-auto lvm"
+        if [ "$DO_ZFS" = "true" ]; then
+          ISO_VOLMGRS="btrfs xfs lvm-auto lvm"
+        else
+          ISO_VOLMGRS="zfs btrfs xfs lvm-auto lvm"
+        fi
       else
         if [ "$ISO_MAJOR_RELEASE" -lt "22" ]; then
           ISO_VOLMGRS="zfs btrfs xfs lvm-auto lvm"
@@ -495,4 +502,58 @@ set_ssh_key () {
       ISO_SSH_KEY=""
     fi
   fi
+}
+
+# Function: set_default_cidr
+#
+# Set default CIDR
+
+set_default_cidr () {
+  BIN_TEST=$( command -v ipcalc | grep -c ipcalc )
+  if [ "$OS_NAME" = "Darwin" ]; then
+    if [ ! "$BIN_TEST" = "0" ]; then
+      DEFAULT_INTERFACE=$( route -n get default |grep interface |awk '{print $2}' )
+      DEFAULT_ISO_NETMASK=$( ifconfig "$DEFAULT_INTERFACE" |grep mask |awk '{print $4}' )
+      DEFAULT_ISO_CIDR=$( ipcalc "1.1.1.1" "$DEFAULT_ISO_NETMASK" | grep ^Netmask |awk '{print $4}' )
+      if [[ "$DEFAULT_ISO_NETMASK" =~ "0x" ]]; then
+        OCTETS=$( eval echo '$(((DEFAULT_ISO_CIDR<<32)-1<<32-$DEFAULT_ISO_CIDR>>'{3..0}'*8&255))' )
+        DEFAULT_ISO_NETMASK=$( echo "${OCTETS// /.}" )
+      fi
+    else
+      verbose_message "Tool ipcalc not found" "warn"
+      DEFAULT_ISO_CIDR="24"
+    fi
+  else
+    DEFAULT_INTERFACE=$( ip -4 route show default |awk '{ print $5 }' )
+    DEFAULT_ISO_CIDR=$( ip r |grep link |grep "$DEFAULT_INTERFACE" |awk '{print $1}' |cut -f2 -d/ |head -1 )
+    if [[ "$DEFAULT_ISO_CIDR" =~ "." ]] || [ "$DEFAULT_ISO_CIDR" = "" ]; then
+      if [ ! "$BIN_TEST" = "0" ]; then
+        DEFAULT_ISO_NETMASK=$( route -n |awk '{print $3}' |grep "^255" )
+        DEFAULT_ISO_CIDR=$( ipcalc "1.1.1.1" "$DEFAULT_ISO_NETMASK" | grep ^Netmask |awk '{print $4}' )
+      else
+        verbose_message "Tool ipcalc not found" "warn"
+        DEFAULT_ISO_CIDR="24"
+      fi
+    fi
+  fi
+  DEFAULT_VM_BRIDE="$DEFAULT_INTERFACE"
+}
+
+# Function: get_cidr_from_netmask
+#
+# Get CIDR from netmask
+
+get_cidr_from_netmask () {
+  BINARY=$( eval eval echo "'\$((('{"${1//./,}"}'>>'{7..0}')%2))'" )
+  ISO_CIDR=$( eval echo '$(('"${BINARY// /+}"'))' )
+}
+
+
+# Function:: get_netmask_from_cidr
+#
+# Get netmask from CIDR
+
+get_netmask_from_cidr () {
+  OCTETS=$( eval echo '$(((1<<32)-1<<32-$1>>'{3..0}'*8&255))' )
+  ISO_NETMASK=$( echo "${OCTETS// /.}" )
 }

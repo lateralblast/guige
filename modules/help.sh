@@ -70,6 +70,7 @@ print_cli_help () {
   --lcall                 LC_ALL (default: $DEFAULT_ISO_LC_ALL)
   --locale                LANGUAGE (default: $DEFAULT_ISO_LOCALE)
   --lvname                Volume Group Name (default: $DEFAULT_ISO_LV_NAME)
+  --netmask               Netmask (default: $DEFAULT_ISO_NETMASK)
   --nic|--vmnic           Network device (default: $DEFAULT_ISO_NIC/$DEFAULT_VM_NIC)
   --oeminstall            OEM Install Type (default: $DEFAULT_ISO_OEM_INSTALL)
   --oldinputfile          Old release ISO (used with --oldrelease)

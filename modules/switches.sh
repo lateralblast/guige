@@ -393,4 +393,14 @@ process_switches () {
   if [ "$VM_RAM" = "" ]; then
     VM_RAM="$DEFAULT_VM_RAM"
   fi
+  if [ ! "$ISO_NETMASK" = "" ]; then
+    if [ "$ISO_CIDR" = "" ]; then
+      get_cidr_from_netmask "$ISO_NETMASK"
+    fi
+  fi
+  if [ ! "$ISO_CIDR" = "" ]; then
+    if [ "$ISO_NETMASK" = "" ]; then
+      get_netmask_from_cidr "$ISO_CIDR"
+    fi
+  fi
 }

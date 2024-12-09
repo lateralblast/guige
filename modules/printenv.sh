@@ -56,7 +56,9 @@ print_env () {
   handle_output "# NIC:                       [ISO_NIC]                        $ISO_NIC"              "TEXT"
   handle_output "# DHCP:                      [DO_DHCP]                        $DO_DHCP"              "TEXT"
   if [ "$DO_DHCP" = "false" ]; then
-    handle_output "# IP:                        [ISO_IP/ISO_CIDR]                $ISO_IP/$ISO_CIDR"   "TEXT"
+    handle_output "# IP:                        [ISO_IP]                         $ISO_IP"             "TEXT"
+    handle_output "# CIDR:                      [ISO_CIDR]                       $ISO_CIDR"           "TEXT"
+    handle_output "# Netmask:                   [ISO_NETMASK]                    $ISO_NETMASK"        "TEXT"
     handle_output "# Gateway:                   [ISO_GATEWAY]                    $ISO_GATEWAY"        "TEXT"
     handle_output "# Nameservers:               [ISO_DNS]                        $ISO_DNS"            "TEXT"
   fi

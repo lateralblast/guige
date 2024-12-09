@@ -8,6 +8,12 @@
 # Process option switch
 
 process_options () {
+  if [[ "$OPTIONS" =~ "zfs" ]]; then
+    DO_ZFS="true"
+  fi
+  if [[ "$OPTIONS" =~ "nozfs" ]]; then
+    DO_ZFS="false"
+  fi
   if [[ "$OPTIONS" =~ "refreshinstaller" ]]; then
     DO_REFRESH_INSTALLER="true"
   fi

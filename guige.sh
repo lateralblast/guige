@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Name:         guige (Generic Ubuntu/Unix ISO Generation Engine)
-# Version:      2.8.6
+# Version:      2.8.7
 # Release:      1
 # License:      CC-BA (Creative Commons By Attribution)
 #               http://creativecommons.org/licenses/by/4.0/legalcode
@@ -340,6 +340,10 @@ do
       ;;
     --lvname)
       ISO_LV_NAME="$2"
+      shift 2
+      ;;
+    --netmask)
+      ISO_NETMASK="$2"
       shift 2
       ;;
     --nic|--vmnic|--installnic|--bootnic|--firstnic)
