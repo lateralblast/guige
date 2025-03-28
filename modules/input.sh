@@ -66,6 +66,9 @@ get_my_ip () {
 
 get_current_release () {
   case "$ISO_RELEASE" in
+    "25.10")
+      ISO_RELEASE="$CURRENT_ISO_RELEASE_2510"
+      ;;
     "25.04")
       ISO_RELEASE="$CURRENT_ISO_RELEASE_2504"
       ;;
@@ -165,7 +168,7 @@ get_code_name () {
 
 get_build_type () {
   case $ISO_CODENAME in
-    "oracular")
+    "plucky")
       DEFAULT_ISO_BUILD_TYPE="daily-live"
       ISO_BUILD_TYPE="daily-live"
       ;;

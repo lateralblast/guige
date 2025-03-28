@@ -11,18 +11,17 @@ used to hang a shield on the shoulder or neck when not in use.
 Version
 -------
 
-Current version: 2.8.7
+Current version: 3.0.6
 
 Issues
 ------
 
 Current issues:
 
-- Currently ZFS root does not work with Ubuntu 22.04.4 or later (have logged a bug with curtin installer team)
-  - A workaround for this is to install 22.04.3 or 23.04 and upgrade to a later release
+- Code currently in the process of being cleaned up so ZFS root works, but some of the other options may not
 - BIOS ISO does not support ZFS
-  - Default mode is UEFI with ZFS and LVM install options
-  - BIOS ISO mode will build installer with only LVM install
+- Default mode is UEFI with ZFS and LVM install options
+- BIOS ISO mode will build installer with only LVM install
 
 Prerequisites
 -------------
@@ -219,7 +218,7 @@ Usage: guige.sh [OPTIONS...]
 --vmcpus                No ov VM CPUs (default: 2)
 --vmname                Set VM name (default: guige)
 --vmtype                VM type (default: kvm)
---volumemanager         Volume Managers (default: zfs zfs-lvm lvm-auto xfs btrfs)
+--volumemanager         Volume Managers (default: zfs auto ext4 xfs btrfs)
 --workdir               Work directory (default: /Users/testuser/guige/ubuntu/22.04.3)
 --zfsfilesystems        ZFS filesystems (default: /var /var/lib /var/lib/AccountsService /var/lib/apt /var/lib/dpkg /var/lib/NetworkManager /srv /usr /usr/local /var/games /var/log /var/mail /var/snap /var/spool /var/www)
 ```

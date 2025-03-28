@@ -177,6 +177,8 @@ process_switches () {
   if [ "$ISO_RELEASE" = "" ]; then
     ISO_RELEASE="$DEFAULT_ISO_RELEASE"
   else
+    ISO_MINOR_RELEASE=$( echo "$ISO_RELEASE" |cut -f2 -d. )
+    ISO_DOT_RELEASE=$( echo "$ISO_RELEASE" |cut -f3 -d. )
     if [ "$ISO_OS_NAME" = "ubuntu" ]; then
       if [ "$ISO_DOT_RELEASE" = "" ]; then
         get_current_release
@@ -303,22 +305,22 @@ process_switches () {
   if [ "$ISO_AUTOINSTALL_DIR" = "" ]; then
     ISO_AUTOINSTALL_DIR="$DEFAULT_ISO_AUTOINSTALL_DIR"
   fi
+  if [ "$ISO_BUILD_TYPE" = "" ]; then
+    ISO_BUILD_TYPE="$DEFAULT_ISO_BUILD_TYPE"
+  fi
   if [ "$WORK_DIR" = "" ]; then
     if [ "$DO_DAILY_ISO" = "true" ]; then
-      WORK_DIR="$HOME/$SCRIPT_NAME/$ISO_OS_NAME/$ISO_CODENAME"
-      DOCKER_WORK_DIR="/root/$SCRIPT_NAME/$ISO_OS_NAME/$ISO_CODENAME"
+      WORK_DIR="$HOME/$SCRIPT_NAME/$ISO_OS_NAME/$ISO_BUILD_TYPE/$ISO_CODENAME"
+      DOCKER_WORK_DIR="/root/$SCRIPT_NAME/$ISO_OS_NAME/$ISO_BUILD_TYPE/$ISO_CODENAME"
     else
-      WORK_DIR="$HOME/$SCRIPT_NAME/$ISO_OS_NAME/$ISO_RELEASE"
-      DOCKER_WORK_DIR="/root/$SCRIPT_NAME/$ISO_OS_NAME/$ISO_RELEASE"
+      WORK_DIR="$HOME/$SCRIPT_NAME/$ISO_OS_NAME/$ISO_BUILD_TYPE/$ISO_RELEASE"
+      DOCKER_WORK_DIR="/root/$SCRIPT_NAME/$ISO_OS_NAME/$ISO_BUILD_TYPE/$ISO_RELEASE"
     fi
   else
     if [ "$DO_DAILY_ISO" = "true" ]; then
-      WORK_DIR="$HOME/$SCRIPT_NAME/$ISO_OS_NAME/$ISO_CODENAME"
-      DOCKER_WORK_DIR="/root/$SCRIPT_NAME/$ISO_OS_NAME/$ISO_CODENAME"
+      WORK_DIR="$HOME/$SCRIPT_NAME/$ISO_OS_NAME/$ISO_BUILD_TYPE/$ISO_CODENAME"
+      DOCKER_WORK_DIR="/root/$SCRIPT_NAME/$ISO_OS_NAME/$ISO_BUILD_TYPE/$ISO_CODENAME"
     fi
-  fi
-  if [ "$ISO_BUILD_TYPE" = "" ]; then
-    ISO_BUILD_TYPE="$DEFAULT_ISO_BUILD_TYPE"
   fi
   if [ "$ISO_VOLID" = "" ]; then
     case $ISO_BUILD_TYPE in

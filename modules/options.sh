@@ -14,6 +14,12 @@ process_options () {
   if [[ "$OPTIONS" =~ "nozfs" ]]; then
     DO_ZFS="false"
   fi
+  if [[ "$OPTIONS" =~ "zfsfile" ]]; then
+    DO_ZFS_FILESYSTEMS="true"
+  fi
+  if [[ "$OPTIONS" =~ "nozfsfile" ]]; then
+    DO_ZFS_FILESYSTEMS="false"
+  fi
   if [[ "$OPTIONS" =~ "refreshinstaller" ]]; then
     DO_REFRESH_INSTALLER="true"
   fi
@@ -222,6 +228,12 @@ process_options () {
   fi
   if [ "$DO_STRICT" = "true" ]; then
     set -eu
+  fi
+  if [[ "$OPTIONS" =~ "early" ]]; then
+    DO_ISO_EARLY_PACKAGES="true"
+  fi
+  if [[ "$OPTIONS" =~ "late" ]]; then
+    DO_ISO_LATE_PACKAGES="false"
   fi
 }
 

@@ -21,11 +21,13 @@ unmount_squashfs () {
 # Unmount ubuntu squashfs filesystem
 
 unmount_ubuntu_squashfs () {
-  handle_output "# Unmounting squashfs $ISO_NEW_DIR/squashfs" "TEXT"
-  if [ "$TEST_MODE" = "false" ]; then
-    MOUNT_TEST=$( mount | grep "$ISO_NEW_DIR/squashfs" | wc -l )
-    if [ ! "$MOUNT_TEST" = "0" ]; then
-      sudo umount "$ISO_NEW_DIR/squashfs"
+  if [ "$DO_ISO_SQUASHFS_UPDATE" = "true" ]; then
+    handle_output "# Unmounting squashfs $ISO_NEW_DIR/squashfs" "TEXT"
+    if [ "$TEST_MODE" = "false" ]; then
+      MOUNT_TEST=$( mount | grep "$ISO_NEW_DIR/squashfs" | wc -l )
+      if [ ! "$MOUNT_TEST" = "0" ]; then
+        sudo umount "$ISO_NEW_DIR/squashfs"
+      fi
     fi
   fi
 }
@@ -52,31 +54,33 @@ copy_squashfs () {
 # sudo cp /etc/resolv.conf /etc/hosts ./isonew/custom/etc/
 
 copy_ubuntu_squashfs () {
-  handle_output "# Copying squashfs files" "TEXT"
   if [ ! -f "/usr/bin/rsync" ]; then
     install_required_packages "$REQUIRED_PACKAGES"
   fi
-  CURRENT_KERNEL=$( uname -r )
-  if [ -f "$CURRENT_KERNEL" ]; then
-    if [ "$TEST_MODE" = "false" ]; then
-      sudo mount -t squashfs -o loop "$ISO_SQUASHFS_FILE" "$ISO_NEW_DIR/squashfs"
-    fi
-    if [ "$VERBOSE_MODE" = "true" ]; then
+  if [ "$DO_ISO_SQUASHFS_UPDATE" = "true" ] || [ "$DO_ISO_SQUASHFS_UNPACK" = "true" ]; then
+    handle_output "# Copying squashfs files" "TEXT"
+    CURRENT_KERNEL=$( uname -r )
+    if [ -f "$CURRENT_KERNEL" ]; then
       if [ "$TEST_MODE" = "false" ]; then
-        sudo rsync -av "$ISO_NEW_DIR/squashfs/" "$ISO_NEW_DIR/custom"
+        sudo mount -t squashfs -o loop "$ISO_SQUASHFS_FILE" "$ISO_NEW_DIR/squashfs"
+      fi
+      if [ "$VERBOSE_MODE" = "true" ]; then
+        if [ "$TEST_MODE" = "false" ]; then
+          sudo rsync -av "$ISO_NEW_DIR/squashfs/" "$ISO_NEW_DIR/custom"
+        fi
+      else
+        if [ "$TEST_MODE" = "false" ]; then
+          sudo rsync -a "$ISO_NEW_DIR/squashfs/" "$ISO_NEW_DIR/custom"
+        fi
       fi
     else
       if [ "$TEST_MODE" = "false" ]; then
-        sudo rsync -a "$ISO_NEW_DIR/squashfs/" "$ISO_NEW_DIR/custom"
+        sudo unsquashfs -f -d "$ISO_NEW_DIR/custom" "$ISO_SQUASHFS_FILE"
       fi
     fi
-  else
     if [ "$TEST_MODE" = "false" ]; then
-      sudo unsquashfs -f -d "$ISO_NEW_DIR/custom" "$ISO_SQUASHFS_FILE"
+      sudo cp /etc/resolv.conf /etc/hosts "$ISO_NEW_DIR/custom/etc"
     fi
-  fi
-  if [ "$TEST_MODE" = "false" ]; then
-    sudo cp /etc/resolv.conf /etc/hosts "$ISO_NEW_DIR/custom/etc"
   fi
 }
 
@@ -97,14 +101,16 @@ update_iso_squashfs () {
 # Update Ubuntu ISO squashfs
 
 update_ubuntu_iso_squashfs () {
-  handle_output "# Making squashfs (this will take a while)" "TEXT"
-  if [ "$TEST_MODE" = "false" ]; then
-    sudo mksquashfs "$ISO_NEW_DIR/custom" "$ISO_NEW_DIR/mksquash/filesystem.squashfs" -noappend
-    sudo cp "$ISO_NEW_DIR/mksquash/filesystem.squashfs" "$NEW_SQUASHFS_FILE"
-    sudo chmod 0444 i"$NEW_SQUASHFS_FILE"
-    sudo echo -n $( sudo du -s --block-size=1 "$ISO_NEW_DIR/custom" | tail -1 | awk '{print $1}') | sudo tee "$ISO_NEW_DIR/mksquash/filesystem.size"
-    sudo cp "$ISO_NEW_DIR/mksquash/filesystem.size" "$ISO_SOURCE_DIR/casper/filesystem.size"
-    sudo chmod 0444 "$ISO_SOURCE_DIR/casper/filesystem.size"
-    sudo find "$ISO_SOURCE_DIR" -type f -print0 | xargs -0 md5sum | sed "s@${ISO_NEW_DIR}@.@" | grep -v md5sum.txt | sudo tee "$ISO_SOURCE_DIR/md5sum.txt"
+  if [ "$DO_ISO_SQUASHFS_UPDATE" = "true" ]; then
+    handle_output "# Making squashfs (this will take a while)" "TEXT"
+    if [ "$TEST_MODE" = "false" ]; then
+      sudo mksquashfs "$ISO_NEW_DIR/custom" "$ISO_NEW_DIR/mksquash/filesystem.squashfs" -noappend
+      sudo cp "$ISO_NEW_DIR/mksquash/filesystem.squashfs" "$NEW_SQUASHFS_FILE"
+      sudo chmod 0444 i"$NEW_SQUASHFS_FILE"
+      sudo echo -n $( sudo du -s --block-size=1 "$ISO_NEW_DIR/custom" | tail -1 | awk '{print $1}') | sudo tee "$ISO_NEW_DIR/mksquash/filesystem.size"
+      sudo cp "$ISO_NEW_DIR/mksquash/filesystem.size" "$ISO_SOURCE_DIR/casper/filesystem.size"
+      sudo chmod 0444 "$ISO_SOURCE_DIR/casper/filesystem.size"
+      sudo find "$ISO_SOURCE_DIR" -type f -print0 | xargs -0 md5sum | sed "s@${ISO_NEW_DIR}@.@" | grep -v md5sum.txt | sudo tee "$ISO_SOURCE_DIR/md5sum.txt"
+    fi
   fi
 }

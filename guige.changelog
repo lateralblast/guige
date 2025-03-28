@@ -573,3 +573,43 @@
 # Added support for Ubuntu 25.04
 # 2.8.7: Mon  9 Dec 2024 23:59:26 AEDT
 # Added code to determine CIDR and Netmask
+# 2.8.8: Mon 24 Mar 2025 22:10:23 AEDT
+# Improved support for Ubuntu Desktop
+# 2.8.9: Mon 24 Mar 2025 22:24:53 AEDT
+# Fixed unbound variable bugs
+# 2.9.0: Tue 25 Mar 2025 10:01:28 AEDT
+# Fixed Arch/Endeavour package check
+# 2.9.1: Tue 25 Mar 2025 10:28:15 AEDT
+# Impoved check for packages in ISO image
+# 2.9.2: Thu 27 Mar 2025 11:17:05 AEDT
+# Turned squashfs operation code off by default
+# 2.9.3: Thu 27 Mar 2025 13:29:43 AEDT
+# Cleaned up lvm-auto
+# 2.9.4: Thu 27 Mar 2025 16:35:34 AEDT
+# Simplified ZFS config in subiquity due to install issues
+# 2.9.5: Thu 27 Mar 2025 17:21:52 AEDT
+# Added flag for multiple ZFS filesystems
+# 2.9.6: Thu 27 Mar 2025 20:32:33 AEDT
+# Fixed squashfs
+# 2.9.7: Thu 27 Mar 2025 22:23:47 AEDT
+# More fixes
+# 2.9.8: Fri 28 Mar 2025 07:42:14 AEDT
+# Subiquity fixes
+# 2.9.9: Fri 28 Mar 2025 08:26:34 AEDT
+# Added custom to generated ISO name for custom user-data and grub.cfg
+# 3.0.0: Fri 28 Mar 2025 10:28:57 AEDT
+# Added early and late flags for package installs
+# 3.0.1: Fri 28 Mar 2025 13:22:15 AEDT
+# Updated work directory determination
+# 3.0.2: Fri 28 Mar 2025 13:59:16 AEDT
+# Fixes for server and squashfs
+# 3.0.3: Fri 28 Mar 2025 15:14:37 AEDT
+# Fixes for ZFS root on server
+# 3.0.4: Fri 28 Mar 2025 15:55:11 AEDT
+# Re-enabled boot from next volume on all releases
+# 3.0.5: Fri 28 Mar 2025 15:55:38 AEDT
+# Cleaned up ISO release number determination/handling
+# 3.0.6: Fri 28 Mar 2025 16:11:48 AEDT
+# Updated daily release to 25.x
+# 3.0.7: Sat 29 Mar 2025 08:42:04 AEDT
+# Initial documentation update

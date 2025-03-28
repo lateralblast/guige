@@ -12,14 +12,14 @@ set_defaults () {
   CURRENT_ISO_RELEASE_1604="16.04.7"
   CURRENT_ISO_RELEASE_1804="18.04.6"
   CURRENT_ISO_RELEASE_2004="20.04.6"
-  CURRENT_ISO_RELEASE_2204="22.04.3"
+  CURRENT_ISO_RELEASE_2204="22.04.5"
   CURRENT_ISO_RELEASE_2210="22.10"
   CURRENT_ISO_RELEASE_2304="23.04"
   CURRENT_ISO_RELEASE_2310="23.10.1"
-  CURRENT_ISO_RELEASE_2404="24.04"
+  CURRENT_ISO_RELEASE_2404="24.04.2"
   CURRENT_ISO_RELEASE_2410="24.10"
   CURRENT_ISO_RELEASE_2504="25.04"
-  CURRENT_ISO_RELEASE="22.04.3"
+  CURRENT_ISO_RELEASE="24.04.2"
   DEFAULT_ISO_OS_NAME="ubuntu"
   DEFAULT_ISO_RELEASE="$CURRENT_ISO_RELEASE"
   DEFAULT_ISO_MAJOR_RELEASE=$( echo "$DEFAULT_ISO_RELEASE" |cut -f1 -d. )
@@ -49,7 +49,7 @@ set_defaults () {
   DEFAULT_ISO_GATEWAY="192.168.1.254"
   DEFAULT_ISO_SWAP_SIZE="2G"
   DEFAULT_ISO_DISK="first-disk"
-  DEFAULT_ISO_VOLMGRS="zfs zfs-lvm lvm-auto xfs btrfs"
+  DEFAULT_ISO_VOLMGRS="zfs auto ext4 xfs btrfs"
   DEFAULT_ISO_GRUB_MENU="0"
   DEFAULT_ISO_GRUB_TIMEOUT="10"
   DEFAULT_ISO_LOCALE="en_US.UTF-8"
@@ -110,13 +110,8 @@ set_defaults () {
   DEFAULT_ISO_DISK_WWN="first-wwn"
   DEFAULT_ISO_COMPRESSION="lzo"
   DEFAULT_ISO_OPTION="btrfs"
-  DO_REFRESH_INSTALL="false"
+  DEFAULT_ISO_NETMASK=""
   VM_EXISTS="false"
-  DO_DHCP="true"
-  DO_GEOIP="true"
-  DO_CHROOT="true"
-  DO_NVME="false"
-  DO_COMPRESSION="true"
   TEST_MODE="false"
   FORCE_MODE="false"
   FULL_FORCE_MODE="false"
@@ -128,15 +123,13 @@ set_defaults () {
   ISO_SUFFIX=""
   BMC_PORT="443"
   BMC_EXPOSE_DURATION="180"
-  DO_CREATE_ISO="true"
-  DO_REORDER_UEFI="true"
-  DO_DELETE_VM="false"
   VM_NAME=""
   XML_FILE=""
   ISO_MAJOR_RELEASE=""
   ISO_MINOR_RELEASE=""
   ISO_DOT_RELEASE=""
   ISO_NETMASK=""
+  ISO_POSTINSTALL="none"
   BREW_DIR=""
   BIN_DIR=""
   VIRT_DIR=""
@@ -156,11 +149,14 @@ set_defaults () {
 reset_defaults () {
   set_ssh_key
   get_release_info
+  if [[ "$ISO_BUILD_TYPE" =~ "desktop" ]]; then
+    DO_CHROOT="false"
+  fi
   if [ "$ISO_OS_NAME" = "" ]; then
     ISO_OS_NAME="$DEFAULT_ISO_OS_NAME"
   fi
   if [[ "$ISO_OS_NAME" =~ "rocky" ]]; then
-    DEFAULT_ISO_VOLMGRS="lvm xfs btrfs"
+    DEFAULT_ISO_VOLMGRS="auto ext4 xfs btrfs"
     DEFAULT_ISO_ARCH="x86_64"
     CURRENT_ISO_RELEASE="9.3"
     CURRENT_ISO_RELEASE_9="9.3"
@@ -171,7 +167,7 @@ reset_defaults () {
     DEFAULT_ISO_PASSWORD="rocky"
     DEFAULT_ISO_BUILD_TYPE="dvd"
     DEFAULT_ISO_SWAP_SIZE="2048"
-    DEFAULT_WORK_DIR="$HOME/$SCRIPT_NAME/$DEFAULT_ISO_OS_NAME/$DEFAULT_ISO_RELEASE"
+    DEFAULT_WORK_DIR="$HOME/$SCRIPT_NAME/$DEFAULT_ISO_OS_NAME/$DEFAULT_ISO_BUILD_TYPE/$DEFAULT_ISO_RELEASE"
     DEFAULT_ISO_MOUNT_DIR="$DEFAULT_WORK_DIR/isomount"
     DEFAULT_ISO_INPUT_FILE="$DEFAULT_WORK_DIR/$DEFAULT_ISO_REALNAME-$DEFAULT_ISO_RELEASE-$DEFAULT_ISO_ARCH-dvd.iso"
     DEFAULT_ISO_INPUT_FILE_BASE=$( basename "$DEFAULT_ISO_INPUT_FILE" )
@@ -187,6 +183,13 @@ reset_defaults () {
     DEFAULT_CI_INPUT_FILE_BASE=$( basename "$DEFAULT_CI_INPUT_FILE" )
     DEFAULT_CI_OUTPUT_FILE="$DEFAULT_WORK_DIR/files/ubuntu-$DEFAULT_ISO_RELEASE-server-cloudimg-$DEFAULT_ISO_ARCH-$DEFAULT_ISO_BOOT_TYPE-autoinstall.img"
     DEFAULT_CI_OUTPUT_FILE_BASE=$( basename "$DEFAULT_CI_OUTPUT_FILE" )
+  fi
+  if [[ "$ISO_BUILD_TYPE" =~ "server" ]]; then
+    DO_ISO_SQUASHFS_UNPACK="true"
+    if [[ "$ISO_VOLMGRS" =~ "zfs" ]]; then
+      DO_ISO_EARLY_PACKAGES="true"
+      DO_ISO_LATE_PACKAGES="true"
+    fi
   fi
 }
 
@@ -227,6 +230,7 @@ set_default_flags () {
   DO_CREATE_AUTOINSTALL_ISO_ONLY="false"
   DO_EXECUTE_ISO_CHROOT_SCRIPT="false"
   DO_PRINT_HELP="true"
+  DO_UNMOUNT_ISO="true"
   DO_NO_UNMOUNT_ISO="false"
   DO_INSTALL_ISO_UPDATE="false"
   DO_INSTALL_ISO_UPGRADE="false"
@@ -260,6 +264,18 @@ set_default_flags () {
   DO_CUSTOM_GRUB="false"
   DO_KS_QUIET="false"
   DO_KS_TEXT="false"
+  DO_ZFS_FILESYSTEMS="false"
+  DO_CREATE_ISO="true"
+  DO_REORDER_UEFI="false"
+  DO_DELETE_VM="false"
+  DO_DHCP="true"
+  DO_GEOIP="true"
+  DO_CHROOT="true"
+  DO_NVME="false"
+  DO_COMPRESSION="true"
+  DO_REFRESH_INSTALL="false"
+  DO_ISO_EARLY_PACKAGES="false"
+  DO_ISO_LATE_PACKAGES="false"
 }
 
 # Function: set_default_os_name
@@ -380,9 +396,9 @@ set_default_docker_arch () {
 # Set default work directories
 
 set_default_dirs () {
-  DEFAULT_WORK_DIR="$HOME/$SCRIPT_NAME/$DEFAULT_ISO_OS_NAME/$DEFAULT_ISO_RELEASE"
-  DEFAULT_OLD_WORK_DIR="$HOME/$SCRIPT_NAME/$DEFAULT_ISO_OS_NAME/$DEFAULT_OLD_ISO_RELEASE"
-  MASKED_DEFAULT_WORK_DIR="$HOME/$SCRIPT_NAME/$DEFAULT_ISO_OS_NAME/$DEFAULT_ISO_RELEASE"
+  DEFAULT_WORK_DIR="$HOME/$SCRIPT_NAME/$DEFAULT_ISO_OS_NAME/$DEFAULT_ISO_BUILD_TYPE/$DEFAULT_ISO_RELEASE"
+  DEFAULT_OLD_WORK_DIR="$HOME/$SCRIPT_NAME/$DEFAULT_ISO_OS_NAME/$DEFAULT_ISO_BUILD_TYPE/$DEFAULT_OLD_ISO_RELEASE"
+  MASKED_DEFAULT_WORK_DIR="$HOME/$SCRIPT_NAME/$DEFAULT_ISO_OS_NAME/$DEFAULT_ISO_BUILD_TYPE/$DEFAULT_ISO_RELEASE"
   DEFAULT_ISO_MOUNT_DIR="$DEFAULT_WORK_DIR/isomount"
   DEFAULT_OLD_ISO_MOUNT_DIR="$DEFAULT_OLD_WORK_DIR/isomount"
   DEFAULT_ISO_AUTOINSTALL_DIR="autoinstall"
@@ -432,12 +448,17 @@ set_default_files () {
 reset_default_files () {
   ISO_VOLID="$ISO_VOLID $ISO_ARCH"
   ISO_GRUB_FILE="$WORK_DIR/grub.cfg"
-  if [ "$ISO_MAJOR_RELEASE" -ge "22" ]; then
-    ISO_SQUASHFS_FILE="$ISO_MOUNT_DIR/casper/ubuntu-server-minimal.squashfs"
-    NEW_SQUASHFS_FILE="$ISO_SOURCE_DIR/casper/ubuntu-server-minimal.squashfs"
+  if [[ "$ISO_BUILD_TYPE" =~ "desktop" ]]; then
+    ISO_SQUASHFS_FILE="$ISO_MOUNT_DIR/casper/minimal.squashfs"
+    NEW_SQUASHFS_FILE="$ISO_SOURCE_DIR/casper/minimal.squashfs"
   else
-    ISO_SQUASHFS_FILE="$ISO_MOUNT_DIR/casper/filesystem.squashfs"
-    NEW_SQUASHFS_FILE="$ISO_SOURCE_DIR/casper/filesystem.squashfs"
+    if [ "$ISO_MAJOR_RELEASE" -ge "22" ]; then
+      ISO_SQUASHFS_FILE="$ISO_MOUNT_DIR/casper/ubuntu-server-minimal.squashfs"
+      NEW_SQUASHFS_FILE="$ISO_SOURCE_DIR/casper/ubuntu-server-minimal.squashfs"
+    else
+      ISO_SQUASHFS_FILE="$ISO_MOUNT_DIR/casper/filesystem.squashfs"
+      NEW_SQUASHFS_FILE="$ISO_SOURCE_DIR/casper/filesystem.squashfs"
+    fi
   fi
 }
 
@@ -450,22 +471,22 @@ reset_volmgrs () {
     if [ "$ISO_OS_NAME" = "ubuntu" ]; then
       if [ "$ISO_MAJOR_RELEASE" -gt "22" ]; then
         if [ "$DO_ZFS" = "true" ]; then
-          ISO_VOLMGRS="btrfs xfs lvm-auto lvm"
+          ISO_VOLMGRS="auto ext4 btrfs xfs"
         else
-          ISO_VOLMGRS="zfs btrfs xfs lvm-auto lvm"
+          ISO_VOLMGRS="zfs auto ext4 btrfs xfs"
         fi
       else
         if [ "$ISO_MAJOR_RELEASE" -lt "22" ]; then
-          ISO_VOLMGRS="zfs btrfs xfs lvm-auto lvm"
+          ISO_VOLMGRS="zfs auto ext4 btrfs xfs"
         else
           if [ ! "$ISO_DOT_RELEASE" = "" ]; then
             if [ "$ISO_DOT_RELEASE" -lt "4" ]; then
-              ISO_VOLMGRS="zfs btrfs xfs lvm-auto lvm"
+              ISO_VOLMGRS="zfs auto ext4 btrfs xfs"
             else
-              ISO_VOLMGRS="btrfs xfs lvm-auto lvm"
+              ISO_VOLMGRS="auto ext4 btrfs xfs"
             fi
           else
-            ISO_VOLMGRS="btrfs xfs lvm-auto lvm"
+            ISO_VOLMGRS="auto ext4 btrfs xfs"
           fi
         fi
       fi

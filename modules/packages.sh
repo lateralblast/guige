@@ -19,7 +19,7 @@ install_required_packages () {
       PACKAGE_VERSION=$( brew info "$PACKAGE" --json |jq -r ".[0].versions.stable" )
     else
       if [[ "$LSB_RELEASE" =~ "Arch" ]] || [[ "$LSB_RELEASE" =~ "Endeavour" ]]; then
-        PACKAGE_VERSION=$( sudo pacman -Q "$PACKAGE" 2>&1 |awk '{print $2}' )
+        PACKAGE_VERSION=$( sudo pacman -Q "$PACKAGE" 2> /dev/null |awk '{print $2}' )
       else
         PACKAGE_VERSION=$( sudo dpkg -l "$PACKAGE" 2>&1 |grep "^ii" |awk '{print $3}' )
       fi
@@ -87,5 +87,12 @@ process_post_install () {
     DO_INSTALL_ISO_UPGRADE="true"
     DO_INSTALL_ISO_DIST_UPGRADE="true"
     DO_INSTALL_ISO_PACKAGES="true"
+  fi
+  if [ "$ISO_POSTINSTALL" = "none" ]; then
+    DO_INSTALL_ISO_NETWORK_UPDATES="false"
+    DO_INSTALL_ISO_UPDATE="false"
+    DO_INSTALL_ISO_UPGRADE="false"
+    DO_INSTALL_ISO_DIST_UPGRADE="false"
+    DO_INSTALL_ISO_PACKAGES="false"
   fi
 }

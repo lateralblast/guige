@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Name:         guige (Generic Ubuntu/Unix ISO Generation Engine)
-# Version:      2.8.7
+# Version:      3.0.6
 # Release:      1
 # License:      CC-BA (Creative Commons By Attribution)
 #               http://creativecommons.org/licenses/by/4.0/legalcode
@@ -81,19 +81,8 @@ fi
 
 while test $# -gt 0
 do
-#  if [ "$1" = "-h" ]; then
-#    print_help "$2"
-#    exit
-#  fi
-#  if [ "$2" = "" ]; then
-#    PATTERN="[version|help|usage]"
-#    if ! [[ "$1" =~ $PATTERN ]]; then
-#      warning_message "No $1 specified"
-#      exit
-#    fi
-#  fi
   case $1 in
-    --action)
+    --action|--actions)
       ACTION="$2"
       shift 2
       ;;
@@ -371,7 +360,7 @@ do
       ISO_ONBOOT="$2"
       shift 2
       ;;
-    --options)
+    --option|--options)
       OPTIONS="$2";
       shift 2
       ;;
@@ -524,6 +513,7 @@ do
       shift 2
       ;;
     --zfsfilesystems)
+      DO_ZFS_FILESYSTEMS="true"
       ZFS_FILESYSTEMS="$2"
       shift 2
       ;;
@@ -689,7 +679,7 @@ else
     prepare_iso
     create_iso
   fi
-  if [ "$DO_UMOUNT_ISO" = "true" ]; then
+  if [ "$DO_UNMOUNT_ISO" = "true" ]; then
     DO_PRINT_HELP="false"
     unmount_iso
     unmount_squashfs

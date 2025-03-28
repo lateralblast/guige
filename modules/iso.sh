@@ -28,25 +28,12 @@ update_iso_url () {
         fi
         NEW_DIR="$ISO_OS_NAME/$ISO_CODENAME"
         ;;
-      "desktop")
+      "desktop"|"server")
         ISO_URL="https://releases.ubuntu.com/$ISO_RELEASE/$BASE_ISO_INPUT_FILE"
         NEW_DIR="$ISO_OS_NAME/$ISO_RELEASE"
         ;;
       *)
-        if [ "$ISO_ARCH" = "amd64" ]; then
-          URL_RELEASE=$( echo "$ISO_RELEASE" |awk -F. '{print $1"."$2}' )
-          if [ "$URL_RELEASE" = "22.04" ]; then
-            if [ "$ISO_RELEASE" = "22.04.4" ]; then
-              ISO_URL="https://releases.ubuntu.com/$URL_RELEASE/$BASE_ISO_INPUT_FILE"
-            else
-              ISO_URL="https://old-releases.ubuntu.com/releases/$URL_RELEASE/$BASE_ISO_INPUT_FILE"
-            fi
-          else
-            ISO_URL="https://releases.ubuntu.com/$URL_RELEASE/$BASE_ISO_INPUT_FILE"
-          fi
-        else
-          ISO_URL="https://cdimage.ubuntu.com/releases/$ISO_RELEASE/release/$BASE_ISO_INPUT_FILE"
-        fi
+        ISO_URL="https://cdimage.ubuntu.com/releases/$ISO_RELEASE/release/$BASE_ISO_INPUT_FILE"
         NEW_DIR="$ISO_OS_NAME/$ISO_RELEASE"
         ;;
     esac
@@ -339,11 +326,7 @@ get_iso_type () {
 prepare_iso () {
   case "$ISO_OS_NAME" in
     "ubuntu")
-      if [[ "$ISO_BUILD_TYPE" =~ "desktop" ]]; then
-        prepare_autoinstall_desktop_iso
-      else
-        prepare_autoinstall_server_iso
-      fi
+      prepare_autoinstall_iso
       ;;
     "rocky")
       prepare_kickstart_iso
