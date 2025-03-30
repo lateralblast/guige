@@ -182,6 +182,9 @@ process_options () {
   if [[ "$OPTIONS" =~ "sshkey" ]]; then
     DO_ISO_SSH_KEY="true"
   fi
+  if [[ "$OPTIONS" =~ "nosshkey" ]]; then
+    DO_ISO_SSH_KEY="false"
+  fi
   if [[ "$OPTIONS" =~ "biosdevname" ]]; then
     ISO_USE_BIOSDEVNAME="true"
   else

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Name:         guige (Generic Ubuntu/Unix ISO Generation Engine)
-# Version:      3.0.8
+# Version:      3.0.9
 # Release:      1
 # License:      CC-BA (Creative Commons By Attribution)
 #               http://creativecommons.org/licenses/by/4.0/legalcode
@@ -103,7 +103,7 @@ do
       shift 2
       ISO_ARCH=$( echo "$ISO_ARCH" |sed "s/aarch64/arm64/g" |sed "s/x86_64/amd64/g" |sed "s/x86/amd64/g" )
       ;;
-    --autoinstalldir)
+    --autoinstalldir|--aidir)
       ISO_AUTOINSTALL_DIR="$2"
       shift 2
       ;;
@@ -115,11 +115,11 @@ do
       BMC_IP="$2"
       shift 2
       ;;
-    --bmcpassword)
+    ----bmcpass|--bmcpassword)
       BMC_PASSWORD="$2"
       shift 2
       ;;
-    --bmcusername)
+    --bmcuser|--bmcusername)
       BMC_USERNAME="$2"
       shift 2
       ;;
@@ -376,7 +376,7 @@ do
       ISO_PASSWORD="$2"
       shift 2
       ;;
-    --passwordalgorithm|--password-algorithm)
+    --passalgo|--passwordalgorithm|--password-algorithm)
       ISO_PASSWORD_ALGORITHM="$2"
       shift 2
       ;;
@@ -447,6 +447,11 @@ do
       ISO_SQUASHFS_FILE="$2"
       shift 2
       ;;
+    --sshkey)
+      ISO_SSH_KEY="$2"
+      DO_ISO_SSH_KEY="true"
+      shift 2
+      ;;
     --sshkeyfile)
       ISO_SSH_KEY_FILE="$2"
       DO_ISO_SSH_KEY="true"
@@ -475,7 +480,7 @@ do
       AUTO_INSTALL_FILE="$2"
       shift 2
       ;;
-    --username)
+    --user|--username)
       ISO_USERNAME="$2"
       shift 2
       ;;
@@ -512,7 +517,7 @@ do
       WORK_DIR="$2"
       shift 2
       ;;
-    --zfsfilesystems)
+    --zfs|--zfsfilesystems)
       DO_ZFS_FILESYSTEMS="true"
       ZFS_FILESYSTEMS="$2"
       shift 2

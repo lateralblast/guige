@@ -615,3 +615,5 @@
 # Initial documentation update
 # 3.0.8: Sun 30 Mar 2025 05:41:45 AEDT
 # Updated file name determination to include volume managers
+# 3.0.9: Sun 30 Mar 2025 13:50:27 AEDT
+# Updated SSH key handling
