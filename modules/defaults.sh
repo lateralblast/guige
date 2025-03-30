@@ -201,6 +201,8 @@ reset_defaults () {
   if [[ "$ISO_VOLMGRS" =~ "zfs" ]]; then
     DO_CHROOT="true"
     DO_ISO_SQUASHFS_UNPACK="true"
+    DO_ISO_EARLY_PACKAGES="true"
+    DO_ISO_LATE_PACKAGES="true"
   else
     DO_CHROOT="false"
     DO_ISO_SQUASHFS_UNPACK="false"
@@ -483,31 +485,6 @@ reset_default_files () {
 # Update order of volmgrs based on --firstoption switch
 
 reset_volmgrs () {
-  if [ "$ISO_VOLMGRS" = "" ]; then
-    if [ "$ISO_OS_NAME" = "ubuntu" ]; then
-      if [ "$ISO_MAJOR_RELEASE" -gt "22" ]; then
-        if [ "$DO_ZFS" = "true" ]; then
-          ISO_VOLMGRS="auto ext4 btrfs xfs"
-        else
-          ISO_VOLMGRS="zfs auto ext4 btrfs xfs"
-        fi
-      else
-        if [ "$ISO_MAJOR_RELEASE" -lt "22" ]; then
-          ISO_VOLMGRS="zfs auto ext4 btrfs xfs"
-        else
-          if [ ! "$ISO_DOT_RELEASE" = "" ]; then
-            if [ "$ISO_DOT_RELEASE" -lt "4" ]; then
-              ISO_VOLMGRS="zfs auto ext4 btrfs xfs"
-            else
-              ISO_VOLMGRS="auto ext4 btrfs xfs"
-            fi
-          else
-            ISO_VOLMGRS="auto ext4 btrfs xfs"
-          fi
-        fi
-      fi
-    fi
-  fi
   if [ ! "$ISO_OPTION" = "" ]; then
     TEMP_VOLMGRS=$(echo "$ISO_VOLMGRS" |sed "s/$ISO_OPTION//g" |sed "s/^ //g" |sed "s/ $//g" )
     ISO_VOLMGRS="$ISO_OPTION $TEMP_VOLMGRS"

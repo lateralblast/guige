@@ -418,4 +418,18 @@ process_switches () {
       get_netmask_from_cidr "$ISO_CIDR"
     fi
   fi
+  if [ "$ISO_VOLMGRS" = "" ]; then
+    ISO_VOLMGRS="$DEFAULT_ISO_VOLMGRS"
+  fi
+  if [[ "$ISO_VOLMGRS" =~ "zfs" ]]; then
+    DO_CHROOT="true"
+    DO_ISO_SQUASHFS_UNPACK="true"
+    DO_ISO_EARLY_PACKAGES="true"
+    DO_ISO_LATE_PACKAGES="true"
+  else
+    DO_CHROOT="false"
+    DO_ISO_SQUASHFS_UNPACK="false"
+    DO_ISO_EARLY_PACKAGES="false"
+    DO_ISO_LATE_PACKAGES="false"
+  fi
 }
