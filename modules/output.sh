@@ -329,9 +329,11 @@ update_output_file_name () {
     ISO_OUTPUT_FILE="$TEMP_DIR_NAME/$TEMP_FILE_NAME-custom-grub.iso"
   fi
   for VOLMGR in $ISO_VOLMGRS; do
-    TEMP_DIR_NAME=$( dirname "$ISO_OUTPUT_FILE" )
-    TEMP_FILE_NAME=$( basename "$ISO_OUTPUT_FILE" .iso )
-    ISO_OUTPUT_FILE="$TEMP_DIR_NAME/$TEMP_FILE_NAME-$VOLMGR.iso"
+    if [ ! "$VOLMGR" = "custom" ]; then
+      TEMP_DIR_NAME=$( dirname "$ISO_OUTPUT_FILE" )
+      TEMP_FILE_NAME=$( basename "$ISO_OUTPUT_FILE" .iso )
+      ISO_OUTPUT_FILE="$TEMP_DIR_NAME/$TEMP_FILE_NAME-$VOLMGR.iso"
+    fi
   done
   if [ "$DO_CREATE_ISO_VM" = "true" ] || [ "$DO_CREATE_CI_VM" = "true" ]; then
     if [ "$VM_TYPE" = "kvm" ]; then

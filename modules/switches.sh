@@ -421,7 +421,7 @@ process_switches () {
   if [ "$ISO_VOLMGRS" = "" ]; then
     ISO_VOLMGRS="$DEFAULT_ISO_VOLMGRS"
   fi
-  if [[ "$ISO_VOLMGRS" =~ "zfs" ]]; then
+  if [[ "$ISO_VOLMGRS" =~ "fs" ]]; then
     DO_CHROOT="true"
     DO_ISO_SQUASHFS_UNPACK="true"
     DO_ISO_EARLY_PACKAGES="true"

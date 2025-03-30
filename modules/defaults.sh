@@ -104,9 +104,10 @@ set_defaults () {
   DEFAULT_ISO_PE_SIZE="32768"
   DEFAULT_ISO_INSTALL_USERNAME="install"
   DEFAULT_ISO_INSTALL_PASSWORD="install"
-  DEFAULT_ISO_VG_NAME="system"
-  DEFAULT_ISO_LV_NAME="${DEFAULT_ISO_VG_NAME}-lv"
-  DEFAULT_ISO_PV_NAME="${DEFAULT_ISO_VG_NAME}-pv"
+  DEFAULT_ISO_VG_BASE="ubuntu"
+  DEFAULT_ISO_VG_NAME="${DEFAULT_ISO_VG_BASE}-vg"
+  DEFAULT_ISO_LV_NAME="${DEFAULT_ISO_VG_BASE}-lv"
+  DEFAULT_ISO_PV_NAME="${DEFAULT_ISO_VG_BASE}-pv"
   DEFAULT_ISO_DISK_NAME="boot"
   DEFAULT_ISO_DISK_SERIAL="first-serial"
   DEFAULT_ISO_DISK_WWN="first-wwn"
@@ -197,17 +198,6 @@ reset_defaults () {
       DO_ISO_EARLY_PACKAGES="true"
       DO_ISO_LATE_PACKAGES="true"
     fi
-  fi
-  if [[ "$ISO_VOLMGRS" =~ "zfs" ]]; then
-    DO_CHROOT="true"
-    DO_ISO_SQUASHFS_UNPACK="true"
-    DO_ISO_EARLY_PACKAGES="true"
-    DO_ISO_LATE_PACKAGES="true"
-  else
-    DO_CHROOT="false"
-    DO_ISO_SQUASHFS_UNPACK="false"
-    DO_ISO_EARLY_PACKAGES="false"
-    DO_ISO_LATE_PACKAGES="false"
   fi
 }
 
