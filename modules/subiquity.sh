@@ -206,17 +206,19 @@ prepare_autoinstall_iso () {
         sudo mkdir -p "$PACKAGE_DIR"
       fi
     fi
-    handle_output "# Copying packages to $PACKAGE_DIR" "TEXT"
-    if [ "$VERBOSE_MODE" = "true" ]; then
-      sudo cp -v "$ISO_NEW_DIR"/custom/var/cache/apt/archives/*.deb "$PACKAGE_DIR"
-    else
-      sudo cp "$ISO_NEW_DIR"/custom/var/cache/apt/archives/*.deb "$PACKAGE_DIR"
-    fi
-    if [ "$DO_OLD_INSTALLER" = "true" ]; then
-      handle_output "# Copying old installer files from $OLD_ISO_MOUNT_DIR/casper/ to $CASPER_DIR" "TEXT"
-      mount_old_iso
-      sudo cp "$OLD_ISO_MOUNT_DIR"/casper/*installer* "$CASPER_DIR/"
-      umount_old_iso
+    if [ "$DO_ISO_EARLY_PACKAGES" = "true" ] || [ "$DO_ISO_LATE_PACKAGES" = "true" ]; then
+      handle_output "# Copying packages to $PACKAGE_DIR" "TEXT"
+      if [ "$VERBOSE_MODE" = "true" ]; then
+        sudo cp -v "$ISO_NEW_DIR"/custom/var/cache/apt/archives/*.deb "$PACKAGE_DIR"
+      else
+        sudo cp "$ISO_NEW_DIR"/custom/var/cache/apt/archives/*.deb "$PACKAGE_DIR"
+      fi
+      if [ "$DO_OLD_INSTALLER" = "true" ]; then
+        handle_output "# Copying old installer files from $OLD_ISO_MOUNT_DIR/casper/ to $CASPER_DIR" "TEXT"
+        mount_old_iso
+        sudo cp "$OLD_ISO_MOUNT_DIR"/casper/*installer* "$CASPER_DIR/"
+        umount_old_iso
+      fi
     fi
   fi
   if [ -d "$ISO_SOURCE_DIR/[BOOT]" ]; then
@@ -395,9 +397,9 @@ prepare_autoinstall_iso () {
               echo "      name: lvm" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
             fi
           else
-            echo "    version: 1" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
             echo "    config:" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
             if [ "$ISO_VOLMGR" = "zfs" ]; then
+              # Creates rpool/ROOT/zfsroot
               echo "      - id: $ISO_DISK" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
               echo "        type: disk" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
               echo "        ptable: gpt" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
@@ -438,8 +440,8 @@ prepare_autoinstall_iso () {
               if [ "$DO_ZFS_FILESYSTEMS" = "true" ]; then
                 ZFS_FS_COUNTER=0
                 for ZFS_FILESYSTEM in $ZFS_FILESYSTEMS; do
-                  echo "      - pool: zpool-1" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
-                  echo "        volume: ROOT/ubuntu_install$ZFS_FILESYSTEM" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
+                  echo "      - pool: rpool" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
+                  echo "        volume: rpool$ZFS_FILESYSTEM" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
                   echo "        properties:" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
                   echo "          canmount: 'on'" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
                   echo "        id: zfs-$ZFS_FS_COUNTER" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
@@ -448,53 +450,88 @@ prepare_autoinstall_iso () {
                 done
               fi
             else
+              echo "      - ptable: gpt" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
+              echo "        path: /dev/$ISO_DISK" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
+              echo "        wipe: superblock-recursive" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
+              echo "        preserve: false" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
+              echo "        name: '$ISO_DISK_NAME'" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
+              echo "        grub_device: false" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
+              echo "        id: disk-$ISO_DISK" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
+              echo "        type: disk" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
+              echo "      - device: disk-$ISO_DISK" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
+              echo "        size: 1127219200" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
+              echo "        wipe: superblock" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
+              echo "        flag: boot" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
+              echo "        number: 1" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
+              echo "        preserve: false" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
+              echo "        grub_device: true" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
+              echo "        offset: 1048576" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
+              echo "        path: /dev/${ISO_DISK}1" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
+              echo "        id: partition-0" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
+              echo "        type: partition" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
+              echo "      - fstype: fat32" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
+              echo "        volume: partition-0" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
+              echo "        preserve: false" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
+              echo "        type: format" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
+              echo "        id: format-0" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
+              echo "      - device: disk-$ISO_DISK" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
+              echo "        size: 2147483648" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
+              echo "        wipe: superblock" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
+              echo "        number: 2" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
+              echo "        preserve: false" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
+              echo "        grub_device: false" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
+              echo "        offset: 1128267776" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
+              echo "        path: /dev/${ISO_DISK}2" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
+              echo "        id: partition-1" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
+              echo "        type: partition" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
               echo "      - fstype: ext4" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
               echo "        volume: partition-1" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
               echo "        preserve: false" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
-              echo "        type: format" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
               echo "        id: format-1" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
+              echo "        type: format" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
               echo "      - device: disk-$ISO_DISK" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
-              echo "        size: -1" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
+              echo "        size: 23566745600" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
               echo "        wipe: superblock" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
               echo "        number: 3" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
               echo "        preserve: false" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
               echo "        grub_device: false" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
               echo "        offset: 3275751424" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
               echo "        path: /dev/${ISO_DISK}3" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
-              echo "        type: partition" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
               echo "        id: partition-2" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
-              echo "      - name: ubuntu-vg" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
+              echo "        type: partition" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
+              echo "      - name: $ISO_PV_NAME" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
               echo "        devices:" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
               echo "        - partition-2" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
               echo "        preserve: false" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
-              echo "        type: lvm_volgroup" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
               echo "        id: lvm_volgroup-0" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
-              echo "      - name: ubuntu-lv" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
+              echo "        type: lvm_volgroup" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
+              echo "      - name: $ISO_LV_NAME" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
               echo "        volgroup: lvm_volgroup-0" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
               echo "        size: -1" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
               echo "        wipe: superblock" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
               echo "        preserve: false" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
-              echo "        path: /dev/ubuntu-vg/ubuntu-lv" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
-              echo "        type: lvm_partition" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
+              echo "        path: /dev/$ISO_PV_NAME/$ISO_LV_NAME" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
               echo "        id: lvm_partition-0" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
+              echo "        type: lvm_partition" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
               echo "      - fstype: $ISO_VOLMGR" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
               echo "        volume: lvm_partition-0" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
               echo "        preserve: false" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
-              echo "        type: format" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
               echo "        id: format-3" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
+              echo "        type: format" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
               echo "      - path: /" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
               echo "        device: format-3" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
-              echo "        type: mount" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
               echo "        id: mount-3" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
+              echo "        type: mount" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
               echo "      - path: /boot" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
               echo "        device: format-1" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
-              echo "        type: mount" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
               echo "        id: mount-1" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
+              echo "        type: mount" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
               echo "      - path: /boot/$ISO_BOOT_TYPE" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
               echo "        device: format-0" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
-              echo "        type: mount" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
               echo "        id: mount-0" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
+              echo "        type: mount" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
             fi
+            echo "    version: 1" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
           fi
           if [ "$DO_REORDER_UEFI" = "true" ]; then
             echo "    grub:" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"

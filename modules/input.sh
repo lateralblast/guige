@@ -3,20 +3,6 @@
 # shellcheck disable=SC2129
 # shellcheck disable=SC2034
 
-# Function: get_ssh_key
-#
-# Get SSH key if option set
-
-get_ssh_key () {
-  if [ "$DO_ISO_SSH_KEY" = "true" ]; then
-    if ! [ -f "$ISO_SSH_KEY_FILE" ]; then
-      warning_message "SSH Key file ($ISO_SSH_KEY_FILE) does not exist"
-    else
-      ISO_SSH_KEY=$(<"$ISO_SSH_KEY_FILE")
-    fi
-  fi
-}
-
 # Function: get_password_crypt
 #
 # Get password crypt
@@ -398,18 +384,26 @@ get_interactive_input () {
       # User Groups
       read -r -p "User Groups? [$ISO_GROUPS]: " NEW_ISO_GROUPS
       ISO_GROUPS=${NEW_ISO_GROUPS:-$ISO_GROUPS}
+      # PE Size
+      read -r -p "PE Size? [$ISO_PE_SIZE]: " NEW_ISO_PE_SIZE
+      ISO_PE_SIZE=${NEW_ISO_PE_SIZE:-$ISO_PE_SIZE}
+      # Boot Partition Size
+      read -r -p "Boot Partition Size? [$ISO_BOOT_SIZE]: " NEW_ISO_BOOT_SIZE
+      ISO_BOOT_SIZE=${NEW_ISO_BOOT_SIZE:-$ISO_BOOT_SIZE}
+    fi
+    # VG Name
+    read -r -p "Disk Name? [$ISO_DISK_NAME]: " NEW_ISO_DISK_NAME
+    ISO_DISK_NAME=${NEW_ISO_DISK_NAME:-$ISO_DISK_NAME}
+    if [[ ! "$ISO_VOLMGRS" =~ "zfs" ]]; then
       # VG Name
       read -r -p "Volume Group Name? [$ISO_VG_NAME]: " NEW_ISO_VG_NAME
       ISO_VG_NAME=${NEW_ISO_VG_NAME:-$ISO_VG_NAME}
       # LV Name
       read -r -p "Logic Volume Name? [$ISO_LV_NAME]: " NEW_ISO_LV_NAME
       ISO_LV_NAME=${NEW_ISO_LV_NAME:-$ISO_LV_NAME}
-      # Boot Partition Size
-      read -r -p "Boot Partition Size? [$ISO_BOOT_SIZE]: " NEW_ISO_BOOT_SIZE
-      ISO_BOOT_SIZE=${NEW_ISO_BOOT_SIZE:-$ISO_BOOT_SIZE}
-      # PE Size
-      read -r -p "PE Size? [$ISO_PE_SIZE]: " NEW_ISO_PE_SIZE
-      ISO_PE_SIZE=${NEW_ISO_PE_SIZE:-$ISO_PE_SIZE}
+      # LV Name
+      read -r -p "Physical Volume Name? [$ISO_PV_NAME]: " NEW_ISO_PV_NAME
+      ISO_PV_NAME=${NEW_ISO_PV_NAME:-$ISO_PV_NAME}
     fi
     # Get whether to install drivers
     read -r -p "Install Drivers? [$DO_INSTALL_ISO_DRIVERS]: " NEW_INSTALL_ISO_DRIVERS

@@ -11,16 +11,18 @@ used to hang a shield on the shoulder or neck when not in use.
 Version
 -------
 
-Current version: 3.0.8
+Current version: 3.1.1
 
 Issues
 ------
 
 Current issues:
 
-- Code currently in the process of being cleaned up so ZFS root works, but some of the other options may not
-- BIOS ISO does not support ZFS
+- The code is currently in the process of being cleaned 
+  - ZFS root has been tested and currently works
+  - btrfs root has been tested and currently works
 - Default mode is UEFI with ZFS and LVM install options
+- BIOS ISO does not support ZFS
 - BIOS ISO mode will build installer with only LVM install
 
 Prerequisites

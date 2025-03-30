@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Name:         guige (Generic Ubuntu/Unix ISO Generation Engine)
-# Version:      3.0.9
+# Version:      3.1.1
 # Release:      1
 # License:      CC-BA (Creative Commons By Attribution)
 #               http://creativecommons.org/licenses/by/4.0/legalcode
@@ -394,6 +394,10 @@ do
       ;;
     --preworkdir)
       PRE_WORK_DIR="$2"
+      shift 2
+      ;;
+    --pvname)
+      ISO_PV_NAME="$2"
       shift 2
       ;;
     --realname)

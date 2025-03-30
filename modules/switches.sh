@@ -23,17 +23,30 @@ process_switches () {
   if [ "$ISO_FALLBACK" = "" ]; then
     ISO_FALLBACK="$DEFAULT_ISO_FALLBACK"
   fi
+  if [ "$ISO_VG_NAME" = "" ]; then
+    ISO_VG_NAME="$DEFAULT_ISO_VG_NAME"
+  else
+    if [ "$ISO_PV_NAME" = "" ]; then
+      ISO_PV_NAME="${ISO_VG_NAME}-pv"
+    fi
+    if [ "$ISO_LV_NAME" = "" ]; then
+      ISO_LV_NAME="${ISO_VG_NAME}-lv"
+    fi
+  fi
+  if [ "$ISO_PV_NAME" = "" ]; then
+    ISO_PV_NAME="$DEFAULT_ISO_PV_NAME"
+  fi
   if [ "$ISO_LV_NAME" = "" ]; then
     ISO_LV_NAME="$DEFAULT_ISO_LV_NAME"
+  fi
+  if [ "$ISO_DISK_NAME" = "" ]; then
+    ISO_DISK_NAME="$DEFAULT_ISO_DISK_NAME"
   fi
   if [ "$ISO_INSTALL_USERNAME" = "" ]; then
     ISO_INSTALL_USERNAME="$DEFAULT_ISO_INSTALL_USERNAME"
   fi
   if [ "$ISO_INSTALL_PASSWORD" = "" ]; then
     ISO_INSTALL_PASSWORD="$DEFAULT_ISO_INSTALL_PASSWORD"
-  fi
-  if [ "$ISO_VG_NAME" = "" ]; then
-    ISO_VG_NAME="$DEFAULT_ISO_VG_NAME"
   fi
   if [ "$ISO_PE_SIZE" = "" ]; then
     ISO_PE_SIZE="$DEFAULT_ISO_PE_SIZE"

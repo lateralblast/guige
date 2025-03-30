@@ -105,7 +105,9 @@ set_defaults () {
   DEFAULT_ISO_INSTALL_USERNAME="install"
   DEFAULT_ISO_INSTALL_PASSWORD="install"
   DEFAULT_ISO_VG_NAME="system"
-  DEFAULT_ISO_LV_NAME="pv.1"
+  DEFAULT_ISO_LV_NAME="${DEFAULT_ISO_VG_NAME}-lv"
+  DEFAULT_ISO_PV_NAME="${DEFAULT_ISO_VG_NAME}-pv"
+  DEFAULT_ISO_DISK_NAME="boot"
   DEFAULT_ISO_DISK_SERIAL="first-serial"
   DEFAULT_ISO_DISK_WWN="first-wwn"
   DEFAULT_ISO_COMPRESSION="lzo"
@@ -122,6 +124,10 @@ set_defaults () {
   ISO_PREFIX=""
   ISO_SUFFIX=""
   ISO_SSH_KEY=""
+  ISO_VG_NAME=""
+  ISO_LV_NAME=""
+  ISO_PV_NAME=""
+  ISO_DISK_NAME=""
   BMC_PORT="443"
   BMC_EXPOSE_DURATION="180"
   VM_NAME=""
@@ -191,6 +197,15 @@ reset_defaults () {
       DO_ISO_EARLY_PACKAGES="true"
       DO_ISO_LATE_PACKAGES="true"
     fi
+  fi
+  if [[ "$ISO_VOLMGRS" =~ "zfs" ]]; then
+    DO_CHROOT="true"
+    DO_ISO_SQUASHFS_UNPACK="true"
+  else
+    DO_CHROOT="false"
+    DO_ISO_SQUASHFS_UNPACK="false"
+    DO_ISO_EARLY_PACKAGES="false"
+    DO_ISO_LATE_PACKAGES="false"
   fi
 }
 
