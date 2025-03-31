@@ -9,7 +9,7 @@
 
 process_actions () {
   if [ "$ISO_ACTION" = "" ]; then
-    warning_message "No action specified" "warn"
+    warning_message "No action specified"
     exit
   fi
   case $ISO_ACTION in
@@ -139,7 +139,7 @@ process_actions () {
       DO_TEST="true"
       ;;
     *)
-      handle_output "Action: $ISO_ACTION is not a valid action" ""
+      warning_message "Action \"$ISO_ACTION\" is not a valid action"
       exit
       ;;
   esac

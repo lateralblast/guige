@@ -8,7 +8,7 @@
 
 execute_racadm () {
   if [ "$DO_ISO_TESTMODE" = "false" ]; then
-    handle_output "# Executing racadm" TEXT
+    handle_output "# Executing racadm" "TEXT"
     $RACADM_BIN -H "$ISO_BMCIP" -u "$ISO_BMCUSERNAME" -p "$ISO_BMCPASSWORD" -c "remoteimage -d"
     $RACADM_BIN -H "$ISO_BMCIP" -u "$ISO_BMCUSERNAME" -p "$ISO_BMCPASSWORD" -c "remoteimage -c -l $ISO_BOOTSERVERIP:ISO_BOOTSERVERFILE"
     $RACADM_BIN -H "$ISO_BMCIP" -u "$ISO_BMCUSERNAME" -p "$ISO_BMCPASSWORD" -c "config -g cfgServerInfo -o cfgServerBootOnce 1"
@@ -22,7 +22,7 @@ execute_racadm () {
 # Check racadm
 
 check_racadm () {
-  handle_output "# Checking racadm" TEXT
+  handle_output "# Checking racadm" "TEXT"
   RACADM_TEST=$( which racadm |grep "^/" )
   if [ -z "$RACADM_TEST" ]; then
     if ! [ -f "$HOME/.local/bin/racadm" ]; then
@@ -30,7 +30,7 @@ check_racadm () {
       if [ -n "$PIP_TEST" ]; then
         PIP_TEST=$( pip list |grep rac |awk '{print $1}')
         if [ -z "$PIP_TEST" ]; then
-          handle_output "pip install --user rac" ""
+          handle_output "pip install --user rac" "TEXT"
           if [ "$DO_ISO_TESTMODE" = "false" ]; then
             pip install --user rac
             RACADM_BIN="$HOME/.local/bin/racadm"
