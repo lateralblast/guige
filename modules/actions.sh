@@ -8,11 +8,11 @@
 # Process action switch
 
 process_actions () {
-  if [ "$ACTION" = "" ]; then
+  if [ "$ISO_ACTION" = "" ]; then
     warning_message "No action specified" "warn"
     exit
   fi
-  case $ACTION in
+  case $ISO_ACTION in
     help|printhelp)
       print_help
       ;;
@@ -30,17 +30,17 @@ process_actions () {
       DO_LIST_VM="true"
       ;;
     createexport)
-      DO_CHECK_WORK_DIR="true"
+      DO_CHECK_ISO_WORKDIR="true"
       DO_INSTALL_REQUIRED_PACKAGES="true"
       DO_CREATE_EXPORT="true"
       ;;
     createansible)
-      DO_CHECK_WORK_DIR="true"
+      DO_CHECK_ISO_WORKDIR="true"
       DO_INSTALL_REQUIRED_PACKAGES="true"
       DO_CREATE_ANSIBLE="true"
       ;;
     runansible)
-      DO_CHECK_WORK_DIR="true"
+      DO_CHECK_ISO_WORKDIR="true"
       DO_INSTALL_REQUIRED_PACKAGES="true"
       DO_CREATE_EXPORT="true"
       DO_CREATE_ANSIBLE="true"
@@ -52,17 +52,17 @@ process_actions () {
     checkdocker)
       DO_DOCKER="false"
       DO_CHECK_DOCKER="true"
-      DO_CHECK_WORK_DIR="true"
+      DO_CHECK_ISO_WORKDIR="true"
       ;;
     getiso)
-      DO_CHECK_WORK_DIR="true"
+      DO_CHECK_ISO_WORKDIR="true"
       DO_GET_BASE_ISO="true"
       ;;
     installrequired|checkrequired)
       DO_INSTALL_REQUIRED_PACKAGES="true"
       ;;
     checkdirs)
-      DO_CHECK_WORK_DIR="true"
+      DO_CHECK_ISO_WORKDIR="true"
       ;;
     justiso)
       DO_CREATE_AUTOINSTALL_ISO_ONLY="true"
@@ -74,14 +74,14 @@ process_actions () {
       DO_EXECUTE_ISO_CHROOT_SCRIPT="true"
       ;;
     createiso)
-      DO_CHECK_WORK_DIR="true"
+      DO_CHECK_ISO_WORKDIR="true"
       DO_INSTALL_REQUIRED_PACKAGES="true"
       DO_EXECUTE_ISO_CHROOT_SCRIPT="true"
       DO_CREATE_AUTOINSTALL_ISO_FULL="true"
       ;;
     createisoandsquashfs)
       DO_ISO_SQUASHFS_UPDATE="true"
-      DO_CHECK_WORK_DIR="true"
+      DO_CHECK_ISO_WORKDIR="true"
       DO_INSTALL_REQUIRED_PACKAGES="true"
       DO_EXECUTE_ISO_CHROOT_SCRIPT="true"
       DO_CREATE_AUTOINSTALL_ISO_FULL="true"
@@ -89,7 +89,7 @@ process_actions () {
     createdockeriso)
       DO_DOCKER="true"
       DO_CHECK_DOCKER="true"
-      DO_CHECK_WORK_DIR="true"
+      DO_CHECK_ISO_WORKDIR="true"
       DO_INSTALL_REQUIRED_PACKAGES="true"
       DO_EXECUTE_ISO_CHROOT_SCRIPT="true"
       DO_CREATE_AUTOINSTALL_ISO_FULL="true"
@@ -98,7 +98,7 @@ process_actions () {
       DO_ISO_SQUASHFS_UPDATE="true"
       DO_DOCKER="true"
       DO_CHECK_DOCKER="true"
-      DO_CHECK_WORK_DIR="true"
+      DO_CHECK_ISO_WORKDIR="true"
       DO_INSTALL_REQUIRED_PACKAGES="true"
       DO_EXECUTE_ISO_CHROOT_SCRIPT="true"
       DO_CREATE_AUTOINSTALL_ISO_FULL="true"
@@ -139,7 +139,7 @@ process_actions () {
       DO_TEST="true"
       ;;
     *)
-      handle_output "Action: $ACTION is not a valid action" ""
+      handle_output "Action: $ISO_ACTION is not a valid action" ""
       exit
       ;;
   esac

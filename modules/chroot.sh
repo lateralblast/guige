@@ -7,7 +7,7 @@
 # Execute chroot script
 
 execute_chroot_script () {
-  case "$ISO_OS_NAME" in
+  case "$ISO_CODENAME" in
     "ubuntu")
       execute_ubuntu_chroot_script
       ;;
@@ -37,7 +37,7 @@ execute_ubuntu_chroot_script () {
 
 create_chroot_script () {
   if [ "$DO_CHROOT" = "true" ]; then
-    case "$ISO_OS_NAME" in
+    case "$ISO_CODENAME" in
       "ubuntu")
         create_ubuntu_chroot_script
         ;;
@@ -64,7 +64,7 @@ create_chroot_script () {
 # exit
 
 create_ubuntu_chroot_script () {
-  ORIG_SCRIPT="$WORK_DIR/files/modify_chroot.sh"
+  ORIG_SCRIPT="$ISO_WORKDIR/files/modify_chroot.sh"
   ISO_CHROOT_SCRIPT="$ISO_NEW_DIR/custom/tmp/modify_chroot.sh"
   check_file_perms "$ORIG_SCRIPT"
   handle_output "# Creating chroot script $ISO_CHROOT_SCRIPT" "TEXT"
@@ -89,8 +89,8 @@ create_ubuntu_chroot_script () {
     echo "  rm /etc/update-motd.d/91-contract-ua-esm-status" >> "$ORIG_SCRIPT"
     echo "fi" >> "$ORIG_SCRIPT"
     echo "apt update" >> "$ORIG_SCRIPT"
-    echo "export LC_ALL=C ; apt install -y --download-only $ISO_CHROOT_PACKAGES" >> "$ORIG_SCRIPT"
-    echo "export LC_ALL=C ; apt install -y $ISO_CHROOT_PACKAGES --option=Dpkg::Options::=$ISO_DPKG_CONF" >> "$ORIG_SCRIPT"
+    echo "export LC_ALL=C ; apt install -y --download-only $ISO_CHROOTPACKAGES" >> "$ORIG_SCRIPT"
+    echo "export LC_ALL=C ; apt install -y $ISO_CHROOTPACKAGES --option=Dpkg::Options::=$ISO_DPKG_CONF" >> "$ORIG_SCRIPT"
     echo "umount /proc/" >> "$ORIG_SCRIPT"
     echo "umount /sys/" >> "$ORIG_SCRIPT"
     echo "umount /dev/pts/" >> "$ORIG_SCRIPT"
@@ -100,7 +100,7 @@ create_ubuntu_chroot_script () {
         sudo_create_dir "$ISO_NEW_DIR/custom/tmp"
       fi
     else
-      if ! [[ "$OPTIONS" =~ "docker" ]]; then
+      if ! [[ "$ISO_OPTIONS" =~ "docker" ]]; then
         if [ ! -d "$ISO_NEW_DIR/custom/tmp" ]; then
           sudo_create_dir "$ISO_NEW_DIR/custom/tmp"
         fi

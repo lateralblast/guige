@@ -38,8 +38,8 @@ create_ci_vm () {
 
 create_iso_vm () {
   if [ "$VM_ISO" = "" ]; then
-    if ! [ "$ISO_OUTPUT_FILE" = "" ]; then
-      VM_ISO="$ISO_OUTPUT_FILE"
+    if ! [ "$ISO_OUTPUTFILE" = "" ]; then
+      VM_ISO="$ISO_OUTPUTFILE"
     fi
   fi
   if [ "$VM_TYPE" = "kvm" ]; then

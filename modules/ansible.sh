@@ -35,22 +35,22 @@ check_ansible () {
 # Creates an ansible file for setting up boot device on iDRAC using Redfish
 
 create_ansible () {
-  HOSTS_YAML="$WORK_DIR/hosts.yaml"
+  HOSTS_YAML="$ISO_WORKDIR/hosts.yaml"
   handle_output "# Creating ansible hosts file $HOSTS_YAML" "TEXT"
   if [ "$TEST_MODE" = "false" ]; then
     echo "---" > "$HOSTS_YAML"
     echo "idrac:" >> "$HOSTS_YAML"
     echo "  hosts:" >> "$HOSTS_YAML"
     echo "    $ISO_HOSTNAME:" >> "$HOSTS_YAML"
-    echo "      ansible_host:   $BMC_IP" >> "$HOSTS_YAML"
-    echo "      baseuri:        $BMC_IP" >> "$HOSTS_YAML"
-    echo "      idrac_user:     $BMC_USERNAME" >> "$HOSTS_YAML"
-    echo "      idrac_password: $BMC_PASSWORD" >> "$HOSTS_YAML"
+    echo "      ansible_host:   $ISO_BMCIP" >> "$HOSTS_YAML"
+    echo "      baseuri:        $ISO_BMCIP" >> "$HOSTS_YAML"
+    echo "      idrac_user:     $ISO_BMCUSERNAME" >> "$HOSTS_YAML"
+    echo "      idrac_password: $ISO_BMCPASSWORD" >> "$HOSTS_YAML"
     print_file "$HOSTS_YAML"
   fi
-  IDRAC_YAML="$WORK_DIR/idrac.yaml"
-  NFS_FILE=$( basename "$BOOT_SERVER_FILE" )
-  NFS_DIR=$( dirname "$BOOT_SERVER_FILE" )
+  IDRAC_YAML="$ISO_WORKDIR/idrac.yaml"
+  NFS_FILE=$( basename "$ISO_BOOTSERVERFILE" )
+  NFS_DIR=$( dirname "$ISO_BOOTSERVERFILE" )
   if [ "$TEST_MODE" = "false" ]; then
     echo "- hosts: idrac" > "$IDRAC_YAML"
     echo "  name: $ISO_VOLID" >> "$IDRAC_YAML"
@@ -70,7 +70,7 @@ create_ansible () {
     echo "    command:                    \"{{ idrac_osd_command_default }}\"" >> "$IDRAC_YAML"
     echo "    validate_certs:             no" >> "$IDRAC_YAML"
     echo "    force_basic_auth:           yes" >> "$IDRAC_YAML"
-    echo "    share_name:                 $BOOT_SERVER_IP:$NFS_DIR/" >> "$IDRAC_YAML"
+    echo "    share_name:                 $ISO_BOOTSERVERIP:$NFS_DIR/" >> "$IDRAC_YAML"
     echo "    ubuntu_iso:                 $NFS_FILE" >> "$IDRAC_YAML"
     echo "  collections:" >> "$IDRAC_YAML"
     echo "    - dellemc.openmanage" >> "$IDRAC_YAML"
@@ -161,8 +161,8 @@ create_ansible () {
 # Run ansible playbook to boot server from ISO
 
 install_server () {
-  HOSTS_YAML="$WORK_DIR/hosts.yaml"
-  IDRAC_YAML="$WORK_DIR/idrac.yaml"
+  HOSTS_YAML="$ISO_WORKDIR/hosts.yaml"
+  IDRAC_YAML="$ISO_WORKDIR/idrac.yaml"
   handle_output "# Executing ansible playbook $IDRAC_YAML" "TEXT"
   if [ "$TEST_MODE" = "false" ]; then
     ansible-playbook "$IDRAC_YAML" -i "$HOSTS_YAML"

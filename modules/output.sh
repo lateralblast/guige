@@ -159,16 +159,16 @@ remove_dir () {
   fi
 }
 
-# Function: check_work_dir
+# Function: check_ISO_WORKDIR
 #
 # Check work directories exist
 #
 # Example:
 # mkdir -p ./isomount ./isonew/squashfs ./isonew/cd ./isonew/custom
 
-check_work_dir () {
+check_ISO_WORKDIR () {
   handle_output "# Check work directories" "TEXT"
-  for ISO_DIR in $ISO_MOUNT_DIR $ISO_NEW_DIR/squashfs $ISO_NEW_DIR/mksquash $ISO_NEW_DIR/cd $ISO_NEW_DIR/custom $WORK_DIR/bin $WORK_DIR/files; do
+  for ISO_DIR in $ISO_MOUNT_DIR $ISO_NEW_DIR/squashfs $ISO_NEW_DIR/mksquash $ISO_NEW_DIR/cd $ISO_NEW_DIR/custom $ISO_WORKDIR/bin $ISO_WORKDIR/files; do
     handle_output "# Check directory $ISO_DIR exists" "TEXT"
     if [ "$FORCE_MODE" = "true" ]; then
       remove_dir "$ISO_DIR"
@@ -177,14 +177,14 @@ check_work_dir () {
   done
 }
 
-# Function: check_old_work_dir
+# Function: check_old_ISO_WORKDIR
 #
 # Check old release work directory
 # Used when copying files from old release to a new release
 
-check_old_work_dir () {
+check_old_ISO_WORKDIR () {
   handle_output "# Check old release work directories exist" "TEXT"
-  for ISO_DIR in $OLD_ISO_MOUNT_DIR $OLD_WORK_DIR/files; do
+  for ISO_DIR in $OLD_ISO_MOUNT_DIR $OLD_ISO_WORKDIR/files; do
     if [ "$FORCE_MODE" = "true" ]; then
       remove_dir "$ISO_DIR"
     fi
@@ -202,7 +202,7 @@ check_file_perms () {
   if [ -f "$CHECK_FILE" ]; then
     MY_USER="$OS_USER"
     MY_GROUP=$(groups |awk '{print $1}')
-    FILE_USER=$(find "$ISO_OUTPUT_FILE" -ls |awk '{print $5}')
+    FILE_USER=$(find "$ISO_OUTPUTFILE" -ls |awk '{print $5}')
     if [ ! "$FILE_USER" = "$MY_USER" ]; then
       sudo chown "$MY_USER" "$CHECK_FILE"
       sudo chgrp "$MY_GROUP" "$CHECK_FILE"
@@ -215,21 +215,21 @@ check_file_perms () {
 # Setup NFS server to export ISO
 
 create_export () {
-  NFS_DIR="$WORK_DIR/files"
+  NFS_DIR="$ISO_WORKDIR/files"
   EXPORTS_FILE="/etc/exports"
   handle_output "# Check NFS export is enabled" "TEXT"
   if [ -f "$EXPORTS_FILE" ]; then
-    EXPORT_CHECK=$( grep -v "^#" < "$EXPORTS_FILE" |grep "$NFS_DIR" |grep "$BMC_IP" |awk '{print $1}' | head -1 )
+    EXPORT_CHECK=$( grep -v "^#" < "$EXPORTS_FILE" |grep "$NFS_DIR" |grep "$ISO_BMCIP" |awk '{print $1}' | head -1 )
   else
     EXPORT_CHECK=""
   fi
   if [ -z "$EXPORT_CHECK" ]; then
     if [ "$OS_NAME" = "Darwin" ]; then
-      echo "$NFS_DIR --mapall=$OS_USER $BMC_IP" |sudo tee -a "$EXPORTS_FILE"
+      echo "$NFS_DIR --mapall=$OS_USER $ISO_BMCIP" |sudo tee -a "$EXPORTS_FILE"
       sudo nfsd enable
       sudo nfsd restart
     else
-      echo "$NFS_DIR $BMC_IP(sync,wdelay,hide,no_subtree_check,sec=sys,rw,secure,root_squash,no_all_squash)" |sudo tee -a "$EXPORTS_FILE"
+      echo "$NFS_DIR $ISO_BMCIP(sync,wdelay,hide,no_subtree_check,sec=sys,rw,secure,root_squash,no_all_squash)" |sudo tee -a "$EXPORTS_FILE"
       sudo exportfs -a
     fi
     print_file "$EXPORTS_FILE"
@@ -242,97 +242,97 @@ create_export () {
 
 update_output_file_name () {
   if ! [ "$ISO_HOSTNAME" = "$DEFAULT_ISO_HOSTNAME" ]; then
-    TEMP_DIR_NAME=$( dirname "$ISO_OUTPUT_FILE" )
-    TEMP_FILE_NAME=$( basename "$ISO_OUTPUT_FILE" .iso )
-    ISO_OUTPUT_FILE="$TEMP_DIR_NAME/$TEMP_FILE_NAME-$ISO_HOSTNAME.iso"
+    TEMP_DIR_NAME=$( dirname "$ISO_OUTPUTFILE" )
+    TEMP_FILE_NAME=$( basename "$ISO_OUTPUTFILE" .iso )
+    ISO_OUTPUTFILE="$TEMP_DIR_NAME/$TEMP_FILE_NAME-$ISO_HOSTNAME.iso"
   fi
   if ! [ "$ISO_NIC" = "$DEFAULT_ISO_NIC" ]; then
-    TEMP_DIR_NAME=$( dirname "$ISO_OUTPUT_FILE" )
-    TEMP_FILE_NAME=$( basename "$ISO_OUTPUT_FILE" .iso )
-    ISO_OUTPUT_FILE="$TEMP_DIR_NAME/$TEMP_FILE_NAME-$ISO_NIC.iso"
+    TEMP_DIR_NAME=$( dirname "$ISO_OUTPUTFILE" )
+    TEMP_FILE_NAME=$( basename "$ISO_OUTPUTFILE" .iso )
+    ISO_OUTPUTFILE="$TEMP_DIR_NAME/$TEMP_FILE_NAME-$ISO_NIC.iso"
   fi
-  if [ "$DO_DHCP" = "false" ]; then
+  if [ "$DO_ISO_DHCP" = "false" ]; then
     if ! [ "$ISO_IP" = "$DEFAULT_ISO_IP" ]; then
-      TEMP_DIR_NAME=$( dirname "$ISO_OUTPUT_FILE" )
-      TEMP_FILE_NAME=$( basename "$ISO_OUTPUT_FILE" .iso )
-      ISO_OUTPUT_FILE="$TEMP_DIR_NAME/$TEMP_FILE_NAME-$ISO_IP.iso"
+      TEMP_DIR_NAME=$( dirname "$ISO_OUTPUTFILE" )
+      TEMP_FILE_NAME=$( basename "$ISO_OUTPUTFILE" .iso )
+      ISO_OUTPUTFILE="$TEMP_DIR_NAME/$TEMP_FILE_NAME-$ISO_IP.iso"
     fi
     if ! [ "$ISO_GATEWAY" = "$DEFAULT_ISO_GATEWAY" ]; then
-      TEMP_DIR_NAME=$( dirname "$ISO_OUTPUT_FILE" )
-      TEMP_FILE_NAME=$( basename "$ISO_OUTPUT_FILE" .iso )
-      ISO_OUTPUT_FILE="$TEMP_DIR_NAME/$TEMP_FILE_NAME-$ISO_GATEWAY.iso"
+      TEMP_DIR_NAME=$( dirname "$ISO_OUTPUTFILE" )
+      TEMP_FILE_NAME=$( basename "$ISO_OUTPUTFILE" .iso )
+      ISO_OUTPUTFILE="$TEMP_DIR_NAME/$TEMP_FILE_NAME-$ISO_GATEWAY.iso"
     fi
     if ! [ "$ISO_DNS" = "$DEFAULT_ISO_DNS" ]; then
-      TEMP_DIR_NAME=$( dirname "$ISO_OUTPUT_FILE" )
-      TEMP_FILE_NAME=$( basename "$ISO_OUTPUT_FILE" .iso )
-      ISO_OUTPUT_FILE="$TEMP_DIR_NAME/$TEMP_FILE_NAME-$ISO_DNS.iso"
+      TEMP_DIR_NAME=$( dirname "$ISO_OUTPUTFILE" )
+      TEMP_FILE_NAME=$( basename "$ISO_OUTPUTFILE" .iso )
+      ISO_OUTPUTFILE="$TEMP_DIR_NAME/$TEMP_FILE_NAME-$ISO_DNS.iso"
     fi
   fi
   if ! [ "$ISO_USERNAME" = "$DEFAULT_ISO_USERNAME" ]; then
-    TEMP_DIR_NAME=$( dirname "$ISO_OUTPUT_FILE" )
-    TEMP_FILE_NAME=$( basename "$ISO_OUTPUT_FILE" .iso )
-    ISO_OUTPUT_FILE="$TEMP_DIR_NAME/$TEMP_FILE_NAME-$ISO_USERNAME.iso"
+    TEMP_DIR_NAME=$( dirname "$ISO_OUTPUTFILE" )
+    TEMP_FILE_NAME=$( basename "$ISO_OUTPUTFILE" .iso )
+    ISO_OUTPUTFILE="$TEMP_DIR_NAME/$TEMP_FILE_NAME-$ISO_USERNAME.iso"
   fi
   if ! [ "$ISO_DISK" = "$DEFAULT_ISO_DISK" ]; then
-    TEMP_DIR_NAME=$( dirname "$ISO_OUTPUT_FILE" )
-    TEMP_FILE_NAME=$( basename "$ISO_OUTPUT_FILE" .iso )
-    ISO_OUTPUT_FILE="$TEMP_DIR_NAME/$TEMP_FILE_NAME-$ISO_DISK.iso"
+    TEMP_DIR_NAME=$( dirname "$ISO_OUTPUTFILE" )
+    TEMP_FILE_NAME=$( basename "$ISO_OUTPUTFILE" .iso )
+    ISO_OUTPUTFILE="$TEMP_DIR_NAME/$TEMP_FILE_NAME-$ISO_DISK.iso"
   fi
   if ! [ "$ISO_PREFIX" = "" ]; then
-    TEMP_DIR_NAME=$( dirname "$ISO_OUTPUT_FILE" )
-    TEMP_FILE_NAME=$( basename "$ISO_OUTPUT_FILE" .iso )
-    ISO_OUTPUT_FILE="$TEMP_DIR_NAME/$ISO_PREFIX-$TEMP_FILE_NAME.iso"
+    TEMP_DIR_NAME=$( dirname "$ISO_OUTPUTFILE" )
+    TEMP_FILE_NAME=$( basename "$ISO_OUTPUTFILE" .iso )
+    ISO_OUTPUTFILE="$TEMP_DIR_NAME/$ISO_PREFIX-$TEMP_FILE_NAME.iso"
   fi
   if ! [ "$ISO_SUFFIX" = "" ]; then
-    TEMP_DIR_NAME=$( dirname "$ISO_OUTPUT_FILE" )
-    TEMP_FILE_NAME=$( basename "$ISO_OUTPUT_FILE" .iso )
-    ISO_OUTPUT_FILE="$TEMP_DIR_NAME/$TEMP_FILE_NAME-$ISO_SUFFIX.iso"
+    TEMP_DIR_NAME=$( dirname "$ISO_OUTPUTFILE" )
+    TEMP_FILE_NAME=$( basename "$ISO_OUTPUTFILE" .iso )
+    ISO_OUTPUTFILE="$TEMP_DIR_NAME/$TEMP_FILE_NAME-$ISO_SUFFIX.iso"
   fi
-  if [[ "$OPTIONS" =~ "cluster" ]]; then
-    TEMP_DIR_NAME=$( dirname "$ISO_OUTPUT_FILE" )
-    TEMP_FILE_NAME=$( basename "$ISO_OUTPUT_FILE" .iso )
-    ISO_OUTPUT_FILE="$TEMP_DIR_NAME/$TEMP_FILE_NAME-cluster.iso"
+  if [[ "$ISO_OPTIONS" =~ "cluster" ]]; then
+    TEMP_DIR_NAME=$( dirname "$ISO_OUTPUTFILE" )
+    TEMP_FILE_NAME=$( basename "$ISO_OUTPUTFILE" .iso )
+    ISO_OUTPUTFILE="$TEMP_DIR_NAME/$TEMP_FILE_NAME-cluster.iso"
   fi
-  if [[ "$OPTIONS" =~ "kvm" ]]; then
-    TEMP_DIR_NAME=$( dirname "$ISO_OUTPUT_FILE" )
-    TEMP_FILE_NAME=$( basename "$ISO_OUTPUT_FILE" .iso )
-    ISO_OUTPUT_FILE="$TEMP_DIR_NAME/$TEMP_FILE_NAME-kvm.iso"
+  if [[ "$ISO_OPTIONS" =~ "kvm" ]]; then
+    TEMP_DIR_NAME=$( dirname "$ISO_OUTPUTFILE" )
+    TEMP_FILE_NAME=$( basename "$ISO_OUTPUTFILE" .iso )
+    ISO_OUTPUTFILE="$TEMP_DIR_NAME/$TEMP_FILE_NAME-kvm.iso"
   fi
-  if [[ "$OPTIONS" =~ "biosdevname" ]]; then
-    TEMP_DIR_NAME=$( dirname "$ISO_OUTPUT_FILE" )
-    TEMP_FILE_NAME=$( basename "$ISO_OUTPUT_FILE" .iso )
-    ISO_OUTPUT_FILE="$TEMP_DIR_NAME/$TEMP_FILE_NAME-biosdevname.iso"
+  if [[ "$ISO_OPTIONS" =~ "biosdevname" ]]; then
+    TEMP_DIR_NAME=$( dirname "$ISO_OUTPUTFILE" )
+    TEMP_FILE_NAME=$( basename "$ISO_OUTPUTFILE" .iso )
+    ISO_OUTPUTFILE="$TEMP_DIR_NAME/$TEMP_FILE_NAME-biosdevname.iso"
   fi
-  if [ "$DO_ISO_SSH_KEY" = "true" ]; then
-    TEMP_DIR_NAME=$( dirname "$ISO_OUTPUT_FILE" )
-    TEMP_FILE_NAME=$( basename "$ISO_OUTPUT_FILE" .iso )
-    ISO_OUTPUT_FILE="$TEMP_DIR_NAME/$TEMP_FILE_NAME-sshkey.iso"
+  if [ "$DO_ISO_SSHKEY" = "true" ]; then
+    TEMP_DIR_NAME=$( dirname "$ISO_OUTPUTFILE" )
+    TEMP_FILE_NAME=$( basename "$ISO_OUTPUTFILE" .iso )
+    ISO_OUTPUTFILE="$TEMP_DIR_NAME/$TEMP_FILE_NAME-sshkey.iso"
   fi
   if [ "$DO_NVME" = "true" ]; then
-    TEMP_DIR_NAME=$( dirname "$ISO_OUTPUT_FILE" )
-    TEMP_FILE_NAME=$( basename "$ISO_OUTPUT_FILE" .iso )
-    ISO_OUTPUT_FILE="$TEMP_DIR_NAME/$TEMP_FILE_NAME-nvme.iso"
+    TEMP_DIR_NAME=$( dirname "$ISO_OUTPUTFILE" )
+    TEMP_FILE_NAME=$( basename "$ISO_OUTPUTFILE" .iso )
+    ISO_OUTPUTFILE="$TEMP_DIR_NAME/$TEMP_FILE_NAME-nvme.iso"
   fi
-  if [ "$DO_DHCP" = "true" ]; then
-    TEMP_DIR_NAME=$( dirname "$ISO_OUTPUT_FILE" )
-    TEMP_FILE_NAME=$( basename "$ISO_OUTPUT_FILE" .iso )
-    ISO_OUTPUT_FILE="$TEMP_DIR_NAME/$TEMP_FILE_NAME-dhcp.iso"
+  if [ "$DO_ISO_DHCP" = "true" ]; then
+    TEMP_DIR_NAME=$( dirname "$ISO_OUTPUTFILE" )
+    TEMP_FILE_NAME=$( basename "$ISO_OUTPUTFILE" .iso )
+    ISO_OUTPUTFILE="$TEMP_DIR_NAME/$TEMP_FILE_NAME-dhcp.iso"
   fi
-  if [ "$DO_CUSTOM_AUTO_INSTALL" = "true" ]; then
-    TEMP_DIR_NAME=$( dirname "$ISO_OUTPUT_FILE" )
-    TEMP_FILE_NAME=$( basename "$ISO_OUTPUT_FILE" .iso )
-    ISO_OUTPUT_FILE="$TEMP_DIR_NAME/$TEMP_FILE_NAME-custom-user-data.iso"
+  if [ "$DO_ISO_AUTOINSTALL" = "true" ]; then
+    TEMP_DIR_NAME=$( dirname "$ISO_OUTPUTFILE" )
+    TEMP_FILE_NAME=$( basename "$ISO_OUTPUTFILE" .iso )
+    ISO_OUTPUTFILE="$TEMP_DIR_NAME/$TEMP_FILE_NAME-custom-user-data.iso"
   fi
-  if [ "$DO_CUSTOM_GRUB" = "true" ]; then
-    TEMP_DIR_NAME=$( dirname "$ISO_OUTPUT_FILE" )
-    TEMP_FILE_NAME=$( basename "$ISO_OUTPUT_FILE" .iso )
-    ISO_OUTPUT_FILE="$TEMP_DIR_NAME/$TEMP_FILE_NAME-custom-grub.iso"
+  if [ "$DO_ISO_GRUBFILE" = "true" ]; then
+    TEMP_DIR_NAME=$( dirname "$ISO_OUTPUTFILE" )
+    TEMP_FILE_NAME=$( basename "$ISO_OUTPUTFILE" .iso )
+    ISO_OUTPUTFILE="$TEMP_DIR_NAME/$TEMP_FILE_NAME-custom-grub.iso"
   fi
   for VOLMGR in $ISO_VOLMGRS; do
     if [ ! "$VOLMGR" = "custom" ]; then
-      TEMP_DIR_NAME=$( dirname "$ISO_OUTPUT_FILE" )
-      TEMP_FILE_NAME=$( basename "$ISO_OUTPUT_FILE" .iso )
-      ISO_OUTPUT_FILE="$TEMP_DIR_NAME/$TEMP_FILE_NAME-$VOLMGR.iso"
+      TEMP_DIR_NAME=$( dirname "$ISO_OUTPUTFILE" )
+      TEMP_FILE_NAME=$( basename "$ISO_OUTPUTFILE" .iso )
+      ISO_OUTPUTFILE="$TEMP_DIR_NAME/$TEMP_FILE_NAME-$VOLMGR.iso"
     fi
   done
   if [ "$DO_CREATE_ISO_VM" = "true" ] || [ "$DO_CREATE_CI_VM" = "true" ]; then
@@ -356,8 +356,8 @@ update_output_file_name () {
   if [ "$VM_CPUS" = "" ]; then
     VM_CPUS="$DEFAULT_VM_CPUS"
   fi
-  if [[ "$ACTION" =~ "vm" ]]; then
-    if [[ "$ACTION" =~ "create" ]]; then
+  if [[ "$ISO_ACTION" =~ "vm" ]]; then
+    if [[ "$ISO_ACTION" =~ "create" ]]; then
       if [ "$VM_RAM" = "" ]; then
         VM_RAM="$DEFAULT_VM_RAM"
       else
@@ -372,21 +372,21 @@ update_output_file_name () {
       fi
     fi
     if [ "$VM_NAME" = "" ]; then
-      if [ "$ISO_BUILD_TYPE" = "" ]; then
-        if [[ "$ACTION" =~ "ci" ]]; then
-          VM_NAME="$SCRIPT_NAME-ci-$ISO_OS_NAME-$ISO_RELEASE-$ISO_BOOT_TYPE-$ISO_ARCH"
+      if [ "$ISO_BUILDTYPE" = "" ]; then
+        if [[ "$ISO_ACTION" =~ "ci" ]]; then
+          VM_NAME="$SCRIPT_NAME-ci-$ISO_CODENAME-$ISO_RELEASE-$ISO_BOOT_TYPE-$ISO_ARCH"
         else
-          VM_NAME="$SCRIPT_NAME-iso-$ISO_OS_NAME-$ISO_RELEASE-$ISO_BOOT_TYPE-$ISO_ARCH"
+          VM_NAME="$SCRIPT_NAME-iso-$ISO_CODENAME-$ISO_RELEASE-$ISO_BOOT_TYPE-$ISO_ARCH"
         fi
       else
-        if [[ "$ACTION" =~ "ci" ]]; then
-          VM_NAME="$SCRIPT_NAME-ci-$ISO_OS_NAME-$ISO_BUILD_TYPE-$ISO_RELEASE-$ISO_BOOT_TYPE-$ISO_ARCH"
+        if [[ "$ISO_ACTION" =~ "ci" ]]; then
+          VM_NAME="$SCRIPT_NAME-ci-$ISO_CODENAME-$ISO_BUILDTYPE-$ISO_RELEASE-$ISO_BOOT_TYPE-$ISO_ARCH"
         else
-          VM_NAME="$SCRIPT_NAME-iso-$ISO_OS_NAME-$ISO_BUILD_TYPE-$ISO_RELEASE-$ISO_BOOT_TYPE-$ISO_ARCH"
+          VM_NAME="$SCRIPT_NAME-iso-$ISO_CODENAME-$ISO_BUILDTYPE-$ISO_RELEASE-$ISO_BOOT_TYPE-$ISO_ARCH"
         fi
       fi
     fi
-    if [[ "$ACTION" =~ "create" ]]; then
+    if [[ "$ISO_ACTION" =~ "create" ]]; then
       if ! [ "$VM_ISO" = "" ]; then
         if ! [ -f "$VM_ISO" ]; then
           warning_message "ISO $VM_ISO does not exist"
@@ -396,18 +396,18 @@ update_output_file_name () {
     fi
   fi
   if [ "$DO_SERIAL" = "true" ]; then
-    ISO_KERNEL_ARGS="$ISO_KERNEL_ARGS console=$ISO_SERIAL_PORT0,$ISO_SERIAL_PORT_SPEED0"
+    ISO_KERNELARGS="$ISO_KERNELARGS console=$ISO_SERIALPORT0,$ISO_SERIALPORTSPEED0"
     if ! [ "$ISO_SERIAL_PORT1" = "" ]; then
-      ISO_KERNEL_ARGS="$ISO_KERNEL_ARGS console=$ISO_SERIAL_PORT1,$ISO_SERIAL_PORT_SPEED1"
+      ISO_KERNELARGS="$ISO_KERNELARGS console=$ISO_SERIAL_PORT1,$ISO_SERIAL_PORT_SPEED1"
     fi
   fi
   if [ "$OLD_INSTALL_SQUASHFS_FILE" = "" ]; then
     OLD_INSTALL_SQUASHFS_FILE="$DEFAULT_OLD_INSTALL_SQUASHFS_FILE"
   fi
-  if [ "$OLD_WORK_DIR" = "" ]; then
-    OLD_WORK_DIR="$DEFAULT_OLD_WORK_DIR"
+  if [ "$OLD_ISO_WORKDIR" = "" ]; then
+    OLD_ISO_WORKDIR="$DEFAULT_OLD_ISO_WORKDIR"
   fi
   if [ "$VM_ISO" = "" ]; then
-    VM_ISO="$ISO_OUTPUT_FILE"
+    VM_ISO="$ISO_OUTPUTFILE"
   fi
 }

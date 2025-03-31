@@ -8,7 +8,7 @@
 # Unmount squashfs filesystem
 
 unmount_squashfs () {
-  case "$ISO_OS_NAME" in
+  case "$ISO_CODENAME" in
     "ubuntu")
       unmount_ubuntu_squashfs
       ;;
@@ -37,7 +37,7 @@ unmount_ubuntu_squashfs () {
 # Copy ISO squashfs
 
 copy_squashfs () {
-  case "$ISO_OS_NAME" in
+  case "$ISO_CODENAME" in
     "ubuntu")
       copy_ubuntu_squashfs
       ;;
@@ -62,7 +62,7 @@ copy_ubuntu_squashfs () {
     CURRENT_KERNEL=$( uname -r )
     if [ -f "$CURRENT_KERNEL" ]; then
       if [ "$TEST_MODE" = "false" ]; then
-        sudo mount -t squashfs -o loop "$ISO_SQUASHFS_FILE" "$ISO_NEW_DIR/squashfs"
+        sudo mount -t squashfs -o loop "$ISO_SQUASHFSFILE" "$ISO_NEW_DIR/squashfs"
       fi
       if [ "$VERBOSE_MODE" = "true" ]; then
         if [ "$TEST_MODE" = "false" ]; then
@@ -75,7 +75,7 @@ copy_ubuntu_squashfs () {
       fi
     else
       if [ "$TEST_MODE" = "false" ]; then
-        sudo unsquashfs -f -d "$ISO_NEW_DIR/custom" "$ISO_SQUASHFS_FILE"
+        sudo unsquashfs -f -d "$ISO_NEW_DIR/custom" "$ISO_SQUASHFSFILE"
       fi
     fi
     if [ "$TEST_MODE" = "false" ]; then
@@ -89,7 +89,7 @@ copy_ubuntu_squashfs () {
 # Update ISO squashfs
 
 update_iso_squashfs () {
-  case "$ISO_OS_NAME" in
+  case "$ISO_CODENAME" in
     "ubuntu")
       update_ubuntu_iso_squashfs
       ;;

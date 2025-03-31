@@ -9,11 +9,11 @@
 execute_racadm () {
   if [ "$TEST_MODE" = "false" ]; then
     handle_output "# Executing racadm" TEXT
-    $RACADM_BIN -H "$BMC_IP" -u "$BMC_USERNAME" -p "$BMC_PASSWORD" -c "remoteimage -d"
-    $RACADM_BIN -H "$BMC_IP" -u "$BMC_USERNAME" -p "$BMC_PASSWORD" -c "remoteimage -c -l $BOOT_SERVER_IP:BOOT_SERVER_FILE"
-    $RACADM_BIN -H "$BMC_IP" -u "$BMC_USERNAME" -p "$BMC_PASSWORD" -c "config -g cfgServerInfo -o cfgServerBootOnce 1"
-    $RACADM_BIN -H "$BMC_IP" -u "$BMC_USERNAME" -p "$BMC_PASSWORD" -c "config -g cfgServerInfo -o cfgServerFirstBootDevice VCD-DVD"
-    $RACADM_BIN -H "$BMC_IP" -u "$BMC_USERNAME" -p "$BMC_PASSWORD" -c "serveraction powercycle"
+    $RACADM_BIN -H "$ISO_BMCIP" -u "$ISO_BMCUSERNAME" -p "$ISO_BMCPASSWORD" -c "remoteimage -d"
+    $RACADM_BIN -H "$ISO_BMCIP" -u "$ISO_BMCUSERNAME" -p "$ISO_BMCPASSWORD" -c "remoteimage -c -l $ISO_BOOTSERVERIP:ISO_BOOTSERVERFILE"
+    $RACADM_BIN -H "$ISO_BMCIP" -u "$ISO_BMCUSERNAME" -p "$ISO_BMCPASSWORD" -c "config -g cfgServerInfo -o cfgServerBootOnce 1"
+    $RACADM_BIN -H "$ISO_BMCIP" -u "$ISO_BMCUSERNAME" -p "$ISO_BMCPASSWORD" -c "config -g cfgServerInfo -o cfgServerFirstBootDevice VCD-DVD"
+    $RACADM_BIN -H "$ISO_BMCIP" -u "$ISO_BMCUSERNAME" -p "$ISO_BMCPASSWORD" -c "serveraction powercycle"
   fi
 }
 

@@ -20,19 +20,19 @@ set_defaults () {
   CURRENT_ISO_RELEASE_2410="24.10"
   CURRENT_ISO_RELEASE_2504="25.04"
   CURRENT_ISO_RELEASE="24.04.2"
-  DEFAULT_ISO_OS_NAME="ubuntu"
+  DEFAULT_ISO_CODENAME="ubuntu"
   DEFAULT_ISO_RELEASE="$CURRENT_ISO_RELEASE"
   DEFAULT_ISO_MAJOR_RELEASE=$( echo "$DEFAULT_ISO_RELEASE" |cut -f1 -d. )
   DEFAULT_ISO_MINOR_RELEASE=$( echo "$DEFAULT_ISO_RELEASE" |cut -f2 -d. )
   CURRENT_OLD_ISO_RELEASE="23.04"
-  CURRENT_ISO_DEV_RELEASE="25.04"
-  CURRENT_ISO_OS_NAME="ubuntu"
+  CURRENT_ISO_DEVRELEASE="25.04"
+  CURRENT_ISO_CODENAME="ubuntu"
   CURRENT_DOCKER_UBUNTU_RELEASE="24.04"
   CURRENT_ISO_CODENAME="jammy"
   CURRENT_ISO_ARCH="amd64"
   DEFAULT_ISO_ARCH=$( uname -m |sed "s/aarch64/arm64/g" |sed "s/x86_64/amd64/g" |sed "s/x86/amd64/g" )
-  DEFAULT_ISO_INSTALL_SOURCE="cdrom"
-  DEFAULT_ISO_SOURCE_ID="ubuntu-server"
+  DEFAULT_ISO_INSTALLSOURCE="cdrom"
+  DEFAULT_ISO_SOURCEID="ubuntu-server"
   DEFAULT_ISO_FALLBACK="continue-anyway"
   DEFAULT_ISO_HOSTNAME="ubuntu"
   DEFAULT_ISO_REALNAME="Ubuntu"
@@ -47,41 +47,41 @@ set_defaults () {
   DEFAULT_ISO_BLOCKLIST=""
   DEFAULT_ISO_ALLOWLIST=""
   DEFAULT_ISO_GATEWAY="192.168.1.254"
-  DEFAULT_ISO_SWAP_SIZE="2G"
+  DEFAULT_ISO_SWAPSIZE="2G"
   DEFAULT_ISO_DISK="first-disk"
   DEFAULT_ISO_VOLMGRS="zfs auto ext4 xfs btrfs"
-  DEFAULT_ISO_GRUB_MENU="0"
-  DEFAULT_ISO_GRUB_TIMEOUT="10"
+  DEFAULT_ISO_GRUBMENU="0"
+  DEFAULT_ISO_GRUBTIMEOUT="10"
   DEFAULT_ISO_LOCALE="en_US.UTF-8"
-  DEFAULT_ISO_LC_ALL="en_US"
+  DEFAULT_ISO_LCALL="en_US"
   DEFAULT_ISO_LAYOUT="us"
   DEFAULT_ISO_COUNTRY="us"
   DEFAULT_ISO_UPDATES="security"
-  DEFAULT_ISO_BUILD_TYPE="live-server"
+  DEFAULT_ISO_BUILDTYPE="live-server"
   DEFAULT_ISO_BOOT_TYPE="efi"
-  DEFAULT_ISO_SERIAL_PORT0="ttyS0"
-  DEFAULT_ISO_SERIAL_PORT_ADDRESS0="0x03f8"
-  DEFAULT_ISO_SERIAL_PORT_SPEED0="115200"
+  DEFAULT_ISO_SERIALPORT0="ttyS0"
+  DEFAULT_ISO_SERIALPORTADDRESS0="0x03f8"
+  DEFAULT_ISO_SERIALPORTSPEED0="115200"
   DEFAULT_ISO_SERIAL_PORT1="ttyS1"
   DEFAULT_ISO_SERIAL_PORT_ADDRESS1="0x02f8"
   DEFAULT_ISO_SERIAL_PORT_SPEED1="115200"
-  DEFAULT_ISO_INSTALL_MODE="text"
-  DEFAULT_ISO_INSTALL_PACKAGES="zfsutils-linux zfs-initramfs xfsprogs btrfs-progs net-tools curl lftp wget sudo file rsync dialog setserial ansible apt-utils whois squashfs-tools duperemove jq btrfs-compsize"
+  DEFAULT_ISO_INSTALLMODE="text"
+  DEFAULT_ISO_PACKAGES="zfsutils-linux zfs-initramfs xfsprogs btrfs-progs net-tools curl lftp wget sudo file rsync dialog setserial ansible apt-utils whois squashfs-tools duperemove jq btrfs-compsize"
   REQUIRED_PACKAGES="binwalk casper genisoimage live-boot live-boot-initramfs-tools p7zip-full lftp wget xorriso whois squashfs-tools sudo file rsync net-tools nfs-kernel-server ansible dialog apt-utils jq"
   DEFAULT_DOCKER_ARCH="amd64 arm64"
-  DEFAULT_ISO_SSH_KEY_FILE="$HOME/.ssh/id_rsa.pub"
-  MASKED_DEFAULT_ISO_SSH_KEY_FILE="$HOME/.ssh/id_rsa.pub"
-  DEFAULT_ISO_SSH_KEY=""
-  DEFAULT_ISO_ALLOW_PASSWORD="false"
-  DEFAULT_BMC_USERNAME="root"
-  DEFAULT_BMC_PASSWORD="calvin"
-  DEFAULT_BMC_IP="192.168.1.3"
-  DEFAULT_ISO_KERNEL_ARGS="console=tty0 console=vt0"
+  DEFAULT_ISO_SSHKEYFILE="$HOME/.ssh/id_rsa.pub"
+  MASKED_DEFAULT_ISO_SSHKEYFILE="$HOME/.ssh/id_rsa.pub"
+  DEFAULT_ISO_SSHKEY=""
+  DEFAULT_ISO_ALLOWPASSWORD="false"
+  DEFAULT_ISO_BMCUSERNAME="root"
+  DEFAULT_ISO_BMCPASSWORD="calvin"
+  DEFAULT_ISO_BMCIP="192.168.1.3"
+  DEFAULT_ISO_KERNELARGS="console=tty0 console=vt0"
   DEFAULT_ISO_SEARCH=""
   DEFAULT_ISO_SELINUX="enforcing"
   DEFAULT_ISO_ONBOOT="on"
-  DEFAULT_ISO_ENABLE_SERVICE="sshd"
-  DEFAULT_ISO_DISABLE_SERVICE="cupsd"
+  DEFAULT_ISO_ENABLESERVICE="sshd"
+  DEFAULT_ISO_DISABLESERVICE="cupsd"
   DEFAULT_ISO_DPKG_CONF="--force-confnew"
   DEFAULT_ISO_DPKG_OVERWRITE="--force-overwrite"
   DEFAULT_ISO_DPKG_DEPENDS="--force-depends"
@@ -93,23 +93,23 @@ set_defaults () {
   DEFAULT_ISO_GECOS="Administrator"
   DEFAULT_ISO_GROUPS="dialout,kvm,libvirt,qemu,wheel"
   DEFAULT_ISO_BOOT_PROTO="dhcp"
-  DEFAULT_ISO_ALLOW_SERVICE="ssh"
+  DEFAULT_ISO_ALLOWSERVICE="ssh"
   DEFAULT_ISO_FIREWALL="enabled"
-  DEFAULT_ISO_PASSWORD_ALGORITHM="sha512"
-  DEFAULT_ISO_BOOT_LOADER_LOCATION="mbr"
-  DEFAULT_ISO_OEM_INSTALL="auto"
-  DEFAULT_ZFS_FILESYSTEMS="/var /var/lib /var/lib/AccountsService /var/lib/apt /var/lib/dpkg /var/lib/NetworkManager /srv /usr /usr/local /var/games /var/log /var/mail /var/snap /var/spool /var/www"
-  DEFAULT_ISO_BOOT_SIZE="2048"
-  DEFAULT_ISO_ROOT_SIZE="-1"
-  DEFAULT_ISO_PE_SIZE="32768"
-  DEFAULT_ISO_INSTALL_USERNAME="install"
-  DEFAULT_ISO_INSTALL_PASSWORD="install"
+  DEFAULT_ISO_PASSWORDALGORITHM="sha512"
+  DEFAULT_ISO_BOOTLOADER="mbr"
+  DEFAULT_ISO_OEMINSTALL="auto"
+  DEFAULT_ISO_ZFSFILESYSTEMS="/var /var/lib /var/lib/AccountsService /var/lib/apt /var/lib/dpkg /var/lib/NetworkManager /srv /usr /usr/local /var/games /var/log /var/mail /var/snap /var/spool /var/www"
+  DEFAULT_ISO_BOOTSIZE="2048"
+  DEFAULT_ISO_ROOTSIZE="-1"
+  DEFAULT_ISO_PESIZE="32768"
+  DEFAULT_ISO_INSTALLUSERNAME="install"
+  DEFAULT_ISO_INSTALLPASSWORD="install"
   DEFAULT_ISO_VG_BASE="ubuntu"
-  DEFAULT_ISO_VG_NAME="${DEFAULT_ISO_VG_BASE}-vg"
-  DEFAULT_ISO_LV_NAME="${DEFAULT_ISO_VG_BASE}-lv"
-  DEFAULT_ISO_PV_NAME="${DEFAULT_ISO_VG_BASE}-pv"
+  DEFAULT_ISO_VGNAME="${DEFAULT_ISO_VG_BASE}-vg"
+  DEFAULT_ISO_LVNAME="${DEFAULT_ISO_VG_BASE}-lv"
+  DEFAULT_ISO_PVNAME="${DEFAULT_ISO_VG_BASE}-pv"
   DEFAULT_ISO_DISK_NAME="boot"
-  DEFAULT_ISO_DISK_SERIAL="first-serial"
+  DEFAULT_ISO_DISKSERIAL="first-serial"
   DEFAULT_ISO_DISK_WWN="first-wwn"
   DEFAULT_ISO_COMPRESSION="lzo"
   DEFAULT_ISO_OPTION="btrfs"
@@ -124,10 +124,10 @@ set_defaults () {
   ISO_USE_BIOSDEVNAME="false"
   ISO_PREFIX=""
   ISO_SUFFIX=""
-  ISO_SSH_KEY=""
-  ISO_VG_NAME=""
-  ISO_LV_NAME=""
-  ISO_PV_NAME=""
+  ISO_SSHKEY=""
+  ISO_VGNAME=""
+  ISO_LVNAME=""
+  ISO_PVNAME=""
   ISO_DISK_NAME=""
   BMC_PORT="443"
   BMC_EXPOSE_DURATION="180"
@@ -157,42 +157,42 @@ set_defaults () {
 reset_defaults () {
   get_ssh_key
   get_release_info
-  if [[ "$ISO_BUILD_TYPE" =~ "desktop" ]]; then
+  if [[ "$ISO_BUILDTYPE" =~ "desktop" ]]; then
     DO_CHROOT="false"
   fi
-  if [ "$ISO_OS_NAME" = "" ]; then
-    ISO_OS_NAME="$DEFAULT_ISO_OS_NAME"
+  if [ "$ISO_CODENAME" = "" ]; then
+    ISO_CODENAME="$DEFAULT_ISO_CODENAME"
   fi
-  if [[ "$ISO_OS_NAME" =~ "rocky" ]]; then
+  if [[ "$ISO_CODENAME" =~ "rocky" ]]; then
     DEFAULT_ISO_VOLMGRS="auto ext4 xfs btrfs"
     DEFAULT_ISO_ARCH="x86_64"
     CURRENT_ISO_RELEASE="9.3"
     CURRENT_ISO_RELEASE_9="9.3"
-    DEFAULT_ISO_OS_NAME="rocky"
+    DEFAULT_ISO_CODENAME="rocky"
     DEFAULT_ISO_HOSTNAME="rocky"
     DEFAULT_ISO_REALNAME="Rocky"
     DEFAULT_ISO_USERNAME="rocky"
     DEFAULT_ISO_PASSWORD="rocky"
-    DEFAULT_ISO_BUILD_TYPE="dvd"
-    DEFAULT_ISO_SWAP_SIZE="2048"
-    DEFAULT_WORK_DIR="$HOME/$SCRIPT_NAME/$DEFAULT_ISO_OS_NAME/$DEFAULT_ISO_BUILD_TYPE/$DEFAULT_ISO_RELEASE"
-    DEFAULT_ISO_MOUNT_DIR="$DEFAULT_WORK_DIR/isomount"
-    DEFAULT_ISO_INPUT_FILE="$DEFAULT_WORK_DIR/$DEFAULT_ISO_REALNAME-$DEFAULT_ISO_RELEASE-$DEFAULT_ISO_ARCH-dvd.iso"
-    DEFAULT_ISO_INPUT_FILE_BASE=$( basename "$DEFAULT_ISO_INPUT_FILE" )
-    DEFAULT_ISO_OUTPUT_FILE_BASE=$( basename "$DEFAULT_ISO_OUTPUT_FILE" )
-    DEFAULT_ISO_URL="https://download.rockylinux.org/pub/rocky/$DEFAULT_ISO_MAJOR_RELEASE/isos/$DEFAULT_ISO_ARCH/$DEFAULT_ISO_INPUT_FILE_BASE"
-    DEFAULT_ISO_INSTALL_PACKAGES="net-tools curl lftp wget sudo file rsync dialog setserial whois squashfs-tools jq"
+    DEFAULT_ISO_BUILDTYPE="dvd"
+    DEFAULT_ISO_SWAPSIZE="2048"
+    DEFAULT_ISO_WORKDIR="$HOME/$SCRIPT_NAME/$DEFAULT_ISO_CODENAME/$DEFAULT_ISO_BUILDTYPE/$DEFAULT_ISO_RELEASE"
+    DEFAULT_ISO_MOUNT_DIR="$DEFAULT_ISO_WORKDIR/isomount"
+    DEFAULT_ISO_INPUTFILE="$DEFAULT_ISO_WORKDIR/$DEFAULT_ISO_REALNAME-$DEFAULT_ISO_RELEASE-$DEFAULT_ISO_ARCH-dvd.iso"
+    DEFAULT_ISO_INPUTFILE_BASE=$( basename "$DEFAULT_ISO_INPUTFILE" )
+    DEFAULT_ISO_OUTPUTFILE_BASE=$( basename "$DEFAULT_ISO_OUTPUTFILE" )
+    DEFAULT_ISO_URL="https://download.rockylinux.org/pub/rocky/$DEFAULT_ISO_MAJOR_RELEASE/isos/$DEFAULT_ISO_ARCH/$DEFAULT_ISO_INPUTFILE_BASE"
+    DEFAULT_ISO_PACKAGES="net-tools curl lftp wget sudo file rsync dialog setserial whois squashfs-tools jq"
     REQUIRED_PACKAGES="apt-utils $REQUIRED_PACKAGES"
   fi
-  if [[ "$ACTION" =~ "ci" ]]; then
+  if [[ "$ISO_ACTION" =~ "ci" ]]; then
     DEFAULT_ISO_RELEASE=$( echo "$DEFAULT_ISO_RELEASE" |awk -F"." '{ print $1"."$2 }' )
-    DEFAULT_WORK_DIR="$HOME/$SCRIPT_NAME/$DEFAULT_ISO_OS_NAME/$DEFAULT_ISO_RELEASE"
-    DEFAULT_CI_INPUT_FILE="$DEFAULT_WORK_DIR/files/ubuntu-$DEFAULT_ISO_RELEASE-server-cloudimg-$DEFAULT_ISO_ARCH.img"
-    DEFAULT_CI_INPUT_FILE_BASE=$( basename "$DEFAULT_CI_INPUT_FILE" )
-    DEFAULT_CI_OUTPUT_FILE="$DEFAULT_WORK_DIR/files/ubuntu-$DEFAULT_ISO_RELEASE-server-cloudimg-$DEFAULT_ISO_ARCH-$DEFAULT_ISO_BOOT_TYPE-autoinstall.img"
-    DEFAULT_CI_OUTPUT_FILE_BASE=$( basename "$DEFAULT_CI_OUTPUT_FILE" )
+    DEFAULT_ISO_WORKDIR="$HOME/$SCRIPT_NAME/$DEFAULT_ISO_CODENAME/$DEFAULT_ISO_RELEASE"
+    DEFAULT_ISO_INPUTCI="$DEFAULT_ISO_WORKDIR/files/ubuntu-$DEFAULT_ISO_RELEASE-server-cloudimg-$DEFAULT_ISO_ARCH.img"
+    DEFAULT_ISO_INPUTCI_BASE=$( basename "$DEFAULT_ISO_INPUTCI" )
+    DEFAULT_ISO_OUTPUTCI="$DEFAULT_ISO_WORKDIR/files/ubuntu-$DEFAULT_ISO_RELEASE-server-cloudimg-$DEFAULT_ISO_ARCH-$DEFAULT_ISO_BOOT_TYPE-autoinstall.img"
+    DEFAULT_ISO_OUTPUTCI_BASE=$( basename "$DEFAULT_ISO_OUTPUTCI" )
   fi
-  if [[ "$ISO_BUILD_TYPE" =~ "server" ]]; then
+  if [[ "$ISO_BUILDTYPE" =~ "server" ]]; then
     DO_ISO_SQUASHFS_UNPACK="true"
     if [[ "$ISO_VOLMGRS" =~ "zfs" ]]; then
       DO_ISO_EARLY_PACKAGES="true"
@@ -213,7 +213,7 @@ set_default_flags () {
   DO_KVM_PACKAGES="false"
   DO_HWE_KERNEL="true"
   DO_CLUSTER_PACKAGES="false"
-  DO_DAILY_ISO="false"
+  DO_ISO_DAILY="false"
   DO_CHECK_DOCKER="false"
   DO_CHECK_ISO="false"
   DO_CHECK_CI="false"
@@ -223,7 +223,7 @@ set_default_flags () {
   DO_DELETE_ISO_VM="false"
   DO_LIST_VM="false"
   DO_OLD_INSTALLER="false"
-  DO_CUSTOM_BOOT_SERVER_FILE="false"
+  DO_ISO_BOOTSERVERFILE="false"
   DO_INSTALL_REQUIRED_PACKAGES="false"
   DO_INSTALL_ISO_NETWORK_UPDATES="false"
   DO_INSTALL_ISO_PACKAGES="false"
@@ -232,7 +232,7 @@ set_default_flags () {
   DO_ISO_AUTO_UPGRADES="false"
   DO_ISO_APT_NEWS="false"
   DO_GET_BASE_ISO="false"
-  DO_CHECK_WORK_DIR="false"
+  DO_CHECK_ISO_WORKDIR="false"
   DO_PREPARE_AUTOINSTALL_ISO_ONLY="false"
   DO_CREATE_AUTOINSTALL_ISO_FULL="false"
   DO_CREATE_AUTOINSTALL_ISO_ONLY="false"
@@ -255,7 +255,7 @@ set_default_flags () {
   DO_LIST_ISOS="false"
   DO_SCP_HEADER="false"
   DO_SERIAL="true"
-  DO_CUSTOM_AUTO_INSTALL="false"
+  DO_ISO_AUTOINSTALL="false"
   DO_ISO_SEARCH_DRIVERS="false"
   DO_ISO_PRESERVE_SOURCES="false"
   DO_PLAIN_TEXT_PASSWORD="false"
@@ -265,25 +265,29 @@ set_default_flags () {
   DO_KS_TEST="false"
   DO_MEDIA_CHECK="false"
   DO_INSTALL_USER="false"
-  DO_ISO_SSH_KEY="true"
+  DO_ISO_SSHKEY="true"
   DO_ISO_FIRSTBOOT="disabled"
   DO_SECURE_BOOT="true"
-  DO_CUSTOM_ISOLINUX="false"
-  DO_CUSTOM_GRUB="false"
+  DO_ISO_ISOLINUXFILE="false"
+  DO_ISO_GRUBFILE="false"
   DO_KS_QUIET="false"
   DO_KS_TEXT="false"
-  DO_ZFS_FILESYSTEMS="false"
+  DO_ISO_ZFSFILESYSTEMS="false"
   DO_CREATE_ISO="true"
   DO_REORDER_UEFI="false"
   DO_DELETE_VM="false"
-  DO_DHCP="true"
+  DO_ISO_DHCP="true"
   DO_GEOIP="true"
   DO_CHROOT="true"
   DO_NVME="false"
-  DO_COMPRESSION="true"
+  DO_ISO_COMPRESSION="true"
   DO_REFRESH_INSTALL="false"
   DO_ISO_EARLY_PACKAGES="false"
   DO_ISO_LATE_PACKAGES="false"
+  DO_REFRESH_INSTALLER="false"
+  DO_MULTIPATH="false"
+  DO_DEBUG="false"
+  DO_STRICT="false"
 }
 
 # Function: set_default_os_name
@@ -294,15 +298,15 @@ set_default_os_name () {
   if [ -f "/usr/bin/lsb_release" ]; then
     LSB_RELEASE=$( lsb_release -s -a )
     if [[ "$LSB_RELEASE" =~ "Ubuntu" ]]; then
-      DEFAULT_ISO_OS_NAME=$( lsb_release -d |awk '{print $2}' |tr '[:upper:]' '[:lower:]' )
+      DEFAULT_ISO_CODENAME=$( lsb_release -d |awk '{print $2}' |tr '[:upper:]' '[:lower:]' )
     else
-      DEFAULT_ISO_OS_NAME="$CURRENT_ISO_OS_NAME"
+      DEFAULT_ISO_CODENAME="$CURRENT_ISO_CODENAME"
       if [[ "$LSB_RELEASE" =~ "Arch" ]] || [[ "$LSB_RELEASE" =~ "Endeavour" ]]; then
         REQUIRED_PACKAGES="p7zip lftp wget xorriso whois squashfs-tools sudo file rsync ansible dialog"
       fi
     fi
   else
-    DEFAULT_ISO_OS_NAME="$CURRENT_ISO_OS_NAME"
+    DEFAULT_ISO_CODENAME="$CURRENT_ISO_CODENAME"
   fi
 }
 
@@ -314,11 +318,11 @@ set_default_arch () {
   if [ -f "/usr/bin/uname" ]; then
     if [ "$OS_NAME" = "Linux" ]; then
       if [ "$( command -v ifconfig )" ]; then
-        DEFAULT_BOOT_SERVER_IP=$( ifconfig | grep "inet " | grep -v "127.0.0.1" |head -1 |awk '{print $2}' )
+        DEFAULT_ISO_BOOTSERVERIP=$( ifconfig | grep "inet " | grep -v "127.0.0.1" |head -1 |awk '{print $2}' )
       else
-        DEFAULT_BOOT_SERVER_IP=$( ip addr | grep "inet " | grep -v "127.0.0.1" |head -1 |awk '{print $2}' |cut -f1 -d/ )
+        DEFAULT_ISO_BOOTSERVERIP=$( ip addr | grep "inet " | grep -v "127.0.0.1" |head -1 |awk '{print $2}' |cut -f1 -d/ )
       fi
-      if [ "$ISO_OS_NAME" = "rocky" ]; then
+      if [ "$ISO_CODENAME" = "rocky" ]; then
         DEFAULT_ISO_ARCH=$( uname -m)
       else
         DEFAULT_ISO_ARCH=$( uname -m | sed "s/aarch64/arm64/g" |sed "s/x86_64/amd64/g" )
@@ -331,14 +335,14 @@ set_default_arch () {
       fi
     else
       if [ "$( command -v ifconfig )" ]; then
-        DEFAULT_BOOT_SERVER_IP=$( ifconfig | grep "inet " | grep -v "127.0.0.1" |head -1 |awk '{print $2}' )
+        DEFAULT_ISO_BOOTSERVERIP=$( ifconfig | grep "inet " | grep -v "127.0.0.1" |head -1 |awk '{print $2}' )
       else
-        DEFAULT_BOOT_SERVER_IP=$( ip add | grep "inet " | grep -v "127.0.0.1" |head -1 |awk '{print $2}' |cut -f1 -d/ )
+        DEFAULT_ISO_BOOTSERVERIP=$( ip add | grep "inet " | grep -v "127.0.0.1" |head -1 |awk '{print $2}' |cut -f1 -d/ )
       fi
     fi
   else
     DEFAULT_ISO_ARCH="$CURRENT_ISO_ARCH"
-    DEFAULT_BOOT_SERVER_IP=$( ifconfig | grep "inet " | grep -v "127.0.0.1" |head -1 |awk '{print $2}' )
+    DEFAULT_ISO_BOOTSERVERIP=$( ifconfig | grep "inet " | grep -v "127.0.0.1" |head -1 |awk '{print $2}' )
   fi
 }
 
@@ -348,7 +352,7 @@ set_default_arch () {
 
 set_default_release () {
   if [ -f "/usr/bin/lsb_release" ]; then
-    if [ "$DEFAULT_ISO_OS_NAME" = "Ubuntu" ]; then
+    if [ "$DEFAULT_ISO_CODENAME" = "Ubuntu" ]; then
       DEFAULT_ISO_RELEASE=$( lsb_release -d |awk '{print $3}' )
     else
       DEFAULT_ISO_RELEASE="$CURRENT_ISO_RELEASE"
@@ -365,7 +369,7 @@ set_default_release () {
 
 set_default_codename () {
   if [ -f "/usr/bin/lsb_release" ]; then
-    if [ "$DEFAULT_ISO_OS_NAME" = "Ubuntu" ]; then
+    if [ "$DEFAULT_ISO_CODENAME" = "Ubuntu" ]; then
       DEFAULT_ISO_CODENAME=$( lsb_release -cs )
     else
       DEFAULT_ISO_CODENAME="$CURRENT_ISO_CODENAME"
@@ -404,14 +408,14 @@ set_default_docker_arch () {
 # Set default work directories
 
 set_default_dirs () {
-  DEFAULT_WORK_DIR="$HOME/$SCRIPT_NAME/$DEFAULT_ISO_OS_NAME/$DEFAULT_ISO_BUILD_TYPE/$DEFAULT_ISO_RELEASE"
-  DEFAULT_OLD_WORK_DIR="$HOME/$SCRIPT_NAME/$DEFAULT_ISO_OS_NAME/$DEFAULT_ISO_BUILD_TYPE/$DEFAULT_OLD_ISO_RELEASE"
-  MASKED_DEFAULT_WORK_DIR="$HOME/$SCRIPT_NAME/$DEFAULT_ISO_OS_NAME/$DEFAULT_ISO_BUILD_TYPE/$DEFAULT_ISO_RELEASE"
-  DEFAULT_ISO_MOUNT_DIR="$DEFAULT_WORK_DIR/isomount"
-  DEFAULT_OLD_ISO_MOUNT_DIR="$DEFAULT_OLD_WORK_DIR/isomount"
-  DEFAULT_ISO_AUTOINSTALL_DIR="autoinstall"
-  DEFAULT_ISO_TARGET_MOUNT="/target"
-  DEFAULT_ISO_INSTALL_MOUNT="/cdrom"
+  DEFAULT_ISO_WORKDIR="$HOME/$SCRIPT_NAME/$DEFAULT_ISO_CODENAME/$DEFAULT_ISO_BUILDTYPE/$DEFAULT_ISO_RELEASE"
+  DEFAULT_OLD_ISO_WORKDIR="$HOME/$SCRIPT_NAME/$DEFAULT_ISO_CODENAME/$DEFAULT_ISO_BUILDTYPE/$DEFAULT_OLD_ISO_RELEASE"
+  MASKED_DEFAULT_ISO_WORKDIR="$HOME/$SCRIPT_NAME/$DEFAULT_ISO_CODENAME/$DEFAULT_ISO_BUILDTYPE/$DEFAULT_ISO_RELEASE"
+  DEFAULT_ISO_MOUNT_DIR="$DEFAULT_ISO_WORKDIR/isomount"
+  DEFAULT_OLD_ISO_MOUNT_DIR="$DEFAULT_OLD_ISO_WORKDIR/isomount"
+  DEFAULT_ISO_AUTOINSTALLDIR="autoinstall"
+  DEFAULT_ISO_TARGETMOUNT="/target"
+  DEFAULT_ISO_INSTALLMOUNT="/cdrom"
 }
 
 # Function: reset_default_dirs
@@ -419,10 +423,10 @@ set_default_dirs () {
 # Update Default work directories
 
 reset_default_dirs () {
-  ISO_MOUNT_DIR="$WORK_DIR/isomount"
-  OLD_ISO_MOUNT_DIR="$OLD_WORK_DIR/isomount"
-  ISO_NEW_DIR="$WORK_DIR/isonew"
-  ISO_SOURCE_DIR="$WORK_DIR/source-files"
+  ISO_MOUNT_DIR="$ISO_WORKDIR/isomount"
+  OLD_ISO_MOUNT_DIR="$OLD_ISO_WORKDIR/isomount"
+  ISO_NEW_DIR="$ISO_WORKDIR/isonew"
+  ISO_SOURCE_DIR="$ISO_WORKDIR/source-files"
 }
 
 # Function: set_default_files
@@ -430,23 +434,23 @@ reset_default_dirs () {
 # Set default file names/locations
 
 set_default_files () {
-  DEFAULT_ISO_INPUT_FILE="$DEFAULT_WORK_DIR/files/ubuntu-$DEFAULT_ISO_RELEASE-live-server-$DEFAULT_ISO_ARCH.iso"
-  DEFAULT_CI_INPUT_FILE="$DEFAULT_WORK_DIR/files/ubuntu-$DEFAULT_ISO_RELEASE-server-cloudimg-$DEFAULT_ISO_ARCH.img"
-  DEFAULT_OLD_ISO_INPUT_FILE="$DEFAULT_OLD_WORK_DIR/files/ubuntu-$DEFAULT_OLD_ISO_RELEASE-live-server-$DEFAULT_ISO_ARCH.iso"
-  DEFAULT_ISO_OUTPUT_FILE="$DEFAULT_WORK_DIR/files/ubuntu-$DEFAULT_ISO_RELEASE-live-server-$DEFAULT_ISO_ARCH-$DEFAULT_ISO_BOOT_TYPE-autoinstall.iso"
-  DEFAULT_CI_OUTPUT_FILE="$DEFAULT_WORK_DIR/files/ubuntu-$DEFAULT_ISO_RELEASE-server-cloudimg-$DEFAULT_ISO_ARCH-$DEFAULT_ISO_BOOT_TYPE-autoinstall.img"
-  DEFAULT_BOOT_SERVER_FILE="$DEFAULT_ISO_OUTPUT_FILE"
-  DEFAULT_ISO_SQUASHFS_FILE="$DEFAULT_ISO_MOUNT_DIR/casper/ubuntu-server-minimal.squashfs"
+  DEFAULT_ISO_INPUTFILE="$DEFAULT_ISO_WORKDIR/files/ubuntu-$DEFAULT_ISO_RELEASE-live-server-$DEFAULT_ISO_ARCH.iso"
+  DEFAULT_ISO_INPUTCI="$DEFAULT_ISO_WORKDIR/files/ubuntu-$DEFAULT_ISO_RELEASE-server-cloudimg-$DEFAULT_ISO_ARCH.img"
+  DEFAULT_OLD_ISO_INPUTFILE="$DEFAULT_OLD_ISO_WORKDIR/files/ubuntu-$DEFAULT_OLD_ISO_RELEASE-live-server-$DEFAULT_ISO_ARCH.iso"
+  DEFAULT_ISO_OUTPUTFILE="$DEFAULT_ISO_WORKDIR/files/ubuntu-$DEFAULT_ISO_RELEASE-live-server-$DEFAULT_ISO_ARCH-$DEFAULT_ISO_BOOT_TYPE-autoinstall.iso"
+  DEFAULT_ISO_OUTPUTCI="$DEFAULT_ISO_WORKDIR/files/ubuntu-$DEFAULT_ISO_RELEASE-server-cloudimg-$DEFAULT_ISO_ARCH-$DEFAULT_ISO_BOOT_TYPE-autoinstall.img"
+  DEFAULT_ISO_BOOTSERVERFILE="$DEFAULT_ISO_OUTPUTFILE"
+  DEFAULT_ISO_SQUASHFSFILE="$DEFAULT_ISO_MOUNT_DIR/casper/ubuntu-server-minimal.squashfs"
   DEFAULT_OLD_INSTALL_SQUASHFS_FILE="$DEFAULT_OLD_ISO_MOUNT_DIR/casper/ubuntu-server-minimal.ubuntu-server.installer.squashfs"
-  DEFAULT_ISO_GRUB_FILE="$DEFAULT_WORK_DIR/grub.cfg"
+  DEFAULT_ISO_GRUBFILE="$DEFAULT_ISO_WORKDIR/grub.cfg"
   DEFAULT_ISO_VOLID="$DEFAULT_ISO_REALNAME $DEFAULT_ISO_RELEASE Server"
-  DEFAULT_ISO_INPUT_FILE_BASE=$( basename "$DEFAULT_ISO_INPUT_FILE" )
-  DEFAULT_CI_INPUT_FILE_BASE=$( basename "$DEFAULT_CI_INPUT_FILE" )
-  DEFAULT_ISO_OUTPUT_FILE_BASE=$( basename "$DEFAULT_ISO_OUTPUT_FILE" )
-  DEFAULT_CI_OUTPUT_FILE_BASE=$( basename "$DEFAULT_CI_OUTPUT_FILE" )
-  DEFAULT_BOOT_SERVER_FILE_BASE=$(basename "$DEFAULT_BOOT_SERVER_FILE")
-  DEFAULT_ISO_SQUASHFS_FILE_BASE=$( basename "$DEFAULT_ISO_SQUASHFS_FILE" )
-  DEFAULT_ISO_GRUB_FILE_BASE=$( basename "$DEFAULT_ISO_GRUB_FILE" )
+  DEFAULT_ISO_INPUTFILE_BASE=$( basename "$DEFAULT_ISO_INPUTFILE" )
+  DEFAULT_ISO_INPUTCI_BASE=$( basename "$DEFAULT_ISO_INPUTCI" )
+  DEFAULT_ISO_OUTPUTFILE_BASE=$( basename "$DEFAULT_ISO_OUTPUTFILE" )
+  DEFAULT_ISO_OUTPUTCI_BASE=$( basename "$DEFAULT_ISO_OUTPUTCI" )
+  DEFAULT_ISO_BOOTSERVERFILE_BASE=$(basename "$DEFAULT_ISO_BOOTSERVERFILE")
+  DEFAULT_ISO_SQUASHFSFILE_BASE=$( basename "$DEFAULT_ISO_SQUASHFSFILE" )
+  DEFAULT_ISO_GRUBFILE_BASE=$( basename "$DEFAULT_ISO_GRUBFILE" )
 }
 
 # Function: reset_default_files
@@ -455,16 +459,16 @@ set_default_files () {
 
 reset_default_files () {
   ISO_VOLID="$ISO_VOLID $ISO_ARCH"
-  ISO_GRUB_FILE="$WORK_DIR/grub.cfg"
-  if [[ "$ISO_BUILD_TYPE" =~ "desktop" ]]; then
-    ISO_SQUASHFS_FILE="$ISO_MOUNT_DIR/casper/minimal.squashfs"
+  ISO_GRUBFILE="$ISO_WORKDIR/grub.cfg"
+  if [[ "$ISO_BUILDTYPE" =~ "desktop" ]]; then
+    ISO_SQUASHFSFILE="$ISO_MOUNT_DIR/casper/minimal.squashfs"
     NEW_SQUASHFS_FILE="$ISO_SOURCE_DIR/casper/minimal.squashfs"
   else
     if [ "$ISO_MAJOR_RELEASE" -ge "22" ]; then
-      ISO_SQUASHFS_FILE="$ISO_MOUNT_DIR/casper/ubuntu-server-minimal.squashfs"
+      ISO_SQUASHFSFILE="$ISO_MOUNT_DIR/casper/ubuntu-server-minimal.squashfs"
       NEW_SQUASHFS_FILE="$ISO_SOURCE_DIR/casper/ubuntu-server-minimal.squashfs"
     else
-      ISO_SQUASHFS_FILE="$ISO_MOUNT_DIR/casper/filesystem.squashfs"
+      ISO_SQUASHFSFILE="$ISO_MOUNT_DIR/casper/filesystem.squashfs"
       NEW_SQUASHFS_FILE="$ISO_SOURCE_DIR/casper/filesystem.squashfs"
     fi
   fi

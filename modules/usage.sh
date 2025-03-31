@@ -7,7 +7,7 @@
 # Print script usage information
 
 print_actions () {
-  cat <<-ACTIONS
+  cat <<-ISO_ACTIONS
 
 actions
 -------
@@ -35,18 +35,18 @@ listalliso:             List all ISOs
 listiso:                List ISOs
 createkvmvm:            Create KVM VM
 deletekvmvm:            Delete KVM VM
-ACTIONS
+ISO_ACTIONS
 }
 
 print_options () {
-  cat <<-OPTIONS
+  cat <<-ISO_OPTIONS
 
 options
 -------
 
 cluster:                Install cluster related packages (pcs, gluster, etc)  (default: $DO_CLUSTER_PACKAGES)
 kvm:                    Install KVM related packages (virt-manager, cloud-image-utils, etc) (default: $DO_KVM_PACKAGES)
-sshkey:                 Add SSH key from ~/.ssh if present (default $DO_ISO_SSH_KEY)
+sshkey:                 Add SSH key from ~/.ssh if present (default $DO_ISO_SSHKEY)
 biosdevname:            Enable biosdevname kernel parameters (default: $ISO_USE_BIOSDEVNAME)
 nounmount:              Don't unmount filesystems (useful for troubleshooting) (default: $DO_NO_UNMOUNT_ISO)
 testmode:               Don't execute commands (useful for testing and generating a script) (default: $TEST_MODE)
@@ -78,17 +78,17 @@ geoip:                  Use Geo IP (default: $DO_GEOIP)
 nogeoip:                Don't use Geo IP
 reorderuefi:            Reorder UEFI devices on reboot (default: $DO_REORDER_UEFI)
 noreorderuefi:          Don't reorder UEFI devices on reboot
-compression:            Compress filesystem(s) if supported (default: $DO_COMPRESSION)
+compression:            Compress filesystem(s) if supported (default: $DO_ISO_COMPRESSION)
 nocompression:          Don't compress filesystem(s)
 strict:                 Enable -eu shell options (useful for debuging) (default: $DO_STRICT)
 nostrict:               Disable -eu shell options
 debug:                  Enable -x shell option (useful for debuging)   (default: $DO_DEBUG)
 nodebug:                Disable -x shell option
-OPTIONS
+ISO_OPTIONS
 }
 
 print_postinstall () {
-  cat <<-POSTINSTALL
+  cat <<-ISO_POSTINSTALL
 
 postinstall
 -----------
@@ -98,11 +98,11 @@ packages:               Install packages as part of install process
 updates:                Do updates as part of install process
 upgrades:               Do upgrades as part of install process
 all:                    Do all updates as part of install process
-POSTINSTALL
+ISO_POSTINSTALL
 }
 
 print_examples () {
-  cat <<-EXAMPLES
+  cat <<-ISO_EXAMPLES
 
 Examples
 --------
@@ -110,7 +110,7 @@ Examples
 Create an ISO with a static IP configuration:
 
 ${0##*/} --action createiso --options verbose --ip 192.168.1.211 --cidr 24 --dns 8.8.8.8 --gateway 192.168.1.254
-EXAMPLES
+ISO_EXAMPLES
 }
 
 

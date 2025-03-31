@@ -51,12 +51,12 @@ install_required_packages () {
 
 handle_bios () {
   if [[ "$ISO_BOOT_TYPE" =~ "efi" ]]; then
-    ISO_INSTALL_PACKAGES="$ISO_INSTALL_PACKAGES grub-efi"
-    ISO_CHROOT_PACKAGES="$ISO_CHROOT_PACKAGES grub-efi"
+    ISO_PACKAGES="$ISO_PACKAGES grub-efi"
+    ISO_CHROOTPACKAGES="$ISO_CHROOTPACKAGES grub-efi"
   fi
   if [[ "$ISO_BOOT_TYPE" =~ "bios" ]]; then
-    ISO_INSTALL_PACKAGES="$ISO_INSTALL_PACKAGES grub-pc"
-    ISO_CHROOT_PACKAGES="$ISO_CHROOT_PACKAGES grub-pc"
+    ISO_PACKAGES="$ISO_PACKAGES grub-pc"
+    ISO_CHROOTPACKAGES="$ISO_CHROOTPACKAGES grub-pc"
   fi
 }
 

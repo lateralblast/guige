@@ -73,7 +73,7 @@ check_kvm_config () {
       sudo_create_dir "$IMAGE_DIR"
     fi
   fi
-  VM_DISK="$WORK_DIR/$VM_NAME.qcow2"
+  VM_DISK="$ISO_WORKDIR/$VM_NAME.qcow2"
   check_kvm_user
 }
 
@@ -135,7 +135,7 @@ create_kvm_iso_vm () {
     IF_TYPE="network"
     CD_BUS="sata"
   fi
-  if [ "$ISO_OS_NAME" = "ubuntu" ]; then
+  if [ "$ISO_CODENAME" = "ubuntu" ]; then
     OS_INFO_SITE="ubuntu.com"
   else
     OS_INFO_SITE="rockylinux.org"
@@ -172,7 +172,7 @@ create_kvm_iso_vm () {
   echo "  <name>$VM_NAME</name>" >> "$XML_FILE"
   echo "  <metadata>" >> "$XML_FILE"
   echo "    <libosinfo:libosinfo xmlns:libosinfo=\"http://libosinfo.org/xmlns/libvirt/domain/1.0\">" >> "$XML_FILE"
-  echo "      <libosinfo:os id=\"http://$OS_INFO_SITE/$ISO_OS_NAME/$ISO_MAJOR_RELEASE.$ISO_MINOR_RELEASE\"/>" >> "$XML_FILE"
+  echo "      <libosinfo:os id=\"http://$OS_INFO_SITE/$ISO_CODENAME/$ISO_MAJOR_RELEASE.$ISO_MINOR_RELEASE\"/>" >> "$XML_FILE"
   echo "    </libosinfo:libosinfo>" >> "$XML_FILE"
   echo "  </metadata>" >> "$XML_FILE"
   echo "  <memory unit='KiB'>$VM_RAM</memory>" >> "$XML_FILE"

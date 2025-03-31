@@ -155,8 +155,8 @@ get_code_name () {
 get_build_type () {
   case $ISO_CODENAME in
     "plucky")
-      DEFAULT_ISO_BUILD_TYPE="daily-live"
-      ISO_BUILD_TYPE="daily-live"
+      DEFAULT_ISO_BUILDTYPE="daily-live"
+      ISO_BUILDTYPE="daily-live"
       ;;
   esac
 }
@@ -169,22 +169,22 @@ get_interactive_input () {
   if [ "$DO_CREATE_EXPORT" = "true" ] || [ "$DO_CREATE_ANSIBLE" = "true" ]; then
     if [ "$DO_CREATE_EXPORT" = "true" ] || [ "$DO_CREATE_ANSIBLE" = "true" ]; then
       # Get bootserver IP
-      read -r -p "Enter Bootserver IP [$BOOT_SERVER_IP]: " NEW_BOOT_SERVER_IP
-      BOOT_SERVER_IP=${NEW_BOOT_SERVER_IP:-$BOOT_SERVER_IP}
+      read -r -p "Enter Bootserver IP [$ISO_BOOTSERVERIP]: " NEW_ISO_BOOTSERVERIP
+      ISO_BOOTSERVERIP=${NEW_ISO_BOOTSERVERIP:-$ISO_BOOTSERVERIP}
       # Get bootserver file
-      read -r -p "Enter Bootserver file [$BOOT_SERVER_FILE]: " NEW_BOOT_SERVER_FILE
-      BOOT_SERVER_FILE=${NEW_BOOT_SERVER_FILE:-$BOOT_SERVER_FILE}
+      read -r -p "Enter Bootserver file [$ISO_BOOTSERVERFILE]: " NEW_ISO_BOOTSERVERFILE
+      ISO_BOOTSERVERFILE=${NEW_ISO_BOOTSERVERFILE:-$ISO_BOOTSERVERFILE}
     fi
     if [ "$DO_CREATE_ANSIBLE" = "true" ]; then
       # Get BMC IP
-      read -r -p "Enter BMC/iDRAC IP [$BMC_IP]: " NEW_BMC_IP
-      BMC_IP=${NEW_BMC_IP:-$BMC_IP}
+      read -r -p "Enter BMC/iDRAC IP [$ISO_BMCIP]: " NEW_ISO_BMCIP
+      ISO_BMCIP=${NEW_ISO_BMCIP:-$ISO_BMCIP}
       # Get BMC Username
-      read -r -p "Enter BMC/iDRAC Username [$BMC_USERNAME]: " NEW_BMC_USERNAME
-      BMC_USERNAME=${NEW_BMC_USERNAME:-$BMC_USERNAME}
+      read -r -p "Enter BMC/iDRAC Username [$ISO_BMCUSERNAME]: " NEW_ISO_BMCUSERNAME
+      ISO_BMCUSERNAME=${NEW_ISO_BMCUSERNAME:-$ISO_BMCUSERNAME}
       # Get BMC Password
-      read -r -p "Enter BMC/iDRAC Password [$BMC_PASSWORD]: " NEW_BMC_PASSWORD
-      BMC_PASSWORD=${NEW_BMC_PASSWORD:-$BMC_PASSWORD}
+      read -r -p "Enter BMC/iDRAC Password [$ISO_BMCPASSWORD]: " NEW_ISO_BMCPASSWORD
+      ISO_BMCPASSWORD=${NEW_ISO_BMCPASSWORD:-$ISO_BMCPASSWORD}
     fi
   else
     # Get release
@@ -197,20 +197,20 @@ get_interactive_input () {
     read -r -p "Architecture [$ISO_ARCH]: "
     ISO_ARCH=${NEW_ISO_ARCH:-$ISO_ARCH}
     # Get Work directory
-    read -r -p "Enter Work directory [$WORK_DIR]: " NEW_WORK_DIR
-    WORK_DIR=${NEW_WORK_DIR:-$WORK_DIR}
+    read -r -p "Enter Work directory [$ISO_WORKDIR]: " NEW_ISO_WORKDIR
+    ISO_WORKDIR=${NEW_ISO_WORKDIR:-$ISO_WORKDIR}
     # Get ISO input file
-    read -r -p "Enter ISO input file [$ISO_INPUT_FILE]: " NEW_ISO_INPUT_FILE
-    ISO_INPUT_FILE=${NEW_ISO_INPUT_FILE:-$ISO_INPUT_FILE}
+    read -r -p "Enter ISO input file [$ISO_INPUTFILE]: " NEW_ISO_INPUTFILE
+    ISO_INPUTFILE=${NEW_ISO_INPUTFILE:-$ISO_INPUTFILE}
     # Get CI input file
-    read -r -p "Enter CI input file [$CI_INPUT_FILE]: " NEW_CI_INPUT_FILE
-    CI_INPUT_FILE=${NEW_CI_INPUT_FILE:-$CI_INPUT_FILE}
+    read -r -p "Enter CI input file [$ISO_INPUTCI]: " NEW_ISO_INPUTCI
+    ISO_INPUTCI=${NEW_ISO_INPUTCI:-$ISO_INPUTCI}
     # Get ISO output file
-    read -r -p "Enter ISO output file [$ISO_OUTPUT_FILE]: " NEW_ISO_OUTPUT_FILE
-    ISO_OUTPUT_FILE=${NEW_ISO_OUTPUT_FILE:-$ISO_OUTPUT_FILE}
+    read -r -p "Enter ISO output file [$ISO_OUTPUTFILE]: " NEW_ISO_OUTPUTFILE
+    ISO_OUTPUTFILE=${NEW_ISO_OUTPUTFILE:-$ISO_OUTPUTFILE}
     # Get CI output file
-    read -r -p "Enter CI output file [$CI_OUTPUT_FILE]: " NEW_CI_OUTPUT_FILE
-    CI_OUTPUT_FILE=${NEW_CI_OUTPUT_FILE:-$CI_OUTPUT_FILE}
+    read -r -p "Enter CI output file [$ISO_OUTPUTCI]: " NEW_ISO_OUTPUTCI
+    ISO_OUTPUTCI=${NEW_ISO_OUTPUTCI:-$ISO_OUTPUTCI}
     # Get ISO URL
     read -r -p "Enter ISO URL [$ISO_URL]: " NEW_ISO_URL
     ISO_URL=${NEW_ISO_URL:-$ISO_URL}
@@ -233,8 +233,8 @@ get_interactive_input () {
     read -r -s -p "Enter password [$ISO_PASSWORD]: " NEW_ISO_PASSWORD
     ISO_PASSWORD=${NEW_ISO_PASSWORD:-$ISO_PASSWORD}
     # Get wether to allow SSH Password
-    read -r -s -p "Allow SSH access with password [$ISO_ALLOW_PASSWORD]: " NEW_ISO_ALLOW_PASSWORD
-    ISO_ALLOW_PASSWORD=${NEW_ISO_ALLOW_PASSWORD:-$ISO_ALLOW_PASSWORD}
+    read -r -s -p "Allow SSH access with password [$ISO_ALLOWPASSWORD]: " NEW_ISO_ALLOWPASSWORD
+    ISO_ALLOWPASSWORD=${NEW_ISO_ALLOWPASSWORD:-$ISO_ALLOWPASSWORD}
     # Get Timezone
     read -r -p "Enter Timezone: " NEW_ISO_TIMEZONE
     ISO_TIMEZONE=${NEW_ISO_TIMEZONE:-$ISO_TIMEZONE}
@@ -242,10 +242,10 @@ get_interactive_input () {
     read -r -p "Enter NIC [$ISO_NIC]: " NEW_ISO_NIC
     ISO_NIC=${NEW_ISO_NIC:-$ISO_NIC}
     # Get DHCP
-    read -r -p "Use DHCP? [$DO_DHCP]: " NEW_DO_DHCP
-    DO_DHCP=${NEW_DO_DHCP:-$DO_DHCP}
+    read -r -p "Use DHCP? [$DO_ISO_DHCP]: " NEW_DO_ISO_DHCP
+    DO_ISO_DHCP=${NEW_DO_ISO_DHCP:-$DO_ISO_DHCP}
     # Get Static IP information if no DHCP
-    if [ "$DO_DHCP" = "false" ]; then
+    if [ "$DO_ISO_DHCP" = "false" ]; then
       # Get IP
       read -r -p "Enter IP [$ISO_IP]: " NEW_ISO_IP
       ISO_IP=${NEW_ISO_IP:-$ISO_IP}
@@ -260,14 +260,14 @@ get_interactive_input () {
       ISO_DNS=${NEW_ISO_DNS:-$ISO_DNS}
     fi
     # Get Install Mode
-    read -r -p "Install Mode [$ISO_INSTALL_MODE]: " NEW_ISO_INSTALL_MODE
-    ISO_INSTALL_MODE=${NEW_ISO_INSTALL_MODE:-$ISO_INSTALL_MODE}
+    read -r -p "Install Mode [$ISO_INSTALLMODE]: " NEW_ISO_INSTALLMODE
+    ISO_INSTALLMODE=${NEW_ISO_INSTALLMODE:-$ISO_INSTALLMODE}
     # Get Kernel
     read -r -p "Enter Kernel [$ISO_KERNEL]: " NEW_ISO_KERNEL
     ISO_KERNEL=${NEW_ISO_KERNEL:-$ISO_KERNEL}
     # Get Kernel Arguments
-    read -r -p "Enter Kernel Arguments [$ISO_KERNEL_ARGS]: " NEW_ISO_KERNEL_ARGS
-    ISO_KERNEL_ARGS=${NEW_ISO_KERNEL_ARGS:-$ISO_KERNEL_ARGS}
+    read -r -p "Enter Kernel Arguments [$ISO_KERNELARGS]: " NEW_ISO_KERNELARGS
+    ISO_KERNELARGS=${NEW_ISO_KERNELARGS:-$ISO_KERNELARGS}
     # Get Keyboard Layout
     read -r -p "Enter IP [$ISO_LAYOUT]: " NEW_ISO_LAYOUT
     ISO_LAYOUT=${NEW_ISO_LAYOUT:-$ISO_LAYOUT}
@@ -275,8 +275,8 @@ get_interactive_input () {
     read -r -p "Enter IP [$ISO_LOCALE]: " NEW_ISO_LOCALE
     ISO_LOCALE=${NEW_ISO_LOCALE:-$ISO_LOCALE}
     # Get LC _ALL
-    read -r -p "Enter LC_ALL [$ISO_LC_ALL]: " NEW_ISO_LC_ALL
-    ISO_LC_ALL=${NEW_ISO_LC_ALL:-$ISO_LC_ALL}
+    read -r -p "Enter LC_ALL [$ISO_LCALL]: " NEW_ISO_LCALL
+    ISO_LCALL=${NEW_ISO_LCALL:-$ISO_LCALL}
     # Get Root Disk(s)
     read -r -p "Enter Root Disk(s) [$ISO_DISK]: " NEW_ISO_DISK
     ISO_DISK=${NEW_ISO_DISK:-$ISO_DISK}
@@ -284,35 +284,35 @@ get_interactive_input () {
     read -r -p "Enter Volume Manager(s) [$ISO_VOLMGRS]: " NEW_ISO_VOLMGRS
     ISO_VOLMGRS=${NEW_ISO_VOLMGRS:-$ISO_VOLMGRS}
     # Get Default Grub Menu selection
-    read -r -p "Enter Default Grub Menu [$ISO_GRUB_MENU]: " NEW_ISO_GRUB_MENU
-    ISO_GRUB_MENU=${NEW_ISO_GRUB_MENU:-$ISO_GRUB_MENU}
+    read -r -p "Enter Default Grub Menu [$ISO_GRUBMENU]: " NEW_ISO_GRUBMENU
+    ISO_GRUBMENU=${NEW_ISO_GRUBMENU:-$ISO_GRUBMENU}
     # Get Grub Timeout
-    read -r -p "Enter Grub Timeout [$ISO_GRUB_TIMEOUT]: " NEW_ISO_GRUB_TIMEOUT
-    ISO_GRUB_TIMEOUT=${NEW_ISO_GRUB_TIMEOUT:-$ISO_GRUB_TIMEOUT}
+    read -r -p "Enter Grub Timeout [$ISO_GRUBTIMEOUT]: " NEW_ISO_GRUBTIMEOUT
+    ISO_GRUBTIMEOUT=${NEW_ISO_GRUBTIMEOUT:-$ISO_GRUBTIMEOUT}
     # Get Autoinstall directory
-    read -r -p "Enter Auttoinstall Directory [$ISO_AUTOINSTALL_DIR]: " NEW_ISO_AUTOINSTALL_DIR
-    ISO_AUTOINSTALL_DIR=${NEW_ISO_AUTOINSTALL_DIR:-$ISO_AUTOINSTALL_DIR}
+    read -r -p "Enter Auttoinstall Directory [$ISO_AUTOINSTALLDIR]: " NEW_ISO_AUTOINSTALLDIR
+    ISO_AUTOINSTALLDIR=${NEW_ISO_AUTOINSTALLDIR:-$ISO_AUTOINSTALLDIR}
     # Get Install Mount
-    read -r -p "Enter Install Mount [$ISO_INSTALL_MOUNT]: " NEW_ISO_INSTALL_MOUNT
-    ISO_INSTALL_MOUNT=${NEW_ISO_INSTALL_MOUNT:-$ISO_INSTALL_MOUNT}
+    read -r -p "Enter Install Mount [$ISO_INSTALLMOUNT]: " NEW_ISO_INSTALLMOUNT
+    ISO_INSTALLMOUNT=${NEW_ISO_INSTALLMOUNT:-$ISO_INSTALLMOUNT}
     # Get Install Target
-    read -r -p "Enter Install Target [$ISO_TARGET_MOUNT]: " NEW_ISO_TARGET_MOUNT
-    ISO_TARGET_MOUNT=${NEW_ISO_TARGET_MOUNT:-$ISO_TARGET_MOUNT}
+    read -r -p "Enter Install Target [$ISO_TARGETMOUNT]: " NEW_ISO_TARGETMOUNT
+    ISO_TARGETMOUNT=${NEW_ISO_TARGETMOUNT:-$ISO_TARGETMOUNT}
     # Get whether to do squashfs
     read -r -p "Recreate squashfs? [$DO_ISO_SQUASHFS_UPDATE]: " NEW_DO_ISO_SQUASHFS_UPDATE
     DO_ISO_SQUASHFS_UPDATE=${NEW_DO_ISO_SQUASHFS_UPDATE:-$DO_ISO_SQUASHFS_UPDATE}
     if  [ "$DO_ISO_SQUASHFS_UPDATE" = "true" ]; then
       # Get squashfs packages
-      read -r -p "Enter Squashfs Packages [$ISO_CHROOT_PACKAGES]: " NEW_ISO_CHROOT_PACKAGES
-      ISO_CHROOT_PACKAGES=${NEW_ISO_CHROOT_PACKAGES:-$ISO_CHROOT_PACKAGES}
+      read -r -p "Enter Squashfs Packages [$ISO_CHROOTPACKAGES]: " NEW_ISO_CHROOTPACKAGES
+      ISO_CHROOTPACKAGES=${NEW_ISO_CHROOTPACKAGES:-$ISO_CHROOTPACKAGES}
     fi
     # Get whether to install packages as part of install
     read -r -p "Install additional packages [$DO_INSTALL_ISO_PACKAGES]: " NEW_DO_INSTALL_ISO_PACKAGES
     DO_INSTALL_ISO_PACKAGES=${NEW_DO_INSTALL_ISO_PACKAGES:-$DO_INSTALL_ISO_PACKAGES}
     if [ "$DO_INSTALL_ISO_PACKAGES" = "true" ]; then
       # Get IP
-      read -r -p "Enter Additional Packages to install[$ISO_INSTALL_PACKAGES]: " NEW_ISO_INSTALL_PACKAGES
-      ISO_INSTALL_PACKAGES=${NEW_ISO_INSTALL_PACKAGES:-$ISO_INSTALL_PACKAGES}
+      read -r -p "Enter Additional Packages to install[$ISO_PACKAGES]: " NEW_ISO_PACKAGES
+      ISO_PACKAGES=${NEW_ISO_PACKAGES:-$ISO_PACKAGES}
     fi
     # Get wether to install network updates
     read -r -p "Install Network Updates? [$DO_INSTALL_ISO_NETWORK_UPDATES]: " NEW_DO_INSTALL_ISO_NETWORK_UPDATES
@@ -331,38 +331,38 @@ get_interactive_input () {
       fi
     fi
     # Get swap size
-    read -r -p "Enter Swap Size [$ISO_SWAP_SIZE]: " NEW_ISO_SWAP_SIZE
-    ISO_SWAP_SIZE=${NEW_ISO_SWAP_SIZE:-$ISO_SWAP_SIZE}
+    read -r -p "Enter Swap Size [$ISO_SWAPSIZE]: " NEW_ISO_SWAPSIZE
+    ISO_SWAPSIZE=${NEW_ISO_SWAPSIZE:-$ISO_SWAPSIZE}
     # Determine wether we use an SSH key
-    read -r -p "Use SSH keys? [$DO_ISO_SSH_KEY]: " NEW_DO_ISO_SSH_KEY
-    DO_ISO_SSH_KEY=${NEW_DO_ISO_SSH_KEY:-$DO_ISO_SSH_KEY}
-    if [ "$DO_ISO_SSH_KEY" = "true" ]; then
+    read -r -p "Use SSH keys? [$DO_ISO_SSHKEY]: " NEW_DO_ISO_SSHKEY
+    DO_ISO_SSHKEY=${NEW_DO_ISO_SSHKEY:-$DO_ISO_SSHKEY}
+    if [ "$DO_ISO_SSHKEY" = "true" ]; then
       # Determine wether we use an SSH key
-      read -r -p "SSH keys file [$ISO_SSH_KEY_FILE]: " NEW_ISO_SSH_KEY_FILE
-      ISO_SSH_KEY_FILE=${NEW_ISO_SSH_KEY_FILE:-$ISO_SSH_KEY_FILE}
+      read -r -p "SSH keys file [$ISO_SSHKEYFILE]: " NEW_ISO_SSHKEYFILE
+      ISO_SSHKEYFILE=${NEW_ISO_SSHKEYFILE:-$ISO_SSHKEYFILE}
     fi
-    if [ "$ISO_OS_NAME" = "rocky" ]; then
+    if [ "$ISO_CODENAME" = "rocky" ]; then
       # Get type of OEM install
-      read -r -p "OEM Install? [$ISO_OEM_INSTALL]: " NEW_ISO_OEM_INSTALL
-      ISO_OEM_INSTALL=${NEW_ISO_OEM_INSTALL:-$ISO_OEM_INSTALL}
+      read -r -p "OEM Install? [$ISO_OEMINSTALL]: " NEW_ISO_OEMINSTALL
+      ISO_OEMINSTALL=${NEW_ISO_OEMINSTALL:-$ISO_OEMINSTALL}
       # Install Source
-      read -r -p "Install Source? [$ISO_INSTALL_SOURCE]: " NEW_ISO_INSTALL_SOURCE
-      ISO_INSTALL_SOURCE=${NEW_ISO_INSTALL_SOURCE:-$ISO_INSTALL_SOURCE}
+      read -r -p "Install Source? [$ISO_INSTALLSOURCE]: " NEW_ISO_INSTALLSOURCE
+      ISO_INSTALLSOURCE=${NEW_ISO_INSTALLSOURCE:-$ISO_INSTALLSOURCE}
       # Install Mode
-      read -r -p "Install Mode? [$ISO_INSTALL_MODE]: " NEW_ISO_INSTALL_MODE
-      ISO_INSTALL_MODE=${NEW_ISO_INSTALL_MODE:-$ISO_INSTALL_MODE}
+      read -r -p "Install Mode? [$ISO_INSTALLMODE]: " NEW_ISO_INSTALLMODE
+      ISO_INSTALLMODE=${NEW_ISO_INSTALLMODE:-$ISO_INSTALLMODE}
       # Install Username
-      read -r -p "SSH Install Username? [$ISO_INSTALL_USERNAME]: " NEW_ISO_INSTALL_USERNAME
-      ISO_INSTALL_USERNAME=${NEW_ISO_INSTALL_USERNAME:-$ISO_INSTALL_USERNAME}
+      read -r -p "SSH Install Username? [$ISO_INSTALLUSERNAME]: " NEW_ISO_INSTALLUSERNAME
+      ISO_INSTALLUSERNAME=${NEW_ISO_INSTALLUSERNAME:-$ISO_INSTALLUSERNAME}
       # Install Username
-      read -r -p "SSH Install Password? [$ISO_INSTALL_PASSWORD]: " NEW_ISO_INSTALL_PASSWORD
-      ISO_INSTALL_PASSWORD=${NEW_ISO_INSTALL_PASSWORD:-$ISO_INSTALL_PASSWORD}
+      read -r -p "SSH Install Password? [$ISO_INSTALLPASSWORD]: " NEW_ISO_INSTALLPASSWORD
+      ISO_INSTALLPASSWORD=${NEW_ISO_INSTALLPASSWORD:-$ISO_INSTALLPASSWORD}
       # Get Password Algorithm
-      read -r -p "Password Algorithm? [$ISO_PASSWORD_ALGORITHM]: " NEW_ISO_PASSWORD_ALGORITHM
-      ISO_PASSWORD_ALGORITHM=${NEW_ISO_PASSWORD_ALGORITHM:-$ISO_PASSWORD_ALGORITHM}
+      read -r -p "Password Algorithm? [$ISO_PASSWORDALGORITHM]: " NEW_ISO_PASSWORDALGORITHM
+      ISO_PASSWORDALGORITHM=${NEW_ISO_PASSWORDALGORITHM:-$ISO_PASSWORDALGORITHM}
       # Get Bootloader Location
-      read -r -p "Bootloader Location? [$ISO_BOOT_LOADER_LOCATION]: " NEW_ISO_BOOTLOADER_LOCATION
-      ISO_BOOT_LOADER_LOCATION=${NEW_ISO_BOOTLOADER_LOCATION:-$ISO_BOOT_LOADER_LOCATION}
+      read -r -p "Bootloader Location? [$ISO_BOOTLOADER]: " NEW_ISO_BOOTLOADER_LOCATION
+      ISO_BOOTLOADER=${NEW_ISO_BOOTLOADER_LOCATION:-$ISO_BOOTLOADER}
       # Get SELinux mode
       read -r -p "SELinux Mode? [$ISO_SELINUX]: " NEW_ISO_SELINUX
       ISO_SELINUX=${NEW_ISO_SELINUX:-$ISO_SELINUX}
@@ -370,8 +370,8 @@ get_interactive_input () {
       read -r -p "Firewall? [$ISO_FIREWALL]: " NEW_ISO_FIREWALL
       ISO_FIREWALL=${NEW_ISO_FIREWALL:-$ISO_FIREWALL}
       # Allow services
-      read -r -p "Allow Services? [$ISO_ALLOW_SERVICE]: " NEW_ISO_ALLOW_SERVICE
-      ISO_ALLOW_SERVICE=${NEW_ISO_ALLOW_SERVICE:-$ISO_ALLOW_SERVICE}
+      read -r -p "Allow Services? [$ISO_ALLOWSERVICE]: " NEW_ISO_ALLOWSERVICE
+      ISO_ALLOWSERVICE=${NEW_ISO_ALLOWSERVICE:-$ISO_ALLOWSERVICE}
       # Network boot protocol
       read -r -p "Network Boot Protocol? [$ISO_BOOT_PROTO]: " NEW_ISO_BOOT_PROTO
       ISO_BOOT_PROTO=${NEW_ISO_BOOT_PROTO:-$ISO_BOOT_PROTO}
@@ -385,25 +385,25 @@ get_interactive_input () {
       read -r -p "User Groups? [$ISO_GROUPS]: " NEW_ISO_GROUPS
       ISO_GROUPS=${NEW_ISO_GROUPS:-$ISO_GROUPS}
       # PE Size
-      read -r -p "PE Size? [$ISO_PE_SIZE]: " NEW_ISO_PE_SIZE
-      ISO_PE_SIZE=${NEW_ISO_PE_SIZE:-$ISO_PE_SIZE}
+      read -r -p "PE Size? [$ISO_PESIZE]: " NEW_ISO_PESIZE
+      ISO_PESIZE=${NEW_ISO_PESIZE:-$ISO_PESIZE}
       # Boot Partition Size
-      read -r -p "Boot Partition Size? [$ISO_BOOT_SIZE]: " NEW_ISO_BOOT_SIZE
-      ISO_BOOT_SIZE=${NEW_ISO_BOOT_SIZE:-$ISO_BOOT_SIZE}
+      read -r -p "Boot Partition Size? [$ISO_BOOTSIZE]: " NEW_ISO_BOOTSIZE
+      ISO_BOOTSIZE=${NEW_ISO_BOOTSIZE:-$ISO_BOOTSIZE}
     fi
     # VG Name
     read -r -p "Disk Name? [$ISO_DISK_NAME]: " NEW_ISO_DISK_NAME
     ISO_DISK_NAME=${NEW_ISO_DISK_NAME:-$ISO_DISK_NAME}
     if [[ ! "$ISO_VOLMGRS" =~ "zfs" ]]; then
       # VG Name
-      read -r -p "Volume Group Name? [$ISO_VG_NAME]: " NEW_ISO_VG_NAME
-      ISO_VG_NAME=${NEW_ISO_VG_NAME:-$ISO_VG_NAME}
+      read -r -p "Volume Group Name? [$ISO_VGNAME]: " NEW_ISO_VGNAME
+      ISO_VGNAME=${NEW_ISO_VGNAME:-$ISO_VGNAME}
       # LV Name
-      read -r -p "Logic Volume Name? [$ISO_LV_NAME]: " NEW_ISO_LV_NAME
-      ISO_LV_NAME=${NEW_ISO_LV_NAME:-$ISO_LV_NAME}
+      read -r -p "Logic Volume Name? [$ISO_LVNAME]: " NEW_ISO_LVNAME
+      ISO_LVNAME=${NEW_ISO_LVNAME:-$ISO_LVNAME}
       # LV Name
-      read -r -p "Physical Volume Name? [$ISO_PV_NAME]: " NEW_ISO_PV_NAME
-      ISO_PV_NAME=${NEW_ISO_PV_NAME:-$ISO_PV_NAME}
+      read -r -p "Physical Volume Name? [$ISO_PVNAME]: " NEW_ISO_PVNAME
+      ISO_PVNAME=${NEW_ISO_PVNAME:-$ISO_PVNAME}
     fi
     # Get whether to install drivers
     read -r -p "Install Drivers? [$DO_INSTALL_ISO_DRIVERS]: " NEW_INSTALL_ISO_DRIVERS
@@ -412,20 +412,20 @@ get_interactive_input () {
     read -r -p "Install Codecs? [$DO_INSTALL_ISO_CODECS]: " NEW_INSTALL_ISO_CODECS
     DO_INSTALL_ISO_CODECS=${NEW_INSTALL_ISO_CODECS:-$DO_INSTALL_ISO_CODECS}
     # Get Serial Port 0
-    read -r -p "First Serial Port? [$ISO_SERIAL_PORT0]: " NEW_ISO_SERIAL_PORT0
-    ISO_SERIAL_PORT0=${NEW_ISO_SERIAL_PORT0:-$ISO_SERIAL_PORT0}
+    read -r -p "First Serial Port? [$ISO_SERIALPORT0]: " NEW_ISO_SERIALPORT0
+    ISO_SERIALPORT0=${NEW_ISO_SERIALPORT0:-$ISO_SERIALPORT0}
     # Get Serial Port 1
     read -r -p "Second Serial Port? [$ISO_SERIAL_PORT1]: " NEW_ISO_SERIAL_PORT1
     ISO_SERIAL_PORT1=${NEW_ISO_SERIAL_PORT1:-$ISO_SERIAL_PORT1}
     # Get Serial Port Address 0
-    read -r -p "First Serial Port Address? [$ISO_SERIAL_PORT_ADDRESS0]: " NEW_ISO_SERIAL_PORT_ADDRESS0
-    ISO_SERIAL_PORT_ADDRESS0=${NEW_ISO_SERIAL_PORT_ADDRESS0:-$ISO_SERIAL_PORT_ADDRESS0}
+    read -r -p "First Serial Port Address? [$ISO_SERIALPORTADDRESS0]: " NEW_ISO_SERIALPORTADDRESS0
+    ISO_SERIALPORTADDRESS0=${NEW_ISO_SERIALPORTADDRESS0:-$ISO_SERIALPORTADDRESS0}
     # Get Serial Port Address 1
     read -r -p "Second Serial Port Address? [$ISO_SERIAL_PORT_ADDRESS1]: " NEW_ISO_SERIAL_PORT_ADDRESS1
     ISO_SERIAL_PORT_ADDRESS1=${NEW_ISO_SERIAL_PORT_ADDRESS1:-$ISO_SERIAL_PORT_ADDRESS1}
     # Get Serial Port Speed 0
-    read -r -p "First Serial Port Speed? [$ISO_SERIAL_PORT_SPEED0]: " NEW_ISO_SERIAL_PORT_SPEED0
-    ISO_SERIAL_PORT_SPEED0=${NEW_ISO_SERIAL_PORT_SPEED0:-$ISO_SERIAL_PORT_SPEED0}
+    read -r -p "First Serial Port Speed? [$ISO_SERIALPORTSPEED0]: " NEW_ISO_SERIALPORTSPEED0
+    ISO_SERIALPORTSPEED0=${NEW_ISO_SERIALPORTSPEED0:-$ISO_SERIALPORTSPEED0}
     # Get Serial Port Speed 1
     read -r -p "Second Serial Port Speed? [$ISO_SERIAL_PORT_SPEED1]: " NEW_ISO_SERIAL_PORT_SPEED1
     ISO_SERIAL_PORT_SPEED1=${NEW_ISO_SERIAL_PORT_SPEED1:-$ISO_SERIAL_PORT_SPEED1}

@@ -11,8 +11,8 @@ process_switches () {
   if [ "$ISO_COMPRESSION" = "" ]; then
     ISO_COMPRESSION="$DEFAULT_ISO_COMPRESSION"
   fi
-  if [ "$ISO_DISK_SERIAL" = "" ]; then
-    ISO_DISK_SERIAL="$DEFAULT_ISO_DISK_SERIAL"
+  if [ "$ISO_DISKSERIAL" = "" ]; then
+    ISO_DISKSERIAL="$DEFAULT_ISO_DISKSERIAL"
   fi
   if [ "$ISO_DISK_WWN" = "" ]; then
     ISO_DISK_WWN="$DEFAULT_ISO_DISK_WWN"
@@ -23,45 +23,45 @@ process_switches () {
   if [ "$ISO_FALLBACK" = "" ]; then
     ISO_FALLBACK="$DEFAULT_ISO_FALLBACK"
   fi
-  if [ "$ISO_VG_NAME" = "" ]; then
-    ISO_VG_NAME="$DEFAULT_ISO_VG_NAME"
+  if [ "$ISO_VGNAME" = "" ]; then
+    ISO_VGNAME="$DEFAULT_ISO_VGNAME"
   else
-    if [ "$ISO_PV_NAME" = "" ]; then
-      ISO_PV_NAME="${ISO_VG_NAME}-pv"
+    if [ "$ISO_PVNAME" = "" ]; then
+      ISO_PVNAME="${ISO_VGNAME}-pv"
     fi
-    if [ "$ISO_LV_NAME" = "" ]; then
-      ISO_LV_NAME="${ISO_VG_NAME}-lv"
+    if [ "$ISO_LVNAME" = "" ]; then
+      ISO_LVNAME="${ISO_VGNAME}-lv"
     fi
   fi
-  if [ "$ISO_PV_NAME" = "" ]; then
-    ISO_PV_NAME="$DEFAULT_ISO_PV_NAME"
+  if [ "$ISO_PVNAME" = "" ]; then
+    ISO_PVNAME="$DEFAULT_ISO_PVNAME"
   fi
-  if [ "$ISO_LV_NAME" = "" ]; then
-    ISO_LV_NAME="$DEFAULT_ISO_LV_NAME"
+  if [ "$ISO_LVNAME" = "" ]; then
+    ISO_LVNAME="$DEFAULT_ISO_LVNAME"
   fi
   if [ "$ISO_DISK_NAME" = "" ]; then
     ISO_DISK_NAME="$DEFAULT_ISO_DISK_NAME"
   fi
-  if [ "$ISO_INSTALL_USERNAME" = "" ]; then
-    ISO_INSTALL_USERNAME="$DEFAULT_ISO_INSTALL_USERNAME"
+  if [ "$ISO_INSTALLUSERNAME" = "" ]; then
+    ISO_INSTALLUSERNAME="$DEFAULT_ISO_INSTALLUSERNAME"
   fi
-  if [ "$ISO_INSTALL_PASSWORD" = "" ]; then
-    ISO_INSTALL_PASSWORD="$DEFAULT_ISO_INSTALL_PASSWORD"
+  if [ "$ISO_INSTALLPASSWORD" = "" ]; then
+    ISO_INSTALLPASSWORD="$DEFAULT_ISO_INSTALLPASSWORD"
   fi
-  if [ "$ISO_PE_SIZE" = "" ]; then
-    ISO_PE_SIZE="$DEFAULT_ISO_PE_SIZE"
+  if [ "$ISO_PESIZE" = "" ]; then
+    ISO_PESIZE="$DEFAULT_ISO_PESIZE"
   fi
-  if [ "$ISO_BOOT_SIZE" = "" ]; then
-    ISO_BOOT_SIZE="$DEFAULT_ISO_BOOT_SIZE"
+  if [ "$ISO_BOOTSIZE" = "" ]; then
+    ISO_BOOTSIZE="$DEFAULT_ISO_BOOTSIZE"
   fi
-  if [ "$ISO_ROOT_SIZE" = "" ]; then
-    ISO_ROOT_SIZE="$DEFAULT_ISO_ROOT_SIZE"
+  if [ "$ISO_ROOTSIZE" = "" ]; then
+    ISO_ROOTSIZE="$DEFAULT_ISO_ROOTSIZE"
   fi
   if [ "$ISO_SELINUX" = "" ]; then
     ISO_SELINUX="$DEFAULT_ISO_SELINUX"
   fi
-  if [ "$ISO_INSTALL_SOURCE" = "" ]; then
-    ISO_INSTALL_SOURCE="$DEFAULT_ISO_INSTALL_SOURCE"
+  if [ "$ISO_INSTALLSOURCE" = "" ]; then
+    ISO_INSTALLSOURCE="$DEFAULT_ISO_INSTALLSOURCE"
   fi
   if [ "$ISO_GROUPS" = "" ]; then
     ISO_GROUPS="$DEFAULT_ISO_GROUPS"
@@ -69,17 +69,17 @@ process_switches () {
   if [ "$ISO_GECOS" = "" ]; then
     ISO_GECOS="$DEFAULT_ISO_GECOS"
   fi
-  if [ "$ISO_ENABLE_SERVICE" = "" ]; then
-    ISO_ENABLE_SERVICE="$DEFAULT_ISO_ENABLE_SERVICE"
+  if [ "$ISO_ENABLESERVICE" = "" ]; then
+    ISO_ENABLESERVICE="$DEFAULT_ISO_ENABLESERVICE"
   fi
-  if [ "$ISO_DISABLE_SERVICE" = "" ]; then
-    ISO_DISABLE_SERVICE="$DEFAULT_ISO_DISABLE_SERVICE"
+  if [ "$ISO_DISABLESERVICE" = "" ]; then
+    ISO_DISABLESERVICE="$DEFAULT_ISO_DISABLESERVICE"
   fi
   if [ "$ISO_ONBOOT" = "" ]; then
     ISO_ONBOOT="$DEFAULT_ISO_ONBOOT"
   fi
-  if [ "$ISO_ALLOW_SERVICE" = "" ]; then
-    ISO_ALLOW_SERVICE="$DEFAULT_ISO_ALLOW_SERVICE"
+  if [ "$ISO_ALLOWSERVICE" = "" ]; then
+    ISO_ALLOWSERVICE="$DEFAULT_ISO_ALLOWSERVICE"
   fi
   if [ "$ISO_FIREWALL" = "" ]; then
     ISO_FIREWALL="$DEFAULT_ISO_FIREWALL"
@@ -87,31 +87,31 @@ process_switches () {
   if [ "$ISO_SELINUX" = "" ]; then
     ISO_SELINUX="$DEFAULT_ISO_SELINUX"
   fi
-  if [ "$ISO_BOOT_LOADER_LOCATION" = "" ]; then
-    ISO_BOOT_LOADER_LOCATION="$DEFAULT_ISO_BOOT_LOADER_LOCATION"
+  if [ "$ISO_BOOTLOADER" = "" ]; then
+    ISO_BOOTLOADER="$DEFAULT_ISO_BOOTLOADER"
   fi
-  if [ "$ISO_PASSWORD_ALGORITHM" = "" ]; then
-    ISO_PASSWORD_ALGORITHM="$DEFAULT_ISO_PASSWORD_ALGORITHM"
+  if [ "$ISO_PASSWORDALGORITHM" = "" ]; then
+    ISO_PASSWORDALGORITHM="$DEFAULT_ISO_PASSWORDALGORITHM"
   fi
-  if [ "$ISO_INSTALL_MODE" = "" ]; then
-    ISO_INSTALL_MODE="$DEFAULT_ISO_INSTALL_MODE"
+  if [ "$ISO_INSTALLMODE" = "" ]; then
+    ISO_INSTALLMODE="$DEFAULT_ISO_INSTALLMODE"
   fi
-  if [ "$DO_CUSTOM_AUTO_INSTALL" = "true" ]; then
-    if [ ! -f "$AUTO_INSTALL_FILE" ]; then
+  if [ "$DO_ISO_AUTOINSTALL" = "true" ]; then
+    if [ ! -f "$ISO_AUTOINSTALLFILE" ]; then
       if [ ! -f "/.dockerenv" ]; then
-        echo "File $AUTO_INSTALL_FILE does not exist"
+        echo "File $ISO_AUTOINSTALLFILE does not exist"
         exit
       fi
     fi
   fi
-  if [ "$ISO_SOURCE_ID" = "" ]; then
-    ISO_SOURCE_ID="$DEFAULT_ISO_SOURCE_ID"
+  if [ "$ISO_SOURCEID" = "" ]; then
+    ISO_SOURCEID="$DEFAULT_ISO_SOURCEID"
   fi
-  if [ "$ISO_OEM_INSTALL" = "" ]; then
-    ISO_OEM_INSTALL="$DEFAULT_ISO_OEM_INSTALL"
+  if [ "$ISO_OEMINSTALL" = "" ]; then
+    ISO_OEMINSTALL="$DEFAULT_ISO_OEMINSTALL"
   fi
-  if [ "$ZFS_FILESYSTEMS" = "" ]; then
-    ZFS_FILESYSTEMS="$DEFAULT_ZFS_FILESYSTEMS"
+  if [ "$ISO_ZFSFILESYSTEMS" = "" ]; then
+    ISO_ZFSFILESYSTEMS="$DEFAULT_ISO_ZFSFILESYSTEMS"
   fi
   if [ "$ISO_SEARCH" = "" ]; then
     ISO_SEARCH="$DEFAULT_ISO_SEARCH"
@@ -125,30 +125,30 @@ process_switches () {
   if [ "$ISO_COUNTRY" = "" ]; then
     ISO_COUNTRY="$DEFAULT_ISO_COUNTRY"
   fi
-  if [[ "$ISO_SERIAL_PORT0" =~ "," ]]; then
-      ISO_SERIAL_PORT0=$(echo "$ISO_SERIAL_PORT0" |cut -f1 -d,)
+  if [[ "$ISO_SERIALPORT0" =~ "," ]]; then
+      ISO_SERIALPORT0=$(echo "$ISO_SERIALPORT0" |cut -f1 -d,)
       ISO_SERIAL_PORT1=$(echo "$ISO_SERIAL_PORT1" |cut -f2 -d,)
   else
-    if [ "$ISO_SERIAL_PORT0" = "" ]; then
-      ISO_SERIAL_PORT0="$DEFAULT_ISO_SERIAL_PORT0"
+    if [ "$ISO_SERIALPORT0" = "" ]; then
+      ISO_SERIALPORT0="$DEFAULT_ISO_SERIALPORT0"
       ISO_SERIAL_PORT1="$DEFAULT_ISO_SERIAL_PORT1"
     fi
   fi
-  if [[ "$ISO_SERIAL_PORT_ADDRESS0" =~ "," ]]; then
-    ISO_SERIAL_PORT_ADDRESS0=$(echo "$ISO_SERIAL_PORT_ADDRESS0" |cut -f1 -d,)
+  if [[ "$ISO_SERIALPORTADDRESS0" =~ "," ]]; then
+    ISO_SERIALPORTADDRESS0=$(echo "$ISO_SERIALPORTADDRESS0" |cut -f1 -d,)
     ISO_SERIAL_PORT_ADDRESS1=$(echo "$ISO_SERIAL_PORT_ADDRESS1" |cut -f2 -d,)
   else
-    if [ "$ISO_SERIAL_PORT_ADDRESS0" = "" ]; then
-      ISO_SERIAL_PORT_ADDRESS0="$DEFAULT_ISO_SERIAL_PORT_ADDRESS0"
+    if [ "$ISO_SERIALPORTADDRESS0" = "" ]; then
+      ISO_SERIALPORTADDRESS0="$DEFAULT_ISO_SERIALPORTADDRESS0"
       ISO_SERIAL_PORT_ADDRESS1="$DEFAULT_ISO_SERIAL_PORT_ADDRESS1"
     fi
   fi
-  if [ "$ISO_SERIAL_PORT_SPEED0" = "" ]; then
-    ISO_SERIAL_PORT_SPEED0=$(echo "$DEFAULT_ISO_SERIAL_PORT_SPEED0" |cut -f1 -d,)
+  if [ "$ISO_SERIALPORTSPEED0" = "" ]; then
+    ISO_SERIALPORTSPEED0=$(echo "$DEFAULT_ISO_SERIALPORTSPEED0" |cut -f1 -d,)
     ISO_SERIAL_PORT_SPEED1=$(echo "$DEFAULT_ISO_SERIAL_PORT_SPEED1" |cut -f2 -d,)
   else
-    if [ "$ISO_SERIAL_PORT_SPEED0" = "" ]; then
-      ISO_SERIAL_PORT_SPEED0="$DEFAULT_ISO_SERIAL_PORT_SPEED0"
+    if [ "$ISO_SERIALPORTSPEED0" = "" ]; then
+      ISO_SERIALPORTSPEED0="$DEFAULT_ISO_SERIALPORTSPEED0"
       ISO_SERIAL_PORT_SPEED1="$DEFAULT_ISO_SERIAL_PORT_SPEED1"
     fi
   fi
@@ -161,43 +161,43 @@ process_switches () {
   if [ "$ISO_BOOT_TYPE" = "" ]; then
     ISO_BOOT_TYPE="$DEFAULT_ISO_BOOT_TYPE"
   fi
-  if [ "$ISO_SSH_KEY_FILE" = "" ]; then
-    ISO_SSH_KEY_FILE="$DEFAULT_ISO_SSH_KEY_FILE"
+  if [ "$ISO_SSHKEYFILE" = "" ]; then
+    ISO_SSHKEYFILE="$DEFAULT_ISO_SSHKEYFILE"
   else
-    ISO_SSH_KEY="$DEFAULT_ISO_SSH_KEY"
+    ISO_SSHKEY="$DEFAULT_ISO_SSHKEY"
   fi
-  if [ "$BOOT_SERVER_IP" = "" ]; then
-    BOOT_SERVER_IP="$DEFAULT_BOOT_SERVER_IP"
+  if [ "$ISO_BOOTSERVERIP" = "" ]; then
+    ISO_BOOTSERVERIP="$DEFAULT_ISO_BOOTSERVERIP"
   fi
-  if [ "$BOOT_SERVER_FILE" = "" ]; then
-    BOOT_SERVER_FILE="$DEFAULT_BOOT_SERVER_FILE"
+  if [ "$ISO_BOOTSERVERFILE" = "" ]; then
+    ISO_BOOTSERVERFILE="$DEFAULT_ISO_BOOTSERVERFILE"
   fi
-  if [ "$BMC_USERNAME" = "" ]; then
-    BMC_USERNAME="$DEFAULT_BMC_USERNAME"
+  if [ "$ISO_BMCUSERNAME" = "" ]; then
+    ISO_BMCUSERNAME="$DEFAULT_ISO_BMCUSERNAME"
   fi
-  if [ "$BMC_PASSWORD" = "" ]; then
-    BMC_PASSWORD="$DEFAULT_BMC_PASSWORD"
+  if [ "$ISO_BMCPASSWORD" = "" ]; then
+    ISO_BMCPASSWORD="$DEFAULT_ISO_BMCPASSWORD"
   fi
-  if [ "$BMC_IP" = "" ]; then
-    BMC_IP="$DEFAULT_BMC_IP"
+  if [ "$ISO_BMCIP" = "" ]; then
+    ISO_BMCIP="$DEFAULT_ISO_BMCIP"
   fi
   if [ "$ISO_CIDR" = "" ]; then
     ISO_CIDR="$DEFAULT_ISO_CIDR"
   fi
-  if [ "$ISO_OS_NAME" = "" ]; then
-    ISO_OS_NAME="$DEFAULT_ISO_OS_NAME"
+  if [ "$ISO_CODENAME" = "" ]; then
+    ISO_CODENAME="$DEFAULT_ISO_CODENAME"
   fi
   if [ "$ISO_RELEASE" = "" ]; then
     ISO_RELEASE="$DEFAULT_ISO_RELEASE"
   else
     ISO_MINOR_RELEASE=$( echo "$ISO_RELEASE" |cut -f2 -d. )
     ISO_DOT_RELEASE=$( echo "$ISO_RELEASE" |cut -f3 -d. )
-    if [ "$ISO_OS_NAME" = "ubuntu" ]; then
+    if [ "$ISO_CODENAME" = "ubuntu" ]; then
       if [ "$ISO_DOT_RELEASE" = "" ]; then
         get_current_release
       fi
     else
-      if [ "$ISO_OS_NAME" = "rocky" ]; then
+      if [ "$ISO_CODENAME" = "rocky" ]; then
         case "$ISO_RELEASE" in
           "9")
             ISO_RELEASE="$CURRENT_ISO_RELEASE_9"
@@ -233,60 +233,60 @@ process_switches () {
   fi
   if [ "$ISO_IP" = "" ]; then
     ISO_BOOT_PROTO="dhcp"
-    DO_DHCP="true"
+    DO_ISO_DHCP="true"
   else
-    DO_DHCP="false"
+    DO_ISO_DHCP="false"
     ISO_BOOT_PROTO="static"
   fi
-  if [ "$ISO_ALLOW_PASSWORD" = "" ]; then
-    ISO_ALLOW_PASSWORD="$DEFAULT_ISO_ALLOW_PASSWORD"
+  if [ "$ISO_ALLOWPASSWORD" = "" ]; then
+    ISO_ALLOWPASSWORD="$DEFAULT_ISO_ALLOWPASSWORD"
   fi
   if [ "$ISO_PASSWORD" = "" ]; then
     ISO_PASSWORD="$DEFAULT_ISO_PASSWORD"
   fi
-  if [ "$ISO_CHROOT_PACKAGES" = "" ]; then
-    ISO_CHROOT_PACKAGES="$DEFAULT_ISO_INSTALL_PACKAGES"
+  if [ "$ISO_CHROOTPACKAGES" = "" ]; then
+    ISO_CHROOTPACKAGES="$DEFAULT_ISO_PACKAGES"
   fi
-  if [ "$ISO_INSTALL_PACKAGES" = "" ]; then
-    ISO_INSTALL_PACKAGES="$DEFAULT_ISO_INSTALL_PACKAGES"
+  if [ "$ISO_PACKAGES" = "" ]; then
+    ISO_PACKAGES="$DEFAULT_ISO_PACKAGES"
   fi
   if [ "$ISO_TIMEZONE" = "" ]; then
     ISO_TIMEZONE="$DEFAULT_ISO_TIMEZONE"
   fi
-  if [ "$ISO_OUTPUT_FILE" = "" ]; then
-    ISO_OUTPUT_FILE="$DEFAULT_ISO_OUTPUT_FILE"
+  if [ "$ISO_OUTPUTFILE" = "" ]; then
+    ISO_OUTPUTFILE="$DEFAULT_ISO_OUTPUTFILE"
   fi
-  if [ "$CI_OUTPUT_FILE" = "" ]; then
-    CI_OUTPUT_FILE="$DEFAULT_CI_OUTPUT_FILE"
+  if [ "$ISO_OUTPUTCI" = "" ]; then
+    ISO_OUTPUTCI="$DEFAULT_ISO_OUTPUTCI"
   fi
   if [ "$ISO_NIC" = "" ]; then
     ISO_NIC="$DEFAULT_ISO_NIC"
   fi
   if [ "$SWAPSIZE" = "" ]; then
-    ISO_SWAP_SIZE="$DEFAULT_ISO_SWAP_SIZE"
+    ISO_SWAPSIZE="$DEFAULT_ISO_SWAPSIZE"
   fi
   if [ "$ISO_DISK" = "" ]; then
     ISO_DISK="$DEFAULT_ISO_DISK"
   fi
   if [ "$ISO_BOOT_TYPE" = "bios" ]; then
-    if [[ "$OPTIONS" =~ "fs" ]]; then
+    if [[ "$ISO_OPTIONS" =~ "fs" ]]; then
       DEFAULT_ISO_VOLMGRS="lvm zfs xfs btrfs"
     else
       DEFAULT_ISO_VOLMGRS="lvm"
     fi
   fi
-  if [ "$DO_CUSTOM_AUTO_INSTALL" = "true" ]; then
+  if [ "$DO_ISO_AUTOINSTALL" = "true" ]; then
     DEFAULT_ISO_VOLMGRS="custom $DEFAULT_ISO_VOLMGRS"
   fi
   reset_volmgrs
   if [ "$GRUB_MENU" = "" ]; then
-    ISO_GRUB_MENU="$DEFAULT_ISO_GRUB_MENU"
+    ISO_GRUBMENU="$DEFAULT_ISO_GRUBMENU"
   fi
   if [ "$GRUB_TIMEOUT" = "" ]; then
-    ISO_GRUB_TIMEOUT="$DEFAULT_ISO_GRUB_TIMEOUT"
+    ISO_GRUBTIMEOUT="$DEFAULT_ISO_GRUBTIMEOUT"
   fi
-  if [ "$ISO_KERNEL_ARGS" = "" ]; then
-    ISO_KERNEL_ARGS="$DEFAULT_ISO_KERNEL_ARGS"
+  if [ "$ISO_KERNELARGS" = "" ]; then
+    ISO_KERNELARGS="$DEFAULT_ISO_KERNELARGS"
   fi
   if [ "$ISO_KERNEL" = "" ]; then
     if [ "$DO_CREATE_ISO_VM" = "true" ]; then
@@ -295,7 +295,7 @@ process_switches () {
       ISO_KERNEL="$DEFAULT_ISO_KERNEL"
     fi
   fi
-  if [[ "$ACTION" =~ "iso" ]]; then
+  if [[ "$ISO_ACTION" =~ "iso" ]]; then
     if [ "$CODENAME" = "" ]; then
       get_code_name
     fi
@@ -303,40 +303,40 @@ process_switches () {
   if [ "$ISO_LOCALE" = "" ]; then
     ISO_LOCALE="$DEFAULT_ISO_LOCALE"
   fi
-  if [ "$ISO_LC_ALL" = "" ]; then
-    ISO_LC_ALL="$DEFAULT_ISO_LC_ALL"
+  if [ "$ISO_LCALL" = "" ]; then
+    ISO_LCALL="$DEFAULT_ISO_LCALL"
   fi
   if [ "$ISO_LAYOUT" = "" ]; then
     ISO_LAYOUT="$DEFAULT_ISO_LAYOUT"
   fi
-  if [ "$ISO_INSTALL_MOUNT" = "" ]; then
-    ISO_INSTALL_MOUNT="$DEFAULT_ISO_INSTALL_MOUNT"
+  if [ "$ISO_INSTALLMOUNT" = "" ]; then
+    ISO_INSTALLMOUNT="$DEFAULT_ISO_INSTALLMOUNT"
   fi
-  if [ "$ISO_TARGET_MOUNT" = "" ]; then
-    ISO_TARGET_MOUNT="$DEFAULT_ISO_TARGET_MOUNT"
+  if [ "$ISO_TARGETMOUNT" = "" ]; then
+    ISO_TARGETMOUNT="$DEFAULT_ISO_TARGETMOUNT"
   fi
-  if [ "$ISO_AUTOINSTALL_DIR" = "" ]; then
-    ISO_AUTOINSTALL_DIR="$DEFAULT_ISO_AUTOINSTALL_DIR"
+  if [ "$ISO_AUTOINSTALLDIR" = "" ]; then
+    ISO_AUTOINSTALLDIR="$DEFAULT_ISO_AUTOINSTALLDIR"
   fi
-  if [ "$ISO_BUILD_TYPE" = "" ]; then
-    ISO_BUILD_TYPE="$DEFAULT_ISO_BUILD_TYPE"
+  if [ "$ISO_BUILDTYPE" = "" ]; then
+    ISO_BUILDTYPE="$DEFAULT_ISO_BUILDTYPE"
   fi
-  if [ "$WORK_DIR" = "" ]; then
-    if [ "$DO_DAILY_ISO" = "true" ]; then
-      WORK_DIR="$HOME/$SCRIPT_NAME/$ISO_OS_NAME/$ISO_BUILD_TYPE/$ISO_CODENAME"
-      DOCKER_WORK_DIR="/root/$SCRIPT_NAME/$ISO_OS_NAME/$ISO_BUILD_TYPE/$ISO_CODENAME"
+  if [ "$ISO_WORKDIR" = "" ]; then
+    if [ "$DO_ISO_DAILY" = "true" ]; then
+      ISO_WORKDIR="$HOME/$SCRIPT_NAME/$ISO_CODENAME/$ISO_BUILDTYPE/$ISO_CODENAME"
+      DOCKER_ISO_WORKDIR="/root/$SCRIPT_NAME/$ISO_CODENAME/$ISO_BUILDTYPE/$ISO_CODENAME"
     else
-      WORK_DIR="$HOME/$SCRIPT_NAME/$ISO_OS_NAME/$ISO_BUILD_TYPE/$ISO_RELEASE"
-      DOCKER_WORK_DIR="/root/$SCRIPT_NAME/$ISO_OS_NAME/$ISO_BUILD_TYPE/$ISO_RELEASE"
+      ISO_WORKDIR="$HOME/$SCRIPT_NAME/$ISO_CODENAME/$ISO_BUILDTYPE/$ISO_RELEASE"
+      DOCKER_ISO_WORKDIR="/root/$SCRIPT_NAME/$ISO_CODENAME/$ISO_BUILDTYPE/$ISO_RELEASE"
     fi
   else
-    if [ "$DO_DAILY_ISO" = "true" ]; then
-      WORK_DIR="$HOME/$SCRIPT_NAME/$ISO_OS_NAME/$ISO_BUILD_TYPE/$ISO_CODENAME"
-      DOCKER_WORK_DIR="/root/$SCRIPT_NAME/$ISO_OS_NAME/$ISO_BUILD_TYPE/$ISO_CODENAME"
+    if [ "$DO_ISO_DAILY" = "true" ]; then
+      ISO_WORKDIR="$HOME/$SCRIPT_NAME/$ISO_CODENAME/$ISO_BUILDTYPE/$ISO_CODENAME"
+      DOCKER_ISO_WORKDIR="/root/$SCRIPT_NAME/$ISO_CODENAME/$ISO_BUILDTYPE/$ISO_CODENAME"
     fi
   fi
   if [ "$ISO_VOLID" = "" ]; then
-    case $ISO_BUILD_TYPE in
+    case $ISO_BUILDTYPE in
       "daily-desktop"|"desktop")
         ISO_VOLID="$ISO_REALNAME $ISO_RELEASE Desktop"
         ;;
@@ -345,65 +345,65 @@ process_switches () {
         ;;
     esac
   fi
-  if [ "$ISO_INPUT_FILE" = "" ]; then
-    ISO_INPUT_FILE="$DEFAULT_ISO_INPUT_FILE"
+  if [ "$ISO_INPUTFILE" = "" ]; then
+    ISO_INPUTFILE="$DEFAULT_ISO_INPUTFILE"
   fi
-  if [ "$CI_INPUT_FILE" = "" ]; then
-    CI_INPUT_FILE="$DEFAULT_CI_INPUT_FILE"
+  if [ "$ISO_INPUTCI" = "" ]; then
+    ISO_INPUTCI="$DEFAULT_ISO_INPUTCI"
   fi
   if [ "$DO_ISO_QUERY" = "true" ]; then
     get_info_from_iso
   else
-    if [ "$DO_CUSTOM_BOOT_SERVER_FILE" = "false" ]; then
-      if [ "$ISO_OS_NAME" = "ubuntu" ]; then
-        case $ISO_BUILD_TYPE in
+    if [ "$DO_ISO_BOOTSERVERFILE" = "false" ]; then
+      if [ "$ISO_CODENAME" = "ubuntu" ]; then
+        case $ISO_BUILDTYPE in
           "daily-live"|"daily-live-server")
-            ISO_INPUT_FILE="$WORK_DIR/files/$ISO_CODENAME-live-server-$ISO_ARCH.iso"
-            ISO_OUTPUT_FILE="$WORK_DIR/files/$ISO_CODENAME-live-server-$ISO_ARCH-$ISO_BOOT_TYPE-autoinstall.iso"
-            CI_INPUT_FILE="$WORK_DIR/files/$ISO_CODENAME-server-cloudimg-$ISO_ARCH.img"
-            CI_OUTPUT_FILE="$WORK_DIR/files/$ISO_CODENAME-server-cloudimg-$ISO_ARCH.img"
-            BOOT_SERVER_FILE="$ISO_OUTPUT_FILE"
+            ISO_INPUTFILE="$ISO_WORKDIR/files/$ISO_CODENAME-live-server-$ISO_ARCH.iso"
+            ISO_OUTPUTFILE="$ISO_WORKDIR/files/$ISO_CODENAME-live-server-$ISO_ARCH-$ISO_BOOT_TYPE-autoinstall.iso"
+            ISO_INPUTCI="$ISO_WORKDIR/files/$ISO_CODENAME-server-cloudimg-$ISO_ARCH.img"
+            ISO_OUTPUTCI="$ISO_WORKDIR/files/$ISO_CODENAME-server-cloudimg-$ISO_ARCH.img"
+            ISO_BOOTSERVERFILE="$ISO_OUTPUTFILE"
             ;;
           "daily-desktop")
-            ISO_INPUT_FILE="$WORK_DIR/files/$ISO_CODENAME-desktop-$ISO_ARCH.iso"
-            ISO_OUTPUT_FILE="$WORK_DIR/files/$ISO_CODENAME-desktop-$ISO_ARCH-$ISO_BOOT_TYPE-autoinstall.iso"
-            BOOT_SERVER_FILE="$ISO_OUTPUT_FILE"
+            ISO_INPUTFILE="$ISO_WORKDIR/files/$ISO_CODENAME-desktop-$ISO_ARCH.iso"
+            ISO_OUTPUTFILE="$ISO_WORKDIR/files/$ISO_CODENAME-desktop-$ISO_ARCH-$ISO_BOOT_TYPE-autoinstall.iso"
+            ISO_BOOTSERVERFILE="$ISO_OUTPUTFILE"
             ;;
          "desktop")
-            ISO_INPUT_FILE="$WORK_DIR/files/$ISO_OS_NAME-$ISO_RELEASE-desktop-$ISO_ARCH.iso"
-            ISO_OUTPUT_FILE="$WORK_DIR/files/$ISO_OS_NAME-$ISO_RELEASE-desktop-$ISO_ARCH-$ISO_BOOT_TYPE-autoinstall.iso"
-            BOOT_SERVER_FILE="$ISO_OUTPUT_FILE"
+            ISO_INPUTFILE="$ISO_WORKDIR/files/$ISO_CODENAME-$ISO_RELEASE-desktop-$ISO_ARCH.iso"
+            ISO_OUTPUTFILE="$ISO_WORKDIR/files/$ISO_CODENAME-$ISO_RELEASE-desktop-$ISO_ARCH-$ISO_BOOT_TYPE-autoinstall.iso"
+            ISO_BOOTSERVERFILE="$ISO_OUTPUTFILE"
             ;;
           *)
-            ISO_INPUT_FILE="$WORK_DIR/files/$ISO_OS_NAME-$ISO_RELEASE-live-server-$ISO_ARCH.iso"
-            ISO_OUTPUT_FILE="$WORK_DIR/files/$ISO_OS_NAME-$ISO_RELEASE-live-server-$ISO_ARCH-$ISO_BOOT_TYPE-autoinstall.iso"
-            BOOT_SERVER_FILE="$ISO_OUTPUT_FILE"
+            ISO_INPUTFILE="$ISO_WORKDIR/files/$ISO_CODENAME-$ISO_RELEASE-live-server-$ISO_ARCH.iso"
+            ISO_OUTPUTFILE="$ISO_WORKDIR/files/$ISO_CODENAME-$ISO_RELEASE-live-server-$ISO_ARCH-$ISO_BOOT_TYPE-autoinstall.iso"
+            ISO_BOOTSERVERFILE="$ISO_OUTPUTFILE"
             ;;
         esac
       else
-        case $ISO_BUILD_TYPE in
+        case $ISO_BUILDTYPE in
           *)
-            ISO_INPUT_FILE="$WORK_DIR/files/$ISO_REALNAME-$ISO_RELEASE-$ISO_ARCH-$ISO_BUILD_TYPE.iso"
-            ISO_OUTPUT_FILE="$WORK_DIR/files/$ISO_REALNAME-$ISO_RELEASE-$ISO_ARCH-$ISO_BOOT_TYPE-$ISO_BUILD_TYPE-kickstart.iso"
-            CI_INPUT_FILE="$WORK_DIR/files/ubuntu-$ISO_RELEASE-server-cloudimg-$ISO_ARCH.img"
-            CI_OUTPUT_FILE="$WORK_DIR/files/ubuntu-$ISO_RELEASE-server-cloudimg-$ISO_ARCH.img"
-            BOOT_SERVER_FILE="$ISO_OUTPUT_FILE"
+            ISO_INPUTFILE="$ISO_WORKDIR/files/$ISO_REALNAME-$ISO_RELEASE-$ISO_ARCH-$ISO_BUILDTYPE.iso"
+            ISO_OUTPUTFILE="$ISO_WORKDIR/files/$ISO_REALNAME-$ISO_RELEASE-$ISO_ARCH-$ISO_BOOT_TYPE-$ISO_BUILDTYPE-kickstart.iso"
+            ISO_INPUTCI="$ISO_WORKDIR/files/ubuntu-$ISO_RELEASE-server-cloudimg-$ISO_ARCH.img"
+            ISO_OUTPUTCI="$ISO_WORKDIR/files/ubuntu-$ISO_RELEASE-server-cloudimg-$ISO_ARCH.img"
+            ISO_BOOTSERVERFILE="$ISO_OUTPUTFILE"
           ;;
         esac
       fi
     fi
   fi
-  if [ "$ISO_SQUASHFS_FILE" = "" ]; then
-    ISO_SQUASHFS_FILE="$DEFAULT_ISO_SQUASHFS_FILE"
+  if [ "$ISO_SQUASHFSFILE" = "" ]; then
+    ISO_SQUASHFSFILE="$DEFAULT_ISO_SQUASHFSFILE"
   fi
-  if [ "$ISO_GRUB_FILE" = "" ]; then
-    ISO_GRUB_FILE="$DEFAULT_ISO_GRUB_FILE"
+  if [ "$ISO_GRUBFILE" = "" ]; then
+    ISO_GRUBFILE="$DEFAULT_ISO_GRUBFILE"
   fi
   if [ "$ISO_USE_BIOSDEVNAME" = "true" ]; then
-    ISO_KERNEL_ARGS="$ISO_KERNEL_ARGS net.ifnames=0 biosdevname=0"
+    ISO_KERNELARGS="$ISO_KERNELARGS net.ifnames=0 biosdevname=0"
   fi
-  if [ "$OLD_ISO_INPUT_FILE" = "" ]; then
-    OLD_ISO_INPUT_FILE="$DEFAULT_OLD_ISO_INPUT_FILE"
+  if [ "$OLD_ISO_INPUTFILE" = "" ]; then
+    OLD_ISO_INPUTFILE="$DEFAULT_OLD_ISO_INPUTFILE"
   fi
   if [ "$VM_RAM" = "" ]; then
     VM_RAM="$DEFAULT_VM_RAM"
@@ -421,7 +421,7 @@ process_switches () {
   if [ "$ISO_VOLMGRS" = "" ]; then
     ISO_VOLMGRS="$DEFAULT_ISO_VOLMGRS"
   fi
-  if [[ "$ISO_VOLMGRS" =~ "fs" ]]; then
+  if [[ "$ISO_VOLMGRS" =~ "fs" ]] || [[ "$ISO_VOLMGRS" =~ "custom" ]]; then
     DO_CHROOT="true"
     DO_ISO_SQUASHFS_UNPACK="true"
     DO_ISO_EARLY_PACKAGES="true"

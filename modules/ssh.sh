@@ -9,9 +9,9 @@
 
 get_ssh_key () {
   if ! [ -f "/.dockerenv" ]; then
-    if [ "$DO_ISO_SSH_KEY" = "true" ]; then
-      if [ "$ISO_SSH_KEY" = "" ]; then
-        if [ "$ISO_SSH_KEY_FILE" = "" ]; then
+    if [ "$DO_ISO_SSHKEY" = "true" ]; then
+      if [ "$ISO_SSHKEY" = "" ]; then
+        if [ "$ISO_SSHKEYFILE" = "" ]; then
           information_message "Attempting to find SSH key file"
           KEY_FILE=$( find $HOME/.ssh -name "*.pub" |head -1 )
           if [ ! "$KEY_FILE" = "" ]; then
@@ -19,15 +19,15 @@ get_ssh_key () {
             information_message "Disabling use of SSH key file"
           else
             information_message "SSH key file found: $KEY_FILE"
-            ISO_SSH_KEY_FILE="$KEY_FILE"
-            ISO_SSH_KEY=$(<"$ISO_SSH_KEY_FILE")
+            ISO_SSHKEYFILE="$KEY_FILE"
+            ISO_SSHKEY=$(<"$ISO_SSHKEYFILE")
           fi
         else
-          if ! [ -f "$ISO_SSH_KEY_FILE" ]; then
-            warning_message "SSH Key file ($ISO_SSH_KEY_FILE) does not exist"
+          if ! [ -f "$ISO_SSHKEYFILE" ]; then
+            warning_message "SSH Key file ($ISO_SSHKEYFILE) does not exist"
             information_message "Disabling use of SSH key file"
           else
-            ISO_SSH_KEY=$(<"$ISO_SSH_KEY_FILE")
+            ISO_SSHKEY=$(<"$ISO_SSHKEYFILE")
           fi
         fi
       fi
