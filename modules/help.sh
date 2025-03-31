@@ -34,7 +34,7 @@ print_cli_help () {
   --compression           Compression algorithm (default: $DEFAULT_ISO_COMPRESSION)
   --country               Country (used for sources.list mirror - default: $DEFAULT_ISO_COUNTRY)
   --debug                 Set debug flag (set -x)
-  --delete                Remove previously created files (default: $FORCE_MODE)
+  --delete                Remove previously created files (default: $DO_ISO_FORCEMODE)
   --disableservice        Disable Service (default: $DEFAULT_ISO_DISABLESERVICE)
   --diskserial            Disk Serial
   --diskwwn               Disk WWN

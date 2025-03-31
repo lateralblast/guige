@@ -136,7 +136,7 @@ process_actions () {
       DO_ISO_LIST="true"
       ;;
     test)
-      DO_TEST="true"
+      DO_ISO_TESTMODE="true"
       ;;
     *)
       warning_message "Action \"$ISO_ACTION\" is not a valid action"
@@ -145,13 +145,13 @@ process_actions () {
   esac
   case $DELETE in
     files)
-      FORCE_MODE="true"
+      DO_ISO_FORCEMODE="true"
       ;;
     all)
-      FULL_FORCE_MODE="true"
+      DO_ISO_FULLFORCEMODE="true"
       ;;
     *)
-      FORCE_MODE="false"
-      FULL_FORCE_MODE="false"
+      DO_ISO_FORCEMODE="false"
+      DO_ISO_FULLFORCEMODE="false"
   esac
 }

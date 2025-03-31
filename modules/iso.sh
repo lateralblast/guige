@@ -266,7 +266,7 @@ check_old_base_iso_file () {
 get_base_iso () {
   handle_output "# Check source ISO exists and grab it if it doesn't" "TEXT"
   BASE_ISO_INPUTFILE=$( basename "$ISO_INPUTFILE" )
-  if [ "$FULL_FORCE_MODE" = "true" ]; then
+  if [ "$DO_ISO_FULLFORCEMODE" = "true" ]; then
     handle_output "rm $ISO_WORKDIR/files/$BASE_ISO_INPUTFILE" ""
     if [ "$DO_ISO_TESTMODE" = "false" ]; then
       rm "$ISO_WORKDIR/files/$BASE_ISO_INPUTFILE"
@@ -291,7 +291,7 @@ get_base_iso () {
 get_old_base_iso () {
   handle_output "# Check old source ISO exists and grab it if it doesn't" "TEXT"
   OLD_BASE_ISO_INPUTFILE=$( basename "$OLD_ISO_INPUTFILE" )
-  if [ "$FULL_FORCE_MODE" = "true" ]; then
+  if [ "$DO_ISO_FULLFORCEMODE" = "true" ]; then
     handle_output "rm $ISO_WORKDIR/files/$OLD_BASE_ISO_INPUTFILE" ""
     if [ "$DO_ISO_TESTMODE" = "false" ]; then
       rm "$OLD_ISO_WORKDIR/files/$OLD_BASE_ISO_INPUTFILE"

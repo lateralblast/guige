@@ -34,7 +34,7 @@ get_base_ci () {
     sudo_create_dir "$CI_DIR"
     sudo_chown "$CI_DIR" "$OS_USER" "$OS_GROUP"
   fi
-  if [ "$FULL_FORCE_MODE" = "true" ]; then
+  if [ "$DO_ISO_FULLFORCEMODE" = "true" ]; then
     handle_output "rm $ISO_WORKDIR/files/$BASE_ISO_INPUTCI" ""
     if [ "$DO_ISO_TESTMODE" = "false" ]; then
       rm "$ISO_WORKDIR/files/$BASE_ISO_INPUTCI"

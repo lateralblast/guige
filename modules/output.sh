@@ -170,7 +170,7 @@ check_ISO_WORKDIR () {
   handle_output "# Check work directories" "TEXT"
   for ISO_DIR in $ISO_MOUNT_DIR $ISO_NEW_DIR/squashfs $ISO_NEW_DIR/mksquash $ISO_NEW_DIR/cd $ISO_NEW_DIR/custom $ISO_WORKDIR/bin $ISO_WORKDIR/files; do
     handle_output "# Check directory $ISO_DIR exists" "TEXT"
-    if [ "$FORCE_MODE" = "true" ]; then
+    if [ "$DO_ISO_FORCEMODE" = "true" ]; then
       remove_dir "$ISO_DIR"
     fi
     create_dir "$ISO_DIR"
@@ -185,7 +185,7 @@ check_ISO_WORKDIR () {
 check_old_ISO_WORKDIR () {
   handle_output "# Check old release work directories exist" "TEXT"
   for ISO_DIR in $OLD_ISO_MOUNT_DIR $OLD_ISO_WORKDIR/files; do
-    if [ "$FORCE_MODE" = "true" ]; then
+    if [ "$DO_ISO_FORCEMODE" = "true" ]; then
       remove_dir "$ISO_DIR"
     fi
     create_dir "$ISO_DIR"
