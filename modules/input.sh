@@ -12,14 +12,14 @@
 get_password_crypt () {
   ISO_PASSWORD="$1"
   if [ "$OS_NAME" = "Darwin" ]; then
-    if [ "$TEST_MODE" = "false" ]; then
+    if [ "$DO_ISO_TESTMODE" = "false" ]; then
       ISO_PASSWORD_CRYPT=$( echo -n "$ISO_PASSWORD" |openssl sha512 | awk '{ print $2 }' )
     fi
   else
     if [ ! -f "/usr/bin/mkpasswd" ]; then
       install_required_packages "$REQUIRED_PACKAGES"
     fi
-    if [ "$TEST_MODE" = "false" ]; then
+    if [ "$DO_ISO_TESTMODE" = "false" ]; then
       ISO_PASSWORD_CRYPT=$( echo "$ISO_PASSWORD" |mkpasswd --method=SHA-512 --stdin )
     fi
   fi
@@ -96,7 +96,7 @@ get_current_release () {
 # Get Ubuntu relase codename
 
 get_code_name () {
-  RELEASE_NO="$ISO_MAJOR_RELEASE.$ISO_MINOR_RELEASE"
+  RELEASE_NO="$ISO_MAJORRELEASE.$ISO_MINORRELEASE"
   if [ "$RELEASE_NO" = "." ]; then
     RELEASE_NO="$ISO_RELEASE"
   fi
@@ -373,8 +373,8 @@ get_interactive_input () {
       read -r -p "Allow Services? [$ISO_ALLOWSERVICE]: " NEW_ISO_ALLOWSERVICE
       ISO_ALLOWSERVICE=${NEW_ISO_ALLOWSERVICE:-$ISO_ALLOWSERVICE}
       # Network boot protocol
-      read -r -p "Network Boot Protocol? [$ISO_BOOT_PROTO]: " NEW_ISO_BOOT_PROTO
-      ISO_BOOT_PROTO=${NEW_ISO_BOOT_PROTO:-$ISO_BOOT_PROTO}
+      read -r -p "Network Boot Protocol? [$ISO_BOOTPROTO]: " NEW_ISO_BOOTPROTO
+      ISO_BOOTPROTO=${NEW_ISO_BOOTPROTO:-$ISO_BOOTPROTO}
       # Enable Network on boot
       read -r -p "Enable Network on boot? [$ISO_ONBOOT]: " NEW_ISO_ONBOOT
       ISO_ONBOOT=${NEW_ISO_ONBOOT:-$ISO_ONBOOT}

@@ -10,7 +10,7 @@
 execute_command () {
   COMMAND="$1"
   execute_message "$COMMAND"
-  if [ "$TEST_MODE" = "false" ]; then
+  if [ "$DO_ISO_TESTMODE" = "false" ]; then
     eval "$COMMAND"
   fi
 }
@@ -24,7 +24,7 @@ print_file () {
   echo ""
   handle_output "# Contents of file $FILE_NAME" "TEXT"
   echo ""
-  if [ "$TEST_MODE" = "false" ]; then
+  if [ "$DO_ISO_TESTMODE" = "false" ]; then
     cat "$FILE_NAME"
   fi
 }
@@ -56,9 +56,9 @@ information_message () {
 verbose_message () {
   OUTPUT_TEXT="$1"
   OUTPUT_TYPE="TEXT"
-  TEMP_VERBOSE_MODE="true"
+  TEMP_DO_ISO_VERBOSEMODE="true"
   handle_output "$OUTPUT_TEXT" "$OUTPUT_TYPE"
-  TEMP_VERBOSE_MODE="false"
+  TEMP_DO_ISO_VERBOSEMODE="false"
 }
 
 # Function: warning_message
@@ -68,9 +68,9 @@ verbose_message () {
 warning_message () {
   OUTPUT_TEXT="$1"
   OUTPUT_TYPE="TEXT"
-  TEMP_VERBOSE_MODE="true"
+  TEMP_DO_ISO_VERBOSEMODE="true"
   handle_output "# Warning: $OUTPUT_TEXT" "$OUTPUT_TYPE"
-  TEMP_VERBOSE_MODE="false"
+  TEMP_DO_ISO_VERBOSEMODE="false"
 }
 
 # Function: handle_output
@@ -80,8 +80,8 @@ warning_message () {
 handle_output () {
   OUTPUT_TEXT="$1"
   OUTPUT_TYPE="$2"
-  if [ "$VERBOSE_MODE" = "true" ] || [ "$TEMP_VERBOSE_MODE" = "true" ]; then
-    if [ "$TEST_MODE" = "true" ]; then
+  if [ "$DO_ISO_VERBOSEMODE" = "true" ] || [ "$TEMP_DO_ISO_VERBOSEMODE" = "true" ]; then
+    if [ "$DO_ISO_TESTMODE" = "true" ]; then
       echo "$OUTPUT_TEXT"
     else
       if [ "$OUTPUT_TYPE" = "TEXT" ]; then
@@ -102,7 +102,7 @@ sudo_chown () {
   USER=$2
   GROUP=$3
   handle_output "# Checking ownership of $OBJECT is $USER:$GROUP" "TEXT"
-  if [ "$TEST_MODE" = "false" ]; then
+  if [ "$DO_ISO_TESTMODE" = "false" ]; then
     if [ ! -f "/.dockerenv" ]; then
       sudo chown $USER:$GROUP $OBJECT
     fi
@@ -117,7 +117,7 @@ create_dir () {
   CREATE_DIR="$1"
   handle_output "# Checking directory $CREATE_DIR exists" "TEXT"
   if [ ! -d "$CREATE_DIR" ]; then
-    if [ "$TEST_MODE" = "false" ]; then
+    if [ "$DO_ISO_TESTMODE" = "false" ]; then
       mkdir -p "$CREATE_DIR"
     fi
   fi
@@ -131,7 +131,7 @@ sudo_create_dir () {
   CREATE_DIR="$1"
   handle_output "# Checking directory $CREATE_DIR exists" "TEXT"
   if [ ! -d "$CREATE_DIR" ]; then
-    if [ "$TEST_MODE" = "false" ]; then
+    if [ "$DO_ISO_TESTMODE" = "false" ]; then
       if [ -f "/.dockerenv" ]; then
         mkdir -p "$CREATE_DIR"
       else
@@ -151,7 +151,7 @@ remove_dir () {
   if [ ! "$REMOVE_DIR" = "/" ]; then
     if [[ $REMOVE_DIR =~ [0-9a-zA-Z] ]]; then
       if [ -d "$REMOVE_DIR" ]; then
-        if [ "$TEST_MODE" = "false" ]; then
+        if [ "$DO_ISO_TESTMODE" = "false" ]; then
           sudo rm -f "$REMOVE_DIR"
         fi
       fi
@@ -308,7 +308,7 @@ update_output_file_name () {
     TEMP_FILE_NAME=$( basename "$ISO_OUTPUTFILE" .iso )
     ISO_OUTPUTFILE="$TEMP_DIR_NAME/$TEMP_FILE_NAME-sshkey.iso"
   fi
-  if [ "$DO_NVME" = "true" ]; then
+  if [ "$DO_ISO_NVME" = "true" ]; then
     TEMP_DIR_NAME=$( dirname "$ISO_OUTPUTFILE" )
     TEMP_FILE_NAME=$( basename "$ISO_OUTPUTFILE" .iso )
     ISO_OUTPUTFILE="$TEMP_DIR_NAME/$TEMP_FILE_NAME-nvme.iso"
@@ -374,15 +374,15 @@ update_output_file_name () {
     if [ "$VM_NAME" = "" ]; then
       if [ "$ISO_BUILDTYPE" = "" ]; then
         if [[ "$ISO_ACTION" =~ "ci" ]]; then
-          VM_NAME="$SCRIPT_NAME-ci-$ISO_CODENAME-$ISO_RELEASE-$ISO_BOOT_TYPE-$ISO_ARCH"
+          VM_NAME="$SCRIPT_NAME-ci-$ISO_CODENAME-$ISO_RELEASE-$ISO_BOOTTYPE-$ISO_ARCH"
         else
-          VM_NAME="$SCRIPT_NAME-iso-$ISO_CODENAME-$ISO_RELEASE-$ISO_BOOT_TYPE-$ISO_ARCH"
+          VM_NAME="$SCRIPT_NAME-iso-$ISO_CODENAME-$ISO_RELEASE-$ISO_BOOTTYPE-$ISO_ARCH"
         fi
       else
         if [[ "$ISO_ACTION" =~ "ci" ]]; then
-          VM_NAME="$SCRIPT_NAME-ci-$ISO_CODENAME-$ISO_BUILDTYPE-$ISO_RELEASE-$ISO_BOOT_TYPE-$ISO_ARCH"
+          VM_NAME="$SCRIPT_NAME-ci-$ISO_CODENAME-$ISO_BUILDTYPE-$ISO_RELEASE-$ISO_BOOTTYPE-$ISO_ARCH"
         else
-          VM_NAME="$SCRIPT_NAME-iso-$ISO_CODENAME-$ISO_BUILDTYPE-$ISO_RELEASE-$ISO_BOOT_TYPE-$ISO_ARCH"
+          VM_NAME="$SCRIPT_NAME-iso-$ISO_CODENAME-$ISO_BUILDTYPE-$ISO_RELEASE-$ISO_BOOTTYPE-$ISO_ARCH"
         fi
       fi
     fi
@@ -395,7 +395,7 @@ update_output_file_name () {
       fi
     fi
   fi
-  if [ "$DO_SERIAL" = "true" ]; then
+  if [ "$DO_ISO_SERIAL" = "true" ]; then
     ISO_KERNELARGS="$ISO_KERNELARGS console=$ISO_SERIALPORT0,$ISO_SERIALPORTSPEED0"
     if ! [ "$ISO_SERIAL_PORT1" = "" ]; then
       ISO_KERNELARGS="$ISO_KERNELARGS console=$ISO_SERIAL_PORT1,$ISO_SERIAL_PORT_SPEED1"

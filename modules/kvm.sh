@@ -115,10 +115,10 @@ create_kvm_iso_vm () {
     INPUT_BUS="usb"
     IF_TYPE="user"
     CD_BUS="scsi"
-    DO_SECURE_BOOT="false"
+    DO_ISO_SECUREBOOT="false"
   else
     QEMU_VER=$( qemu-system-amd64 --version |head -1 |awk '{print $4}' |awk -F"." '{print $1"."$2}' )
-    if [ "$DO_SECURE_BOOT" = "true" ]; then
+    if [ "$DO_ISO_SECUREBOOT" = "true" ]; then
       VARS_FILE="/usr/share/OVMF/OVMF_VARS_4M.ms.fd"
       BIOS_FILE="/usr/share/OVMF/OVMF_CODE_4M.ms.fd"
     else
@@ -153,13 +153,13 @@ create_kvm_iso_vm () {
     VARS_FILE="/usr/share/edk2/x64/OVMF_VARS.fd"
   fi
   if ! [ -f "$BIOS_FILE" ]; then
-    TEMP_VERBOSE_MODE="true"
+    TEMP_DO_ISO_VERBOSEMODE="true"
     warning_message "Could not find BIOS file (tried $BIOS_FILE)"
     exit
   fi
   information_message "Creating VM disk $VM_DISK"
   execute_message "sudo qemu-img create -f qcow2 $VM_DISK $VM_SIZE"
-  if [ "$TEST_MODE" = "false" ]; then
+  if [ "$DO_ISO_TESTMODE" = "false" ]; then
     if [ "$OS_NAME" = "Darwin" ]; then
       qemu-img create -f qcow2 "$VM_DISK" "$VM_SIZE"
     else
@@ -172,7 +172,7 @@ create_kvm_iso_vm () {
   echo "  <name>$VM_NAME</name>" >> "$XML_FILE"
   echo "  <metadata>" >> "$XML_FILE"
   echo "    <libosinfo:libosinfo xmlns:libosinfo=\"http://libosinfo.org/xmlns/libvirt/domain/1.0\">" >> "$XML_FILE"
-  echo "      <libosinfo:os id=\"http://$OS_INFO_SITE/$ISO_CODENAME/$ISO_MAJOR_RELEASE.$ISO_MINOR_RELEASE\"/>" >> "$XML_FILE"
+  echo "      <libosinfo:os id=\"http://$OS_INFO_SITE/$ISO_CODENAME/$ISO_MAJORRELEASE.$ISO_MINORRELEASE\"/>" >> "$XML_FILE"
   echo "    </libosinfo:libosinfo>" >> "$XML_FILE"
   echo "  </metadata>" >> "$XML_FILE"
   echo "  <memory unit='KiB'>$VM_RAM</memory>" >> "$XML_FILE"
@@ -181,14 +181,14 @@ create_kvm_iso_vm () {
   echo "  <resource>" >> "$XML_FILE"
   echo "    <partition>/machine</partition>" >> "$XML_FILE"
   echo "  </resource>" >> "$XML_FILE"
-  if [ "$ISO_BOOT_TYPE" = "bios" ]; then
+  if [ "$ISO_BOOTTYPE" = "bios" ]; then
     echo "  <os>" >> "$XML_FILE"
     echo "    <type arch='$QEMU_ARCH' machine='$MACHINE'>hvm</type>" >> "$XML_FILE"
   else
     echo "  <os firmware='efi'>" >> "$XML_FILE"
     echo "    <type arch='$QEMU_ARCH' machine='$MACHINE'>hvm</type>" >> "$XML_FILE"
     echo "    <firmware>" >> "$XML_FILE"
-    if [ "$DO_SECURE_BOOT" = "true" ]; then
+    if [ "$DO_ISO_SECUREBOOT" = "true" ]; then
       echo "      <feature enabled='yes' name='enrolled-keys'/>" >> "$XML_FILE"
       echo "      <feature enabled='yes' name='secure-boot'/>" >> "$XML_FILE"
       echo "    </firmware>" >> "$XML_FILE"
@@ -423,7 +423,7 @@ create_kvm_iso_vm () {
   echo "</domain>" >> "$XML_FILE"
   print_file "$XML_FILE"
   information_message "Importing VM config $XML_FILE"
-  if [ "$TEST_MODE" = "false" ]; then
+  if [ "$DO_ISO_TESTMODE" = "false" ]; then
     if [ "$OS_NAME" = "Darwin" ]; then
       execute_message "virsh define $XML_FILE"
       virsh define "$XML_FILE"
@@ -448,7 +448,7 @@ delete_kvm_vm () {
   if [ -z "$( command -v virsh )" ]; then
     install_required_packages "$REQUIRED_KVM_PACKAGES"
   fi
-  if [ "$TEST_MODE" = "false" ]; then
+  if [ "$DO_ISO_TESTMODE" = "false" ]; then
     VM_STATUS=$( virsh list --all |grep "shut off" |wc -l |sed "s/ //g" )
     if [ "$OS_NAME" = "Darwin" ]; then
       if [ "$VM_STATUS" = "0" ]; then

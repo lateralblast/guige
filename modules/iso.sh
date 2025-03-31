@@ -43,7 +43,7 @@ update_iso_url () {
   else
     if [ "$ISO_CODENAME" = "rocky" ]; then
       if [ "$ISO_URL" = "" ]; then
-        ISO_URL="https://download.rockylinux.org/pub/rocky/$ISO_MAJOR_RELEASE/isos/$ISO_ARCH/$BASE_ISO_INPUTFILE"
+        ISO_URL="https://download.rockylinux.org/pub/rocky/$ISO_MAJORRELEASE/isos/$ISO_ARCH/$BASE_ISO_INPUTFILE"
       fi
     fi
   fi
@@ -67,8 +67,8 @@ update_required_packages () {
 
 update_ISO_PACKAGES () {
   if [ "$ISO_CODENAME" = "ubuntu" ]; then
-    if [ "$DO_HWE_KERNEL" = "true" ]; then
-      ISO_PACKAGES="$ISO_PACKAGES linux-image-generic-hwe-$ISO_MAJOR_RELEASE.$ISO_MINOR_RELEASE"
+    if [ "$DO_ISO_HWEKERNEL" = "true" ]; then
+      ISO_PACKAGES="$ISO_PACKAGES linux-image-generic-hwe-$ISO_MAJORRELEASE.$ISO_MINORRELEASE"
     fi
   fi
 }
@@ -78,7 +78,7 @@ update_ISO_PACKAGES () {
 # Prepare ISO
 
 create_iso () {
-  if [ "$DO_CREATE_ISO" = "true" ]; then
+  if [ "$DO_ISO_CREATEISO" = "true" ]; then
     case "$ISO_CODENAME" in
       "ubuntu")
         create_autoinstall_iso
@@ -109,12 +109,12 @@ copy_iso () {
     warning_message "ISO $ISO_INPUTFILE not mounted"
     exit
   else
-    if [ "$VERBOSE_MODE" = "true" ]; then
-      if [ "$TEST_MODE" = "false" ]; then
+    if [ "$DO_ISO_VERBOSEMODE" = "true" ]; then
+      if [ "$DO_ISO_TESTMODE" = "false" ]; then
         sudo rsync -av --delete "$ISO_MOUNT_DIR/" "$ISO_NEW_DIR/cd"
       fi
     else
-      if [ "$TEST_MODE" = "false" ]; then
+      if [ "$DO_ISO_TESTMODE" = "false" ]; then
         sudo rsync -a --delete "$ISO_MOUNT_DIR/" "$ISO_NEW_DIR/cd"
       fi
     fi
@@ -130,7 +130,7 @@ copy_iso () {
 
 unmount_iso () {
   handle_output "sudo umount -l $ISO_MOUNT_DIR" ""
-  if [ "$TEST_MODE" = "false" ]; then
+  if [ "$DO_ISO_TESTMODE" = "false" ]; then
     MOUNT_TEST=$( mount | grep "$ISO_MOUNT_DIR" | wc -l )
     if [ ! "$MOUNT_TEST" = "0" ]; then
       sudo umount -l "$ISO_MOUNT_DIR"
@@ -147,7 +147,7 @@ unmount_iso () {
 
 unmount_old_iso () {
   handle_output "sudo umount -l $OLD_ISO_MOUNT_DIR" ""
-  if [ "$TEST_MODE" = "false" ]; then
+  if [ "$DO_ISO_TESTMODE" = "false" ]; then
     MOUNT_TEST=$( mount | grep "$OLD_ISO_MOUNT_DIR" | wc -l )
     if [ ! "$MOUNT_TEST" = "0" ]; then
       sudo umount -l "$OLD_ISO_MOUNT_DIR"
@@ -166,7 +166,7 @@ mount_iso () {
   check_base_iso_file
   handle_output "# Mounting ISO $ISO_WORKDIR/files/$BASE_ISO_INPUTFILE at $ISO_MOUNT_DIR" "TEXT"
   handle_output "sudo mount -o loop \"$ISO_WORKDIR/files/$BASE_ISO_INPUTFILE\" \"$ISO_MOUNT_DIR\" 2> /dev/null" ""
-  if [ "$TEST_MODE" = "false" ]; then
+  if [ "$DO_ISO_TESTMODE" = "false" ]; then
     sudo mount -o loop "$ISO_WORKDIR/files/$BASE_ISO_INPUTFILE" "$ISO_MOUNT_DIR" 2> /dev/null
   fi
 }
@@ -182,7 +182,7 @@ mount_old_iso () {
   check_old_base_iso_file
   handle_output "# Mounting ISO $OLD_ISO_WORKDIR/files/$OLD_BASE_ISO_INPUTFILE at $OLD_ISO_MOUNT_DIR" "TEXT"
   handle_output "sudo mount -o loop \"$OLD_ISO_WORKDIR/files/$OLD_BASE_ISO_INPUTFILE\" \"$OLD_ISO_MOUNT_DIR\" 2> /dev/null" ""
-  if [ "$TEST_MODE" = "false" ]; then
+  if [ "$DO_ISO_TESTMODE" = "false" ]; then
     sudo mount -o loop "$OLD_ISO_WORKDIR/files/$OLD_BASE_ISO_INPUTFILE" "$OLD_ISO_MOUNT_DIR" 2> /dev/null
   fi
 }
@@ -192,20 +192,20 @@ mount_old_iso () {
 # List ISOs
 
 list_isos () {
-  TEMP_VERBOSE_MODE="true"
+  TEMP_DO_ISO_VERBOSEMODE="true"
   if [ "$ISO_SEARCH" = "" ]; then
     FILE_LIST=$(find "$ISO_WORKDIR" -name "*.iso" 2> /dev/null)
   else
     FILE_LIST=$(find "$ISO_WORKDIR" -name "*.iso" 2> /dev/null |grep "$ISO_SEARCH" )
   fi
   for FILE_NAME in $FILE_LIST; do
-    if [ "$DO_SCP_HEADER" = "true" ]; then
+    if [ "$DO_ISO_SCPHEADER" = "true" ]; then
       handle_output "$ISO_BMCUSERNAME@$MY_IP:$FILE_NAME" "TEXT"
     else
       handle_output "$FILE_NAME" "TEXT"
     fi
   done
-  TEMP_VERBOSE_MODE="false"
+  TEMP_DO_ISO_VERBOSEMODE="false"
 }
 
 # Function: check_base_iso_file
@@ -268,16 +268,16 @@ get_base_iso () {
   BASE_ISO_INPUTFILE=$( basename "$ISO_INPUTFILE" )
   if [ "$FULL_FORCE_MODE" = "true" ]; then
     handle_output "rm $ISO_WORKDIR/files/$BASE_ISO_INPUTFILE" ""
-    if [ "$TEST_MODE" = "false" ]; then
+    if [ "$DO_ISO_TESTMODE" = "false" ]; then
       rm "$ISO_WORKDIR/files/$BASE_ISO_INPUTFILE"
     fi
   fi
   check_base_iso_file
-  if [ "$DO_CHECK_ISO" = "true" ]; then
+  if [ "$DO_ISO_LATEST" = "true" ]; then
     cd "$ISO_WORKDIR/files" || exit ; wget -N "$ISO_URL"
   else
     if ! [ -f "$ISO_WORKDIR/files/$BASE_ISO_INPUTFILE" ]; then
-      if [ "$TEST_MODE" = "false" ]; then
+      if [ "$DO_ISO_TESTMODE" = "false" ]; then
         wget "$ISO_URL" -O "$ISO_WORKDIR/files/$BASE_ISO_INPUTFILE"
       fi
     fi
@@ -293,16 +293,16 @@ get_old_base_iso () {
   OLD_BASE_ISO_INPUTFILE=$( basename "$OLD_ISO_INPUTFILE" )
   if [ "$FULL_FORCE_MODE" = "true" ]; then
     handle_output "rm $ISO_WORKDIR/files/$OLD_BASE_ISO_INPUTFILE" ""
-    if [ "$TEST_MODE" = "false" ]; then
+    if [ "$DO_ISO_TESTMODE" = "false" ]; then
       rm "$OLD_ISO_WORKDIR/files/$OLD_BASE_ISO_INPUTFILE"
     fi
   fi
   check_old_base_iso_file
-  if [ "$DO_CHECK_ISO" = "true" ]; then
+  if [ "$DO_ISO_LATEST" = "true" ]; then
     cd "$OLD_ISO_WORKDIR/files" || exit ; wget -N "$OLD_ISO_URL"
   else
     if ! [ -f "$OLD_ISO_WORKDIR/files/$OLD_BASE_ISO_INPUTFILE" ]; then
-      if [ "$TEST_MODE" = "false" ]; then
+      if [ "$DO_ISO_TESTMODE" = "false" ]; then
         wget "$OLD_ISO_URL" -O "$OLD_ISO_WORKDIR/files/$OLD_BASE_ISO_INPUTFILE"
       fi
     fi
@@ -459,14 +459,14 @@ create_autoinstall_iso () {
   BOOT_IMAGE=$( xorriso -indev "$ISO_INPUTFILE" -report_el_torito as_mkisofs |grep "^-b " |tail -1 |awk '{print $2}' |cut -f2 -d"'" 2>&1 )
   UEFI_BOOT_SIZE=$( xorriso -indev "$ISO_INPUTFILE" -report_el_torito as_mkisofs |grep "^-boot-load-size" |tail -1 |awk '{print $2}' |cut -f2 -d"'" 2>&1 )
   DOS_BOOT_SIZE=$( xorriso -indev "$ISO_INPUTFILE" -report_el_torito as_mkisofs |grep "^-boot-load-size" |head -1 |awk '{print $2}' |cut -f2 -d"'" 2>&1 )
-  if [ "$ISO_MAJOR_RELEASE" -gt 22 ]; then
+  if [ "$ISO_MAJORRELEASE" -gt 22 ]; then
     APPEND_PART=$( xorriso -indev "$ISO_INPUTFILE" -report_el_torito as_mkisofs |grep append_partition |tail -1 |awk '{print $3}' 2>&1 )
     UEFI_IMAGE="--interval:appended_partition_2:::"
   else
     APPEND_PART="0xef"
     UEFI_IMAGE=$( xorriso -indev "$ISO_INPUTFILE" -report_el_torito as_mkisofs |grep "^-e " |tail -1 |awk '{print $2}' |cut -f2 -d"'" 2>&1 )
   fi
-  if [ "$TEST_MODE" = "false" ]; then
+  if [ "$DO_ISO_TESTMODE" = "false" ]; then
     if [ "$ISO_ARCH" = "amd64" ]; then
       verbose_message "# Executing:"
       verbose_message "xorriso -as mkisofs -r -V \"$ISO_VOLID\" -o \"$ISO_OUTPUTFILE\" \\"

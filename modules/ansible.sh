@@ -17,14 +17,14 @@ check_ansible () {
   fi
   handle_output "$COMMAND" ""
   if ! [ "$ANSIBLE_CHECK" = "ansible" ]; then
-    if [ "$TEST_MODE" = "false" ]; then
+    if [ "$DO_ISO_TESTMODE" = "false" ]; then
       $COMMAND
     fi
   fi
   handle_output "# Checking ansible collection dellemc.openmanage is installed" "TEXT"
   ANSIBLE_CHECK=$( ansible-galaxy collection list |grep "dellemc.openmanage" |awk '{print $1}' |uniq )
   if ! [ "$ANSIBLE_CHECK" = "dellemc.openmanage" ]; then
-    if [ "$TEST_MODE" = "false" ]; then
+    if [ "$DO_ISO_TESTMODE" = "false" ]; then
       ansible-galaxy collection install dellemc.openmanage
     fi
   fi
@@ -37,7 +37,7 @@ check_ansible () {
 create_ansible () {
   HOSTS_YAML="$ISO_WORKDIR/hosts.yaml"
   handle_output "# Creating ansible hosts file $HOSTS_YAML" "TEXT"
-  if [ "$TEST_MODE" = "false" ]; then
+  if [ "$DO_ISO_TESTMODE" = "false" ]; then
     echo "---" > "$HOSTS_YAML"
     echo "idrac:" >> "$HOSTS_YAML"
     echo "  hosts:" >> "$HOSTS_YAML"
@@ -51,7 +51,7 @@ create_ansible () {
   IDRAC_YAML="$ISO_WORKDIR/idrac.yaml"
   NFS_FILE=$( basename "$ISO_BOOTSERVERFILE" )
   NFS_DIR=$( dirname "$ISO_BOOTSERVERFILE" )
-  if [ "$TEST_MODE" = "false" ]; then
+  if [ "$DO_ISO_TESTMODE" = "false" ]; then
     echo "- hosts: idrac" > "$IDRAC_YAML"
     echo "  name: $ISO_VOLID" >> "$IDRAC_YAML"
     echo "  gather_facts: False" >> "$IDRAC_YAML"
@@ -164,7 +164,7 @@ install_server () {
   HOSTS_YAML="$ISO_WORKDIR/hosts.yaml"
   IDRAC_YAML="$ISO_WORKDIR/idrac.yaml"
   handle_output "# Executing ansible playbook $IDRAC_YAML" "TEXT"
-  if [ "$TEST_MODE" = "false" ]; then
+  if [ "$DO_ISO_TESTMODE" = "false" ]; then
     ansible-playbook "$IDRAC_YAML" -i "$HOSTS_YAML"
   fi
 }

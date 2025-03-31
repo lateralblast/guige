@@ -23,7 +23,7 @@ unmount_squashfs () {
 unmount_ubuntu_squashfs () {
   if [ "$DO_ISO_SQUASHFS_UPDATE" = "true" ]; then
     handle_output "# Unmounting squashfs $ISO_NEW_DIR/squashfs" "TEXT"
-    if [ "$TEST_MODE" = "false" ]; then
+    if [ "$DO_ISO_TESTMODE" = "false" ]; then
       MOUNT_TEST=$( mount | grep "$ISO_NEW_DIR/squashfs" | wc -l )
       if [ ! "$MOUNT_TEST" = "0" ]; then
         sudo umount "$ISO_NEW_DIR/squashfs"
@@ -61,24 +61,24 @@ copy_ubuntu_squashfs () {
     handle_output "# Copying squashfs files" "TEXT"
     CURRENT_KERNEL=$( uname -r )
     if [ -f "$CURRENT_KERNEL" ]; then
-      if [ "$TEST_MODE" = "false" ]; then
+      if [ "$DO_ISO_TESTMODE" = "false" ]; then
         sudo mount -t squashfs -o loop "$ISO_SQUASHFSFILE" "$ISO_NEW_DIR/squashfs"
       fi
-      if [ "$VERBOSE_MODE" = "true" ]; then
-        if [ "$TEST_MODE" = "false" ]; then
+      if [ "$DO_ISO_VERBOSEMODE" = "true" ]; then
+        if [ "$DO_ISO_TESTMODE" = "false" ]; then
           sudo rsync -av "$ISO_NEW_DIR/squashfs/" "$ISO_NEW_DIR/custom"
         fi
       else
-        if [ "$TEST_MODE" = "false" ]; then
+        if [ "$DO_ISO_TESTMODE" = "false" ]; then
           sudo rsync -a "$ISO_NEW_DIR/squashfs/" "$ISO_NEW_DIR/custom"
         fi
       fi
     else
-      if [ "$TEST_MODE" = "false" ]; then
+      if [ "$DO_ISO_TESTMODE" = "false" ]; then
         sudo unsquashfs -f -d "$ISO_NEW_DIR/custom" "$ISO_SQUASHFSFILE"
       fi
     fi
-    if [ "$TEST_MODE" = "false" ]; then
+    if [ "$DO_ISO_TESTMODE" = "false" ]; then
       sudo cp /etc/resolv.conf /etc/hosts "$ISO_NEW_DIR/custom/etc"
     fi
   fi
@@ -103,7 +103,7 @@ update_iso_squashfs () {
 update_ubuntu_iso_squashfs () {
   if [ "$DO_ISO_SQUASHFS_UPDATE" = "true" ]; then
     handle_output "# Making squashfs (this will take a while)" "TEXT"
-    if [ "$TEST_MODE" = "false" ]; then
+    if [ "$DO_ISO_TESTMODE" = "false" ]; then
       sudo mksquashfs "$ISO_NEW_DIR/custom" "$ISO_NEW_DIR/mksquash/filesystem.squashfs" -noappend
       sudo cp "$ISO_NEW_DIR/mksquash/filesystem.squashfs" "$NEW_SQUASHFS_FILE"
       sudo chmod 0444 i"$NEW_SQUASHFS_FILE"

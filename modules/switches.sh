@@ -158,8 +158,8 @@ process_switches () {
   else
     DOCKER_ARCH="$ISO_ARCH"
   fi
-  if [ "$ISO_BOOT_TYPE" = "" ]; then
-    ISO_BOOT_TYPE="$DEFAULT_ISO_BOOT_TYPE"
+  if [ "$ISO_BOOTTYPE" = "" ]; then
+    ISO_BOOTTYPE="$DEFAULT_ISO_BOOTTYPE"
   fi
   if [ "$ISO_SSHKEYFILE" = "" ]; then
     ISO_SSHKEYFILE="$DEFAULT_ISO_SSHKEYFILE"
@@ -190,10 +190,10 @@ process_switches () {
   if [ "$ISO_RELEASE" = "" ]; then
     ISO_RELEASE="$DEFAULT_ISO_RELEASE"
   else
-    ISO_MINOR_RELEASE=$( echo "$ISO_RELEASE" |cut -f2 -d. )
-    ISO_DOT_RELEASE=$( echo "$ISO_RELEASE" |cut -f3 -d. )
+    ISO_MINORRELEASE=$( echo "$ISO_RELEASE" |cut -f2 -d. )
+    ISO_DOTRELEASE=$( echo "$ISO_RELEASE" |cut -f3 -d. )
     if [ "$ISO_CODENAME" = "ubuntu" ]; then
-      if [ "$ISO_DOT_RELEASE" = "" ]; then
+      if [ "$ISO_DOTRELEASE" = "" ]; then
         get_current_release
       fi
     else
@@ -232,11 +232,11 @@ process_switches () {
     ISO_DNS="$DEFAULT_ISO_DNS"
   fi
   if [ "$ISO_IP" = "" ]; then
-    ISO_BOOT_PROTO="dhcp"
+    ISO_BOOTPROTO="dhcp"
     DO_ISO_DHCP="true"
   else
     DO_ISO_DHCP="false"
-    ISO_BOOT_PROTO="static"
+    ISO_BOOTPROTO="static"
   fi
   if [ "$ISO_ALLOWPASSWORD" = "" ]; then
     ISO_ALLOWPASSWORD="$DEFAULT_ISO_ALLOWPASSWORD"
@@ -268,7 +268,7 @@ process_switches () {
   if [ "$ISO_DISK" = "" ]; then
     ISO_DISK="$DEFAULT_ISO_DISK"
   fi
-  if [ "$ISO_BOOT_TYPE" = "bios" ]; then
+  if [ "$ISO_BOOTTYPE" = "bios" ]; then
     if [[ "$ISO_OPTIONS" =~ "fs" ]]; then
       DEFAULT_ISO_VOLMGRS="lvm zfs xfs btrfs"
     else
@@ -359,24 +359,24 @@ process_switches () {
         case $ISO_BUILDTYPE in
           "daily-live"|"daily-live-server")
             ISO_INPUTFILE="$ISO_WORKDIR/files/$ISO_CODENAME-live-server-$ISO_ARCH.iso"
-            ISO_OUTPUTFILE="$ISO_WORKDIR/files/$ISO_CODENAME-live-server-$ISO_ARCH-$ISO_BOOT_TYPE-autoinstall.iso"
+            ISO_OUTPUTFILE="$ISO_WORKDIR/files/$ISO_CODENAME-live-server-$ISO_ARCH-$ISO_BOOTTYPE-autoinstall.iso"
             ISO_INPUTCI="$ISO_WORKDIR/files/$ISO_CODENAME-server-cloudimg-$ISO_ARCH.img"
             ISO_OUTPUTCI="$ISO_WORKDIR/files/$ISO_CODENAME-server-cloudimg-$ISO_ARCH.img"
             ISO_BOOTSERVERFILE="$ISO_OUTPUTFILE"
             ;;
           "daily-desktop")
             ISO_INPUTFILE="$ISO_WORKDIR/files/$ISO_CODENAME-desktop-$ISO_ARCH.iso"
-            ISO_OUTPUTFILE="$ISO_WORKDIR/files/$ISO_CODENAME-desktop-$ISO_ARCH-$ISO_BOOT_TYPE-autoinstall.iso"
+            ISO_OUTPUTFILE="$ISO_WORKDIR/files/$ISO_CODENAME-desktop-$ISO_ARCH-$ISO_BOOTTYPE-autoinstall.iso"
             ISO_BOOTSERVERFILE="$ISO_OUTPUTFILE"
             ;;
          "desktop")
             ISO_INPUTFILE="$ISO_WORKDIR/files/$ISO_CODENAME-$ISO_RELEASE-desktop-$ISO_ARCH.iso"
-            ISO_OUTPUTFILE="$ISO_WORKDIR/files/$ISO_CODENAME-$ISO_RELEASE-desktop-$ISO_ARCH-$ISO_BOOT_TYPE-autoinstall.iso"
+            ISO_OUTPUTFILE="$ISO_WORKDIR/files/$ISO_CODENAME-$ISO_RELEASE-desktop-$ISO_ARCH-$ISO_BOOTTYPE-autoinstall.iso"
             ISO_BOOTSERVERFILE="$ISO_OUTPUTFILE"
             ;;
           *)
             ISO_INPUTFILE="$ISO_WORKDIR/files/$ISO_CODENAME-$ISO_RELEASE-live-server-$ISO_ARCH.iso"
-            ISO_OUTPUTFILE="$ISO_WORKDIR/files/$ISO_CODENAME-$ISO_RELEASE-live-server-$ISO_ARCH-$ISO_BOOT_TYPE-autoinstall.iso"
+            ISO_OUTPUTFILE="$ISO_WORKDIR/files/$ISO_CODENAME-$ISO_RELEASE-live-server-$ISO_ARCH-$ISO_BOOTTYPE-autoinstall.iso"
             ISO_BOOTSERVERFILE="$ISO_OUTPUTFILE"
             ;;
         esac
@@ -384,7 +384,7 @@ process_switches () {
         case $ISO_BUILDTYPE in
           *)
             ISO_INPUTFILE="$ISO_WORKDIR/files/$ISO_REALNAME-$ISO_RELEASE-$ISO_ARCH-$ISO_BUILDTYPE.iso"
-            ISO_OUTPUTFILE="$ISO_WORKDIR/files/$ISO_REALNAME-$ISO_RELEASE-$ISO_ARCH-$ISO_BOOT_TYPE-$ISO_BUILDTYPE-kickstart.iso"
+            ISO_OUTPUTFILE="$ISO_WORKDIR/files/$ISO_REALNAME-$ISO_RELEASE-$ISO_ARCH-$ISO_BOOTTYPE-$ISO_BUILDTYPE-kickstart.iso"
             ISO_INPUTCI="$ISO_WORKDIR/files/ubuntu-$ISO_RELEASE-server-cloudimg-$ISO_ARCH.img"
             ISO_OUTPUTCI="$ISO_WORKDIR/files/ubuntu-$ISO_RELEASE-server-cloudimg-$ISO_ARCH.img"
             ISO_BOOTSERVERFILE="$ISO_OUTPUTFILE"
@@ -399,7 +399,7 @@ process_switches () {
   if [ "$ISO_GRUBFILE" = "" ]; then
     ISO_GRUBFILE="$DEFAULT_ISO_GRUBFILE"
   fi
-  if [ "$ISO_USE_BIOSDEVNAME" = "true" ]; then
+  if [ "$ISO_BIOSDEVNAME" = "true" ]; then
     ISO_KERNELARGS="$ISO_KERNELARGS net.ifnames=0 biosdevname=0"
   fi
   if [ "$OLD_ISO_INPUTFILE" = "" ]; then
@@ -422,14 +422,14 @@ process_switches () {
     ISO_VOLMGRS="$DEFAULT_ISO_VOLMGRS"
   fi
   if [[ "$ISO_VOLMGRS" =~ "fs" ]] || [[ "$ISO_VOLMGRS" =~ "custom" ]]; then
-    DO_CHROOT="true"
+    DO_ISO_CHROOT="true"
     DO_ISO_SQUASHFS_UNPACK="true"
-    DO_ISO_EARLY_PACKAGES="true"
-    DO_ISO_LATE_PACKAGES="true"
+    DO_ISO_EARLYPACKAGES="true"
+    DO_ISO_LATEPACKAGES="true"
   else
-    DO_CHROOT="false"
+    DO_ISO_CHROOT="false"
     DO_ISO_SQUASHFS_UNPACK="false"
-    DO_ISO_EARLY_PACKAGES="false"
-    DO_ISO_LATE_PACKAGES="false"
+    DO_ISO_EARLYPACKAGES="false"
+    DO_ISO_LATEPACKAGES="false"
   fi
 }

@@ -7,7 +7,7 @@
 # Execute racadm commands
 
 execute_racadm () {
-  if [ "$TEST_MODE" = "false" ]; then
+  if [ "$DO_ISO_TESTMODE" = "false" ]; then
     handle_output "# Executing racadm" TEXT
     $RACADM_BIN -H "$ISO_BMCIP" -u "$ISO_BMCUSERNAME" -p "$ISO_BMCPASSWORD" -c "remoteimage -d"
     $RACADM_BIN -H "$ISO_BMCIP" -u "$ISO_BMCUSERNAME" -p "$ISO_BMCPASSWORD" -c "remoteimage -c -l $ISO_BOOTSERVERIP:ISO_BOOTSERVERFILE"
@@ -31,7 +31,7 @@ check_racadm () {
         PIP_TEST=$( pip list |grep rac |awk '{print $1}')
         if [ -z "$PIP_TEST" ]; then
           handle_output "pip install --user rac" ""
-          if [ "$TEST_MODE" = "false" ]; then
+          if [ "$DO_ISO_TESTMODE" = "false" ]; then
             pip install --user rac
             RACADM_BIN="$HOME/.local/bin/racadm"
           else

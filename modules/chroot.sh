@@ -22,10 +22,10 @@ execute_chroot_script () {
 # sudo chroot ./isonew/custom
 
 execute_ubuntu_chroot_script () {
-  if [ "$DO_CHROOT" = "true" ]; then
+  if [ "$DO_ISO_CHROOT" = "true" ]; then
     handle_output "# Executing chroot script" "TEXT"
     handle_output "chroot $ISO_NEW_DIR/custom /tmp/modify_chroot.sh" "TEXT"
-    if [ "$TEST_MODE" = "false" ]; then
+    if [ "$DO_ISO_TESTMODE" = "false" ]; then
       sudo chroot "$ISO_NEW_DIR/custom" "/tmp/modify_chroot.sh"
     fi
   fi
@@ -36,7 +36,7 @@ execute_ubuntu_chroot_script () {
 # Create chroot script
 
 create_chroot_script () {
-  if [ "$DO_CHROOT" = "true" ]; then
+  if [ "$DO_ISO_CHROOT" = "true" ]; then
     case "$ISO_CODENAME" in
       "ubuntu")
         create_ubuntu_chroot_script
@@ -68,7 +68,7 @@ create_ubuntu_chroot_script () {
   ISO_CHROOT_SCRIPT="$ISO_NEW_DIR/custom/tmp/modify_chroot.sh"
   check_file_perms "$ORIG_SCRIPT"
   handle_output "# Creating chroot script $ISO_CHROOT_SCRIPT" "TEXT"
-  if [ "$TEST_MODE" = "false" ]; then
+  if [ "$DO_ISO_TESTMODE" = "false" ]; then
     echo "#!/usr/bin/bash" > "$ORIG_SCRIPT"
     echo "mount -t proc none /proc/" >> "$ORIG_SCRIPT"
     echo "mount -t sysfs none /sys/" >> "$ORIG_SCRIPT"
@@ -90,7 +90,7 @@ create_ubuntu_chroot_script () {
     echo "fi" >> "$ORIG_SCRIPT"
     echo "apt update" >> "$ORIG_SCRIPT"
     echo "export LC_ALL=C ; apt install -y --download-only $ISO_CHROOTPACKAGES" >> "$ORIG_SCRIPT"
-    echo "export LC_ALL=C ; apt install -y $ISO_CHROOTPACKAGES --option=Dpkg::Options::=$ISO_DPKG_CONF" >> "$ORIG_SCRIPT"
+    echo "export LC_ALL=C ; apt install -y $ISO_CHROOTPACKAGES --option=Dpkg::Options::=$ISO_ISO_DPKGCONF" >> "$ORIG_SCRIPT"
     echo "umount /proc/" >> "$ORIG_SCRIPT"
     echo "umount /sys/" >> "$ORIG_SCRIPT"
     echo "umount /dev/pts/" >> "$ORIG_SCRIPT"

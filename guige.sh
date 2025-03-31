@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Name:         guige (Generic Ubuntu/Unix ISO Generation Engine)
-# Version:      3.1.5
+# Version:      3.1.6
 # Release:      1
 # License:      CC-BA (Creative Commons By Attribution)
 #               http://creativecommons.org/licenses/by/4.0/legalcode
@@ -562,14 +562,14 @@ get_iso_type
 
 # Output variables
 
-if [ "$DO_PRINT_ENV" = "true" ] || [ "$INTERACTIVE_MODE" = "true" ]; then
-  TEMP_VERBOSE_MODE="true"
+if [ "$DO_PRINT_ENV" = "true" ] || [ "$DO_ISO_INTERACTIVEMODE" = "true" ]; then
+  TEMP_DO_ISO_VERBOSEMODE="true"
 fi
 
 get_ssh_key
 get_my_ip
 ISO_PASSWORD_CRYPT=$( get_password_crypt "$ISO_PASSWORD" )
-if [ "$DO_INSTALL_USER" = "true" ]; then
+if [ "$DO_ISO_INSTALLUSER" = "true" ]; then
   ISO_INSTALLPASSWORD_CRYPT=$( get_password_crypt "$ISO_INSTALLPASSWORD" )
 fi
 print_env
@@ -577,7 +577,7 @@ print_env
 # If run in interactive mode ask for values for required parameters
 # Set any unset values to defaults
 
-if [ "$INTERACTIVE_MODE" = "true" ]; then
+if [ "$DO_ISO_INTERACTIVEMODE" = "true" ]; then
   get_interactive_input
 fi
 
@@ -585,7 +585,7 @@ fi
 
 if [ "$ISO_ACTION" = "test" ]; then
   check_ISO_WORKDIR
-  if [ "$DO_KS_TEST" = "true" ]; then
+  if [ "$DO_ISO_KSTEST" = "true" ]; then
     prepare_kickstart_files
     exit
   fi
@@ -665,7 +665,7 @@ if [ "$DO_ISO_FULLISO" = "true" ]; then
   fi
   prepare_iso
   create_iso
-  if ! [ "$DO_NO_UNMOUNT_ISO" = "true" ]; then
+  if ! [ "$DO_ISO_NOUNMOUNT" = "true" ]; then
     unmount_iso
     unmount_squashfs
   fi

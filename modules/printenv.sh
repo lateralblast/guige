@@ -29,8 +29,8 @@ print_env () {
   handle_output "# Cloud Image output file:   [ISO_OUTPUTCI]                 $ISO_OUTPUTCI"                       "TEXT"
   handle_output "# SCP command:               [SCP_COMMAND]                    $ISO_BMCUSERNAME@$MY_IP:$ISO_OUTPUTFILE" "TEXT"
   handle_output "# ISO Release:               [ISO_RELEASE]                    $ISO_RELEASE"                          "TEXT"
-  handle_output "# ISO Release (Major):       [ISO_MAJOR_RELEASE]              $ISO_MAJOR_RELEASE"                    "TEXT"
-  handle_output "# ISO Release (Minor):       [ISO_MINOR_RELEASE]              $ISO_MINOR_RELEASE"                    "TEXT"
+  handle_output "# ISO Release (Major):       [ISO_MAJORRELEASE]              $ISO_MAJORRELEASE"                    "TEXT"
+  handle_output "# ISO Release (Minor):       [ISO_MINORRELEASE]              $ISO_MINORRELEASE"                    "TEXT"
   handle_output "# ISO Build:                 [ISO_BUILDTYPE]                 $ISO_BUILDTYPE"                       "TEXT"
   handle_output "# ISO Volume ID:             [ISO_VOLID]                      $ISO_VOLID"                            "TEXT"
   handle_output "# ISO mount directory:       [ISO_MOUNT_DIR]                  $ISO_MOUNT_DIR"                        "TEXT"
@@ -39,7 +39,7 @@ print_env () {
     handle_output "# Old install squashfs file: [OLD_INSTALL_SQUASHFS_FILE]      $OLD_INSTALL_SQUASHFS_FILE"      "TEXT"
   fi
   handle_output "# ISO squashfs file:         [ISO_SQUASHFSFILE]              $ISO_SQUASHFSFILE"    "TEXT"
-  handle_output "# Check latest ISO:          [DO_CHECK_ISO]                   $DO_CHECK_ISO"         "TEXT"
+  handle_output "# Check latest ISO:          [DO_ISO_LATEST]                   $DO_ISO_LATEST"         "TEXT"
   handle_output "# Hostname:                  [ISO_HOSTNAME]                   $ISO_HOSTNAME"         "TEXT"
   handle_output "# Username:                  [ISO_USERNAME]                   $ISO_USERNAME"         "TEXT"
   handle_output "# Realname:                  [ISO_REALNAME]                   $ISO_REALNAME"         "TEXT"
@@ -78,7 +78,7 @@ print_env () {
   handle_output "# Install mount:             [ISO_INSTALLMOUNT]              $ISO_INSTALLMOUNT"              "TEXT"
   handle_output "# Install target:            [ISO_TARGETMOUNT]               $ISO_TARGETMOUNT"               "TEXT"
   handle_output "# Recreate squashfs:         [DO_ISO_SQUASHFS_UPDATE]         $DO_ISO_SQUASHFS_UPDATE"         "TEXT"
-  handle_output "# Run chroot script:         [DO_CHROOT]                      $DO_CHROOT"                      "TEXT"
+  handle_output "# Run chroot script:         [DO_ISO_CHROOT]                      $DO_ISO_CHROOT"                      "TEXT"
   handle_output "# Squashfs packages:         [ISO_CHROOTPACKAGES]            $ISO_CHROOTPACKAGES"            "TEXT"
   handle_output "# Additional packages:       [ISO_PACKAGES]           $ISO_PACKAGES"           "TEXT"
   handle_output "# Network updates:           [DO_INSTALL_ISO_NETWORK_UPDATES] $DO_INSTALL_ISO_NETWORK_UPDATES" "TEXT"
@@ -109,7 +109,7 @@ print_env () {
     handle_output "# Firewall:                  [ISO_FIREWALL]                   $ISO_FIREWALL"                 "TEXT"
     handle_output "# Allow Services:            [ISO_ALLOWSERVICE]               $ISO_ALLOWSERVICE"            "TEXT"
     handle_output "# Enable Network on boot:    [ISO_ONBOOT]                     $ISO_ONBOOT"                   "TEXT"
-    handle_output "# Network Boot Procol:       [ISO_BOOT_PROTO]                 $ISO_BOOT_PROTO"               "TEXT"
+    handle_output "# Network Boot Procol:       [ISO_BOOTPROTO]                 $ISO_BOOTPROTO"               "TEXT"
     handle_output "# Enable Services:           [ISO_ENABLESERVICE]             $ISO_ENABLESERVICE"           "TEXT"
     handle_output "# Disable Services:          [ISO_DISABLESERVICE]            $ISO_DISABLESERVICE"          "TEXT"
     handle_output "# User GECOS field:          [ISO_GECOS]                      $ISO_GECOS"                    "TEXT"
@@ -129,16 +129,16 @@ print_env () {
   handle_output "# Serial Port Address:       [ISO_SERIAL_PORT_ADDRESS1]       $ISO_SERIAL_PORT_ADDRESS1"       "TEXT"
   handle_output "# Serial Port Speed:         [ISO_SERIALPORTSPEED0]         $ISO_SERIALPORTSPEED0"         "TEXT"
   handle_output "# Serial Port Speed:         [ISO_SERIAL_PORT_SPEED1]         $ISO_SERIAL_PORT_SPEED1"         "TEXT"
-  handle_output "# Use biosdevnames:          [ISO_USE_BIOSDEVNAME]            $ISO_USE_BIOSDEVNAME"            "TEXT"
+  handle_output "# Use biosdevnames:          [ISO_BIOSDEVNAME]            $ISO_BIOSDEVNAME"            "TEXT"
   handle_output "# OEM Install:               [ISO_OEMINSTALL]                $ISO_OEMINSTALL"                "TEXT"
   handle_output "# Source ID:                 [ISO_SOURCEID]                  $ISO_SOURCEID"                  "TEXT"
-  handle_output "# Search Drivers:            [DO_ISO_SEARCH_DRIVERS]          $DO_ISO_SEARCH_DRIVERS"          "TEXT"
-  handle_output "# Preserve Sources:          [DO_ISO_PRESERVE_SOURCES]        $DO_ISO_PRESERVE_SOURCES"        "TEXT"
+  handle_output "# Search Drivers:            [DO_ISO_SEARCHDRIVERS]          $DO_ISO_SEARCHDRIVERS"          "TEXT"
+  handle_output "# Preserve Sources:          [DO_ISO_PRESERVESOURCES]        $DO_ISO_PRESERVESOURCES"        "TEXT"
   if [ "$DO_ISO_AUTOINSTALL" = "true" ]; then
     handle_output "# Custom user-data:          [ISO_AUTOINSTALLFILE]               $ISO_AUTOINSTALLFILE" "TEXT"
   fi
-  if [ "$DO_PRINT_ENV" = "true" ] || [ "$INTERACTIVE_MODE" = "true" ]; then
-    TEMP_VERBOSE_MODE="false"
+  if [ "$DO_PRINT_ENV" = "true" ] || [ "$DO_ISO_INTERACTIVEMODE" = "true" ]; then
+    TEMP_DO_ISO_VERBOSEMODE="false"
   fi
   if [ "$DO_PRINT_ENV" = "true" ]; then
     exit

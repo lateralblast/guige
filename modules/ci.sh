@@ -36,7 +36,7 @@ get_base_ci () {
   fi
   if [ "$FULL_FORCE_MODE" = "true" ]; then
     handle_output "rm $ISO_WORKDIR/files/$BASE_ISO_INPUTCI" ""
-    if [ "$TEST_MODE" = "false" ]; then
+    if [ "$DO_ISO_TESTMODE" = "false" ]; then
       rm "$ISO_WORKDIR/files/$BASE_ISO_INPUTCI"
     fi
   fi
@@ -45,7 +45,7 @@ get_base_ci () {
     cd "$ISO_WORKDIR/files" || exit ; wget -N "$CI_URL"
   else
     if ! [ -f "$ISO_WORKDIR/files/$BASE_ISO_INPUTCI" ]; then
-      if [ "$TEST_MODE" = "false" ]; then
+      if [ "$DO_ISO_TESTMODE" = "false" ]; then
         wget "$CI_URL" -O "$ISO_WORKDIR/files/$BASE_ISO_INPUTCI"
       fi
     fi

@@ -26,7 +26,7 @@ install_required_packages () {
     fi
     verbose_message "# $PACKAGE version: $PACKAGE_VERSION" TEXT
     if [ -z "$PACKAGE_VERSION" ]; then
-      if [ "$TEST_MODE" = "false" ]; then
+      if [ "$DO_ISO_TESTMODE" = "false" ]; then
         verbose_message "# Installing package $PACKAGE"
         if [ "$OS_NAME" = "Darwin" ]; then
           brew update
@@ -50,11 +50,11 @@ install_required_packages () {
 # Handle BIOS and EFI options
 
 handle_bios () {
-  if [[ "$ISO_BOOT_TYPE" =~ "efi" ]]; then
+  if [[ "$ISO_BOOTTYPE" =~ "efi" ]]; then
     ISO_PACKAGES="$ISO_PACKAGES grub-efi"
     ISO_CHROOTPACKAGES="$ISO_CHROOTPACKAGES grub-efi"
   fi
-  if [[ "$ISO_BOOT_TYPE" =~ "bios" ]]; then
+  if [[ "$ISO_BOOTTYPE" =~ "bios" ]]; then
     ISO_PACKAGES="$ISO_PACKAGES grub-pc"
     ISO_CHROOTPACKAGES="$ISO_CHROOTPACKAGES grub-pc"
   fi
@@ -79,7 +79,7 @@ process_post_install () {
     DO_INSTALL_ISO_UPGRADE="true"
   fi
   if [[ "$ISO_POSTINSTALL" =~ "autoupgrades" ]]; then
-    DO_ISO_AUTO_UPGRADES="true"
+    DO_ISO_AUTOUPGRADES="true"
   fi
   if [[ "$ISO_POSTINSTALL" =~ "all" ]]; then
     DO_INSTALL_ISO_NETWORK_UPDATES="true"

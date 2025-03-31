@@ -44,23 +44,23 @@ print_options () {
 options
 -------
 
-cluster:                Install cluster related packages (pcs, gluster, etc)  (default: $DO_CLUSTER_PACKAGES)
+cluster:                Install cluster related packages (pcs, gluster, etc)  (default: $DO_ISO_CLUSTERPACKAGES)
 kvm:                    Install KVM related packages (virt-manager, cloud-image-utils, etc) (default: $DO_KVM_PACKAGES)
 sshkey:                 Add SSH key from ~/.ssh if present (default $DO_ISO_SSHKEY)
-biosdevname:            Enable biosdevname kernel parameters (default: $ISO_USE_BIOSDEVNAME)
-nounmount:              Don't unmount filesystems (useful for troubleshooting) (default: $DO_NO_UNMOUNT_ISO)
-testmode:               Don't execute commands (useful for testing and generating a script) (default: $TEST_MODE)
+biosdevname:            Enable biosdevname kernel parameters (default: $ISO_BIOSDEVNAME)
+nounmount:              Don't unmount filesystems (useful for troubleshooting) (default: $DO_ISO_NOUNMOUNT)
+testmode:               Don't execute commands (useful for testing and generating a script) (default: $DO_ISO_TESTMODE)
 efi:                    Create UEFI based ISO
 bios:                   Create BIOS based ISO
-verbose:                Verbose output (default: $VERBOSE_MODE)
-interactive:            Interactively ask questions (default: $INTERACTIVE_MODE)
+verbose:                Verbose output (default: $DO_ISO_VERBOSEMODE)
+interactive:            Interactively ask questions (default: $DO_ISO_INTERACTIVEMODE)
 autoupgrades:           Allow autoupgrades
-hwekernel:              Don't install HWE kernel packages (Ubuntu) (default: $DO_HWE_KERNEL)
+hwekernel:              Don't install HWE kernel packages (Ubuntu) (default: $DO_ISO_HWEKERNEL)
 nohwekernel:            Don't install HWE kernel packages
 multipath:              Don't load multipath kernel module (default: $DO_MULTIPATH)
 nomultipath:            Don't load multipath kernel module
-plaintextpassword:      Use plaintext password (default: $DO_PLAIN_TEXT_PASSWORD)
-mediacheck:             Do media check (default: $DO_MEDIA_CHECK)
+plaintextpassword:      Use plaintext password (default: $DO_ISO_PLAINTEXTPASSWORD)
+mediacheck:             Do media check (default: $DO_ISO_MEDIACHECK)
 nolockroot:             Don't lock root account
 noactivate:             Don't activate network
 noipv4:                 Disable IPv4
@@ -68,21 +68,21 @@ noipv6:                 Disable IPv6
 plaintext:              Plain text password
 staticip:               Use static IP
 dhcp:                   Use DHCP
-nochroot:               Don't run chroot script (default: $DO_CHROOT)
+nochroot:               Don't run chroot script (default: $DO_ISO_CHROOT)
 chroot:                 Run chroot script
-refreshinstaller:       Refresh installer (default: $DO_REFRESH_INSTALLER)
+refreshinstaller:       Refresh installer (default: $DO_ISO_REFRESHINSTALLER)
 norefreshinstaller:     Don't refresh installer
-nvme:                   Additional NVMe config (default: $DO_NVME)
+nvme:                   Additional NVMe config (default: $DO_ISO_NVME)
 nonvme:                 No additional NVMe config
-geoip:                  Use Geo IP (default: $DO_GEOIP)
+geoip:                  Use Geo IP (default: $DO_ISO_GEOIP)
 nogeoip:                Don't use Geo IP
-reorderuefi:            Reorder UEFI devices on reboot (default: $DO_REORDER_UEFI)
+reorderuefi:            Reorder UEFI devices on reboot (default: $DO_ISO_REORDERUEFI)
 noreorderuefi:          Don't reorder UEFI devices on reboot
 compression:            Compress filesystem(s) if supported (default: $DO_ISO_COMPRESSION)
 nocompression:          Don't compress filesystem(s)
-strict:                 Enable -eu shell options (useful for debuging) (default: $DO_STRICT)
+strict:                 Enable -eu shell options (useful for debuging) (default: $DO_ISO_STRICT)
 nostrict:               Disable -eu shell options
-debug:                  Enable -x shell option (useful for debuging)   (default: $DO_DEBUG)
+debug:                  Enable -x shell option (useful for debuging)   (default: $DO_ISO_DEBUG)
 nodebug:                Disable -x shell option
 ISO_OPTIONS
 }

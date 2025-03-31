@@ -39,12 +39,12 @@ check_docker_config () {
       handle_output "# Checking volume images" "TEXT"
       DOCKER_VOLUME_CHECK=$( docker volume list |grep "^$SCRIPT_NAME-$CURRENT_DOCKER_UBUNTU_RELEASE-$DIR_ARCH" |awk '{print $1}' )
       if ! [ "$DOCKER_VOLUME_CHECK" = "$SCRIPT_NAME-$CURRENT_DOCKER_UBUNTU_RELEASE-$DIR_ARCH" ]; then
-        if [ "$TEST_MODE" = "false" ]; then
+        if [ "$DO_ISO_TESTMODE" = "false" ]; then
           docker volume create "$SCRIPT_NAME-$CURRENT_DOCKER_UBUNTU_RELEASE-$DIR_ARCH"
         fi
       fi
       if ! [ "$DOCKER_IMAGE_CHECK" = "$SCRIPT_NAME-$CURRENT_DOCKER_UBUNTU_RELEASE-$DIR_ARCH" ]; then
-        if [ "$TEST_MODE" = "false" ]; then
+        if [ "$DO_ISO_TESTMODE" = "false" ]; then
           handle_output "# Creating Docker compose file $ISO_WORKDIR/$DIR_ARCH/docker-compose.yml" "TEXT"
           echo "version: \"3\"" > "$ISO_WORKDIR/$DIR_ARCH/docker-compose.yml"
           echo "" >> "$ISO_WORKDIR/$DIR_ARCH/docker-compose.yml"
@@ -98,7 +98,7 @@ create_docker_iso () {
     if [ "$DO_ISO_DOCKER" = "false" ]; then
       exit
     fi
-    if ! [ "$TEST_MODE" = "true" ]; then
+    if ! [ "$DO_ISO_TESTMODE" = "true" ]; then
       echo "#!/bin/bash" > "$LOCAL_SCRIPT"
       echo "$DOCKER_ISO_WORKDIR/files/$SCRIPT_BIN $SCRIPT_ARGS --workdir $DOCKER_ISO_WORKDIR --preworkdir $ISO_WORKDIR" >> "$LOCAL_SCRIPT"
       if [ "$DO_ISO_DOCKER" = "true" ]; then
