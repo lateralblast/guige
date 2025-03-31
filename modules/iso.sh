@@ -494,7 +494,7 @@ create_autoinstall_iso () {
       -iso_mbr_part_type "$ISO_MBR_PART_TYPE" -c "$BOOT_CATALOG" \
       -e "$UEFI_IMAGE" -no-emul-boot -boot-load-size "$UEFI_BOOT_SIZE" "$ISO_SOURCE_DIR"
     fi
-    if [ "$DO_DOCKER" = "true" ]; then
+    if [ "$DO_ISO_DOCKER" = "true" ]; then
       BASE_DOCKER_ISO_OUTPUTFILE=$( basename "$ISO_OUTPUTFILE" )
       echo "# Output file will be at \"$ISO_PREWORKDIR/files/$BASE_DOCKER_ISO_OUTPUTFILE\""
     fi

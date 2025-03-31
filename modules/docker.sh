@@ -90,18 +90,18 @@ create_docker_iso () {
     DOCKER_SCRIPT="$DOCKER_ISO_WORKDIR/files/guige_docker_script.sh"
     cp "$SCRIPT_FILE" "$DOCKER_BIN"
     chmod +x "$DOCKER_BIN"
-    if [ "$DO_OLD_INSTALLER" = "true" ]; then
+    if [ "$DO_ISO_OLDINSTALLER" = "true" ]; then
       check_old_ISO_WORKDIR
     fi
     check_docker_config
     handle_output "" ""
-    if [ "$DO_DOCKER" = "false" ]; then
+    if [ "$DO_ISO_DOCKER" = "false" ]; then
       exit
     fi
     if ! [ "$TEST_MODE" = "true" ]; then
       echo "#!/bin/bash" > "$LOCAL_SCRIPT"
       echo "$DOCKER_ISO_WORKDIR/files/$SCRIPT_BIN $SCRIPT_ARGS --workdir $DOCKER_ISO_WORKDIR --preworkdir $ISO_WORKDIR" >> "$LOCAL_SCRIPT"
-      if [ "$DO_DOCKER" = "true" ]; then
+      if [ "$DO_ISO_DOCKER" = "true" ]; then
         BASE_DOCKER_ISO_OUTPUTFILE=$( basename "$ISO_OUTPUTFILE" )
         echo "# Output file will be at \"$ISO_WORKDIR/files/$BASE_DOCKER_ISO_OUTPUTFILE\""
       fi

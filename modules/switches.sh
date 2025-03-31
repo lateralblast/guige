@@ -289,7 +289,7 @@ process_switches () {
     ISO_KERNELARGS="$DEFAULT_ISO_KERNELARGS"
   fi
   if [ "$ISO_KERNEL" = "" ]; then
-    if [ "$DO_CREATE_ISO_VM" = "true" ]; then
+    if [ "$DO_ISO_CREATEISOVM" = "true" ]; then
       ISO_KERNEL="$DEFAULT_VM_TYPE"
     else
       ISO_KERNEL="$DEFAULT_ISO_KERNEL"

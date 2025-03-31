@@ -12,10 +12,10 @@ print_env () {
   handle_output "# Codename:                  [ISO_CODENAME]                   $ISO_CODENAME"         "TEXT"
   handle_output "# Architecture:              [ISO_ARCH]                       $ISO_ARCH"             "TEXT"
   handle_output "# Work directory:            [ISO_WORKDIR]                       $ISO_WORKDIR"             "TEXT"
-  if [ "$DO_DOCKER" = "true" ]; then
+  if [ "$DO_ISO_DOCKER" = "true" ]; then
     handle_output "# Previous Work directory:   [ISO_WORKDIR]                       $ISO_WORKDIR"           "TEXT"
   fi
-  if [ "$DO_OLD_INSTALLER" = "true" ]; then
+  if [ "$DO_ISO_OLDINSTALLER" = "true" ]; then
     handle_output "# Old Work directory:        [OLD_ISO_WORKDIR]                   $OLD_ISO_WORKDIR"       "TEXT"
     handle_output "# Old ISO input file:        [OLD_ISO_INPUTFILE]             $OLD_ISO_INPUTFILE" "TEXT"
     handle_output "# Old ISO URL:               [OLD_ISO_URL]                    $OLD_ISO_URL"        "TEXT"
@@ -34,7 +34,7 @@ print_env () {
   handle_output "# ISO Build:                 [ISO_BUILDTYPE]                 $ISO_BUILDTYPE"                       "TEXT"
   handle_output "# ISO Volume ID:             [ISO_VOLID]                      $ISO_VOLID"                            "TEXT"
   handle_output "# ISO mount directory:       [ISO_MOUNT_DIR]                  $ISO_MOUNT_DIR"                        "TEXT"
-  if [ "$DO_OLD_INSTALLER" = "true" ]; then
+  if [ "$DO_ISO_OLDINSTALLER" = "true" ]; then
     handle_output "# Old ISO mount directory:   [OLD_ISO_MOUNT_DIR]              $OLD_ISO_MOUNT_DIR"              "TEXT"
     handle_output "# Old install squashfs file: [OLD_INSTALL_SQUASHFS_FILE]      $OLD_INSTALL_SQUASHFS_FILE"      "TEXT"
   fi

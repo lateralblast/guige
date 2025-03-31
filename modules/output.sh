@@ -335,7 +335,7 @@ update_output_file_name () {
       ISO_OUTPUTFILE="$TEMP_DIR_NAME/$TEMP_FILE_NAME-$VOLMGR.iso"
     fi
   done
-  if [ "$DO_CREATE_ISO_VM" = "true" ] || [ "$DO_CREATE_CI_VM" = "true" ]; then
+  if [ "$DO_ISO_CREATEISOVM" = "true" ] || [ "$DO_ISO_CREATECIVM" = "true" ]; then
     if [ "$VM_TYPE" = "kvm" ]; then
       if [ "$OS_NAME" = "Darwin" ]; then
         REQUIRED_PACKAGES="$REQUIRED_PACKAGES qemu libvirt dnsmasq libosinfo virt-manager"

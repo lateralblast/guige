@@ -213,7 +213,7 @@ prepare_autoinstall_iso () {
       else
         sudo cp "$ISO_NEW_DIR"/custom/var/cache/apt/archives/*.deb "$PACKAGE_DIR"
       fi
-      if [ "$DO_OLD_INSTALLER" = "true" ]; then
+      if [ "$DO_ISO_OLDINSTALLER" = "true" ]; then
         handle_output "# Copying old installer files from $OLD_ISO_MOUNT_DIR/casper/ to $CASPER_DIR" "TEXT"
         mount_old_iso
         sudo cp "$OLD_ISO_MOUNT_DIR"/casper/*installer* "$CASPER_DIR/"

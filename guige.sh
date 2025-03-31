@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Name:         guige (Generic Ubuntu/Unix ISO Generation Engine)
-# Version:      3.1.4
+# Version:      3.1.5
 # Release:      1
 # License:      CC-BA (Creative Commons By Attribution)
 #               http://creativecommons.org/licenses/by/4.0/legalcode
@@ -593,44 +593,44 @@ fi
 
 # Handle specific functions
 
-if [ "$DO_LIST_VM" = "true" ]; then
+if [ "$DO_ISO_LISTVM" = "true" ]; then
   list_vm
   exit
 fi
 
-if [ "$DO_DOCKER" = "true" ] || [ "$DO_CHECK_DOCKER" = "true" ]; then
+if [ "$DO_ISO_DOCKER" = "true" ] || [ "$DO_ISO_CHECKDOCKER" = "true" ]; then
   create_docker_iso
 fi
 if [ "$DO_DELETE_VM" = "true" ]; then
   delete_vm
   exit
 fi
-if [ "$DO_CREATE_ISO_VM" = "true" ]; then
+if [ "$DO_ISO_CREATEISOVM" = "true" ]; then
   get_info_from_iso
   create_iso_vm
   exit
 fi
-if [ "$DO_CREATE_CI_VM" = "true" ]; then
+if [ "$DO_ISO_CREATECIVM" = "true" ]; then
   create_ci_vm
   exit
 fi
-if [ "$DO_CHECK_RACADM" = "true" ]; then
+if [ "$DO_ISO_CHECKRACADM" = "true" ]; then
   check_racadm
   exit
 fi
-if [ "$DO_EXECUTE_RACADM" = "true" ]; then
+if [ "$DO_ISO_EXECUTERACADM" = "true" ]; then
   check_racadm
   execute_racadm
   exit
 fi
-if [ "$DO_CHECK_ISO_WORKDIR" = "true" ]; then
+if [ "$DO_ISO_CHECKWORKDIR" = "true" ]; then
   DO_PRINT_HELP="false"
   check_ISO_WORKDIR
-  if [ "$DO_OLD_INSTALLER" = "true" ]; then
+  if [ "$DO_ISO_OLDINSTALLER" = "true" ]; then
     check_old_ISO_WORKDIR
   fi
 fi
-if [ "$DO_INSTALL_REQUIRED_PACKAGES" = "true" ]; then
+if [ "$DO_ISO_INSTALLREQUIREDPACKAGES" = "true" ]; then
   DO_PRINT_HELP="false"
   install_required_packages "$REQUIRED_PACKAGES"
 fi
@@ -644,14 +644,14 @@ fi
 if [ "$DO_INSTALL_SERVER" = "true" ]; then
   install_server
 fi
-if [ "$DO_GET_BASE_ISO" = "true" ]; then
+if [ "$DO_ISO_GETISO" = "true" ]; then
   DO_PRINT_HELP="false"
   get_base_iso
   if [ "$ISO_ACTION" = "getiso" ]; then
     exit
   fi
 fi
-if [ "$DO_CREATE_AUTOINSTALL_ISO_FULL" = "true" ]; then
+if [ "$DO_ISO_FULLISO" = "true" ]; then
   DO_PRINT_HELP="false"
   unmount_iso
   unmount_squashfs
@@ -670,27 +670,27 @@ if [ "$DO_CREATE_AUTOINSTALL_ISO_FULL" = "true" ]; then
     unmount_squashfs
   fi
 else
-  if [ "$DO_EXECUTE_ISO_CHROOT_SCRIPT" = "true" ]; then
+  if [ "$DO_ISO_RUNCHROOTSCRIPT" = "true" ]; then
     DO_PRINT_HELP="false"
     mount_iso
     execute_chroot_script
   fi
-  if [ "$DO_PREPARE_AUTOINSTALL_ISO_ONLY" = "true" ]; then
+  if [ "$DO_ISO_CREATEAUTOINSTALL" = "true" ]; then
     DO_PRINT_HELP="false"
     prepare_iso
   fi
-  if [ "$DO_CREATE_AUTOINSTALL_ISO_ONLY" = "true" ]; then
+  if [ "$DO_ISO_JUSTISO" = "true" ]; then
     DO_PRINT_HELP="false"
     prepare_iso
     create_iso
   fi
-  if [ "$DO_UNMOUNT_ISO" = "true" ]; then
+  if [ "$DO_ISO_UNMOUNT" = "true" ]; then
     DO_PRINT_HELP="false"
     unmount_iso
     unmount_squashfs
   fi
 fi
-if [ "$DO_LIST_ISOS" = "true" ]; then
+if [ "$DO_ISO_LIST" = "true" ]; then
   list_isos
   exit
 fi

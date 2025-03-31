@@ -20,28 +20,28 @@ process_actions () {
       print_usage
       ;;
     checkracadm)
-      DO_CHECK_RACADM="true"
+      DO_ISO_CHECKRACADM="true"
       ;;
-    runracadm)
-      DO_CHECK_RACADM="true"
-      DO_EXECUTE_RACADM="true"
+    runracadm|execracadm|exectureracadm)
+      DO_ISO_CHECKRACADM="true"
+      DO_ISO_EXECUTERACADM="true"
       ;;
     listvm)
-      DO_LIST_VM="true"
+      DO_ISO_LISTVM="true"
       ;;
     createexport)
-      DO_CHECK_ISO_WORKDIR="true"
-      DO_INSTALL_REQUIRED_PACKAGES="true"
+      DO_ISO_CHECKWORKDIR="true"
+      DO_ISO_INSTALLREQUIREDPACKAGES="true"
       DO_CREATE_EXPORT="true"
       ;;
     createansible)
-      DO_CHECK_ISO_WORKDIR="true"
-      DO_INSTALL_REQUIRED_PACKAGES="true"
+      DO_ISO_CHECKWORKDIR="true"
+      DO_ISO_INSTALLREQUIREDPACKAGES="true"
       DO_CREATE_ANSIBLE="true"
       ;;
     runansible)
-      DO_CHECK_ISO_WORKDIR="true"
-      DO_INSTALL_REQUIRED_PACKAGES="true"
+      DO_ISO_CHECKWORKDIR="true"
+      DO_ISO_INSTALLREQUIREDPACKAGES="true"
       DO_CREATE_EXPORT="true"
       DO_CREATE_ANSIBLE="true"
       DO_INSTALL_SERVER="true"
@@ -50,90 +50,90 @@ process_actions () {
       DO_PRINT_ENV="true"
       ;;
     checkdocker)
-      DO_DOCKER="false"
-      DO_CHECK_DOCKER="true"
-      DO_CHECK_ISO_WORKDIR="true"
+      DO_ISO_DOCKER="false"
+      DO_ISO_CHECKDOCKER="true"
+      DO_ISO_CHECKWORKDIR="true"
       ;;
     getiso)
-      DO_CHECK_ISO_WORKDIR="true"
-      DO_GET_BASE_ISO="true"
+      DO_ISO_CHECKWORKDIR="true"
+      DO_ISO_GETISO="true"
       ;;
     installrequired|checkrequired)
-      DO_INSTALL_REQUIRED_PACKAGES="true"
+      DO_ISO_INSTALLREQUIREDPACKAGES="true"
       ;;
-    checkdirs)
-      DO_CHECK_ISO_WORKDIR="true"
+    checkworkdir|checkdirs)
+      DO_ISO_CHECKWORKDIR="true"
       ;;
     justiso)
-      DO_CREATE_AUTOINSTALL_ISO_ONLY="true"
+      DO_ISO_JUSTISO="true"
       ;;
     createautoinstall)
-      DO_PREPARE_AUTOINSTALL_ISO_ONLY="true"
+      DO_ISO_CREATEAUTOINSTALL="true"
       ;;
-    runchrootscript)
-      DO_EXECUTE_ISO_CHROOT_SCRIPT="true"
+    runchrootscript|execchrootscript|executechrootscript)
+      DO_ISO_RUNCHROOTSCRIPT="true"
       ;;
-    createiso)
-      DO_CHECK_ISO_WORKDIR="true"
-      DO_INSTALL_REQUIRED_PACKAGES="true"
-      DO_EXECUTE_ISO_CHROOT_SCRIPT="true"
-      DO_CREATE_AUTOINSTALL_ISO_FULL="true"
+    createiso|fulliso)
+      DO_ISO_CHECKWORKDIR="true"
+      DO_ISO_INSTALLREQUIREDPACKAGES="true"
+      DO_ISO_RUNCHROOTSCRIPT="true"
+      DO_ISO_FULLISO="true"
       ;;
     createisoandsquashfs)
       DO_ISO_SQUASHFS_UPDATE="true"
-      DO_CHECK_ISO_WORKDIR="true"
-      DO_INSTALL_REQUIRED_PACKAGES="true"
-      DO_EXECUTE_ISO_CHROOT_SCRIPT="true"
-      DO_CREATE_AUTOINSTALL_ISO_FULL="true"
+      DO_ISO_CHECKWORKDIR="true"
+      DO_ISO_INSTALLREQUIREDPACKAGES="true"
+      DO_ISO_RUNCHROOTSCRIPT="true"
+      DO_ISO_FULLISO="true"
      ;;
     createdockeriso)
-      DO_DOCKER="true"
-      DO_CHECK_DOCKER="true"
-      DO_CHECK_ISO_WORKDIR="true"
-      DO_INSTALL_REQUIRED_PACKAGES="true"
-      DO_EXECUTE_ISO_CHROOT_SCRIPT="true"
-      DO_CREATE_AUTOINSTALL_ISO_FULL="true"
+      DO_ISO_DOCKER="true"
+      DO_ISO_CHECKDOCKER="true"
+      DO_ISO_CHECKWORKDIR="true"
+      DO_ISO_INSTALLREQUIREDPACKAGES="true"
+      DO_ISO_RUNCHROOTSCRIPT="true"
+      DO_ISO_FULLISO="true"
       ;;
     createdockerisoandsquashfs)
       DO_ISO_SQUASHFS_UPDATE="true"
-      DO_DOCKER="true"
-      DO_CHECK_DOCKER="true"
-      DO_CHECK_ISO_WORKDIR="true"
-      DO_INSTALL_REQUIRED_PACKAGES="true"
-      DO_EXECUTE_ISO_CHROOT_SCRIPT="true"
-      DO_CREATE_AUTOINSTALL_ISO_FULL="true"
+      DO_ISO_DOCKER="true"
+      DO_ISO_CHECKDOCKER="true"
+      DO_ISO_CHECKWORKDIR="true"
+      DO_ISO_INSTALLREQUIREDPACKAGES="true"
+      DO_ISO_RUNCHROOTSCRIPT="true"
+      DO_ISO_FULLISO="true"
       ;;
     createisovm)
       VM_TYPE="kvm"
-      DO_INSTALL_REQUIRED_PACKAGES="true"
-      DO_CREATE_ISO_VM="true"
+      DO_ISO_INSTALLREQUIREDPACKAGES="true"
+      DO_ISO_CREATEISOVM="true"
       ;;
     deleteisovm)
       VM_TYPE="kvm"
-      DO_INSTALL_REQUIRED_PACKAGES="true"
-      DO_DELETE_ISO_VM="true"
+      DO_ISO_INSTALLREQUIREDPACKAGES="true"
+      DO_ISO_DELETEISOVM="true"
       ;;
     createcivm)
       VM_TYPE="kvm"
-      DO_INSTALL_REQUIRED_PACKAGES="true"
-      DO_CREATE_CI_VM="true"
+      DO_ISO_INSTALLREQUIREDPACKAGES="true"
+      DO_ISO_CREATECIVM="true"
       ;;
     deletecivm)
       VM_TYPE="kvm"
-      DO_INSTALL_REQUIRED_PACKAGES="true"
-      DO_DELETE_CI_VM="true"
+      DO_ISO_INSTALLREQUIREDPACKAGES="true"
+      DO_ISO_DELETECIVM="true"
       ;;
     queryiso)
       DO_ISO_QUERY="true"
       ;;
     unmount)
-      DO_UMOUNT_ISO="true"
+      DO_ISO_UNMOUNT="true"
       ;;
     oldinstaller)
-      DO_OLD_INSTALLER="true"
+      DO_ISO_OLDINSTALLER="true"
       ;;
     listalliso|listallisos|listiso|listisos)
-      DO_LIST_ISOS="true"
+      DO_ISO_LIST="true"
       ;;
     test)
       DO_TEST="true"
