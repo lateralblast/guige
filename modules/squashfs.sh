@@ -8,7 +8,7 @@
 # Unmount squashfs filesystem
 
 unmount_squashfs () {
-  case "$ISO_CODENAME" in
+  case "$ISO_OSNAME" in
     "ubuntu")
       unmount_ubuntu_squashfs
       ;;
@@ -37,7 +37,7 @@ unmount_ubuntu_squashfs () {
 # Copy ISO squashfs
 
 copy_squashfs () {
-  case "$ISO_CODENAME" in
+  case "$ISO_OSNAME" in
     "ubuntu")
       copy_ubuntu_squashfs
       ;;
@@ -89,7 +89,7 @@ copy_ubuntu_squashfs () {
 # Update ISO squashfs
 
 update_iso_squashfs () {
-  case "$ISO_CODENAME" in
+  case "$ISO_OSNAME" in
     "ubuntu")
       update_ubuntu_iso_squashfs
       ;;

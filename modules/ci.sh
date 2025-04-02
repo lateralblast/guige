@@ -10,7 +10,7 @@
 
 update_ci_url () {
   BASE_ISO_INPUTCI=$( basename "$ISO_INPUTCI" )
-  if [ "$ISO_CODENAME" = "ubuntu" ]; then
+  if [ "$ISO_OSNAME" = "ubuntu" ]; then
     case $ISO_BUILDTYPE in
       "daily-live"|"daily-live-server")
         CI_URL="https://cloud-images.ubuntu.com/daily/server/$ISO_CODENAME/current/$BASE_ISO_INPUTCI"

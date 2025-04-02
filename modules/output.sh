@@ -168,7 +168,7 @@ remove_dir () {
 
 check_ISO_WORKDIR () {
   handle_output "# Check work directories" "TEXT"
-  for ISO_DIR in $ISO_MOUNT_DIR $ISO_NEW_DIR/squashfs $ISO_NEW_DIR/mksquash $ISO_NEW_DIR/cd $ISO_NEW_DIR/custom $ISO_WORKDIR/bin $ISO_WORKDIR/files; do
+  for ISO_DIR in $ISO_MOUNTDIR $ISO_NEW_DIR/squashfs $ISO_NEW_DIR/mksquash $ISO_NEW_DIR/cd $ISO_NEW_DIR/custom $ISO_WORKDIR/bin $ISO_WORKDIR/files; do
     handle_output "# Check directory $ISO_DIR exists" "TEXT"
     if [ "$DO_ISO_FORCEMODE" = "true" ]; then
       remove_dir "$ISO_DIR"
@@ -184,7 +184,7 @@ check_ISO_WORKDIR () {
 
 check_old_ISO_WORKDIR () {
   handle_output "# Check old release work directories exist" "TEXT"
-  for ISO_DIR in $OLD_ISO_MOUNT_DIR $OLD_ISO_WORKDIR/files; do
+  for ISO_DIR in $OLD_ISO_MOUNTDIR $OLD_ISO_WORKDIR/files; do
     if [ "$DO_ISO_FORCEMODE" = "true" ]; then
       remove_dir "$ISO_DIR"
     fi
@@ -374,15 +374,15 @@ update_output_file_name () {
     if [ "$VM_NAME" = "" ]; then
       if [ "$ISO_BUILDTYPE" = "" ]; then
         if [[ "$ISO_ACTION" =~ "ci" ]]; then
-          VM_NAME="$SCRIPT_NAME-ci-$ISO_CODENAME-$ISO_RELEASE-$ISO_BOOTTYPE-$ISO_ARCH"
+          VM_NAME="$SCRIPT_NAME-ci-$ISO_OSNAME-$ISO_RELEASE-$ISO_BOOTTYPE-$ISO_ARCH"
         else
-          VM_NAME="$SCRIPT_NAME-iso-$ISO_CODENAME-$ISO_RELEASE-$ISO_BOOTTYPE-$ISO_ARCH"
+          VM_NAME="$SCRIPT_NAME-iso-$ISO_OSNAME-$ISO_RELEASE-$ISO_BOOTTYPE-$ISO_ARCH"
         fi
       else
         if [[ "$ISO_ACTION" =~ "ci" ]]; then
-          VM_NAME="$SCRIPT_NAME-ci-$ISO_CODENAME-$ISO_BUILDTYPE-$ISO_RELEASE-$ISO_BOOTTYPE-$ISO_ARCH"
+          VM_NAME="$SCRIPT_NAME-ci-$ISO_OSNAME-$ISO_BUILDTYPE-$ISO_RELEASE-$ISO_BOOTTYPE-$ISO_ARCH"
         else
-          VM_NAME="$SCRIPT_NAME-iso-$ISO_CODENAME-$ISO_BUILDTYPE-$ISO_RELEASE-$ISO_BOOTTYPE-$ISO_ARCH"
+          VM_NAME="$SCRIPT_NAME-iso-$ISO_OSNAME-$ISO_BUILDTYPE-$ISO_RELEASE-$ISO_BOOTTYPE-$ISO_ARCH"
         fi
       fi
     fi
@@ -401,8 +401,8 @@ update_output_file_name () {
       ISO_KERNELARGS="$ISO_KERNELARGS console=$ISO_SERIAL_PORT1,$ISO_SERIAL_PORT_SPEED1"
     fi
   fi
-  if [ "$OLD_INSTALL_SQUASHFS_FILE" = "" ]; then
-    OLD_INSTALL_SQUASHFS_FILE="$DEFAULT_OLD_INSTALL_SQUASHFS_FILE"
+  if [ "$OLD_ISO_INSTALLSQUASHFSFILE" = "" ]; then
+    OLD_ISO_INSTALLSQUASHFSFILE="$DEFAULT_OLD_ISO_INSTALLSQUASHFSFILE"
   fi
   if [ "$OLD_ISO_WORKDIR" = "" ]; then
     OLD_ISO_WORKDIR="$DEFAULT_OLD_ISO_WORKDIR"

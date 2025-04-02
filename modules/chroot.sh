@@ -7,7 +7,7 @@
 # Execute chroot script
 
 execute_chroot_script () {
-  case "$ISO_CODENAME" in
+  case "$ISO_OSNAME" in
     "ubuntu")
       execute_ubuntu_chroot_script
       ;;
@@ -37,7 +37,7 @@ execute_ubuntu_chroot_script () {
 
 create_chroot_script () {
   if [ "$DO_ISO_CHROOT" = "true" ]; then
-    case "$ISO_CODENAME" in
+    case "$ISO_OSNAME" in
       "ubuntu")
         create_ubuntu_chroot_script
         ;;

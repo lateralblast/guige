@@ -11,7 +11,7 @@ used to hang a shield on the shoulder or neck when not in use.
 Version
 -------
 
-Current version: 3.1.6
+Current version: 3.2.0
 
 Issues
 ------
@@ -25,6 +25,7 @@ Current issues:
 - Default mode is UEFI with ZFS and LVM install options
 - BIOS ISO does not support ZFS
 - BIOS ISO mode will build installer with only LVM install
+- I've noticed some race conditions in the Ubuntu installer where the installer will crash sometimes and not others, I'm yet to determine what causes this race condition
 
 Prerequisites
 -------------

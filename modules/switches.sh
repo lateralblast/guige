@@ -187,17 +187,20 @@ process_switches () {
   if [ "$ISO_CODENAME" = "" ]; then
     ISO_CODENAME="$DEFAULT_ISO_CODENAME"
   fi
+  if [ "$ISO_OSNAME" = "" ]; then
+    ISO_OSNAME="$DEFAULT_ISO_OSNAME"
+  fi
   if [ "$ISO_RELEASE" = "" ]; then
     ISO_RELEASE="$DEFAULT_ISO_RELEASE"
   else
     ISO_MINORRELEASE=$( echo "$ISO_RELEASE" |cut -f2 -d. )
     ISO_DOTRELEASE=$( echo "$ISO_RELEASE" |cut -f3 -d. )
-    if [ "$ISO_CODENAME" = "ubuntu" ]; then
+    if [ "$ISO_OSNAME" = "ubuntu" ]; then
       if [ "$ISO_DOTRELEASE" = "" ]; then
         get_current_release
       fi
     else
-      if [ "$ISO_CODENAME" = "rocky" ]; then
+      if [ "$ISO_OSNAME" = "rocky" ]; then
         case "$ISO_RELEASE" in
           "9")
             ISO_RELEASE="$CURRENT_ISO_RELEASE_9"
@@ -321,20 +324,8 @@ process_switches () {
   if [ "$ISO_BUILDTYPE" = "" ]; then
     ISO_BUILDTYPE="$DEFAULT_ISO_BUILDTYPE"
   fi
-  if [ "$ISO_WORKDIR" = "" ]; then
-    if [ "$DO_ISO_DAILY" = "true" ]; then
-      ISO_WORKDIR="$HOME/$SCRIPT_NAME/$ISO_CODENAME/$ISO_BUILDTYPE/$ISO_CODENAME"
-      DOCKER_ISO_WORKDIR="/root/$SCRIPT_NAME/$ISO_CODENAME/$ISO_BUILDTYPE/$ISO_CODENAME"
-    else
-      ISO_WORKDIR="$HOME/$SCRIPT_NAME/$ISO_CODENAME/$ISO_BUILDTYPE/$ISO_RELEASE"
-      DOCKER_ISO_WORKDIR="/root/$SCRIPT_NAME/$ISO_CODENAME/$ISO_BUILDTYPE/$ISO_RELEASE"
-    fi
-  else
-    if [ "$DO_ISO_DAILY" = "true" ]; then
-      ISO_WORKDIR="$HOME/$SCRIPT_NAME/$ISO_CODENAME/$ISO_BUILDTYPE/$ISO_CODENAME"
-      DOCKER_ISO_WORKDIR="/root/$SCRIPT_NAME/$ISO_CODENAME/$ISO_BUILDTYPE/$ISO_CODENAME"
-    fi
-  fi
+  ISO_WORKDIR="$HOME/$SCRIPT_NAME/$ISO_OSNAME/$ISO_BUILDTYPE/$ISO_RELEASE"
+  DOCKER_ISO_WORKDIR="/root/$SCRIPT_NAME/$ISO_OSNAME/$ISO_BUILDTYPE/$ISO_RELEASE"
   if [ "$ISO_VOLID" = "" ]; then
     case $ISO_BUILDTYPE in
       "daily-desktop"|"desktop")
@@ -355,7 +346,7 @@ process_switches () {
     get_info_from_iso
   else
     if [ "$DO_ISO_BOOTSERVERFILE" = "false" ]; then
-      if [ "$ISO_CODENAME" = "ubuntu" ]; then
+      if [ "$ISO_OSNAME" = "ubuntu" ]; then
         case $ISO_BUILDTYPE in
           "daily-live"|"daily-live-server")
             ISO_INPUTFILE="$ISO_WORKDIR/files/$ISO_CODENAME-live-server-$ISO_ARCH.iso"
@@ -370,13 +361,13 @@ process_switches () {
             ISO_BOOTSERVERFILE="$ISO_OUTPUTFILE"
             ;;
          "desktop")
-            ISO_INPUTFILE="$ISO_WORKDIR/files/$ISO_CODENAME-$ISO_RELEASE-desktop-$ISO_ARCH.iso"
-            ISO_OUTPUTFILE="$ISO_WORKDIR/files/$ISO_CODENAME-$ISO_RELEASE-desktop-$ISO_ARCH-$ISO_BOOTTYPE-autoinstall.iso"
+            ISO_INPUTFILE="$ISO_WORKDIR/files/$ISO_OSNAME-$ISO_RELEASE-desktop-$ISO_ARCH.iso"
+            ISO_OUTPUTFILE="$ISO_WORKDIR/files/$ISO_OSNAME-$ISO_RELEASE-desktop-$ISO_ARCH-$ISO_BOOTTYPE-autoinstall.iso"
             ISO_BOOTSERVERFILE="$ISO_OUTPUTFILE"
             ;;
           *)
-            ISO_INPUTFILE="$ISO_WORKDIR/files/$ISO_CODENAME-$ISO_RELEASE-live-server-$ISO_ARCH.iso"
-            ISO_OUTPUTFILE="$ISO_WORKDIR/files/$ISO_CODENAME-$ISO_RELEASE-live-server-$ISO_ARCH-$ISO_BOOTTYPE-autoinstall.iso"
+            ISO_INPUTFILE="$ISO_WORKDIR/files/$ISO_OSNAME-$ISO_RELEASE-live-server-$ISO_ARCH.iso"
+            ISO_OUTPUTFILE="$ISO_WORKDIR/files/$ISO_OSNAME-$ISO_RELEASE-live-server-$ISO_ARCH-$ISO_BOOTTYPE-autoinstall.iso"
             ISO_BOOTSERVERFILE="$ISO_OUTPUTFILE"
             ;;
         esac

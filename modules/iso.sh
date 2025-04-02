@@ -10,15 +10,14 @@
 
 update_iso_url () {
   BASE_ISO_INPUTFILE=$( basename "$ISO_INPUTFILE" )
-  if [ "$ISO_CODENAME" = "ubuntu" ]; then
+  if [ "$ISO_OSNAME" = "ubuntu" ]; then
     case $ISO_BUILDTYPE in
       "daily-live"|"daily-live-server")
-        if [ "$ISO_RELEASE" = "$CURRENT_ISO_DEVRELEASE" ] || [ "$ISO_CODENAME" = "$CURRENT_ISO_CODENAME" ]; then
-          ISO_URL="https://cdimage.ubuntu.com/ubuntu-server/daily-live/current/$ISO_CODENAME-live-server-$ISO_ARCH.iso"
+        if [ "$ISO_RELEASE" = "$CURRENT_ISO_DEVRELEASE" ] || [ "$ISO_OSNAME" = "$CURRENT_ISO_CODENAME" ]; then
+          ISO_URL="https://cdimage.ubuntu.com/ubuntu-server/daily-live/current/$ISO_OSNAME-live-server-$ISO_ARCH.iso"
         else
           ISO_URL="https://cdimage.ubuntu.com/ubuntu-server/$ISO_CODENAME/daily-live/current/$BASE_ISO_INPUTFILE"
         fi
-        NEW_DIR="$ISO_CODENAME/$ISO_CODENAME"
         ;;
       "daily-desktop")
         if [ "$ISO_RELEASE" = "$CURRENT_ISO_DEVRELEASE" ] || [ "$ISO_CODENAME" = "$CURRENT_ISO_CODENAME" ]; then
@@ -26,22 +25,19 @@ update_iso_url () {
         else
           ISO_URL="https://cdimage.ubuntu.com/$ISO_CODENAME/daily-live/current/$BASE_ISO_INPUTFILE"
         fi
-        NEW_DIR="$ISO_CODENAME/$ISO_CODENAME"
         ;;
       "desktop"|"server")
         ISO_URL="https://releases.ubuntu.com/$ISO_RELEASE/$BASE_ISO_INPUTFILE"
-        NEW_DIR="$ISO_CODENAME/$ISO_RELEASE"
         ;;
       *)
         ISO_URL="https://cdimage.ubuntu.com/releases/$ISO_RELEASE/release/$BASE_ISO_INPUTFILE"
-        NEW_DIR="$ISO_CODENAME/$ISO_RELEASE"
         ;;
     esac
     if [ "$OLD_ISO_URL" = "" ]; then
       OLD_ISO_URL="$DEFAULT_OLD_ISO_URL"
     fi
   else
-    if [ "$ISO_CODENAME" = "rocky" ]; then
+    if [ "$ISO_OSNAME" = "rocky" ]; then
       if [ "$ISO_URL" = "" ]; then
         ISO_URL="https://download.rockylinux.org/pub/rocky/$ISO_MAJORRELEASE/isos/$ISO_ARCH/$BASE_ISO_INPUTFILE"
       fi
@@ -66,7 +62,7 @@ update_required_packages () {
 # Update packages to include in ISO
 
 update_ISO_PACKAGES () {
-  if [ "$ISO_CODENAME" = "ubuntu" ]; then
+  if [ "$ISO_OSNAME" = "ubuntu" ]; then
     if [ "$DO_ISO_HWEKERNEL" = "true" ]; then
       ISO_PACKAGES="$ISO_PACKAGES linux-image-generic-hwe-$ISO_MAJORRELEASE.$ISO_MINORRELEASE"
     fi
@@ -79,7 +75,7 @@ update_ISO_PACKAGES () {
 
 create_iso () {
   if [ "$DO_ISO_CREATEISO" = "true" ]; then
-    case "$ISO_CODENAME" in
+    case "$ISO_OSNAME" in
       "ubuntu")
         create_autoinstall_iso
         ;;
@@ -99,23 +95,23 @@ create_iso () {
 # rsync -av ./isomount/ ./isonew/cd
 
 copy_iso () {
-  handle_output "# Copying ISO files from $ISO_MOUNT_DIR to $ISO_NEW_DIR/cd" "TEXT"
+  handle_output "# Copying ISO files from $ISO_MOUNTDIR to $ISO_NEW_DIR/cd" "TEXT"
   if [ ! -f "/usr/bin/rsync" ]; then
     install_required_packages "$REQUIRED_PACKAGES"
   fi
-  UC_TEST_DIR="$ISO_MOUNT_DIR/EFI"
-  LC_TEST_DIR="$ISO_MOUNT_DIR/efi"
+  UC_TEST_DIR="$ISO_MOUNTDIR/EFI"
+  LC_TEST_DIR="$ISO_MOUNTDIR/efi"
   if [ ! -d "$UC_TEST_DIR" ] && [ ! -d "$LC_TEST_DIR" ]; then
     warning_message "ISO $ISO_INPUTFILE not mounted"
     exit
   else
     if [ "$DO_ISO_VERBOSEMODE" = "true" ]; then
       if [ "$DO_ISO_TESTMODE" = "false" ]; then
-        sudo rsync -av --delete "$ISO_MOUNT_DIR/" "$ISO_NEW_DIR/cd"
+        sudo rsync -av --delete "$ISO_MOUNTDIR/" "$ISO_NEW_DIR/cd"
       fi
     else
       if [ "$DO_ISO_TESTMODE" = "false" ]; then
-        sudo rsync -a --delete "$ISO_MOUNT_DIR/" "$ISO_NEW_DIR/cd"
+        sudo rsync -a --delete "$ISO_MOUNTDIR/" "$ISO_NEW_DIR/cd"
       fi
     fi
   fi
@@ -129,11 +125,11 @@ copy_iso () {
 # sudo umount -l /home/user/ubuntu-iso/isomount
 
 unmount_iso () {
-  handle_output "sudo umount -l $ISO_MOUNT_DIR" ""
+  handle_output "sudo umount -l $ISO_MOUNTDIR" ""
   if [ "$DO_ISO_TESTMODE" = "false" ]; then
-    MOUNT_TEST=$( mount | grep "$ISO_MOUNT_DIR" | wc -l )
+    MOUNT_TEST=$( mount | grep "$ISO_MOUNTDIR" | wc -l )
     if [ ! "$MOUNT_TEST" = "0" ]; then
-      sudo umount -l "$ISO_MOUNT_DIR"
+      sudo umount -l "$ISO_MOUNTDIR"
     fi
   fi
 }
@@ -146,11 +142,11 @@ unmount_iso () {
 # sudo umount -l /home/user/ubuntu-old-iso/isomount
 
 unmount_old_iso () {
-  handle_output "sudo umount -l $OLD_ISO_MOUNT_DIR" ""
+  handle_output "sudo umount -l $OLD_ISO_MOUNTDIR" ""
   if [ "$DO_ISO_TESTMODE" = "false" ]; then
-    MOUNT_TEST=$( mount | grep "$OLD_ISO_MOUNT_DIR" | wc -l )
+    MOUNT_TEST=$( mount | grep "$OLD_ISO_MOUNTDIR" | wc -l )
     if [ ! "$MOUNT_TEST" = "0" ]; then
-      sudo umount -l "$OLD_ISO_MOUNT_DIR"
+      sudo umount -l "$OLD_ISO_MOUNTDIR"
     fi
   fi
 }
@@ -164,10 +160,10 @@ unmount_old_iso () {
 mount_iso () {
   get_base_iso
   check_base_iso_file
-  handle_output "# Mounting ISO $ISO_WORKDIR/files/$BASE_ISO_INPUTFILE at $ISO_MOUNT_DIR" "TEXT"
-  handle_output "sudo mount -o loop \"$ISO_WORKDIR/files/$BASE_ISO_INPUTFILE\" \"$ISO_MOUNT_DIR\" 2> /dev/null" ""
+  handle_output "# Mounting ISO $ISO_WORKDIR/files/$BASE_ISO_INPUTFILE at $ISO_MOUNTDIR" "TEXT"
+  handle_output "sudo mount -o loop \"$ISO_WORKDIR/files/$BASE_ISO_INPUTFILE\" \"$ISO_MOUNTDIR\" 2> /dev/null" ""
   if [ "$DO_ISO_TESTMODE" = "false" ]; then
-    sudo mount -o loop "$ISO_WORKDIR/files/$BASE_ISO_INPUTFILE" "$ISO_MOUNT_DIR" 2> /dev/null
+    sudo mount -o loop "$ISO_WORKDIR/files/$BASE_ISO_INPUTFILE" "$ISO_MOUNTDIR" 2> /dev/null
   fi
 }
 
@@ -180,10 +176,10 @@ mount_iso () {
 mount_old_iso () {
   get_old_base_iso
   check_old_base_iso_file
-  handle_output "# Mounting ISO $OLD_ISO_WORKDIR/files/$OLD_BASE_ISO_INPUTFILE at $OLD_ISO_MOUNT_DIR" "TEXT"
-  handle_output "sudo mount -o loop \"$OLD_ISO_WORKDIR/files/$OLD_BASE_ISO_INPUTFILE\" \"$OLD_ISO_MOUNT_DIR\" 2> /dev/null" ""
+  handle_output "# Mounting ISO $OLD_ISO_WORKDIR/files/$OLD_BASE_ISO_INPUTFILE at $OLD_ISO_MOUNTDIR" "TEXT"
+  handle_output "sudo mount -o loop \"$OLD_ISO_WORKDIR/files/$OLD_BASE_ISO_INPUTFILE\" \"$OLD_ISO_MOUNTDIR\" 2> /dev/null" ""
   if [ "$DO_ISO_TESTMODE" = "false" ]; then
-    sudo mount -o loop "$OLD_ISO_WORKDIR/files/$OLD_BASE_ISO_INPUTFILE" "$OLD_ISO_MOUNT_DIR" 2> /dev/null
+    sudo mount -o loop "$OLD_ISO_WORKDIR/files/$OLD_BASE_ISO_INPUTFILE" "$OLD_ISO_MOUNTDIR" 2> /dev/null
   fi
 }
 
@@ -324,7 +320,7 @@ get_iso_type () {
 # Prepare ISO
 
 prepare_iso () {
-  case "$ISO_CODENAME" in
+  case "$ISO_OSNAME" in
     "ubuntu")
       prepare_autoinstall_iso
       ;;
@@ -395,12 +391,12 @@ get_info_from_iso () {
     fi
   fi
   ISO_OUTPUTFILE="$ISO_WORKDIR/files/$TEST_NAME-$ISO_RELEASE-$TEST_TYPE-$ISO_ARCH.iso"
-  handle_output "# Input ISO:     $ISO_INPUTFILE" "TEXT"
+  handle_output "# Input ISO:     $ISO_INPUTFILE"  "TEXT"
   handle_output "# Distribution:  $ISO_DISTRO"     "TEXT"
   handle_output "# Release:       $ISO_RELEASE"    "TEXT"
   handle_output "# Codename:      $ISO_CODENAME"   "TEXT"
   handle_output "# Architecture:  $ISO_ARCH"       "TEXT"
-  handle_output "# Output ISO:    $ISO_OUTPUTFILE"    "TEXT"
+  handle_output "# Output ISO:    $ISO_OUTPUTFILE" "TEXT"
 }
 
 # Function: create_autoinstall_iso

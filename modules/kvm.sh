@@ -135,7 +135,7 @@ create_kvm_iso_vm () {
     IF_TYPE="network"
     CD_BUS="sata"
   fi
-  if [ "$ISO_CODENAME" = "ubuntu" ]; then
+  if [ "$ISO_OSNAME" = "ubuntu" ]; then
     OS_INFO_SITE="ubuntu.com"
   else
     OS_INFO_SITE="rockylinux.org"
@@ -172,7 +172,7 @@ create_kvm_iso_vm () {
   echo "  <name>$VM_NAME</name>" >> "$XML_FILE"
   echo "  <metadata>" >> "$XML_FILE"
   echo "    <libosinfo:libosinfo xmlns:libosinfo=\"http://libosinfo.org/xmlns/libvirt/domain/1.0\">" >> "$XML_FILE"
-  echo "      <libosinfo:os id=\"http://$OS_INFO_SITE/$ISO_CODENAME/$ISO_MAJORRELEASE.$ISO_MINORRELEASE\"/>" >> "$XML_FILE"
+  echo "      <libosinfo:os id=\"http://$OS_INFO_SITE/$ISO_OSNAME/$ISO_MAJORRELEASE.$ISO_MINORRELEASE\"/>" >> "$XML_FILE"
   echo "    </libosinfo:libosinfo>" >> "$XML_FILE"
   echo "  </metadata>" >> "$XML_FILE"
   echo "  <memory unit='KiB'>$VM_RAM</memory>" >> "$XML_FILE"

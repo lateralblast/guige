@@ -166,6 +166,9 @@ get_build_type () {
 # Get values for script interactively
 
 get_interactive_input () {
+  # Get codename
+  read -r -p "Enter OS Name [$ISO_OSNAME]: " NEW_ISO_OSNAME
+  ISO_OSNAME=${NEW_ISO_OSNAME:-$ISO_OSNAME}
   if [ "$DO_CREATE_EXPORT" = "true" ] || [ "$DO_CREATE_ANSIBLE" = "true" ]; then
     if [ "$DO_CREATE_EXPORT" = "true" ] || [ "$DO_CREATE_ANSIBLE" = "true" ]; then
       # Get bootserver IP
@@ -341,7 +344,7 @@ get_interactive_input () {
       read -r -p "SSH keys file [$ISO_SSHKEYFILE]: " NEW_ISO_SSHKEYFILE
       ISO_SSHKEYFILE=${NEW_ISO_SSHKEYFILE:-$ISO_SSHKEYFILE}
     fi
-    if [ "$ISO_CODENAME" = "rocky" ]; then
+    if [ "$ISO_OSNAME" = "rocky" ]; then
       # Get type of OEM install
       read -r -p "OEM Install? [$ISO_OEMINSTALL]: " NEW_ISO_OEMINSTALL
       ISO_OEMINSTALL=${NEW_ISO_OEMINSTALL:-$ISO_OEMINSTALL}

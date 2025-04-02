@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Name:         guige (Generic Ubuntu/Unix ISO Generation Engine)
-# Version:      3.1.6
+# Version:      3.2.0
 # Release:      1
 # License:      CC-BA (Creative Commons By Attribution)
 #               http://creativecommons.org/licenses/by/4.0/legalcode
@@ -29,6 +29,11 @@ OS_NAME=$( uname )
 OS_ARCH=$( uname -m |sed "s/aarch64/arm64/g" |sed "s/x86_64/amd64/g")
 OS_USER=$( whoami )
 OS_GROUP=$( id -gn )
+if [ -f "/usr/bin/lsb_release" ]; then
+  OS_DISTRO=$( lsb_release -is )
+else
+  OS_DISTRO="$OS_NAME"
+fi
 
 # Handle verbose and debug early so it's enabled early
 

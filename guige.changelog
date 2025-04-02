@@ -633,3 +633,9 @@
 # Aligned variable names with options 
 # 3.1.7: Mon 31 Mar 2025 15:01:45 AEDT
 # Cleaned up output
+# 3.1.8: Tue 01 Apr 2025 22:14:22 AEDT
+# Improved CIDR determination
+# 3.1.9: Tue 01 Apr 2025 22:49:10 AEDT
+# Bug fixes
+# 3.2.0: Wed 02 Apr 2025 15:43:41 AEDT
+# More bug fixes
