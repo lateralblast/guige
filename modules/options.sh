@@ -8,235 +8,235 @@
 # Process option switch
 
 process_options () {
-  if [[ "$ISO_OPTIONS" =~ "zfs" ]]; then
-    DO_ISO_ZFS="true"
+  if [[ "${iso['options']}" =~ "zfs" ]]; then
+    options_ZFS="true"
   fi
-  if [[ "$ISO_OPTIONS" =~ "nozfs" ]]; then
-    DO_ISO_ZFS="false"
+  if [[ "${iso['options']}" =~ "nozfs" ]]; then
+    options_ZFS="false"
   fi
-  if [[ "$ISO_OPTIONS" =~ "zfsf" ]]; then
-    DO_ISO_ZFSFILESYSTEMS="true"
+  if [[ "${iso['options']}" =~ "zfsf" ]]; then
+    options['zfs_filesystems']="true"
   fi
-  if [[ "$ISO_OPTIONS" =~ "nozfsf" ]]; then
-    DO_ISO_ZFSFILESYSTEMS="false"
+  if [[ "${iso['options']}" =~ "nozfsf" ]]; then
+    options['zfs_filesystems']="false"
   fi
-  if [[ "$ISO_OPTIONS" =~ "refreshinstaller" ]]; then
-    DO_ISO_REFRESHINSTALLER="true"
+  if [[ "${iso['options']}" =~ "refreshinstaller" ]]; then
+    options['refreshinstaller']="true"
   fi
-  if [[ "$ISO_OPTIONS" =~ "norefreshinstaller" ]]; then
-    DO_ISO_REFRESHINSTALLER="false"
+  if [[ "${iso['options']}" =~ "norefreshinstaller" ]]; then
+    options['refreshinstaller']="false"
   fi
-  if [[ "$ISO_OPTIONS" =~ "debug" ]]; then
-    DO_ISO_DEBUG="true"
+  if [[ "${iso['options']}" =~ "debug" ]]; then
+    options['debug']="true"
   fi
-  if [[ "$ISO_OPTIONS" =~ "nodebug" ]]; then
-    DO_ISO_DEBUG="false"
+  if [[ "${iso['options']}" =~ "nodebug" ]]; then
+    options['debug']="false"
   fi
-  if [[ "$ISO_OPTIONS" =~ "strict" ]]; then
-    DO_ISO_STRICT="true"
+  if [[ "${iso['options']}" =~ "strict" ]]; then
+    options['strict']="true"
   fi
-  if [[ "$ISO_OPTIONS" =~ "nostrict" ]]; then
-    DO_ISO_STRICT="false"
+  if [[ "${iso['options']}" =~ "nostrict" ]]; then
+    options['strict']="false"
   fi
-  if [[ "$ISO_OPTIONS" =~ "compress" ]]; then
-    DO_ISO_COMPRESSION="true"
+  if [[ "${iso['options']}" =~ "compress" ]]; then
+    options['compression']="true"
   fi
-  if [[ "$ISO_OPTIONS" =~ "nocompress" ]]; then
-    DO_ISO_COMPRESSION="false"
+  if [[ "${iso['options']}" =~ "nocompress" ]]; then
+    options['compression']="false"
   fi
-  if [[ "$ISO_OPTIONS" =~ "nvme" ]]; then
-    DO_ISO_NVME="true"
+  if [[ "${iso['options']}" =~ "nvme" ]]; then
+    options['nvme']="true"
   fi
-  if [[ "$ISO_OPTIONS" =~ "nonvme" ]]; then
-    DO_ISO_NVME="false"
+  if [[ "${iso['options']}" =~ "nonvme" ]]; then
+    options['nvme']="false"
   fi
-  if [[ "$ISO_OPTIONS" =~ "chroot" ]]; then
-    DO_ISO_CHROOT="true"
+  if [[ "${iso['options']}" =~ "chroot" ]]; then
+    options['chroot']="true"
   fi
-  if [[ "$ISO_OPTIONS" =~ "nochroot" ]]; then
-    DO_ISO_CHROOT="false"
+  if [[ "${iso['options']}" =~ "nochroot" ]]; then
+    options['chroot']="false"
   fi
-  if [[ "$ISO_OPTIONS" =~ "geoip" ]]; then
-    DO_ISO_GEOIP="true"
+  if [[ "${iso['options']}" =~ "geoip" ]]; then
+    options['geoip']="true"
   fi
-  if [[ "$ISO_OPTIONS" =~ "nogeoip" ]]; then
-    DO_ISO_GEOIP="false"
+  if [[ "${iso['options']}" =~ "nogeoip" ]]; then
+    options['geoip']="false"
   fi
-  if [[ "$ISO_OPTIONS" =~ "reorderuefi" ]]; then
-    DO_ISO_REORDERUEFI="true"
+  if [[ "${iso['options']}" =~ "reorderuefi" ]]; then
+    options['reorderuefi']="true"
   fi
-  if [[ "$ISO_OPTIONS" =~ "noreorderuefi" ]]; then
-    DO_ISO_REORDERUEFI="false"
+  if [[ "${iso['options']}" =~ "noreorderuefi" ]]; then
+    options['reorderuefi']="false"
   fi
-  if [[ "$ISO_OPTIONS" =~ "nosecure" ]]; then
-    DO_ISO_SECUREBOOT="false"
+  if [[ "${iso['options']}" =~ "nosecure" ]]; then
+    options['secureboot']="false"
   fi
-  if [[ "$ISO_OPTIONS" =~ "noiso" ]]; then
-    DO_ISO_CREATEISO="false"
+  if [[ "${iso['options']}" =~ "noiso" ]]; then
+    options['createiso']="false"
   fi
-  if [[ "$ISO_OPTIONS" =~ "firstboot" ]]; then
-    DO_ISO_FIRSTBOOT="enabled"
+  if [[ "${iso['options']}" =~ "firstboot" ]]; then
+    options['firstboot']="enabled"
   fi
-  if [[ "$ISO_OPTIONS" =~ "quiet" ]]; then
-    DO_ISO_KSQUIET="true"
+  if [[ "${iso['options']}" =~ "quiet" ]]; then
+    options['ksquiet']="true"
   fi
-  if [[ "$ISO_OPTIONS" =~ "text" ]]; then
-    DO_ISO_KSTEXT="true"
+  if [[ "${iso['options']}" =~ "text" ]]; then
+    options['kstext']="true"
   fi
-  if [[ "$ISO_OPTIONS" =~ "user" ]]; then
-    DO_ISO_INSTALLUSER="true"
+  if [[ "${iso['options']}" =~ "user" ]]; then
+    options['installuser']="true"
   fi
-  if [[ "$ISO_OPTIONS" =~ "static" ]]; then
-    ISO_BOOTPROTO="static"
-    DO_ISO_DHCP="false"
+  if [[ "${iso['options']}" =~ "static" ]]; then
+    iso['bootproto']="static"
+    options['dhcp']="false"
   fi
-  if [[ "$ISO_OPTIONS" =~ "dhcp" ]]; then
-    ISO_BOOTPROTO="dhcp"
-    DO_ISO_DHCP="true"
+  if [[ "${iso['options']}" =~ "dhcp" ]]; then
+    iso['bootproto']="dhcp"
+    options['dhcp']="true"
   fi
-  if [[ "$ISO_OPTIONS" =~ "mediacheck" ]]; then
-    DO_ISO_MEDIACHECK="true"
+  if [[ "${iso['options']}" =~ "mediacheck" ]]; then
+    options['mediacheck']="true"
   fi
-  if [[ "$ISO_OPTIONS" =~ "ks" ]] || [[ "$ISO_OPTIONS" =~ "kick" ]]; then
-    if [ "$ISO_ACTION" = "test" ]; then
-      DO_ISO_KSTEST="true"
+  if [[ "${iso['options']}" =~ "ks" ]] || [[ "${iso['options']}" =~ "kick" ]]; then
+    if [ "${iso['action']}" = "test" ]; then
+      options['kstest']="true"
     fi
   fi
-  if [[ "$ISO_OPTIONS" =~ "nolockroot" ]]; then
-    DO_ISO_LOCKROOT="false"
+  if [[ "${iso['options']}" =~ "nolockroot" ]]; then
+    options['lockroot']="false"
   fi
-  if [[ "$ISO_OPTIONS" =~ "nodef" ]]; then
-    DO_ISO_DEFAULTROUTE="true"
+  if [[ "${iso['options']}" =~ "nodef" ]]; then
+    options['defaultroute']="true"
   fi
-  if [[ "$ISO_OPTIONS" =~ "noactivate" ]]; then
-    DO_ISO_ACTIVATE="false"
+  if [[ "${iso['options']}" =~ "noactivate" ]]; then
+    options['activate']="false"
   fi
-  if [[ "$ISO_OPTIONS" =~ "hwekernel" ]]; then
-    DO_ISO_HWEKERNEL="true"
+  if [[ "${iso['options']}" =~ "hwekernel" ]]; then
+    options['hwekernel']="true"
   fi
-  if [[ "$ISO_OPTIONS" =~ "nohwekernel" ]]; then
-    DO_ISO_HWEKERNEL="false"
+  if [[ "${iso['options']}" =~ "nohwekernel" ]]; then
+    options['hwekernel']="false"
   fi
-  if [[ "$ISO_OPTIONS" =~ "noipv4" ]]; then
-    DO_ISO_IPV4="false"
+  if [[ "${iso['options']}" =~ "noipv4" ]]; then
+    options['ipv4']="false"
   fi
-  if [[ "$ISO_OPTIONS" =~ "noipv6" ]]; then
-    DO_ISO_IPV6="false"
+  if [[ "${iso['options']}" =~ "noipv6" ]]; then
+    options['ipv6']="false"
   fi
-  if [[ "$ISO_OPTIONS" =~ "plaintext" ]]; then
-    DO_ISO_PLAINTEXTPASSWORD="true"
+  if [[ "${iso['options']}" =~ "plaintext" ]]; then
+    options['plaintextpassword']="true"
   else
-    DO_ISO_PLAINTEXTPASSWORD="false"
+    options['plaintextpassword']="false"
   fi
-  if [[ "$ISO_OPTIONS" =~ "searchdrivers" ]]; then
-    DO_ISO_SEARCHDRIVERS="true"
+  if [[ "${iso['options']}" =~ "searchdrivers" ]]; then
+    options['searchdrivers']="true"
   fi
-  if [[ "$ISO_OPTIONS" =~ "preservesourceslist" ]]; then
-    DO_ISO_PRESERVESOURCES="true"
+  if [[ "${iso['options']}" =~ "preservesourceslist" ]]; then
+    options['preservesources']="true"
   fi
-  if [[ "$ISO_OPTIONS" =~ "scp" ]]; then
-    DO_ISO_SCPHEADER="true"
+  if [[ "${iso['options']}" =~ "scp" ]]; then
+    options['scpheader']="true"
   fi
-  if [[ "$ISO_OPTIONS" =~ "confdef" ]] || [[ "$ISO_OPTIONS" =~ "confnew" ]]; then
-    if [[ "$ISO_OPTIONS" =~ "confdef" ]]; then
-      ISO_ISO_DPKGCONF="--force-confdef"
+  if [[ "${iso['options']}" =~ "confdef" ]] || [[ "${iso['options']}" =~ "confnew" ]]; then
+    if [[ "${iso['options']}" =~ "confdef" ]]; then
+      iso['dpkgconf']="--force-confdef"
     fi
-    if [[ "$ISO_OPTIONS" =~ "confnew" ]]; then
-      ISO_ISO_DPKGCONF="--force-confnew"
+    if [[ "${iso['options']}" =~ "confnew" ]]; then
+      iso['dpkgconf']="--force-confnew"
     fi
   else
-    ISO_ISO_DPKGCONF="$DEFAULT_ISO_ISO_DPKGCONF"
+    iso['dpkgconf']="${defaults['dpkgconf']}"
   fi
-  if [[ "$ISO_OPTIONS" =~ "overwrite" ]]; then
-    ISO_DPKGOVERWRITE="--force-overwrite"
+  if [[ "${iso['options']}" =~ "overwrite" ]]; then
+    iso['dpkgoverwrite']="--force-overwrite"
   else
-    ISO_DPKGOVERWRITE="$DEFAULT_ISO_DPKGOVERWRITE"
+    iso['dpkgoverwrite']="${defaults['dpkgoverwrite']}"
   fi
-  if [[ "$ISO_OPTIONS" =~ "depends" ]]; then
-    ISO_DPKGDEPENDS="--force-depends"
+  if [[ "${iso['options']}" =~ "depends" ]]; then
+    iso['dpkgdepends']="--force-depends"
   else
-    ISO_DPKGDEPENDS="$DEFAULT_ISO_DPKGDEPENDS"
+    iso['dpkgdepends']="${defaults['dpkgdepends']}"
   fi
-  if [[ "$ISO_OPTIONS" =~ "latest" ]]; then
-    DO_ISO_LATEST="true"
+  if [[ "${iso['options']}" =~ "latest" ]]; then
+    options['latest']="true"
   fi
-  if [[ "$ISO_OPTIONS" =~ "noserial" ]]; then
-    DO_ISO_SERIAL="false"
+  if [[ "${iso['options']}" =~ "noserial" ]]; then
+    options['serial']="false"
   fi
-  if [[ "$ISO_OPTIONS" =~ "nomultipath" ]]; then
-    DO_ISO_NOMULTIPATH="true"
-    if [ "$ISO_BLOCKLIST" = "" ]; then
-      ISO_BLOCKLIST="md_multipath"
+  if [[ "${iso['options']}" =~ "nomultipath" ]]; then
+    options['nomultipath']="true"
+    if [ "${iso['blocklist']}" = "" ]; then
+      iso['blocklist']="md_multipath"
     else
-      ISO_BLOCKLIST="$ISO_BLOCKLIST,md_multipath"
+      iso['blocklist']="${iso['blocklist']},md_multipath"
     fi
   fi
-  if [[ "$ISO_OPTIONS" =~ "cluster" ]]; then
-    DO_ISO_CLUSTERPACKAGES="true"
-    DEFAULT_ISO_PACKAGES="$DEFAULT_ISO_PACKAGES pcs pacemaker cockpit cockpit-machines resource-agents-extra resource-agents-common resource-agents-base glusterfs-server"
+  if [[ "${iso['options']}" =~ "cluster" ]]; then
+    options['clusterpackages']="true"
+    defaults['packages']="${defaults['packages']} pcs pacemaker cockpit cockpit-iso['machine']}s resource-agents-extra resource-agents-common resource-agents-base glusterfs-server"
   fi
-  if [[ "$ISO_OPTIONS" =~ "kvm" ]]; then
-    DO_ISO_CLUSTERPACKAGES="true"
-    DEFAULT_ISO_PACKAGES="$DEFAULT_ISO_PACKAGES cpu-checker qemu-kvm libvirt-daemon-system libvirt-clients bridge-utils virt-manager cloud-image-utils"
+  if [[ "${iso['options']}" =~ "kvm" ]]; then
+    options['clusterpackages']="true"
+    defaults['packages']="${defaults['packages']} cpu-checker qemu-kvm libvirt-daemon-system libvirt-clients bridge-utils virt-manager cloud-image-utils"
   fi
-  if [[ "$ISO_OPTIONS" =~ "sshkey" ]]; then
-    DO_ISO_SSHKEY="true"
+  if [[ "${iso['options']}" =~ "sshkey" ]]; then
+    options['sshkey']="true"
   fi
-  if [[ "$ISO_OPTIONS" =~ "nosshkey" ]]; then
-    DO_ISO_SSHKEY="false"
+  if [[ "${iso['options']}" =~ "nosshkey" ]]; then
+    options['sshkey']="false"
   fi
-  if [[ "$ISO_OPTIONS" =~ "biosdevname" ]]; then
-    DO_ISO_BIOSDEVNAME="true"
+  if [[ "${iso['options']}" =~ "biosdevname" ]]; then
+    options_BIOSDEVNAME="true"
   else
-    DO_ISO_BIOSDEVNAME="false"
+    options_BIOSDEVNAME="false"
   fi
-  if [[ "$ISO_OPTIONS" =~ "nounmount" ]]; then
-    DO_ISO_NOUNMOUNT="true";
+  if [[ "${iso['options']}" =~ "nounmount" ]]; then
+    options['nounmount']="true";
   else
-    DO_ISO_NOUNMOUNT="false";
+    options['nounmount']="false";
   fi
-  if [[ "$ISO_OPTIONS" =~ "testmode" ]]; then
-    DO_ISO_TESTMODE="true";
+  if [[ "${iso['options']}" =~ "testmode" ]]; then
+    options['testmode']="true";
   else
-    DO_ISO_TESTMODE="false";
+    options['testmode']="false";
   fi
-  if [[ "$ISO_OPTIONS" =~ "efi" ]]; then
-    ISO_BOOTTYPE="efi";
+  if [[ "${iso['options']}" =~ "efi" ]]; then
+    iso['boottype']="efi";
   fi
-  if [[ "$ISO_OPTIONS" =~ "bios" ]]; then
-    ISO_BOOTTYPE="bios";
+  if [[ "${iso['options']}" =~ "bios" ]]; then
+    iso['boottype']="bios";
   fi
-  if [[ "$ISO_OPTIONS" =~ "verbose" ]]; then
-    DO_ISO_VERBOSEMODE="true";
+  if [[ "${iso['options']}" =~ "verbose" ]]; then
+    options['verbose']="true";
   else
-    DO_ISO_VERBOSEMODE="false";
+    options['verbose']="false";
   fi
-  if [[ "$ISO_OPTIONS" =~ "autoupgrades" ]]; then
-    DO_ISO_AUTOUPGRADES="true";
+  if [[ "${iso['options']}" =~ "autoupgrades" ]]; then
+    options['autoupgrade']="true";
   else
-    DO_ISO_AUTOUPGRADES="false";
+    options['autoupgrade']="false";
   fi
-  if [[ "$ISO_OPTIONS" =~ "interactive" ]]; then
-    DO_ISO_INTERACTIVEMODE="true";
+  if [[ "${iso['options']}" =~ "interactive" ]]; then
+    options['interactivemode']="true";
   else
-    DO_ISO_INTERACTIVEMODE="false";
+    options['interactivemode']="false";
   fi
-  if [[ "$ISO_OPTIONS" =~ "aptnews" ]]; then
-    DO_ISO_APTNEWS="true";
+  if [[ "${iso['options']}" =~ "aptnews" ]]; then
+    options['aptnews']="true";
   else
-    DO_ISO_APTNEWS="false";
+    options['aptnews']="false";
   fi
-  if [ "$DO_ISO_DEBUG" = "true" ]; then
+  if [ "${options['debug']}" = "true" ]; then
     set -x
   fi
-  if [ "$DO_ISO_STRICT" = "true" ]; then
+  if [ "${options['strict']}" = "true" ]; then
     set -eu
   fi
-  if [[ "$ISO_OPTIONS" =~ "early" ]]; then
-    DO_ISO_EARLYPACKAGES="true"
+  if [[ "${iso['options']}" =~ "early" ]]; then
+    options['earlypackages']="true"
   fi
-  if [[ "$ISO_OPTIONS" =~ "late" ]]; then
-    DO_ISO_LATEPACKAGES="false"
+  if [[ "${iso['options']}" =~ "late" ]]; then
+    options['latepackages']="false"
   fi
 }
 
@@ -245,15 +245,15 @@ process_options () {
 # Get release information
 
 get_release_info () {
-  if [ ! "$ISO_RELEASE" = "" ]; then
-    NO_DOTS=$( echo "$ISO_RELEASE" | sed "s/[^.]//g" | awk '{ print length }' )
-    set -- $(echo "$ISO_RELEASE" | awk 'BEGIN { FS="[:\t.]"; } {print $1, $2, $3 }' )
-    ISO_MAJORRELEASE="$1"
-    ISO_MINORRELEASE="$2"
-    if [ "$NO_DOTS" = "2" ]; then
-      ISO_DOTRELEASE="$3"
+  if [ ! "${iso['release']}" = "" ]; then
+    num_dots=$( echo "${iso['release']}" | sed "s/[^.]//g" | awk '{ print length }' )
+    set -- $(echo "${iso['release']}" | awk 'BEGIN { FS="[:\t.]"; } {print $1, $2, $3 }' )
+    iso['majorrelease']="$1"
+    iso['minorrelease']="$2"
+    if [ "${num_dots}" = "2" ]; then
+      options['dotrelease']="$3"
     else
-      ISO_DOTRELEASE=""
+      options['dotrelease']=""
     fi
   fi
 }

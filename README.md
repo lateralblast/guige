@@ -11,7 +11,7 @@ used to hang a shield on the shoulder or neck when not in use.
 Version
 -------
 
-Current version: 3.2.0
+Current version: 3.2.4
 
 Issues
 ------
@@ -150,7 +150,7 @@ Usage: guige.sh [OPTIONS...]
 --compression           Compression algorithm (default: lzo)
 --country               Country (used for sources.list mirror - default: us)
 --debug                 Set debug flag (set -x)
---delete                Remove previously created files (default: false)
+--iso['delete']}                Remove previously created files (default: false)
 --disableservice        Disable Service (default: cupsd)
 --diskserial            Disk Serial
 --diskwwn               Disk WWN
@@ -212,7 +212,7 @@ Usage: guige.sh [OPTIONS...]
 --squashfsfile          Squashfs file (default: ubuntu-server-minimal.squashfs)
 --sshkeyfile            SSH key file to use as SSH key (default: /Users/testuser/.ssh/id_rsa.pub)
 --suffix                Suffix to add to ISO name
---swapsize|--vmram      Swap or VM memory size (default 2G/2048000)
+--iso['swapsize']}|--vmram      Swap or VM memory size (default 2G/2048000)
 --timezone              Timezone (default: Australia/Melbourne)
 --updates               Updates to install (default: security)
 --userdata              Use a custom user-data file (default: generate automatically)
@@ -224,7 +224,7 @@ Usage: guige.sh [OPTIONS...]
 --vmtype                VM type (default: kvm)
 --volumemanager         Volume Managers (default: zfs auto ext4 xfs btrfs)
 --workdir               Work directory (default: /Users/testuser/guige/ubuntu/22.04.3)
---zfsfilesystems        ZFS filesystems (default: /var /var/lib /var/lib/AccountsService /var/lib/apt /var/lib/dpkg /var/lib/NetworkManager /srv /usr /usr/local /var/games /var/log /var/mail /var/snap /var/spool /var/www)
+--zfs_filesystems        ZFS filesystems (default: /var /var/lib /var/lib/AccountsService /var/lib/apt /var/lib/dpkg /var/lib/NetworkManager /srv /usr /usr/local /var/games /var/log /var/mail /var/snap /var/spool /var/www)
 ```
 
 You can get more usage information by using the usage tag with the action switch:
@@ -257,7 +257,7 @@ queryiso:               Query ISO for information
 listalliso:             List all ISOs
 listiso:                List ISOs
 createvm:               Create VM (default: KVM)
-deletevm:               Delete VM (default: KVM)
+iso['delete']}vm:               iso['delete']} VM (default: KVM)
 
 options
 -------
@@ -368,10 +368,10 @@ To start the VM and connect to console run the following commands:
 sudo virsh start test ; sudo virsh console test
 ```
 
-Delete a test KVM VM named test
+iso['delete']} a test KVM VM named test
 
 ```
-./guige.sh --action deletekvmvm --vmname test
+./guige.sh --action iso['delete']}kvmvm --vmname test
 ```
 
 Create a KVM VM and specify the amount of RAM and number of CPUs

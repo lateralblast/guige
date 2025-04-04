@@ -8,11 +8,11 @@
 # Process action switch
 
 process_actions () {
-  if [ "$ISO_ACTION" = "" ]; then
+  if [ "${iso['action']}" = "" ]; then
     warning_message "No action specified"
     exit
   fi
-  case $ISO_ACTION in
+  case "${iso['action']}" in
     help|printhelp)
       print_help
       ;;
@@ -20,138 +20,138 @@ process_actions () {
       print_usage
       ;;
     checkracadm)
-      DO_ISO_CHECKRACADM="true"
+      options['checkracadm']="true"
       ;;
     runracadm|execracadm|exectureracadm)
-      DO_ISO_CHECKRACADM="true"
-      DO_ISO_EXECUTERACADM="true"
+      options['checkracadm']="true"
+      options['executeracadm']="true"
       ;;
     listvm)
-      DO_ISO_LISTVM="true"
+      options['listvms']="true"
       ;;
     createexport)
-      DO_ISO_CHECKWORKDIR="true"
-      DO_ISO_INSTALLREQUIREDPACKAGES="true"
-      DO_CREATE_EXPORT="true"
+      options['checkworkdir']="true"
+      options['installrequiredpackages']="true"
+      options['createexport']="true"
       ;;
     createansible)
-      DO_ISO_CHECKWORKDIR="true"
-      DO_ISO_INSTALLREQUIREDPACKAGES="true"
-      DO_CREATE_ANSIBLE="true"
+      options['checkworkdir']="true"
+      options['installrequiredpackages']="true"
+      options['createansible']="true"
       ;;
     runansible)
-      DO_ISO_CHECKWORKDIR="true"
-      DO_ISO_INSTALLREQUIREDPACKAGES="true"
-      DO_CREATE_EXPORT="true"
-      DO_CREATE_ANSIBLE="true"
-      DO_INSTALL_SERVER="true"
+      options['checkworkdir']="true"
+      options['installrequiredpackages']="true"
+      options['createexport']="true"
+      options['createansible']="true"
+      options['installserver']="true"
       ;;
     printenv)
-      DO_PRINT_ENV="true"
+      options['printenv']="true"
       ;;
     checkdocker)
-      DO_ISO_DOCKER="false"
-      DO_ISO_CHECKDOCKER="true"
-      DO_ISO_CHECKWORKDIR="true"
+      options['docker']="false"
+      options['checkdocker']="true"
+      options['checkworkdir']="true"
       ;;
     getiso)
-      DO_ISO_CHECKWORKDIR="true"
-      DO_ISO_GETISO="true"
+      options['checkworkdir']="true"
+      options['getiso']="true"
       ;;
     installrequired|checkrequired)
-      DO_ISO_INSTALLREQUIREDPACKAGES="true"
+      options['installrequiredpackages']="true"
       ;;
     checkworkdir|checkdirs)
-      DO_ISO_CHECKWORKDIR="true"
+      options['checkworkdir']="true"
       ;;
     justiso)
-      DO_ISO_JUSTISO="true"
+      options['justiso']="true"
       ;;
     createautoinstall)
-      DO_ISO_CREATEAUTOINSTALL="true"
+      options['createautoinstall']="true"
       ;;
     runchrootscript|execchrootscript|executechrootscript)
-      DO_ISO_RUNCHROOTSCRIPT="true"
+      options['runchrootscript']="true"
       ;;
     createiso|fulliso)
-      DO_ISO_CHECKWORKDIR="true"
-      DO_ISO_INSTALLREQUIREDPACKAGES="true"
-      DO_ISO_RUNCHROOTSCRIPT="true"
-      DO_ISO_FULLISO="true"
+      options['checkworkdir']="true"
+      options['installrequiredpackages']="true"
+      options['runchrootscript']="true"
+      options['fulliso']="true"
       ;;
     createisoandsquashfs)
-      DO_ISO_SQUASHFS_UPDATE="true"
-      DO_ISO_CHECKWORKDIR="true"
-      DO_ISO_INSTALLREQUIREDPACKAGES="true"
-      DO_ISO_RUNCHROOTSCRIPT="true"
-      DO_ISO_FULLISO="true"
+      options['updatesquashfs']="true"
+      options['checkworkdir']="true"
+      options['installrequiredpackages']="true"
+      options['runchrootscript']="true"
+      options['fulliso']="true"
      ;;
     createdockeriso)
-      DO_ISO_DOCKER="true"
-      DO_ISO_CHECKDOCKER="true"
-      DO_ISO_CHECKWORKDIR="true"
-      DO_ISO_INSTALLREQUIREDPACKAGES="true"
-      DO_ISO_RUNCHROOTSCRIPT="true"
-      DO_ISO_FULLISO="true"
+      options['docker']="true"
+      options['checkdocker']="true"
+      options['checkworkdir']="true"
+      options['installrequiredpackages']="true"
+      options['runchrootscript']="true"
+      options['fulliso']="true"
       ;;
     createdockerisoandsquashfs)
-      DO_ISO_SQUASHFS_UPDATE="true"
-      DO_ISO_DOCKER="true"
-      DO_ISO_CHECKDOCKER="true"
-      DO_ISO_CHECKWORKDIR="true"
-      DO_ISO_INSTALLREQUIREDPACKAGES="true"
-      DO_ISO_RUNCHROOTSCRIPT="true"
-      DO_ISO_FULLISO="true"
+      options['updatesquashfs']="true"
+      options['docker']="true"
+      options['checkdocker']="true"
+      options['checkworkdir']="true"
+      options['installrequiredpackages']="true"
+      options['runchrootscript']="true"
+      options['fulliso']="true"
       ;;
     createisovm)
-      VM_TYPE="kvm"
-      DO_ISO_INSTALLREQUIREDPACKAGES="true"
-      DO_ISO_CREATEISOVM="true"
+      vm['type']="kvm"
+      options['installrequiredpackages']="true"
+      options['createisovm']="true"
       ;;
-    deleteisovm)
-      VM_TYPE="kvm"
-      DO_ISO_INSTALLREQUIREDPACKAGES="true"
-      DO_ISO_DELETEISOVM="true"
+    iso['delete']}isovm)
+      vm['type']="kvm"
+      options['installrequiredpackages']="true"
+      options['deleteisovm']="true"
       ;;
     createcivm)
-      VM_TYPE="kvm"
-      DO_ISO_INSTALLREQUIREDPACKAGES="true"
-      DO_ISO_CREATECIVM="true"
+      vm['type']="kvm"
+      options['installrequiredpackages']="true"
+      options['createcivm']="true"
       ;;
-    deletecivm)
-      VM_TYPE="kvm"
-      DO_ISO_INSTALLREQUIREDPACKAGES="true"
-      DO_ISO_DELETECIVM="true"
+    iso['delete']}civm)
+      vm['type']="kvm"
+      options['installrequiredpackages']="true"
+      options['deletecivm']="true"
       ;;
     queryiso)
-      DO_ISO_QUERY="true"
+      options['query']="true"
       ;;
     unmount)
-      DO_ISO_UNMOUNT="true"
+      options['unmount']="true"
       ;;
     oldinstaller)
-      DO_ISO_OLDINSTALLER="true"
+      options['oldinstaller']="true"
       ;;
     listalliso|listallisos|listiso|listisos)
-      DO_ISO_LIST="true"
+      options['listisos']="true"
       ;;
     test)
-      DO_ISO_TESTMODE="true"
+      options['testmode']="true"
       ;;
     *)
-      warning_message "Action \"$ISO_ACTION\" is not a valid action"
+      warning_message "Action \"${iso['action']}\" is not a valid action"
       exit
       ;;
   esac
-  case $DELETE in
+  case ${iso['delete']} in
     files)
-      DO_ISO_FORCEMODE="true"
+      options['force']="true"
       ;;
     all)
-      DO_ISO_FULLFORCEMODE="true"
+      options['forceall']="true"
       ;;
     *)
-      DO_ISO_FORCEMODE="false"
-      DO_ISO_FULLFORCEMODE="false"
+      options['force']="false"
+      options['forceall']="false"
   esac
 }
