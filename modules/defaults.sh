@@ -354,9 +354,11 @@ set_default_arch () {
 set_default_release () {
   if [ -f "/usr/bin/lsb_release" ]; then
     if [ "$OS_DISTRO" = "Ubuntu" ]; then
-      DEFAULT_ISO_RELEASE=$( lsb_release -ds |awk '{print $2}' )
-    else
-      DEFAULT_ISO_RELEASE="$CURRENT_ISO_RELEASE"
+      if [ "$DEFAULT_ISO_RELEASE" = "" ]; then
+        DEFAULT_ISO_RELEASE=$( lsb_release -ds |awk '{print $2}' )
+      else
+        DEFAULT_ISO_RELEASE="$CURRENT_ISO_RELEASE"
+      fi
     fi
   else
     DEFAULT_ISO_RELEASE="$CURRENT_ISO_RELEASE"

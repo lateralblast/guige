@@ -561,7 +561,7 @@ prepare_autoinstall_iso () {
             echo "    - \"sed -i \\\"s/first-nic/\$(lshw -class network -short |awk '{print \$2}' |grep ^e |head -1)/g\\\" /autoinstall.yaml\"" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
             echo "    - \"sed -i \\\"s/nvme\\\([0-9]\\\)n\\\([0-9]\\\)\\\([0-9]\\\)/nvme\\\1n\\\2p\\\3/g\\\" /autoinstall.yaml\"" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
           fi
-          NO_DEBS=$( find "$PACKAGE_DIR" "*.deb" |wc -l)
+          NO_DEBS=$( find "$PACKAGE_DIR" -name "*.deb" |wc -l)
           if [ ! "$NO_DEBS" = "0" ] && [ "$DO_ISO_EARLYPACKAGES" = "true" ]; then
             echo "    - \"export DEBIAN_FRONTEND=\\\"noninteractive\\\" && dpkg $ISO_ISO_DPKGCONF $ISO_DPKGOVERWRITE --auto-deconfigure $ISO_DPKGDEPENDS -i $ISO_INSTALLMOUNT/$ISO_AUTOINSTALLDIR/packages/*.deb\"" >> "$CONFIG_DIR/$ISO_VOLMGR/$ISO_DISK/user-data"
           fi

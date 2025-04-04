@@ -85,10 +85,10 @@ create_docker_iso () {
     if [ ! -d "$DOCKER_MODULE_DIR" ]; then
       mkdir -p "$DOCKER_MODULE_DIR"
     fi
-    cp "$MODULE_PATH"/* "$DOCKER_MODULE_DIR"
+    execute_command "cp $MODULE_PATH/* $DOCKER_MODULE_DIR"
     LOCAL_SCRIPT="$ISO_WORKDIR/files/guige_docker_script.sh"
     DOCKER_SCRIPT="$DOCKER_ISO_WORKDIR/files/guige_docker_script.sh"
-    cp "$SCRIPT_FILE" "$DOCKER_BIN"
+    execute_command "cp $SCRIPT_FILE $DOCKER_BIN"
     chmod +x "$DOCKER_BIN"
     if [ "$DO_ISO_OLDINSTALLER" = "true" ]; then
       check_old_ISO_WORKDIR
@@ -105,6 +105,7 @@ create_docker_iso () {
         BASE_DOCKER_ISO_OUTPUTFILE=$( basename "$ISO_OUTPUTFILE" )
         echo "# Output file will be at \"$ISO_WORKDIR/files/$BASE_DOCKER_ISO_OUTPUTFILE\""
       fi
+      NEW_DIR="$ISO_OSNAME/$ISO_BUILDTYPE/$ISO_RELEASE"
       verbose_message "# Executing: exec docker run --privileged=true --cap-add=CAP_MKNOD --device-cgroup-rule=\"b 7:* rmw\" --platform \"linux/$ISO_ARCH\" --mount source=\"$SCRIPT_NAME-$CURRENT_DOCKER_UBUNTU_RELEASE-$ISO_ARCH,target=/root/$SCRIPT_NAME\" --mount type=bind,source=\"$ISO_WORKDIR/files,target=/root/$SCRIPT_NAME/$NEW_DIR/files\"  \"$SCRIPT_NAME-$CURRENT_DOCKER_UBUNTU_RELEASE-$ISO_ARCH\" /bin/bash \"$DOCKER_SCRIPT\""
       exec docker run --privileged=true --cap-add=CAP_MKNOD --device-cgroup-rule="b 7:* rmw" --platform "linux/$ISO_ARCH" --mount source="$SCRIPT_NAME-$CURRENT_DOCKER_UBUNTU_RELEASE-$ISO_ARCH,target=/root/$SCRIPT_NAME" --mount type=bind,source="$ISO_WORKDIR/files,target=/root/$SCRIPT_NAME/$NEW_DIR/files"  "$SCRIPT_NAME-$CURRENT_DOCKER_UBUNTU_RELEASE-$ISO_ARCH" /bin/bash "$DOCKER_SCRIPT"
       exit

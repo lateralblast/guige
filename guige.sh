@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Name:         guige (Generic Ubuntu/Unix ISO Generation Engine)
-# Version:      3.2.0
+# Version:      3.2.1
 # Release:      1
 # License:      CC-BA (Creative Commons By Attribution)
 #               http://creativecommons.org/licenses/by/4.0/legalcode
@@ -39,7 +39,9 @@ fi
 
 if [[ "$*" =~ "verbose" ]]; then
   DO_VERBOSE="true"
-  set -eu
+  if [ ! -f "/.dockerenv" ]; then
+    set -eu
+  fi
 else
   DO_VERBOSE="false"
 fi
