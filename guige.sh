@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Name:         guige (Generic Ubuntu/Unix ISO Generation Engine)
-# Version:      3.2.4
+# Version:      3.2.6
 # Release:      1
 # License:      CC-BA (Creative Commons By Attribution)
 #               http://creativecommons.org/licenses/by/4.0/legalcode
@@ -36,6 +36,7 @@ declare -a action_flags
 
 script['args']="$*"
 script['file']="$0"
+script['file']=$( realpath "${script['file']}" )
 script['name']="guige"
 script['path']=$( pwd )
 script['bin']=$( basename "$0" |sed "s/^\.\///g")
@@ -51,6 +52,22 @@ else
   os['distro']="${os['name']}"
 fi
 
+# Run shellcheck
+
+check_shellcheck () {
+  bin_test=$( command -v shellcheck | grep -c shellcheck )
+  if [ ! "$bin_test" = "0" ]; then
+    shellcheck "${script['file']}"
+  fi
+  if [ -d "${script['modules']}" ]; then
+    for module in $( ls "${script['modules']}"/*.sh ); do
+      if [[ "${script['args']}" =~ "verbose" ]]; then
+        echo "Loading Module: ${module}"
+      fi
+      shellcheck "${module}"
+    done
+  fi
+}
 
 # Handle verbose and debug early so it's enabled early
 
@@ -202,7 +219,7 @@ do
       set -x
       shift
       ;;
-    --iso['delete']})
+    --delete)
       iso['delete']="$2"
       shift 2
       ;;
@@ -331,7 +348,7 @@ do
       shift 2
       ;;
     --isokernelargs|--kernelargs)
-      iso['kernel']}ARGS="$2"
+      iso['kernelargs']="$2"
       shift 2
       ;;
     --layout|--vmsize)
@@ -485,7 +502,7 @@ do
       iso['suffix']="$2"
       shift 2
       ;;
-    --iso['swapsize']}|--vmram)
+    --swapsize|--vmram)
       iso['swapsize']="$2"
       VM_RAM="$2"
       shift 2

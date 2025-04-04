@@ -3,6 +3,7 @@
 # shellcheck disable=SC2129
 # shellcheck disable=SC2153
 # shellcheck disable=SC2028
+# shellcheck disable=SC2154
 
 # Function: prepare_autoinstall_server_iso
 #
@@ -178,7 +179,7 @@
 
 prepare_autoinstall_iso () {
   if [ -z "$(command -v 7z)" ]; then
-    install_options['requiredpackages']} "${options['requiredpackages']}"
+    install_required_packages "${options['requiredpackages']}"
   fi
   handle_output "# Preparing autoinstall server ISO" "TEXT"
   iso['packagedir']="${iso['sourcedir']}/${iso['autoinstalldir']}/packages"
@@ -301,7 +302,7 @@ prepare_autoinstall_iso () {
     if [ "${options['testmode']}" = "false" ]; then
       if [ "${iso_volmgr}" = "custom" ]; then
         if [ -f "${iso['workdir']}/files/user-data" ]; then
-          sudo_chown "${iso['workdir']}/files/user-data" ${os['user']} ${os['group']}
+          sudo_chown "${iso['workdir']}/files/user-data" "${os['user']}" "${os['group']}"
           chmod +w "${iso['workdir']}/files/user-data"
         fi
         cp "${iso['workdir']}/files/user-data" "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"

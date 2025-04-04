@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
 # shellcheck disable=SC2034
+# shellcheck disable=SC2154
 
 # Function: install_required_packages
 #
@@ -12,7 +13,7 @@
 install_required_packages () {
   package_list="$1"
   handle_output "# Checking required packages are installed" "TEXT"
-  for package in ${package}_list; do
+  for package in ${package_list}; do
     package_version=""
     verbose_message "# package: ${package}" TEXT
     if [ "${os['name']}" = "Darwin" ]; then
@@ -24,8 +25,8 @@ install_required_packages () {
         package_version=$( sudo dpkg -l "${package}" 2>&1 |grep "^ii" |awk '{print $3}' )
       fi
     fi
-    verbose_message "# ${package} version: ${package}_version" "TEXT"
-    if [ -z "${package}_version" ]; then
+    verbose_message "# ${package} version: ${package_version}" "TEXT"
+    if [ -z "${package_version}" ]; then
       if [ "${options['testmode']}" = "false" ]; then
         verbose_message "# Installing package ${package}"
         if [ "${os['name']}" = "Darwin" ]; then

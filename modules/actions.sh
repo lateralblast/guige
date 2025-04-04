@@ -2,6 +2,7 @@
 
 # shellcheck disable=SC2129
 # shellcheck disable=SC2034
+# shellcheck disable=SC2154
 
 # Function: process_actions
 #
@@ -13,79 +14,34 @@ process_actions () {
     exit
   fi
   case "${iso['action']}" in
-    help|printhelp)
-      print_help
-      ;;
-    usage|printusage)
-      print_usage
+    checkdocker)
+      options['docker']="false"
+      options['checkdocker']="true"
+      options['checkworkdir']="true"
       ;;
     checkracadm)
       options['checkracadm']="true"
       ;;
-    runracadm|execracadm|exectureracadm)
-      options['checkracadm']="true"
-      options['executeracadm']="true"
+    checkshellcheck|shellcheck)
+      check_shellcheck
+      exit
       ;;
-    listvm)
-      options['listvms']="true"
-      ;;
-    createexport)
+    checkworkdir|checkdirs)
       options['checkworkdir']="true"
-      options['installrequiredpackages']="true"
-      options['createexport']="true"
       ;;
     createansible)
       options['checkworkdir']="true"
       options['installrequiredpackages']="true"
       options['createansible']="true"
       ;;
-    runansible)
-      options['checkworkdir']="true"
-      options['installrequiredpackages']="true"
-      options['createexport']="true"
-      options['createansible']="true"
-      options['installserver']="true"
-      ;;
-    printenv)
-      options['printenv']="true"
-      ;;
-    checkdocker)
-      options['docker']="false"
-      options['checkdocker']="true"
-      options['checkworkdir']="true"
-      ;;
-    getiso)
-      options['checkworkdir']="true"
-      options['getiso']="true"
-      ;;
-    installrequired|checkrequired)
-      options['installrequiredpackages']="true"
-      ;;
-    checkworkdir|checkdirs)
-      options['checkworkdir']="true"
-      ;;
-    justiso)
-      options['justiso']="true"
-      ;;
     createautoinstall)
       options['createautoinstall']="true"
       ;;
-    runchrootscript|execchrootscript|executechrootscript)
-      options['runchrootscript']="true"
-      ;;
-    createiso|fulliso)
-      options['checkworkdir']="true"
+    createcivm)
+      vm['type']="kvm"
       options['installrequiredpackages']="true"
-      options['runchrootscript']="true"
-      options['fulliso']="true"
+      options['createcivm']="true"
       ;;
-    createisoandsquashfs)
-      options['updatesquashfs']="true"
-      options['checkworkdir']="true"
-      options['installrequiredpackages']="true"
-      options['runchrootscript']="true"
-      options['fulliso']="true"
-     ;;
     createdockeriso)
       options['docker']="true"
       options['checkdocker']="true"
@@ -103,37 +59,86 @@ process_actions () {
       options['runchrootscript']="true"
       options['fulliso']="true"
       ;;
+    createexport)
+      options['checkworkdir']="true"
+      options['installrequiredpackages']="true"
+      options['createexport']="true"
+      ;;
+    createiso|fulliso)
+      options['checkworkdir']="true"
+      options['installrequiredpackages']="true"
+      options['runchrootscript']="true"
+      options['fulliso']="true"
+      ;;
+    createisoandsquashfs)
+      options['updatesquashfs']="true"
+      options['checkworkdir']="true"
+      options['installrequiredpackages']="true"
+      options['runchrootscript']="true"
+      options['fulliso']="true"
+     ;;
     createisovm)
       vm['type']="kvm"
       options['installrequiredpackages']="true"
       options['createisovm']="true"
       ;;
-    iso['delete']}isovm)
-      vm['type']="kvm"
-      options['installrequiredpackages']="true"
-      options['deleteisovm']="true"
-      ;;
-    createcivm)
-      vm['type']="kvm"
-      options['installrequiredpackages']="true"
-      options['createcivm']="true"
-      ;;
-    iso['delete']}civm)
+    deletecivm)
       vm['type']="kvm"
       options['installrequiredpackages']="true"
       options['deletecivm']="true"
       ;;
-    queryiso)
-      options['query']="true"
+    deleteisovm)
+      vm['type']="kvm"
+      options['installrequiredpackages']="true"
+      options['deleteisovm']="true"
       ;;
-    unmount)
-      options['unmount']="true"
+    getiso)
+      options['checkworkdir']="true"
+      options['getiso']="true"
+      ;;
+    help|printhelp)
+      print_help
+      ;;
+    installrequired|checkrequired)
+      options['installrequiredpackages']="true"
+      ;;
+    justiso)
+      options['justiso']="true"
+      ;;
+    listalliso|listallisos|listiso|listisos)
+      options['listisos']="true"
+      ;;
+    listvm)
+      options['listvms']="true"
       ;;
     oldinstaller)
       options['oldinstaller']="true"
       ;;
-    listalliso|listallisos|listiso|listisos)
-      options['listisos']="true"
+    printenv)
+      options['printenv']="true"
+      ;;
+    queryiso)
+      options['query']="true"
+      ;;
+    runansible)
+      options['checkworkdir']="true"
+      options['installrequiredpackages']="true"
+      options['createexport']="true"
+      options['createansible']="true"
+      options['installserver']="true"
+      ;;
+    runchrootscript|execchrootscript|executechrootscript)
+      options['runchrootscript']="true"
+      ;;
+    runracadm|execracadm|exectureracadm)
+      options['checkracadm']="true"
+      options['executeracadm']="true"
+      ;;
+    unmount)
+      options['unmount']="true"
+      ;;
+    usage|printusage)
+      print_usage
       ;;
     test)
       options['testmode']="true"

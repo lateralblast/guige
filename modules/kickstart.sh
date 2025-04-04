@@ -3,6 +3,7 @@
 # shellcheck disable=SC2129
 # shellcheck disable=SC2034
 # shellcheck disable=SC2153
+# shellcheck disable=SC2154
 
 # Function: create_kickstart_iso
 #
@@ -10,7 +11,7 @@
 
 create_kickstart_iso () {
   if [ ! -f "/usr/bin/xorriso" ]; then
-    install_options['requiredpackages']} "${options['requiredpackages']}"
+    install_required_packages "${options['requiredpackages']}"
   fi
   if [ "${options['testmode']}" = "false" ]; then
     handle_output "# Creating ISO" "TEXT"
@@ -164,7 +165,7 @@ prepare_kickstart_files () {
 #
 # Prepare kickstart grub, isolinux, etc files
 
-prepare_kickstart_iso['grubmenu']} () {
+prepare_kickstart_grubmenu () {
   TMP_LINUX_CFG="${iso['workdir']}/files/isolinux.cfg"
   TMP_GRUB_CFG="${iso['workdir']}/files/grub.cfg"
   ISO_LINUX_CFG="${iso['newdir']}/cd/isolinux/isolinux.cfg"
@@ -175,10 +176,10 @@ prepare_kickstart_iso['grubmenu']} () {
   counter=0
   iso['kernelserialargs']="console=${iso['serialporta']},${iso['serialportspeeda']} console=${iso['serailportb']},${iso['serialportspeedb']}"
   if [ "${options['ksquiet']}" = "true" ]; then
-    iso['kernel']}ARGS="${iso['kernel']}ARGS quiet"
+    iso['kernelargs']="${iso['kernelargs']} quiet"
   fi
   if [ "${options['kstext']}" = "true" ]; then
-    iso['kernel']}ARGS="${iso['kernel']}ARGS inst.text"
+    iso['kernelargs']="${iso['kernelargs']} inst.text"
   fi
   if [ "${options['isolinuxfile']}" = "true" ]; then
     print_file "${iso['isolinuxfile']}"
@@ -188,16 +189,14 @@ prepare_kickstart_iso['grubmenu']} () {
       sudo cp "${iso['grubfile']}" "$ISO_GRUB_CFG"
     fi
   else
-    for iso['disk']} in ${iso['disk']}; do
-      for iso_volmgr in ${iso['volumemanager']}; do
-        if ! [ "${iso_volmgr}" = "custom" ]; then
-          echo "label ${counter}" >> "$TMP_LINUX_CFG"
-          echo "  menu label ^${iso['volid']}:${iso_volmgr}:${iso['disk']}:${iso['nic']} (${iso['kernel']}ARGS)" >> "$TMP_LINUX_CFG"
-          echo "  kernel vmlinuz" >> "$TMP_LINUX_CFG"
-          echo "  append initrd=initrd.img inst.stage2=hd:LABEL=${iso['label']} ${iso['kernel']}ARGS inst.ks=hd:LABEL=${iso['label']}:/${iso_volmgr}.cfg" >> "$TMP_LINUX_CFG"
-          counter=$(( counter+1 ))
-        fi
-      done
+    for iso_volmgr in ${iso['volumemanager']}; do
+      if ! [ "${iso_volmgr}" = "custom" ]; then
+        echo "label ${counter}" >> "$TMP_LINUX_CFG"
+        echo "  menu label ^${iso['volid']}:${iso_volmgr}:${iso['disk']}:${iso['nic']} (${iso['kernel']}ARGS)" >> "$TMP_LINUX_CFG"
+        echo "  kernel vmlinuz" >> "$TMP_LINUX_CFG"
+        echo "  append initrd=initrd.img inst.stage2=hd:LABEL=${iso['label']} ${iso['kernel']}ARGS inst.ks=hd:LABEL=${iso['label']}:/${iso_volmgr}.cfg" >> "$TMP_LINUX_CFG"
+        counter=$(( counter+1 ))
+      fi
     done
     if [ "${options['autoinstall']}" = "true" ]; then
       echo "label custom" >> "$TMP_LINUX_CFG"
@@ -247,15 +246,13 @@ prepare_kickstart_iso['grubmenu']} () {
       echo "  initrdefi /images/pxeboot/initrd.img" >> "$TMP_GRUB_CFG"
       echo "}" >> "$TMP_GRUB_CFG"
     fi
-    for iso['disk']} in ${iso['disk']}; do
-      for iso_volmgr in ${iso['volumemanager']}; do
-        if ! [ "${iso_volmgr}" = "custom" ]; then
-          echo "menuentry '${iso['volid']}:${iso_volmgr}:${iso['disk']}:${iso['nic']} (${iso['kernelserialargs']})' {" >> "$TMP_GRUB_CFG"
-          echo "  linuxefi /images/pxeboot/vmlinuz inst.stage2=hd:LABEL=${iso['label']} ${iso['kernel']}ARGS inst.ks=hd:LABEL=${iso['label']}:/${iso_volmgr}.cfg" >> "$TMP_GRUB_CFG"
-          echo "  initrdefi /images/pxeboot/initrd.img" >> "$TMP_GRUB_CFG"
-          echo "}" >> "$TMP_GRUB_CFG"
-        fi
-      done
+    for iso_volmgr in ${iso['volumemanager']}; do
+      if ! [ "${iso_volmgr}" = "custom" ]; then
+        echo "menuentry '${iso['volid']}:${iso_volmgr}:${iso['disk']}:${iso['nic']} (${iso['kernelserialargs']})' {" >> "$TMP_GRUB_CFG"
+        echo "  linuxefi /images/pxeboot/vmlinuz inst.stage2=hd:LABEL=${iso['label']} ${iso['kernel']}ARGS inst.ks=hd:LABEL=${iso['label']}:/${iso_volmgr}.cfg" >> "$TMP_GRUB_CFG"
+        echo "  initrdefi /images/pxeboot/initrd.img" >> "$TMP_GRUB_CFG"
+        echo "}" >> "$TMP_GRUB_CFG"
+      fi
     done
     echo "menuentry 'Install ${iso['volid']} (${iso['kernelserialargs']})' {" >> "$TMP_GRUB_CFG"
     echo "  linuxefi /images/pxeboot/vmlinuz inst.stage2=hd:LABEL=${iso['label']} ${iso['kernelserialargs']}" >> "$TMP_GRUB_CFG"
@@ -286,5 +283,5 @@ prepare_kickstart_iso['grubmenu']} () {
 
 prepare_kickstart_iso () {
   prepare_kickstart_files
-  prepare_kickstart_iso['grubmenu']}
+  prepare_kickstart_grubmenu
 }

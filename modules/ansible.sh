@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 
+# shellcheck disable=SC2034
 # shellcheck disable=SC2129
+# shellcheck disable=SC2154
 
 # Function: check_ansible
 #

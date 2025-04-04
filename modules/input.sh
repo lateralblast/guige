@@ -2,6 +2,7 @@
 
 # shellcheck disable=SC2129
 # shellcheck disable=SC2034
+# shellcheck disable=SC2154
 
 # Function: get_password_crypt
 #
@@ -96,7 +97,7 @@ get_current_release () {
 # Get Ubuntu relase codename
 
 get_code_name () {
-  rel_num="${iso['majorrelease']}.$iso['minorrelease']}"
+  rel_num="${iso['majorrelease']}.${iso['minorrelease']}"
   if [ "${rel_num}" = "." ]; then
     rel_num="${iso['release']}"
   fi
@@ -275,7 +276,7 @@ get_interactive_input () {
     read -r -p "Enter IP [${iso['layout']}]: " new['layout']
     iso['layout']=${new['layout']}:-${iso['layout']}
     # Get Locale
-    read -r -p "Enter IP [${iso['locale']}]: " new['locale']}
+    read -r -p "Enter IP [${iso['locale']}]: " new['locale']
     iso['locale']=${new['locale']}:-${iso['locale']}
     # Get LC _ALL
     read -r -p "Enter LC_ALL [${iso['lcall']}]: " new['lcall']

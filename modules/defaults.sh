@@ -2,6 +2,7 @@
 
 # shellcheck disable=SC2129
 # shellcheck disable=SC2034
+# shellcheck disable=SC2154
 
 # Function: set_defaults
 #
@@ -295,10 +296,10 @@ set_default_flags () {
 # Set default OS name
 
 set_default_osname () {
-  if [ -f "/usr/bin/iso['release']}" ]; then
-    iso['release']=$( iso['release']} -s -a )
+  if [ -f "/usr/bin/lsb_release" ]; then
+    iso['release']=$( lsb_release -s -a )
     if [[ "${iso['release']}" =~ "Ubuntu" ]]; then
-      defaults['osname']=$( iso['release']} -d |awk '{print $2}' |tr '[:upper:]' '[:lower:]' )
+      defaults['osname']=$( lsb_release -d |awk '{print $2}' |tr '[:upper:]' '[:lower:]' )
     else
       defaults['osname']="${current['osname']}"
       if [[ "${iso['release']}" =~ "Arch" ]] || [[ "${iso['release']}" =~ "Endeavour" ]]; then
@@ -351,9 +352,9 @@ set_default_arch () {
 # Set default release
 
 set_default_release () {
-  if [ -f "/usr/bin/iso['release']}" ]; then
+  if [ -f "/usr/bin/lsb_release" ]; then
     if [ "${os['distro']}" = "Ubuntu" ]; then
-      defaults['release']=$( iso['release']} -ds |awk '{print $2}' )
+      defaults['release']=$( lsb_release -ds |awk '{print $2}' )
     else
       defaults['release']="${current['release']}"
     fi
@@ -368,9 +369,9 @@ set_default_release () {
 # Set default codename
 
 set_default_codename () {
-  if [ -f "/usr/bin/iso['release']}" ]; then
+  if [ -f "/usr/bin/lsb_release" ]; then
     if [ "${os['name']}" = "Ubuntu" ]; then
-      defaults['codename']=$( iso['release']} -cs 2> /dev/null)
+      defaults['codename']=$( lsb_release -cs 2> /dev/null)
     else
       defaults['codename']="${current['codename']}"
     fi

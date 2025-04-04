@@ -2,6 +2,7 @@
 
 # shellcheck disable=SC2129
 # shellcheck disable=SC2001
+# shellcheck disable=SC2154
 
 # Function: execute_command
 #
@@ -104,7 +105,7 @@ sudo_chown () {
   handle_output "# Checking ownership of ${object} is ${user}:${group}" "TEXT"
   if [ "${options['testmode']}" = "false" ]; then
     if [ ! -f "/.dockerenv" ]; then
-      sudo chown ${user}:${group} ${object}
+      sudo chown "${user}":"${group}" "${object}"
     fi
   fi
 }

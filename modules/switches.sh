@@ -2,6 +2,7 @@
 
 # shellcheck disable=SC2129
 # shellcheck disable=SC2034
+# shellcheck disable=SC2154
 
 # Function: process_switches
 #
@@ -288,8 +289,8 @@ process_switches () {
   if [ "${iso['grubtimeout']}" = "" ]; then
     iso['grubtimeout']="${defaults['grubtimeout']}"
   fi
-  if [ "${iso['kernel']}ARGS" = "" ]; then
-    iso['kernel']}ARGS="${defaults['kernel']}ARGS"
+  if [ "${iso['kernelargs']}" = "" ]; then
+    iso['kernelargs']="${defaults['kernelargs']}"
   fi
   if [ "${iso['kernel']}" = "" ]; then
     if [ "${options['createisovm']}" = "true" ]; then

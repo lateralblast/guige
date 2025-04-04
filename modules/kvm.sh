@@ -3,6 +3,7 @@
 # shellcheck disable=SC2129
 # shellcheck disable=SC2034
 # shellcheck disable=SC2007
+# shellcheck disable=SC2154
 
 # Function: check_kvm_vm_existd
 #
@@ -10,9 +11,9 @@
 
 check_kvm_vm_exists () {
   if [ "${os['name']}" = "Darwin" ]; then
-    kvm_test=$(virsh list --all |awk '{ print $2 }' |grep "^${vm['name']}" |wc -l |sed "s/ //g" )
+    kvm_test=$(virsh list --all |awk '{ print $2 }' |grep -c "^${vm['name']}" )
   else
-    kvm_test=$(sudo virsh list --all |awk '{ print $2 }' |grep "^${vm['name']}" |wc -l |sed "s/ //g" )
+    kvm_test=$(sudo virsh list --all |awk '{ print $2 }' |grep -c "^${vm['name']}" )
   fi
   if [ ! "${kvm_testi}" = "0" ]; then
     warning_message "KVM VM ${vm['name']} exists"
@@ -42,7 +43,7 @@ check_kvm_user () {
 
 check_kvm_config () {
   if [ -z "$( command -v virsh )" ]; then
-    install_options['requiredpackages']} "${iso['requiredkvmpackages']}"
+    install_required_packages "${iso['requiredkvmpackages']}"
   fi
   if [ "${os['name']}" = "Darwin" ]; then
     options['brewdir']="/opt/homebrew/Cellar"
@@ -446,10 +447,10 @@ create_kvm_iso_vm () {
 
 delete_kvm_vm () {
   if [ -z "$( command -v virsh )" ]; then
-    install_options['requiredpackages']} "${iso['requiredkvmpackages']}"
+    install_required_packages "${iso['requiredkvmpackages']}"
   fi
   if [ "${options['testmode']}" = "false" ]; then
-    vm['status']=$( virsh list --all |grep "shut off" |wc -l |sed "s/ //g" )
+    vm['status']=$( virsh list --all |grep -c "shut off" )
     if [ "${os['name']}" = "Darwin" ]; then
       if [ "${vm['status']}" = "0" ]; then
         information_message "Stopping KVM VM ${vm['name']}"
@@ -474,7 +475,7 @@ delete_kvm_vm () {
 
 list_kvm_vm () {
   if [ -z "$( command -v virsh )" ]; then
-    install_options['requiredpackages']} "${iso['requiredkvmpackages']}"
+    install_required_packages "${iso['requiredkvmpackages']}"
   fi
   if [ "${os['name']}" = "Darwin" ]; then
     virsh list --all

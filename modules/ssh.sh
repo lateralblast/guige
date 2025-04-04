@@ -2,6 +2,7 @@
 
 # shellcheck disable=SC2129
 # shellcheck disable=SC2046
+# shellcheck disable=SC2154
 
 # Function: get_ssh_key
 #
@@ -13,7 +14,7 @@ get_ssh_key () {
       if [ "${iso['sshkey']}" = "" ]; then
         if [ "${iso['sshkeyfile']}" = "" ]; then
           information_message "Attempting to find SSH key file"
-          key_file=$( find $HOME/.ssh -name "*.pub" |head -1 )
+          key_file=$( find "$HOME"/.ssh -name "*.pub" |head -1 )
           if [ ! "${key_file}" = "" ]; then
             information_message "No SSH key file found"
             information_message "Disabling use of SSH key file"

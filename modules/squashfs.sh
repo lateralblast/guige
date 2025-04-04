@@ -2,6 +2,7 @@
 
 # shellcheck disable=SC2129
 # shellcheck disable=SC2046
+# shellcheck disable=SC2154
 
 # Function: unmount_squashfs
 #
@@ -24,7 +25,7 @@ unmount_ubuntu_squashfs () {
   if [ "${options['updatesquashfs']}" = "true" ]; then
     handle_output "# Unmounting squashfs ${iso['newdir']}/squashfs" "TEXT"
     if [ "${options['testmode']}" = "false" ]; then
-      mount_test=$( mount | grep "${iso['newdir']}/squashfs" | wc -l )
+      mount_test=$( mount | grep -c "${iso['newdir']}/squashfs" )
       if [ ! "${mount_test}" = "0" ]; then
         sudo umount "${iso['newdir']}/squashfs"
       fi
@@ -55,7 +56,7 @@ copy_squashfs () {
 
 copy_ubuntu_squashfs () {
   if [ ! -f "/usr/bin/rsync" ]; then
-    install_options['requiredpackages']} "${options['requiredpackages']}"
+    install_required_packages "${options['requiredpackages']}"
   fi
   if [ "${options['updatesquashfs']}" = "true" ] || [ "${options['unpacksquashfs']}" = "true" ]; then
     handle_output "# Copying squashfs files" "TEXT"

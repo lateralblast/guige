@@ -3,6 +3,7 @@
 # shellcheck disable=SC2129
 # shellcheck disable=SC2034
 # shellcheck disable=SC2153
+# shellcheck disable=SC2154
 
 # Funtion update_ci_url
 #
@@ -29,7 +30,7 @@ update_ci_url () {
 get_base_ci () {
   handle_output "# Check source Cloud Image exists and grab it if it doesn't" "TEXT"
   iso['inputcibase']=$( basename "${iso['inputci']}" )
-  iso['cidir']=$( dirname ${iso['inputci']} )
+  iso['cidir']=$( dirname "${iso['inputci']}" )
   if [ ! -d "${iso['cidir']}" ]; then
     sudo_create_dir "${iso['cidir']}"
     sudo_chown "${iso['cidir']}" "${os['user']}" "${os['group']}"
@@ -59,7 +60,7 @@ get_base_ci () {
 check_base_ci_file () {
   if [ -f "${iso['inputci']}" ]; then
     iso['inputcibase']=$( basename "${iso['inputci']}" )
-    file_type=$( file "${iso['workdir']}/files/${iso['inputcibase']}" |cut -f2 -d: |grep -E "QCOW" |wc -l |sed "s/ //g" )
+    file_type=$( file "${iso['workdir']}/files/${iso['inputcibase']}" |cut -f2 -d: |grep -cE "QCOW" )
     if [ "${file_type}" = "0" ]; then
       warning_message "${iso['workdir']}/files/${iso['inputcibase']} is not a valid Cloud Image file"
       exit

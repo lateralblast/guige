@@ -3,6 +3,7 @@
 # shellcheck disable=SC2129
 # shellcheck disable=SC2034
 # shellcheck disable=SC2153
+# shellcheck disable=SC2154
 
 # Funtion update_iso_url
 #
@@ -107,11 +108,11 @@ copy_iso () {
   else
     if [ "${options['verbose']}" = "true" ]; then
       if [ "${options['testmode']}" = "false" ]; then
-        sudo rsync -av --iso['delete']} "${iso['mountdir']}/" "${iso['newdir']}/cd"
+        sudo rsync -av --delete "${iso['mountdir']}/" "${iso['newdir']}/cd"
       fi
     else
       if [ "${options['testmode']}" = "false" ]; then
-        sudo rsync -a --iso['delete']} "${iso['mountdir']}/" "${iso['newdir']}/cd"
+        sudo rsync -a --delete "${iso['mountdir']}/" "${iso['newdir']}/cd"
       fi
     fi
   fi
@@ -127,7 +128,7 @@ copy_iso () {
 unmount_iso () {
   handle_output "sudo umount -l ${iso['mountdir']}" ""
   if [ "${options['testmode']}" = "false" ]; then
-    mount_test=$( mount | grep "${iso['mountdir']}" | wc -l )
+    mount_test=$( mount | grep -c "${iso['mountdir']}" )
     if [ ! "${mount_test}" = "0" ]; then
       sudo umount -l "${iso['mountdir']}"
     fi
@@ -144,7 +145,7 @@ unmount_iso () {
 unmount_old () {
   handle_output "sudo umount -l ${old['mountdir']}" ""
   if [ "${options['testmode']}" = "false" ]; then
-    mount_test=$( mount | grep "${old['mountdir']}" | wc -l )
+    mount_test=$( mount | grep -c "${old['mountdir']}" )
     if [ ! "${mount_test}" = "0" ]; then
       sudo umount -l "${old['mountdir']}"
     fi
@@ -176,10 +177,10 @@ mount_iso () {
 mount_old () {
   get_old_base_iso
   check_old_base_iso_file
-  handle_output "# Mounting ISO ${old['workdir']}/files/$OLD_iso['inputfilebase']} at ${old['mountdir']}" "TEXT"
-  handle_output "sudo mount -o loop \"${old['workdir']}/files/$OLD_iso['inputfilebase']}\" \"${old['mountdir']}\" 2> /dev/null" ""
+  handle_output "# Mounting ISO ${old['workdir']}/files/${old['inputfilebase']} at ${old['mountdir']}" "TEXT"
+  handle_output "sudo mount -o loop \"${old['workdir']}/files/${old['inputfilebase']}\" \"${old['mountdir']}\" 2> /dev/null" ""
   if [ "${options['testmode']}" = "false" ]; then
-    sudo mount -o loop "${old['workdir']}/files/$OLD_iso['inputfilebase']}" "${old['mountdir']}" 2> /dev/null
+    sudo mount -o loop "${old['workdir']}/files/${old['inputfilebase']}" "${old['mountdir']}" 2> /dev/null
   fi
 }
 
@@ -211,7 +212,7 @@ list_isos () {
 check_base_iso_file () {
   if [ -f "${iso['inputfile']}" ]; then
     iso['inputfilebase']=$( basename "${iso['inputfile']}" )
-    file_type=$( file "${iso['workdir']}/files/${iso['inputfilebase']}" |cut -f2 -d: |grep -E "MBR|ISO" |wc -l |sed "s/ //g" )
+    file_type=$( file "${iso['workdir']}/files/${iso['inputfilebase']}" |cut -f2 -d: |grep -cE "MBR|ISO" )
     if [ "${file_type}" = "0" ]; then
       warning_message "${iso['workdir']}/files/${iso['inputfilebase']} is not a valid ISO file"
       exit
@@ -226,10 +227,10 @@ check_base_iso_file () {
 
 check_old_base_iso_file () {
   if [ -f "${old['inputfile']}" ]; then
-    OLD_iso['inputfilebase']=$( basename "${old['inputfile']}" )
-    OLD_file_type=$( file "${old['workdir']}/files/$OLD_iso['inputfilebase']}" |cut -f2 -d: |grep -E "MBR|ISO")
-    if [ -z "$OLD_file_type" ]; then
-      warning_message "${old['workdir']}/files/$OLD_iso['inputfilebase']} is not a valid ISO file"
+    old['inputfilebase']=$( basename "${old['inputfile']}" )
+    file_type=$( file "${old['workdir']}/files/${old['inputfilebase']}" |cut -f2 -d: |grep -E "MBR|ISO")
+    if [ -z "${file_type}" ]; then
+      warning_message "${old['workdir']}/files/${old['inputfilebase']} is not a valid ISO file"
       exit
     fi
   fi
@@ -286,20 +287,20 @@ get_base_iso () {
 
 get_old_base_iso () {
   handle_output "# Check old source ISO exists and grab it if it doesn't" "TEXT"
-  OLD_iso['inputfilebase']=$( basename "${old['inputfile']}" )
+  old['inputfilebase']=$( basename "${old['inputfile']}" )
   if [ "${options['forceall']}" = "true" ]; then
-    handle_output "rm ${iso['workdir']}/files/$OLD_iso['inputfilebase']}" ""
+    handle_output "rm ${iso['workdir']}/files/${old['inputfilebase']}" ""
     if [ "${options['testmode']}" = "false" ]; then
-      rm "${old['workdir']}/files/$OLD_iso['inputfilebase']}"
+      rm "${old['workdir']}/files/${old['inputfilebase']}"
     fi
   fi
   check_old_base_iso_file
   if [ "${options['latest']}" = "true" ]; then
     cd "${old['workdir']}/files" || exit ; wget -N "${old['url']}"
   else
-    if ! [ -f "${old['workdir']}/files/$OLD_iso['inputfilebase']}" ]; then
+    if ! [ -f "${old['workdir']}/files/${old['inputfilebase']}" ]; then
       if [ "${options['testmode']}" = "false" ]; then
-        wget "${old['url']}" -O "${old['workdir']}/files/$OLD_iso['inputfilebase']}"
+        wget "${old['url']}" -O "${old['workdir']}/files/${old['inputfilebase']}"
       fi
     fi
   fi
@@ -342,31 +343,31 @@ get_info_from_iso () {
     test_type=$( echo "${test_file}" | cut -f2 -d- )
     case "${test_name}" in
       "bionic")
-        iso['release']="${current['release']}_1804"
+        iso['release']="${current['release1804']}"
         ;;
       "focal")
-        iso['release']="${current['release']}_2004"
+        iso['release']="${current['release2004']}"
         ;;
       "jammy")
-        iso['release']="${current['release']}_2204"
+        iso['release']="${current['release2204']}"
         ;;
       "kinetic")
-        iso['release']="${current['release']}_2210"
+        iso['release']="${current['release2210']}"
         ;;
       "lunar")
-        iso['release']="${current['release']}_2304"
+        iso['release']="${current['release2304']}"
         ;;
       "mantic")
-        iso['release']="${current['release']}_2310"
+        iso['release']="${current['release2310']}"
         ;;
       "noble")
-        iso['release']="${current['release']}_2404"
+        iso['release']="${current['release2404']}"
         ;;
       "oracular")
-        iso['release']="${current['release']}_2410"
+        iso['release']="${current['release2410']}"
         ;;
       "plucky")
-        iso['release']="${current['release']}_2504"
+        iso['release']="${current['release2504']}"
         ;;
       "ubuntu")
         iso['release']=$(echo "${test_file}" |cut -f2 -d- )
