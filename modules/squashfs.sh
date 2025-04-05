@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
-# shellcheck disable=SC2129
 # shellcheck disable=SC2046
+# shellcheck disable=SC2129
 # shellcheck disable=SC2154
 
 # Function: unmount_squashfs

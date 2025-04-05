@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 
-# shellcheck disable=SC2129
 # shellcheck disable=SC2034
+# shellcheck disable=SC2116
+# shellcheck disable=SC2129
 # shellcheck disable=SC2154
 
 # Function: set_defaults
@@ -509,7 +510,7 @@ set_default_cidr () {
   else
     defaults['interface']=$( ip -4 route show default |grep -v linkdown|awk '{ print $5 }' )
     defaults['cidr']=$( ip r |grep link |grep "${defaults['interface']}" |awk '{print $1}' |cut -f2 -d/ |head -1 )
-    if [[ "${defaults['cidr']}" =~ "." ]] || [ "${defaults['cidr']}" = "" ]; then
+    if [[ "${defaults['cidr']}" =~ . ]] || [ "${defaults['cidr']}" = "" ]; then
       if [ ! "${bin_test}" = "0" ]; then
         defaults['netmask']=$( route -n |awk '{print $3}' |grep "^255" )
         defaults['cidr']=$( ipcalc "1.1.1.1" "${defaults['netmask']}" | grep ^Netmask |awk '{print $4}' )
@@ -527,8 +528,10 @@ set_default_cidr () {
 # Get CIDR from netmask
 
 get_cidr_from_netmask () {
-  binary=$( eval eval echo "'\$((('{"${1//./,}"}'>>'{7..0}')%2))'" )
-  iso['cidr']=$( eval echo '$(('"${binary// /+}"'))' )
+  local x=${1##*255.}
+  set -- 0^^^128^192^224^240^248^252^254^ "$(( (${#1}" - "${#x})*2 ))" "${x%%.*}"
+  x="${1%%"$3"*}"
+  iso['cidr']=$( eval echo "$(( $2 + (${#x}/4) ))")
 }
 
 

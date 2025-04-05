@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 
+# shellcheck disable=SC2028
 # shellcheck disable=SC2129
 # shellcheck disable=SC2153
-# shellcheck disable=SC2028
 # shellcheck disable=SC2154
 
 # Function: prepare_autoinstall_server_iso
@@ -536,8 +536,9 @@ prepare_autoinstall_iso () {
           echo "    - \"sed -i \\\"s/first-serial/\$(udevadm info --query=all --name=\`lsblk -x TYPE |grep disk |sort |head -1 |awk '{print \$1}'\` |grep ID_SERIAL= |cut -f2 -d=)/g\\\" /autoinstall.yaml\"" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
         fi
         if ! [ "${iso['allowlist']}" = "" ]; then
-          if [[ "${iso['allowlist']}" =~ "," ]]; then
-            for module in $(${iso['allowlist']}//,/ }); do
+          if [[ "${iso['allowlist']}" =~ , ]]; then
+            module_list=$(eval echo "${iso['allowlist']//,/ }")
+            for module in ${module_list}; do
               echo "    - \"echo '${module}' > /etc/modules-load.d/${module}.conf\"" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
               echo "    - \"modprobe ${module}\"" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
             done
@@ -562,8 +563,9 @@ prepare_autoinstall_iso () {
         echo "    - \"rm /etc/resolv.conf\"" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
         echo "    - \"echo \\\"nameserver ${iso['dns']}\\\" >> /etc/resolv.conf\"" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
         if ! [ "${iso['blocklist']}" = "" ]; then
-          if [[ "${iso['blocklist']}" =~ "," ]]; then
-            for module in $(${iso['blocklist']}//,/ }); do
+          if [[ "${iso['blocklist']}" =~ , ]]; then
+            module_list=$(eval echo "${iso['blocklist']//,/ }")
+            for module in ${module_list}; do
               echo "    - \"echo 'blacklist ${module}' > /etc/modprobe.d/${module}.conf\"" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
               echo "    - \"modprobe -r ${module} --remove-dependencies\"" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
             done

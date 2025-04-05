@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Name:         guige (Generic Ubuntu/Unix ISO Generation Engine)
-# Version:      3.2.6
+# Version:      3.3.0
 # Release:      1
 # License:      CC-BA (Creative Commons By Attribution)
 #               http://creativecommons.org/licenses/by/4.0/legalcode
@@ -13,10 +13,10 @@
 # Packager:     Richard Spindler <richard@lateralblast.com.au>
 # Description:  Shell script designed to simplify creation of custom Ubuntu Install ISOs
 
-# shellcheck disable=SC2129
+# shellcheck disable=SC1090
 # shellcheck disable=SC2034
 # shellcheck disable=SC2045
-# shellcheck disable=SC1090
+# shellcheck disable=SC2129
 
 # Create arrays for options and actions
 

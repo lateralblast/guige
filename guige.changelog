@@ -651,3 +651,11 @@
 # Added shellcheck function
 # 3.2.6: Sat  5 Apr 2025 08:35:54 AEDT
 # Bug fixes
+# 3.2.7: Sat  5 Apr 2025 11:27:09 AEDT
+# Code cleanup based on shellcheck suggestions
+# 3.2.8: Sat  5 Apr 2025 12:11:40 AEDT
+# Fixed function to get CIDR from netmask
+# 3.2.9: Sat  5 Apr 2025 12:18:24 AEDT
+# Bug fixes
+# 3.3.0: Sat  5 Apr 2025 12:51:18 AEDT
+# More fixes based on shellcheck recommendations
