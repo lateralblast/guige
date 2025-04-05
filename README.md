@@ -126,6 +126,8 @@ Usage
 You can get help using the -h or --help switch:
 
 ```
+./guige.sh --help
+
 Usage: guige --action [action] --options [options]
 
 --action                 Action to perform
@@ -262,7 +264,7 @@ queryiso:               Query ISO for information
 listalliso:             List all ISOs
 listiso:                List ISOs
 createvm:               Create VM (default: KVM)
-iso['delete']}vm:               iso['delete']} VM (default: KVM)
+deletevm:               Delete VM (default: KVM)
 
 options
 -------
