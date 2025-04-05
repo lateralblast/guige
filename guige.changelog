@@ -661,3 +661,5 @@
 # More fixes based on shellcheck recommendations
 # 3.3.1: Sat  5 Apr 2025 13:16:36 AEDT
 # Formatting fixes
+# 3.3.2: Sat  5 Apr 2025 18:46:07 AEDT
+# Replaced general help function
