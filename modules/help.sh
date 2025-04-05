@@ -112,7 +112,7 @@ print_cli_help () {
   --vmtype                VM type (default: ${defaults['vmtype']})
   --volumemanager         Volume Managers (default: ${defaults['volumemanager']})
   --workdir               Work directory (default: ${defaults['workdir']})
-  --zfsfilesystems        ZFS filesystems (default: ${defaults['zfs_filesystems']})
+  --zfsfilesystems        ZFS filesystems (default: ${defaults['zfsfilesystems']})
 help
   exit
 }

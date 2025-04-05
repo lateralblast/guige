@@ -659,3 +659,5 @@
 # Bug fixes
 # 3.3.0: Sat  5 Apr 2025 12:51:18 AEDT
 # More fixes based on shellcheck recommendations
+# 3.3.1: Sat  5 Apr 2025 13:16:36 AEDT
+# Formatting fixes

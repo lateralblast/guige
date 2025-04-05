@@ -431,9 +431,9 @@ prepare_autoinstall_iso () {
             echo "      device: efi_format" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
             echo "      path: /boot/efi" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
             echo "      type: mount" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
-            if [ "${options['zfs_filesystems']}" = "true" ]; then
+            if [ "${options['zfsfilesystems']}" = "true" ]; then
               zfs_fs_counter=0
-              for zfs_filesystem in ${iso['zfs_filesystems']}; do
+              for zfs_filesystem in ${iso['zfsfilesystems']}; do
                 echo "    - pool: rpool" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
                 echo "      volume: rpool${zfs_filesystem}" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
                 echo "      properties:" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"

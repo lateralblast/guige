@@ -17,10 +17,10 @@ process_options () {
     options_ZFS="false"
   fi
   if [[ "${iso['options']}" =~ "zfsf" ]]; then
-    options['zfs_filesystems']="true"
+    options['zfsfilesystems']="true"
   fi
   if [[ "${iso['options']}" =~ "nozfsf" ]]; then
-    options['zfs_filesystems']="false"
+    options['zfsfilesystems']="false"
   fi
   if [[ "${iso['options']}" =~ "refreshinstaller" ]]; then
     options['refreshinstaller']="true"

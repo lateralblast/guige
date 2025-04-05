@@ -111,8 +111,8 @@ process_switches () {
   if [ "${iso['oeminstall']}" = "" ]; then
     iso['oeminstall']="${defaults['oeminstall']}"
   fi
-  if [ "${iso['zfs_filesystems']}" = "" ]; then
-    iso['zfs_filesystems']="${defaults['zfs_filesystems']}"
+  if [ "${iso['zfsfilesystems']}" = "" ]; then
+    iso['zfsfilesystems']="${defaults['zfsfilesystems']}"
   fi
   if [ "${iso['search']}" = "" ]; then
     iso['search']="${defaults['search']}"

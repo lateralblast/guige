@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Name:         guige (Generic Ubuntu/Unix ISO Generation Engine)
-# Version:      3.3.0
+# Version:      3.3.1
 # Release:      1
 # License:      CC-BA (Creative Commons By Attribution)
 #               http://creativecommons.org/licenses/by/4.0/legalcode
@@ -156,7 +156,7 @@ do
       iso['bmcip']="$2"
       shift 2
       ;;
-    ----bmcpass|--bmcpassword)
+    --bmcpass|--bmcpassword)
       iso['bmcpassword']="$2"
       shift 2
       ;;
@@ -288,13 +288,13 @@ do
       iso['hostname']="$2"
       shift 2
       ;;
+    --inputci|--vmci)
+      iso['inputci']="$2"
+      shift 2
+      ;;
     --inputiso|--vmiso)
       iso['inputfile']="$2"
       vm['inputfile']="$2"
-      shift 2
-      ;;
-    --inputci|--vmci)
-      iso['inputci']="$2"
       shift 2
       ;;
     --installmode|--install-mode)
@@ -326,6 +326,14 @@ do
       shift 2
       options['dhcp']="false"
       ;;
+    --isokernel|--kernel)
+      iso['kernel']="$2"
+      shift 2
+      ;;
+    --isokernelargs|--kernelargs)
+      iso['kernelargs']="$2"
+      shift 2
+      ;;
     --isolinux|--isolinuxfile)
       options['isolinuxfile']="true"
       iso['isolinuxfile']="$2"
@@ -341,14 +349,6 @@ do
       ;;
     --isovolid|--volid)
       iso['volid']="$2"
-      shift 2
-      ;;
-    --isokernel|--kernel)
-      iso['kernel']="$2"
-      shift 2
-      ;;
-    --isokernelargs|--kernelargs)
-      iso['kernelargs']="$2"
       shift 2
       ;;
     --layout|--vmsize)
@@ -401,19 +401,19 @@ do
       iso['options']="$2";
       shift 2
       ;;
-    --outputiso)
-      iso['outputfile']="$2"
-      shift 2
-      ;;
     --outputci)
       iso['outputci']="$2"
+      shift 2
+      ;;
+    --outputiso)
+      iso['outputfile']="$2"
       shift 2
       ;;
     --password)
       iso['password']="$2"
       shift 2
       ;;
-    --passalgo|--passwordalgorithm|--password-algorithm)
+    --passwordalgorithm|--password-algorithm|--passalgo|--algoritm)
       iso['passwordalgorithm']="$2"
       shift 2
       ;;
@@ -529,7 +529,7 @@ do
       print_usage "$2"
       exit
       ;;
-    -V|--version)
+    --version|-V)
       echo "${script['version']}"
       shift
       exit
@@ -558,9 +558,9 @@ do
       iso['workdir']="$2"
       shift 2
       ;;
-    --zfs|--zfs_filesystems)
-      options['zfs_filesystems']="true"
-      iso['zfs_filesystems']="$2"
+    --zfs|--zfsfilesystems)
+      options['zfsfilesystems']="true"
+      iso['zfsfilesystems']="$2"
       shift 2
       ;;
     --)
