@@ -663,3 +663,15 @@
 # Formatting fixes
 # 3.3.2: Sat  5 Apr 2025 18:46:07 AEDT
 # Replaced general help function
+# 3.3.3: Sun 06 Apr 2025 14:29:23 AEST
+# Updated options processing
+# 3.3.4: Sun 06 Apr 2025 14:33:55 AEST
+# Updated CIDR determination
+# 3.3.5: Sun  6 Apr 2025 14:50:14 AEST
+# Fixed default release determination
+# 3.3.6: Sun  6 Apr 2025 14:59:05 AEST
+# Added code to handle multiple actions
+# 3.3.7: Mon  7 Apr 2025 07:56:01 AEST
+# Cleaned up defaults
+# 3.3.8: Mon  7 Apr 2025 11:51:51 AEST
+# Improved switches processing

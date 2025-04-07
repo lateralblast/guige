@@ -65,7 +65,8 @@ print_env () {
     handle_output "# Nameservers:               [iso['dns']}]                        ${iso['dns']}"            "TEXT"
   fi
   handle_output "# Kernel:                    [iso['kernel']}]                     ${iso['kernel']}"                     "TEXT"
-  handle_output "# Kernel arguments:          [iso['kernel']}ARGS]                 ${iso['kernel']}ARGS"                 "TEXT"
+  handle_output "# Kernel arguments:          [iso['kernelargs']}]                 ${iso['kernelargs']}"                 "TEXT"
+  handle_output "# Kernel serial arguments:   [iso['kernelserialargs']}]           ${iso['kernelserialargs']}"                 "TEXT"
   handle_output "# Block kernel modules:      [iso['blocklist']}]                  ${iso['blocklist']}"                  "TEXT"
   handle_output "# Allow kernel modules:      [iso['allowlist']}]                  ${iso['allowlist']}"                  "TEXT"
   handle_output "# Allow password login:      [iso['allowpassword']}]              ${iso['allowpassword']}"              "TEXT"
@@ -126,7 +127,7 @@ print_env () {
     handle_output "# Fallback:                  [iso['fallback']}]                   ${iso['fallback']}"                 "TEXT"
   fi
   handle_output "# Serial Port:               [iso['serialporta']}]                ${iso['serialporta']}"                "TEXT"
-  handle_output "# Serial Port:               [iso['serailportb']}]                ${iso['serailportb']}"                "TEXT"
+  handle_output "# Serial Port:               [iso['serialportb']}]                ${iso['serialportb']}"                "TEXT"
   handle_output "# Serial Port Address:       [iso['serialportaddressa']}]         ${iso['serialportaddressa']}"         "TEXT"
   handle_output "# Serial Port Address:       [iso['serialportaddressb']}]         ${iso['serialportaddressb']}"         "TEXT"
   handle_output "# Serial Port Speed:         [iso['serialportspeeda']}]           ${iso['serialportspeeda']}"           "TEXT"

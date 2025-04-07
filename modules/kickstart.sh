@@ -174,7 +174,7 @@ prepare_kickstart_grubmenu () {
   ISO_REPO_DIR="/run/install/repo"
   echo "default ${iso['grubmenu']}" > "$TMP_LINUX_CFG"
   counter=0
-  iso['kernelserialargs']="console=${iso['serialporta']},${iso['serialportspeeda']} console=${iso['serailportb']},${iso['serialportspeedb']}"
+  iso['kernelserialargs']="console=${iso['serialporta']},${iso['serialportspeeda']} console=${iso['serialportb']},${iso['serialportspeedb']}"
   if [ "${options['ksquiet']}" = "true" ]; then
     iso['kernelargs']="${iso['kernelargs']} quiet"
   fi

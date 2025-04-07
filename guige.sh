@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Name:         guige (Generic Ubuntu/Unix ISO Generation Engine)
-# Version:      3.3.2
+# Version:      3.3.8
 # Release:      1
 # License:      CC-BA (Creative Commons By Attribution)
 #               http://creativecommons.org/licenses/by/4.0/legalcode
@@ -31,8 +31,6 @@ declare -A docker
 declare -A options
 declare -A current
 declare -A defaults
-declare -a option_flags
-declare -a action_flags
 
 script['args']="$*"
 script['file']="$0"
@@ -552,17 +550,17 @@ do
       ;;
     --serialport)
       # Serial port
-      iso['serialporta']="$2"
+      iso['serialport']="$2"
       shift 2
       ;;
     --serialportaddress)
       # Serial port address
-      iso['serialportaddressa']="$2"
+      iso['serialportaddress']="$2"
       shift 2
       ;;
     --serialportspeed)
       # Serial port speed
-      iso['serialportspeeda']="$2"
+      iso['serialportspeed']="$2"
       shift 2
       ;;
     --sourceid)

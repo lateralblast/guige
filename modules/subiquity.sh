@@ -241,7 +241,7 @@ prepare_autoinstall_iso () {
       sudo_chown "${iso['sourcedir']}/isolinux" "${os['user']}" "${os['group']}"
       echo "default ${iso['grubmenu']}" > "${iso['sourcedir']}/isolinux/txt.cfg"
       counter=0
-      iso['kernelserialargs']="console=${iso['serialporta']},${iso['serialportspeeda']} console=${iso['serailportb']},${iso['serialportspeedb']}"
+      iso['kernelserialargs']="console=${iso['serialporta']},${iso['serialportspeeda']} console=${iso['serialportb']},${iso['serialportspeedb']}"
       for iso_volmgr in ${iso['volumemanager']}; do
         echo "label ${counter}" >> "${iso['sourcedir']}/isolinux/txt.cfg"
         if [[ "${iso_volmgr}" =~ "custom" ]]; then

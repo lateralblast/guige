@@ -419,8 +419,8 @@ get_interactive_input () {
     read -r -p "First Serial Port? [${iso['serialporta']}]: " new['serialporta']
     iso['serialporta']=${new['serialporta']}:-${iso['serialporta']}
     # Get Serial Port 1
-    read -r -p "Second Serial Port? [${iso['serailportb']}]: " new['serailportb']
-    iso['serailportb']=${new['serailportb']}:-${iso['serailportb']}
+    read -r -p "Second Serial Port? [${iso['serialportb']}]: " new['serialportb']
+    iso['serialportb']=${new['serialportb']}:-${iso['serialportb']}
     # Get Serial Port Address 0
     read -r -p "First Serial Port Address? [${iso['serialportaddressa']}]: " new['serialportaddressa']
     iso['serialportaddressa']=${new['serialportaddressa']}:-${iso['serialportaddressa']}

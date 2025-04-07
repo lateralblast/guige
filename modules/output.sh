@@ -398,8 +398,8 @@ update_output_file_name () {
   fi
   if [ "${options['serial']}" = "true" ]; then
     iso['kernelargs']="${iso['kernel']}ARGS console=${iso['serialporta']},${iso['serialportspeeda']}"
-    if ! [ "${iso['serailportb']}" = "" ]; then
-      iso['kernelargs']="${iso['kernel']}ARGS console=${iso['serailportb']},${iso['serialportspeedb']}"
+    if ! [ "${iso['serialportb']}" = "" ]; then
+      iso['kernelargs']="${iso['kernel']}ARGS console=${iso['serialportb']},${iso['serialportspeedb']}"
     fi
   fi
   if [ "${old['installsquashfile']}" = "" ]; then
