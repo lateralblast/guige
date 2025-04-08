@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Name:         guige (Generic Ubuntu/Unix ISO Generation Engine)
-# Version:      3.3.8
+# Version:      3.4.1
 # Release:      1
 # License:      CC-BA (Creative Commons By Attribution)
 #               http://creativecommons.org/licenses/by/4.0/legalcode
@@ -251,9 +251,19 @@ do
       iso['disableservice']="$2"
       shift 2
       ;;
+    --diskfile)
+      # Disk file
+      iso['diskfile']="$2"
+      shift 2
+      ;;
     --diskserial)
       # Disk serial
       iso['diskserial']="$2"
+      shift 2
+      ;;
+    --disksize)
+      # Disk size
+      iso['diskize']="$2"
       shift 2
       ;;
     --diskwwn)
@@ -335,7 +345,6 @@ do
     --inputfile|--inputiso|--vmiso)
       # Import ISO
       iso['inputfile']="$2"
-      vm['inputfile']="$2"
       shift 2
       ;;
     --installmode|--install-mode)
@@ -405,10 +414,9 @@ do
       iso['volid']="$2"
       shift 2
       ;;
-    --layout|--vmsize)
-      # Layout or VM disk size
-      iso['layout']="$2"
-      vm['size']=$2
+    --layout)
+      # Keyboard layout
+      iso['layout']=$2
       shift 2
       ;;
     --lcall)
@@ -434,7 +442,6 @@ do
     --nic|--vmnic|--installnic|--bootnic|--firstnic)
       # NIC to use for installation
       iso['nic']="$2"
-      vm['nic']="$2"
       shift 2
       ;;
     --oeminstall)
@@ -510,6 +517,11 @@ do
     --pvname)
       # Physical Volume Name
       iso['pvname']="$2"
+      shift 2
+      ;;
+    --ram|--vmram)
+      # RAM size
+      iso['ram']="$2"
       shift 2
       ;;
     --realname)
@@ -590,10 +602,14 @@ do
       iso['suffix']="$2"
       shift 2
       ;;
-    --swapsize|--vmram)
-      # Swap/RAM size
+    --swap|--vmswap)
+      # Swap device 
+      iso['swap']="$2"
+      shift 2
+      ;;
+    --swapsize|--vmswapsize)
+      # Swap size
       iso['swapsize']="$2"
-      VM_RAM="$2"
       shift 2
       ;;
     --timezone)
@@ -636,17 +652,17 @@ do
       ;;
     --vmcpus|--cpus)
       # Number of CPUs
-      vm['cpus']="$2"
+      iso['cpus']="$2"
       shift 2
       ;;
     --vmname|--name)
       # VM name
-      vm['name']="$2"
+      iso['name']="$2"
       shift 2
       ;;
     --vmtype|--type)
       # VM type
-      vm['type']="$2"
+      iso['type']="$2"
       shift 2
       ;;
     --volumemanager|--volumemanagers|--volmgr|--volmgrs)
@@ -777,7 +793,7 @@ if [ "${options['checkworkdir']}" = "true" ]; then
 fi
 if [ "${options['installrequiredpackages']}" = "true" ]; then
   options['help']="false"
-  install_required_packages "${options['requiredpackages']}"
+  install_required_packages "${iso['requiredpackages']}"
 fi
 if [ "${options['createexport']}" = "true" ]; then
   create_export

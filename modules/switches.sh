@@ -10,6 +10,7 @@
 
 process_switches () {
   for switch_name in "${!defaults[@]}"; do
+    verbose_message "Processing switch ${switch_name}"
     if [ "${iso[${switch_name}]}" = "" ]; then
       case "${switch_name}" in
         arch)
@@ -217,8 +218,5 @@ process_switches () {
   fi
   if [ "${options['biosdevname']}" = "true" ]; then
     iso['kernelargs']="${iso['kernelargs']} net.ifnames=0 biosdevname=0"
-  fi
-  if [ "${vm['ram']}" = "" ]; then
-    vm['ram']="${defaults['vmram']}"
   fi
 }

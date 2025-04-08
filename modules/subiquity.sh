@@ -179,7 +179,7 @@
 
 prepare_autoinstall_iso () {
   if [ -z "$(command -v 7z)" ]; then
-    install_required_packages "${options['requiredpackages']}"
+    install_required_packages "${iso['requiredpackages']}"
   fi
   handle_output "# Preparing autoinstall server ISO" "TEXT"
   iso['packagedir']="${iso['sourcedir']}/${iso['autoinstalldir']}/packages"
@@ -350,7 +350,7 @@ prepare_autoinstall_iso () {
           echo "  kernel:" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
           echo "    package: ${iso['kernel']}" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
           echo "  keyboard:" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
-          echo "    layout: ${iso['layout']}" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+          echo "    layout: ${iso['disksize']}" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
           echo "  locale: ${iso['locale']}" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
 #          echo "  user-data:" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
 #          echo "    timezone: ${iso['timezone']}" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"

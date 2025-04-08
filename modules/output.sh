@@ -337,60 +337,60 @@ update_output_file_name () {
     fi
   done
   if [ "${options['createisovm']}" = "true" ] || [ "${options['createcivm']}" = "true" ]; then
-    if [ "${vm['type']}" = "kvm" ]; then
+    if [ "${iso['type']}" = "kvm" ]; then
       if [ "${os['name']}" = "Darwin" ]; then
-        options['requiredpackages']="${options['requiredpackages']} qemu libvirt dnsmasq libosinfo virt-manager"
+        iso['requiredpackages']="${iso['requiredpackages']} qemu libvirt dnsmasq libosinfo virt-manager"
       else
-        options['requiredpackages']="${options['requiredpackages']} qemu-full virt-manager virt-viewer dnsmasq bridge-utils libguestfs ebtables vde2 openbsd-netcat cloud-image-utils libosinfo"
+        iso['requiredpackages']="${iso['requiredpackages']} qemu-full virt-manager virt-viewer dnsmasq bridge-utils libguestfs ebtables vde2 openbsd-netcat cloud-image-utils libosinfo"
       fi
     fi
   fi
-  if [ "${vm['type']}" = "" ]; then
-    vm['type']="${defaults['vmtype']}"
+  if [ "${iso['type']}" = "" ]; then
+   iso['type']="${defaults['type']}"
   fi
-  if [ "${vm['nic']}" = "" ]; then
-    vm['nic']="${defaults['vmnic']}"
+  if [ "${iso['nic']}" = "" ]; then
+    iso['nic']="${defaults['nic']}"
   fi
-  if [ "${vm['size']}" = "" ]; then
-    vm['size']="${defaults['vmsize']}"
+  if [ "${iso['disksize']}" = "" ]; then
+    iso['disksize']="${defaults['disksize']}"
   fi
-  if [ "${vm['cpus']}" = "" ]; then
-    vm['cpus']="${defaults['vmcpus']}"
+  if [ "${iso['cpus']}" = "" ]; then
+    iso['cpus']="${defaults['cpus']}"
   fi
   if [[ "${iso['action']}" =~ "vm" ]]; then
     if [[ "${iso['action']}" =~ "create" ]]; then
-      if [ "${vm['ram']}" = "" ]; then
-        vm['ram']="${defaults['vmram']}"
+      if [ "${iso['ram']}" = "" ]; then
+        iso['ram']="${defaults['ram']}"
       else
-        if [[ "${vm['ram']}" =~ "G" ]] || [[ "${vm['ram']}" =~ "g" ]]; then
-          vm['ram']=$(echo "${vm['ram']}" |sed "s/[G,g]//g")
-          vm['ram']=$(echo "${vm['ram']}*1024*1024" |bc -l)
+        if [[ "${iso['ram']}" =~ "G" ]] || [[ "${iso['ram']}" =~ "g" ]]; then
+          iso['ram']=$(echo "${iso['ram']}" |sed "s/[G,g]//g")
+          iso['ram']=$(echo "${iso['ram']}*1024*1024" |bc -l)
         fi
-        if [ "${vm['ram']}" -lt 1024000 ]; then
+        if [ "${iso['ram']}" -lt 1024000 ]; then
           warning_message "Insufficient RAM specified for VM"
           exit
         fi
       fi
     fi
-    if [ "${vm['name']}" = "" ]; then
+    if [ "${iso['name']}" = "" ]; then
       if [ "${iso['build']}" = "" ]; then
         if [[ "${iso['action']}" =~ "ci" ]]; then
-          vm['name']="${script['name']}-ci-${iso['osname']}-${iso['release']}-${iso['boottype']}-${iso['arch']}"
+          iso['name']="${script['name']}-ci-${iso['osname']}-${iso['release']}-${iso['boottype']}-${iso['arch']}"
         else
-          vm['name']="${script['name']}-iso-${iso['osname']}-${iso['release']}-${iso['boottype']}-${iso['arch']}"
+          iso['name']="${script['name']}-iso-${iso['osname']}-${iso['release']}-${iso['boottype']}-${iso['arch']}"
         fi
       else
         if [[ "${iso['action']}" =~ "ci" ]]; then
-          vm['name']="${script['name']}-ci-${iso['osname']}-${iso['build']}-${iso['release']}-${iso['boottype']}-${iso['arch']}"
+          iso['name']="${script['name']}-ci-${iso['osname']}-${iso['build']}-${iso['release']}-${iso['boottype']}-${iso['arch']}"
         else
-          vm['name']="${script['name']}-iso-${iso['osname']}-${iso['build']}-${iso['release']}-${iso['boottype']}-${iso['arch']}"
+          iso['name']="${script['name']}-iso-${iso['osname']}-${iso['build']}-${iso['release']}-${iso['boottype']}-${iso['arch']}"
         fi
       fi
     fi
     if [[ "${iso['action']}" =~ "create" ]]; then
-      if ! [ "${vm['inputfile']}" = "" ]; then
-        if ! [ -f "${vm['inputfile']}" ]; then
-          warning_message "ISO ${vm['inputfile']} does not exist"
+      if ! [ "${iso['inputfile']}" = "" ]; then
+        if ! [ -f "${iso['inputfile']}" ]; then
+          warning_message "ISO ${iso['inputfile']} does not exist"
           exit
         fi
       fi
@@ -408,7 +408,7 @@ update_output_file_name () {
   if [ "${old['workdir']}" = "" ]; then
     old['workdir']="${defaults['oldworkdir']}"
   fi
-  if [ "${vm['inputfile']}" = "" ]; then
-    vm['inputfile']="${iso['outputfile']}"
+  if [ "${iso['inputfile']}" = "" ]; then
+   iso['inputfile']="${iso['outputfile']}"
   fi
 }

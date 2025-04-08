@@ -18,7 +18,7 @@ get_password_crypt () {
     fi
   else
     if [ ! -f "/usr/bin/mkpasswd" ]; then
-      install_required_packages "${options['requiredpackages']}"
+      install_required_packages "${iso['requiredpackages']}"
     fi
     if [ "${options['testmode']}" = "false" ]; then
       iso['passwordcrypt']=$( echo "${iso['password']}" |mkpasswd --method=SHA-512 --stdin )
@@ -272,6 +272,9 @@ get_interactive_input () {
     # Get Kernel Arguments
     read -r -p "Enter Kernel Arguments [${iso['kernelargs']}]: " new['kernelargs']
     iso['kernelargs']=${new['kernelargs']}:-${iso['kernel']}
+    # Get Disk Size
+    read -r -p "Enter IP [${iso['disksize']}]: " new['disksize']
+    iso['disksize']=${new['disksize']}:-${iso['disksize']}
     # Get Keyboard Layout
     read -r -p "Enter IP [${iso['layout']}]: " new['layout']
     iso['layout']=${new['layout']}:-${iso['layout']}
@@ -334,9 +337,12 @@ get_interactive_input () {
         options['distupgrade']=${NEW_options['distupgrade']}:-${options['distupgrade']}
       fi
     fi
+    # Get swap device
+    read -r -p "Enter Swap Size [${iso['swap']}]: " new['swap']
+    iso['swap']=${new['swap']}:-${iso['swap']}
     # Get swap size
     read -r -p "Enter Swap Size [${iso['swapsize']}]: " new['swapsize']
-    iso['swapsize']=${new['swapsize']}:-${iso['swapsize']}
+    iso['swap']=${new['swapsize']}:-${iso['swapsize']}
     # Determine wether we use an SSH key
     read -r -p "Use SSH keys? [${options['sshkey']}]: " NEW_options['sshkey']
     options['sshkey']=${NEW_options['sshkey']}:-${options['sshkey']}

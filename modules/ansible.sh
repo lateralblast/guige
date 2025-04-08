@@ -20,7 +20,7 @@ check_ansible () {
   handle_output "${ommand}" ""
   if ! [ "${ansible_check}" = "ansible" ]; then
     if [ "${options['testmode']}" = "false" ]; then
-      ${ommand}
+      ${command}
     fi
   fi
   handle_output "# Checking ansible collection dellemc.openmanage is installed" "TEXT"

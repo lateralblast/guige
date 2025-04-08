@@ -11,13 +11,13 @@
 
 check_kvm_vm_exists () {
   if [ "${os['name']}" = "Darwin" ]; then
-    kvm_test=$(virsh list --all |awk '{ print $2 }' |grep -c "^${vm['name']}" )
+    kvm_test=$(virsh list --all |awk '{ print $2 }' |grep -c "^${iso['name']}" )
   else
-    kvm_test=$(sudo virsh list --all |awk '{ print $2 }' |grep -c "^${vm['name']}" )
+    kvm_test=$(sudo virsh list --all |awk '{ print $2 }' |grep -c "^${iso['name']}" )
   fi
   if [ ! "${kvm_testi}" = "0" ]; then
-    warning_message "KVM VM ${vm['name']} exists"
-    vm['exists']="true"
+    warning_message "KVM VM ${iso['name']} exists"
+   iso['exists']="true"
   fi
 }
 
@@ -46,14 +46,14 @@ check_kvm_config () {
     install_required_packages "${iso['requiredkvmpackages']}"
   fi
   if [ "${os['name']}" = "Darwin" ]; then
-    options['brewdir']="/opt/homebrew/Cellar"
-    if [ ! -d "${options['brewdir']}" ]; then
-      options['brewdir']="/usr/local/Cellar"
-      iso['virtdir']="${options['brewdir']}/libvirt"
-      options['bindir']="/usr/local/bin"
+    iso['brewdir']="/opt/homebrew/Cellar"
+    if [ ! -d "${iso['brewdir']}" ]; then
+      iso['brewdir']="/usr/local/Cellar"
+      iso['virtdir']="${iso['brewdir']}/libvirt"
+      iso['bindir']="/usr/local/bin"
     else
       iso['virtdir']="/opt/homebrew/var/lib/libvirt"
-      options['bindir']="/opt/homebrew/bin"
+      iso['bindir']="/opt/homebrew/bin"
     fi
     iso['imagedir']="${iso['virtdir']}/images"
     if [ ! -d "${iso['virtdir']}" ]; then
@@ -74,7 +74,9 @@ check_kvm_config () {
       sudo_create_dir "${iso['imagedir']}"
     fi
   fi
-  VM_DISK="${iso['workdir']}/${vm['name']}.qcow2"
+  if [ "${iso['diskfile']}" ]; then
+    iso['diskfile']="${iso['workdir']}/${iso['name']}.qcow2"
+  fi
   check_kvm_user
 }
 
@@ -95,27 +97,27 @@ create_kvm_iso_vm () {
   check_kvm_config
   if [ "${os['name']}" = "Darwin" ]; then
     iso['qemuver']=$( brew info qemu --json |jq -r ".[0].versions.stable" )
-    VIRT_VER=$( echo "${iso['qemuver']}" |awk -F. '{print $1"."$2}' )
+    iso['qemuvir']=$( echo "${iso['qemuver']}" |awk -F. '{print $1"."$2}' )
     if [ "${iso['arch']}" = "amd64" ] || [ "${iso['arch']}" = "x86_64" ]; then
-      iso['varsfile']="${options['brewdir']}/qemu/${iso['qemuver']}/share/qemu/edk2-i386-vars.fd"
-      iso['biosfile']="${options['brewdir']}/qemu/${iso['qemuver']}/share/qemu/edk2-x86_64-code.fd"
+      iso['varsfile']="${iso['brewdir']}/qemu/${iso['qemuver']}/share/qemu/edk2-i386-vars.fd"
+      iso['biosfile']="${iso['brewdir']}/qemu/${iso['qemuver']}/share/qemu/edk2-x86_64-code.fd"
       iso['qemuarch']="x86_64"
-      QEMU_EMU="${options['bindir']}/qemu-system-x86_64"
-      iso['machine']="pc-q35-$VIRT_VER"
-      SERIAL="isa-serial"
+      iso['qemu']="${iso['bindir']}/qemu-system-x86_64"
+      iso['machine']="pc-q35-${iso['qemuvir']}"
+      iso['serial']="isa-serial"
     else
-      iso['varsfile']="${options['brewdir']}/qemu/${iso['qemuver']}/share/qemu/edk2-arm-vars.fd"
-      iso['biosfile']="${options['brewdir']}/qemu/${iso['qemuver']}/share/qemu/edk2-aarch64-code.fd"
+      iso['varsfile']="${iso['brewdir']}/qemu/${iso['qemuver']}/share/qemu/edk2-arm-vars.fd"
+      iso['biosfile']="${iso['brewdir']}/qemu/${iso['qemuver']}/share/qemu/edk2-aarch64-code.fd"
       iso['qemuarch']="aarch64"
-      QEMU_EMU="${options['bindir']}/qemu-system-aarch64"
-      iso['machine']="virt-$VIRT_VER"
-      SERIAL="system-serial"
+      iso['qemu']="${iso['bindir']}/qemu-system-aarch64"
+      iso['machine']="virt-${iso['qemuvir']}"
+      iso['serial']="system-serial"
     fi
-    DOM_TYPE="qemu"
-    VIDEO="vga"
-    INPUT_BUS="usb"
-    IF_TYPE="user"
-    CD_BUS="scsi"
+    iso['domaintype']="qemu"
+    iso['video']="vga"
+    iso['inputbus']="usb"
+    iso['iftype']="user"
+    iso['cdbus']="scsi"
     options['secureboot']="false"
   else
     iso['qemuver']=$( qemu-system-amd64 --version |head -1 |awk '{print $4}' |awk -F"." '{print $1"."$2}' )
@@ -127,28 +129,28 @@ create_kvm_iso_vm () {
       iso['biosfile']="/usr/share/OVMF/OVMF_CODE.fd"
     fi
     iso['qemuarch']="x86_64"
-    QEMU_EMU="/usr/bin/qemu-system-x86_64"
-    DOM_TYPE="kvm"
+    iso['qemu']="/usr/bin/qemu-system-x86_64"
+    iso['domaintype']="kvm"
     iso['machine']="pc-q35-${iso['qemuver']}"
-    VIDEO="qxl"
-    SERIAL="isa-serial"
-    INPUT_BUS="ps2"
-    IF_TYPE="network"
-    CD_BUS="sata"
+    iso['video']="qxl"
+    iso['serial']="isa-serial"
+    iso['inputbus']="ps2"
+    iso['iftype']="network"
+    iso['cdbus']="sata"
   fi
   if [ "${iso['osname']}" = "ubuntu" ]; then
-    OS_INFO_SITE="ubuntu.com"
+    iso['infosite']="ubuntu.com"
   else
-    OS_INFO_SITE="rockylinux.org"
+    iso['infosite']="rockylinux.org"
   fi
-  QEMU_DIR="${iso['virtdir']}/qemu"
-  QEMU_MAC=$( printf '52:54:00:%02X:%02X:%02X\n' $[RANDOM%256] $[RANDOM%256] $[RANDOM%256] )
-  NVRAM_DIR="$QEMU_DIR/nvram"
-  if [ ! -d "$NVRAM_DIR" ]; then
-    sudo_create_dir "$NVRAM_DIR"
-    sudo_chown "$NVRAM_DIR" "${os['user']}" "${os['group']}"
+  iso['qemudir']="${iso['virtdir']}/qemu"
+  iso['macaddress']=$( printf '52:54:00:%02X:%02X:%02X\n' $[RANDOM%256] $[RANDOM%256] $[RANDOM%256] )
+  iso['nvramdir']="${iso['qemudir']}/nvram"
+  if [ ! -d "${iso['nvramdir']}" ]; then
+    sudo_create_dir "${iso['nvramdir']}"
+    sudo_chown "${iso['nvramdir']}" "${os['user']}" "${os['group']}"
   fi
-  NVRAM_FILE="$NVRAM_DIR/${vm['name']}}_VARS.fd"
+  iso['nvramfile']="${iso['nvramdir']}=/${iso['name']}}_VARS.fd"
   if ! [ -f "${iso['biosfile']}" ]; then
     iso['biosfile']="/usr/share/edk2/x64/OVMF_CODE.fd"
     iso['varsfile']="/usr/share/edk2/x64/OVMF_VARS.fd"
@@ -158,49 +160,49 @@ create_kvm_iso_vm () {
     warning_message "Could not find BIOS file (tried ${iso['biosfile']})"
     exit
   fi
-  information_message "Creating VM disk $VM_DISK"
-  execute_message "sudo qemu-img create -f qcow2 $VM_DISK ${vm['size']}"
+  information_message "Creating VM disk ${iso['diskfile']}"
+  execute_message "sudo qemu-img create -f qcow2 ${iso['diskfile']} ${iso['disksize']}"
   if [ "${options['testmode']}" = "false" ]; then
     if [ "${os['name']}" = "Darwin" ]; then
-      qemu-img create -f qcow2 "$VM_DISK" "${vm['size']}"
+      qemu-img create -f qcow2 "${iso['diskfile']}" "${iso['disksize']}"
     else
-      sudo qemu-img create -f qcow2 "$VM_DISK" "${vm['size']}"
+      sudo qemu-img create -f qcow2 "${iso['diskfile']}" "${disk['disksize']}"
     fi
   fi
   information_message "Generating VM config ${iso['xmlfile']}"
-  iso['xmlfile']="/tmp/${vm['name']}.xml"
-  echo "<domain type='$DOM_TYPE'>" > "${iso['xmlfile']}"
-  echo "  <name>${vm['name']}</name>" >> "${iso['xmlfile']}"
+  iso['xmlfile']="/tmp/${iso['name']}.xml"
+  echo "<domain type='$iso['domaintype']='>" > "${iso['xmlfile']}"
+  echo "  <name>${iso['name']}</name>" >> "${iso['xmlfile']}"
   echo "  <metadata>" >> "${iso['xmlfile']}"
   echo "    <libosinfo:libosinfo xmlns:libosinfo=\"http://libosinfo.org/xmlns/libvirt/domain/1.0\">" >> "${iso['xmlfile']}"
-  echo "      <libosinfo:os id=\"http://$OS_INFO_SITE/${iso['osname']}/${iso['majorrelease']}.${iso['minorrelease']}\"/>" >> "${iso['xmlfile']}"
+  echo "      <libosinfo:os id=\"http://${iso['infosite']}/${iso['osname']}/${iso['majorrelease']}.${iso['minorrelease']}\"/>" >> "${iso['xmlfile']}"
   echo "    </libosinfo:libosinfo>" >> "${iso['xmlfile']}"
   echo "  </metadata>" >> "${iso['xmlfile']}"
-  echo "  <memory unit='KiB'>$VM_RAM</memory>" >> "${iso['xmlfile']}"
-  echo "  <currentMemory unit='KiB'>$VM_RAM</currentMemory>" >> "${iso['xmlfile']}"
+  echo "  <memory unit='KiB'>${iso['ram']}</memory>" >> "${iso['xmlfile']}"
+  echo "  <currentMemory unit='KiB'>${iso['ram']}</currentMemory>" >> "${iso['xmlfile']}"
   echo "  <vcpu placement='static'>${vm['cpus']}</vcpu>" >> "${iso['xmlfile']}"
   echo "  <resource>" >> "${iso['xmlfile']}"
   echo "    <partition>/iso['machine']}</partition>" >> "${iso['xmlfile']}"
   echo "  </resource>" >> "${iso['xmlfile']}"
   if [ "${iso['boottype']}" = "bios" ]; then
     echo "  <os>" >> "${iso['xmlfile']}"
-    echo "    <type arch='${iso['qemuarch']}' iso['machine']='${iso['machine']}'>hvm</type>" >> "${iso['xmlfile']}"
+    echo "    <type arch='${iso['qemuarch']}' machine='${iso['machine']}'>hvm</type>" >> "${iso['xmlfile']}"
   else
     echo "  <os firmware='efi'>" >> "${iso['xmlfile']}"
-    echo "    <type arch='${iso['qemuarch']}' iso['machine']='${iso['machine']}'>hvm</type>" >> "${iso['xmlfile']}"
+    echo "    <type arch='${iso['qemuarch']}' machine='${iso['machine']}'>hvm</type>" >> "${iso['xmlfile']}"
     echo "    <firmware>" >> "${iso['xmlfile']}"
     if [ "${options['secureboot']}" = "true" ]; then
       echo "      <feature enabled='yes' name='enrolled-keys'/>" >> "${iso['xmlfile']}"
       echo "      <feature enabled='yes' name='secure-boot'/>" >> "${iso['xmlfile']}"
       echo "    </firmware>" >> "${iso['xmlfile']}"
       echo "    <loader readonly='yes' secure='yes' type='pflash'>${iso['biosfile']}</loader>" >> "${iso['xmlfile']}"
-      echo "    <nvram template='${iso['varsfile']}'>$NVRAM_FILE</nvram>" >> "${iso['xmlfile']}"
+      echo "    <nvram template='${iso['varsfile']}'>${iso['nvramfile']}=</nvram>" >> "${iso['xmlfile']}"
     else
       echo "      <feature enabled='no' name='enrolled-keys'/>" >> "${iso['xmlfile']}"
       echo "      <feature enabled='no' name='secure-boot'/>" >> "${iso['xmlfile']}"
       echo "    </firmware>" >> "${iso['xmlfile']}"
       echo "    <loader readonly='yes' type='pflash'>${iso['biosfile']}</loader>" >> "${iso['xmlfile']}"
-      echo "    <nvram template='${iso['varsfile']}'>$NVRAM_FILE</nvram>" >> "${iso['xmlfile']}"
+      echo "    <nvram template='${iso['varsfile']}'>${iso['nvramfile']}=</nvram>" >> "${iso['xmlfile']}"
     fi
     echo "    <bootmenu enable='yes'/>" >> "${iso['xmlfile']}"
   fi
@@ -209,14 +211,14 @@ create_kvm_iso_vm () {
   if [ "${os['name']}" = "Darwin" ]; then
     echo "    <acpi/>" >> "${iso['xmlfile']}"
     if [ "${iso['arch']}" = "amd64" ] || [ "${iso['arch']}" = "x86_64" ]; then
-      CPU_FALLBACK="qemu64"
+      iso['cpufallback']=="qemu64"
     else
       echo "    <gic version='2'/>" >> "${iso['xmlfile']}"
-      CPU_FALLBACK="cortex-a57"
+      iso['cpufallback']=="cortex-a57"
     fi
     echo "  </features>" >> "${iso['xmlfile']}"
     echo "  <cpu mode='custom' match='exact' check='partial'>" >> "${iso['xmlfile']}"
-    echo "    <model fallback='forbid'>$CPU_FALLBACK</model>" >> "${iso['xmlfile']}"
+    echo "    <model fallback='forbid'>${iso['cpufallback']}=</model>" >> "${iso['xmlfile']}"
     echo "  </cpu>" >> "${iso['xmlfile']}"
     echo "  <clock offset='utc'/>" >> "${iso['xmlfile']}"
     echo "  <on_poweroff>destroy</on_poweroff>" >> "${iso['xmlfile']}"
@@ -242,10 +244,10 @@ create_kvm_iso_vm () {
     echo "  </pm>" >> "${iso['xmlfile']}"
   fi
   echo "  <devices>" >> "${iso['xmlfile']}"
-  echo "    <emulator>$QEMU_EMU</emulator>" >> "${iso['xmlfile']}"
+  echo "    <emulator>${iso['qemu']}</emulator>" >> "${iso['xmlfile']}"
   echo "    <disk type='file' device='disk'>" >> "${iso['xmlfile']}"
   echo "      <driver name='qemu' type='qcow2' discard='unmap'/>" >> "${iso['xmlfile']}"
-  echo "      <source file='$VM_DISK'/>" >> "${iso['xmlfile']}"
+  echo "      <source file='${iso['diskfile']}'/>" >> "${iso['xmlfile']}"
   echo "      <target dev='vda' bus='virtio'/>" >> "${iso['xmlfile']}"
 #  echo "      <boot order='2'/>" >> "${iso['xmlfile']}"
   echo "      <address type='pci' domain='0x0000' bus='0x04' slot='0x00' function='0x0'/>" >> "${iso['xmlfile']}"
@@ -255,7 +257,7 @@ create_kvm_iso_vm () {
     echo "      <driver name='qemu' type='raw'/>" >> "${iso['xmlfile']}"
     echo "      <source file='${vm['inputfile']}'/>" >> "${iso['xmlfile']}"
     echo "      <backingStore/>" >> "${iso['xmlfile']}"
-    echo "      <target dev='sda' bus='$CD_BUS'/>" >> "${iso['xmlfile']}"
+    echo "      <target dev='sda' bus='$iso['cdbus']'/>" >> "${iso['xmlfile']}"
     echo "      <readonly/>" >> "${iso['xmlfile']}"
 #    echo "      <boot order='1'/>" >> "${iso['xmlfile']}"
     echo "      <alias name='scsi0-0-0-0'/>" >> "${iso['xmlfile']}"
@@ -272,7 +274,7 @@ create_kvm_iso_vm () {
     echo "    <disk type='file' device='cdrom'>" >> "${iso['xmlfile']}"
     echo "      <driver name='qemu' type='raw'/>" >> "${iso['xmlfile']}"
     echo "      <source file='${vm['inputfile']}'/>" >> "${iso['xmlfile']}"
-    echo "      <target dev='sda' bus='$CD_BUS'/>" >> "${iso['xmlfile']}"
+    echo "      <target dev='sda' bus='$iso['cdbus']'/>" >> "${iso['xmlfile']}"
     echo "      <readonly/>" >> "${iso['xmlfile']}"
     echo "      <boot order='1'/>" >> "${iso['xmlfile']}"
     echo "      <address type='drive' controller='0' bus='0' target='0' unit='0'/>" >> "${iso['xmlfile']}"
@@ -358,8 +360,8 @@ create_kvm_iso_vm () {
   echo "    <controller type='sata' index='0'>" >> "${iso['xmlfile']}"
   echo "      <address type='pci' domain='0x0000' bus='0x00' slot='0x1f' function='0x2'/>" >> "${iso['xmlfile']}"
   echo "    </controller>" >> "${iso['xmlfile']}"
-  echo "    <interface type='$IF_TYPE'>" >> "${iso['xmlfile']}"
-  echo "      <mac address='$QEMU_MAC'/>" >> "${iso['xmlfile']}"
+  echo "    <interface type='$iso['iftype']'>" >> "${iso['xmlfile']}"
+  echo "      <mac address='$iso['macaddress']'/>" >> "${iso['xmlfile']}"
   if [ ! "${os['name']}" = "Darwin" ]; then
     echo "      <source network='default'/>" >> "${iso['xmlfile']}"
   fi
@@ -367,8 +369,8 @@ create_kvm_iso_vm () {
   echo "      <address type='pci' domain='0x0000' bus='0x01' slot='0x00' function='0x0'/>" >> "${iso['xmlfile']}"
   echo "    </interface>" >> "${iso['xmlfile']}"
   echo "    <serial type='pty'>" >> "${iso['xmlfile']}"
-  echo "      <target type='$SERIAL' port='0'>" >> "${iso['xmlfile']}"
-  echo "        <alias name='$SERIAL'/>" >> "${iso['xmlfile']}"
+  echo "      <target type='${iso['serial']}' port='0'>" >> "${iso['xmlfile']}"
+  echo "        <alias name='${iso['serial']}'/>" >> "${iso['xmlfile']}"
   echo "      </target>" >> "${iso['xmlfile']}"
   echo "    </serial>" >> "${iso['xmlfile']}"
   echo "    <console type='pty'>" >> "${iso['xmlfile']}"
@@ -381,16 +383,16 @@ create_kvm_iso_vm () {
   echo "    <input type='tablet' bus='usb'>" >> "${iso['xmlfile']}"
   echo "      <address type='usb' bus='0' port='1'/>" >> "${iso['xmlfile']}"
   echo "    </input>" >> "${iso['xmlfile']}"
-  echo "    <input type='mouse' bus='$INPUT_BUS'/>" >> "${iso['xmlfile']}"
-  echo "    <input type='keyboard' bus='$INPUT_BUS'/>" >> "${iso['xmlfile']}"
+  echo "    <input type='mouse' bus='$iso['inputbus']'/>" >> "${iso['xmlfile']}"
+  echo "    <input type='keyboard' bus='$iso['inputbus']'/>" >> "${iso['xmlfile']}"
   echo "    <sound model='ich9'>" >> "${iso['xmlfile']}"
   echo "      <address type='pci' domain='0x0000' bus='0x00' slot='0x1b' function='0x0'/>" >> "${iso['xmlfile']}"
   echo "    </sound>" >> "${iso['xmlfile']}"
   echo "    <video>" >> "${iso['xmlfile']}"
   if [ "${os['name']}" = "Darwin" ]; then
-    echo "      <model type='$VIDEO' vram='65536' heads='1' primary='yes'/>" >> "${iso['xmlfile']}"
+    echo "      <model type='${iso['video']}' vram='65536' heads='1' primary='yes'/>" >> "${iso['xmlfile']}"
   else
-    echo "      <model type='$VIDEO' ram='65536' vram='65536' vgamem='16384' heads='1' primary='yes'/>" >> "${iso['xmlfile']}"
+    echo "      <model type='${iso['video']}' ram='65536' vram='65536' vgamem='16384' heads='1' primary='yes'/>" >> "${iso['xmlfile']}"
   fi
   echo "      <alias name='video0'/>" >> "${iso['xmlfile']}"
   echo "      <address type='pci' domain='0x0000' bus='0x00' slot='0x01' function='0x0'/>" >> "${iso['xmlfile']}"
@@ -430,13 +432,13 @@ create_kvm_iso_vm () {
       virsh define "${iso['xmlfile']}"
       verbose_message "To start the VM and connect to console run the following command:" TEXT
       verbose_message "" TEXT
-      verbose_message "virsh start ${vm['name']} ; virsh console ${vm['name']}" TEXT
+      verbose_message "virsh start ${iso['name']} ; virsh console ${iso['name']}" TEXT
     else
       execute_message "sudo virsh define ${iso['xmlfile']}"
       sudo virsh define "${iso['xmlfile']}"
       verbose_message "To start the VM and connect to console run the following command:" TEXT
       verbose_message "" TEXT
-      verbose_message "sudo virsh start ${vm['name']} ; sudo virsh console ${vm['name']}" TEXT
+      verbose_message "sudo virsh start ${iso['name']} ; sudo virsh console ${iso['name']}" TEXT
     fi
   fi
 }
@@ -450,21 +452,21 @@ delete_kvm_vm () {
     install_required_packages "${iso['requiredkvmpackages']}"
   fi
   if [ "${options['testmode']}" = "false" ]; then
-    vm['status']=$( virsh list --all |grep -c "shut off" )
+    iso['status']=$( virsh list --all |grep -c "shut off" )
     if [ "${os['name']}" = "Darwin" ]; then
-      if [ "${vm['status']}" = "0" ]; then
-        information_message "Stopping KVM VM ${vm['name']}"
-        execute_command "virsh -c \"qemu:///session\" shutdown ${vm['name']} 2> /dev/null"
+      if [ "${iso['status']}" = "0" ]; then
+        information_message "Stopping KVM VM ${iso['name']}"
+        execute_command "virsh -c \"qemu:///session\" shutdown ${iso['name']} 2> /dev/null"
       fi
-      information_message "Deleting VM ${vm['name']}"
-      execute_command "virsh -c \"qemu:///session\" undefine ${vm['name']} --nvram 2> /dev/null"
+      information_message "Deleting VM ${iso['name']}"
+      execute_command "virsh -c \"qemu:///session\" undefine ${iso['name']} --nvram 2> /dev/null"
     else
-      if [ "${vm['status']}" = "0" ]; then
-        information_message "Stopping KVM VM ${vm['name']}"
-        execute_command "sudo virsh shutdown ${vm['name']} 2> /dev/null"
+      if [ "${iso['status']}" = "0" ]; then
+        information_message "Stopping KVM VM ${iso['name']}"
+        execute_command "sudo virsh shutdown ${iso['name']} 2> /dev/null"
       fi
-      information_message "Deleting VM ${vm['name']}"
-      execute_command "sudo virsh undefine ${vm['name']} --nvram 2> /dev/null"
+      information_message "Deleting VM ${iso['name']}"
+      execute_command "sudo virsh undefine ${iso['name']} --nvram 2> /dev/null"
     fi
   fi
 }

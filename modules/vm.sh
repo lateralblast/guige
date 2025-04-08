@@ -8,12 +8,12 @@
 # Delete a VM
 
 delete_vm () {
-  if [ "${vm['type']}" = "kvm" ]; then
+  if [ "${iso['type']}" = "kvm" ]; then
     check_kvm_vm_exists
-    if [ "${vm['exists']}" = "true" ]; then
+    if [ "${iso['exists']}" = "true" ]; then
       delete_kvm_vm
     else
-      information_message "KVM VM ${vm['name']} does not exist"
+      information_message "KVM VM ${iso['name']} does not exist"
     fi
   fi
 }
@@ -23,12 +23,12 @@ delete_vm () {
 # Create a VM for testing cloud init
 
 create_ci_vm () {
-  if [ "${vm['type']}" = "kvm" ]; then
+  if [ "${iso['type']}" = "kvm" ]; then
     check_kvm_vm_exists
-    if [ "${vm['exists']}" = "false" ]; then
+    if [ "${iso['exists']}" = "false" ]; then
       create_kvm_ci_vm
     else
-      information_message "KVM VM ${vm['name']} already exists"
+      information_message "KVM VM ${iso['name']} already exists"
     fi
   fi
 }
@@ -40,15 +40,15 @@ create_ci_vm () {
 create_iso_vm () {
   if [ "${vm['inputfile']}" = "" ]; then
     if ! [ "${iso['outputfile']}" = "" ]; then
-      vm['inputfile']="${iso['outputfile']}"
+     iso['inputfile']="${iso['outputfile']}"
     fi
   fi
-  if [ "${vm['type']}" = "kvm" ]; then
+  if [ "${iso['type']}" = "kvm" ]; then
     check_kvm_vm_exists
-    if [ "${vm['exists']}" = "false" ]; then
+    if [ "${iso['exists']}" = "false" ]; then
       create_kvm_iso_vm
     else
-      information_message "KVM VM ${vm['name']} already exists"
+      information_message "KVM VM ${iso['name']} already exists"
     fi
   fi
 }
@@ -58,7 +58,7 @@ create_iso_vm () {
 # List VMs
 
 list_vm () {
-  if [ "${vm['type']}" = "kvm" ]; then
+  if [ "${iso['type']}" = "kvm" ]; then
     list_kvm_vm
   fi
 }

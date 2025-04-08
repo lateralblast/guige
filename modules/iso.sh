@@ -46,14 +46,14 @@ update_iso_url () {
   fi
 }
 
-# Function: update_options['requiredpackages']}
+# Function: update_iso['requiredpackages']}
 #
 # Update required packages
 
 update_required_packages () {
   if [ "${os['name']}" = "Darwin" ]; then
     if ! [[ "${iso['action']}" =~ "docker" ]]; then
-      options['requiredpackages']="p7zip lftp wget xorriso ansible squashfs"
+      iso['requiredpackages']="p7zip lftp wget xorriso ansible squashfs"
     fi
   fi
 }
@@ -98,11 +98,11 @@ create_iso () {
 copy_iso () {
   handle_output "# Copying ISO files from ${iso['mountdir']} to ${iso['newdir']}/cd" "TEXT"
   if [ ! -f "/usr/bin/rsync" ]; then
-    install_required_packages "${options['requiredpackages']}"
+    install_required_packages "${iso['requiredpackages']}"
   fi
-  UC_TEST_DIR="${iso['mountdir']}/EFI"
-  LC_TEST_DIR="${iso['mountdir']}/efi"
-  if [ ! -d "$UC_TEST_DIR" ] && [ ! -d "$LC_TEST_DIR" ]; then
+  uc_test_dir="${iso['mountdir']}/EFI"
+  lc_test_dir="${iso['mountdir']}/efi"
+  if [ ! -d "${uc_test_dir}" ] && [ ! -d "${lc_test_dir}" ]; then
     warning_message "ISO ${iso['inputfile']} not mounted"
     exit
   else
@@ -312,7 +312,7 @@ get_old_base_iso () {
 
 get_iso_type () {
   if [[ "${iso['inputfile']}" =~ "dvd" ]]; then
-    ISO_TYPE="dvd"
+    iso['type']="dvd"
   fi
 }
 
@@ -448,7 +448,7 @@ get_info_from_iso () {
 
 create_autoinstall_iso () {
   if [ ! -f "/usr/bin/xorriso" ]; then
-    install_required_packages "${options['requiredpackages']}"
+    install_required_packages "${iso['requiredpackages']}"
   fi
   check_file_perms "${iso['outputfile']}"
   handle_output "# Creating ISO" "TEXT"

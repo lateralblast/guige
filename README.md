@@ -11,7 +11,7 @@ used to hang a shield on the shoulder or neck when not in use.
 Version
 -------
 
-Current version: 3.3.8
+Current version: 3.4.1
 
 Issues
 ------
@@ -134,7 +134,7 @@ Usage: guige --action [action] --options [options]
 --allowlist              Allow/load additional kernel modules(s)
 --allowpassword          Allow password access via SSH (default: false)
 --allowservice           Allow Services (default: ssh)
---arch                   Architacture (default: arm64)
+--arch                   Architacture (default: amd64)
 --autoinstalldir         Directory where autoinstall config files are stored on ISO (default: autoinstall)
 --blocklist              Block kernel module(s)
 --bmcip                  BMC/iDRAC IP (default: 192.168.1.3)
@@ -142,35 +142,37 @@ Usage: guige --action [action] --options [options]
 --bmcusername            BMC/iDRAC User (default: root)
 --disk                   Boot Disk devices (default: first-disk)
 --bootloader             Boot Loader Location (default: mbr)
---bootserverfile         Boot sever file (default: /Users/user/guige/ubuntu/live-server/24.04.2/files/ubuntu-24.04.2-live-server-arm64-efi-autoinstall.iso)
+--bootserverfile         Boot sever file (default: /home/user/guige/ubuntu/live-server/24.04.2/files/ubuntu-24.04.2-live-server-amd64-efi-autoinstall.iso)
 --bootserverip           NFS/Bootserver IP
 --bootsize               Boot partition size (default: 2048)
 --build                  Type of ISO to build (default: live-server)
---chrootpackages         List of packages to add to ISO
---cidr                   CIDR (default: 24)
+--chrootpackages         List of packages to add to ISO (default: zfsutils-linux zfs-initramfs xfsprogs btrfs-progs net-tools curl lftp wget sudo file rsync dialog setserial ansible apt-utils whois squashfs-tools duperemove jq btrfs-compsize iproute2)
+--cidr                   CIDR (default: 22)
 --codename               Linux release codename or distribution (default: jammy)
 --compression            Compression algorithm (default: lzo)
 --country                Country (default: us)
 --debug                  Set debug flag (set -x)
 --delete                 Remove previously created files
 --disableservice         Disable service(s) (default: cupsd)
+--diskfile               Disk file
 --diskserial             Disk serial (default: first-serial)
+--disksize               Disk size (default: 20G)
 --diskwwn                Disk WWN (default: first-wwn)
 --dns                    DNS server IP (default: 8.8.8.8)
 --enableservice          Enable service(s) (default: sshd)
 --fallback               Installation fallback (default: continue-anyway)
 --firewall               Firewall (default: enabled)
---firstoption            First menu option (e.g. grub menu) (default: btrfs)
+--firstoption            First menu option (e.g. grub menu) (default: zfs)
 --gateway                Gateway IP (default: 192.168.1.254)
 --gecos                  User GECOS field (default: Administrator)
 --groups                 Groups to add user to (default: dialout,kvm,libvirt,qemu,wheel)
---grubfile               Import grub file (default: /Users/user/guige/ubuntu/live-server/24.04.2/grub.cfg)
+--grubfile               Import grub file (default: /home/user/guige/ubuntu/live-server/24.04.2/grub.cfg)
 --grubmenu               Import grub menu (default: 0)
 --grubtimeout            Grub timeout (default: 10)
 --help                   Print help
 --hostname               Hostname (default: ubuntu)
---inputci                Import Cloud Image (default: /Users/user/guige/ubuntu/live-server/24.04.2/files/ubuntu-24.04.2-server-cloudimg-arm64.img)
---inputfile              Import ISO (default: /Users/user/guige/ubuntu/live-server/24.04.2/files/ubuntu-24.04.2-live-server-arm64.iso)
+--inputci                Import Cloud Image (default: /home/user/guige/ubuntu/live-server/24.04.2/files/ubuntu-24.04.2-server-cloudimg-amd64.img)
+--inputfile              Import ISO (default: /home/user/guige/ubuntu/live-server/24.04.2/files/ubuntu-24.04.2-live-server-amd64.iso)
 --installmode            Install mode (default: text)
 --installmount           Where the install mounts the CD during install (default: /cdrom)
 --installpassword        Temporary install password for remote access during install (default: install)
@@ -184,20 +186,20 @@ Usage: guige --action [action] --options [options]
 --packages               Additional packages to install (default: zfsutils-linux zfs-initramfs xfsprogs btrfs-progs net-tools curl lftp wget sudo file rsync dialog setserial ansible apt-utils whois squashfs-tools duperemove jq btrfs-compsize iproute2)
 --url                    ISO URL
 --volid                  ISO Volume ID (default: Ubuntu 24.04.2 Server)
---layout                 Layout or VM disk size (default: us)
+--layout                 Keyboard layout (default: us)
 --lcall                  LC_ALL (default: en_US)
 --locale                 Local (default: en_US.UTF-8)
 --lvname                 Logical Volume Name (default: ubuntu-lv)
---netmask                Netmask (default: 255.255.255.0)
+--netmask                Netmask (default: 255.255.252.0)
 --nic                    NIC to use for installation (default: first-nic)
 --oeminstall             OEM Install (default: auto)
---oldinputfile           Old release ISO (default: /Users/user/guige/ubuntu/live-server/23.04/files/ubuntu-23.04-live-server-arm64.iso)
+--oldinputfile           Old release ISO (default: /home/user/guige/ubuntu/live-server/23.04/files/ubuntu-23.04-live-server-amd64.iso)
 --oldisourl              Old ISO URL
 --oldrelease             Old release (default: 23.04)
 --onboot                 Enable network on boot (default: on)
 --options                Options (e.g. verbose)
---outputci               Output CI file (default: /Users/user/guige/ubuntu/live-server/24.04.2/files/ubuntu-24.04.2-server-cloudimg-arm64-efi-autoinstall.img)
---outputfile             Output ISO file (default: /Users/user/guige/ubuntu/live-server/24.04.2/files/ubuntu-24.04.2-live-server-arm64-efi-autoinstall.iso)
+--outputci               Output CI file (default: /home/user/guige/ubuntu/live-server/24.04.2/files/ubuntu-24.04.2-server-cloudimg-amd64-efi-autoinstall.img)
+--outputfile             Output ISO file (default: /home/user/guige/ubuntu/live-server/24.04.2/files/ubuntu-24.04.2-live-server-amd64-efi-autoinstall.iso)
 --password               Password (default: ubuntu)
 --passwordalgorithm      Password Algorithm (default: sha512)
 --pesize                 PE size (default: 32768)
@@ -205,6 +207,7 @@ Usage: guige --action [action] --options [options]
 --prefix                 Output file name prefix
 --preworkdir             Docker work directory
 --pvname                 Physical Volume Name (default: ubuntu-pv)
+--ram                    RAM size (default: 2048000)
 --realname               User real name field (default: Ubuntu)
 --release                OS release (default: 24.04.2)
 --rootsize               Root volume size (default: -1)
@@ -214,11 +217,12 @@ Usage: guige --action [action] --options [options]
 --serialportaddress      Serial port address
 --serialportspeed        Serial port speed
 --sourceid               Source ID (default: ubuntu-server)
---squashfsfile           Squashfs file (default: /Users/user/guige/ubuntu/live-server/23.04/isomount/casper/ubuntu-server-minimal.squashfs)
+--squashfsfile           Squashfs file (default: /home/user/guige/ubuntu/live-server/23.04/isomount/casper/ubuntu-server-minimal.squashfs)
 --sshkey                 SSH key
---sshkeyfile             SSH key file (default: /Users/user/.ssh/id_rsa.pub)
+--sshkeyfile             SSH key file (default: /home/user/.ssh/id_rsa.pub)
 --suffix                 Output file name suffix
---swapsize               Swap/RAM size (default: 2G)
+--swap                   Swap device
+--swapsize               Swap size (default: 2G)
 --timezone               Timezone (default: Australia/Melbourne)
 --updates                Updates to install (default: security)
 --autoinstallfile        Import autoinstall config file
@@ -226,11 +230,11 @@ Usage: guige --action [action] --options [options]
 --usage                  Usage information
 --version                Display version
 --vgname                 Volume Group Name (default: ubuntu-vg)
---vmcpus                 Number of CPUs (default: 2)
---vmname                 VM name (default: guige)
---vmtype                 VM type (default: kvm)
+--vmcpus                 Number of CPUs
+--vmname                 VM name
+--vmtype                 VM type
 --volumemanager          Volumemanager(s) (default: zfs auto ext4 xfs btrfs)
---workdir                Work directory (default: /Users/user/guige/ubuntu/live-server/24.04.2)
+--workdir                Work directory (default: /home/user/guige/ubuntu/live-server/24.04.2)
 --zfsfilesystems         Additional ZFS filesystems (default: /var /var/lib /var/lib/AccountsService /var/lib/apt /var/lib/dpkg /var/lib/NetworkManager /srv /usr /usr/local /var/games /var/log /var/mail /var/snap /var/spool /var/www)
 ```
 

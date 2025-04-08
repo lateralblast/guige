@@ -10,23 +10,23 @@
 
 print_env () {
   handle_output "# Setting Variables" TEXT
-  handle_output "# OS name:                   [iso['osname']}]                     ${iso['osname']}"         "TEXT"
-  handle_output "# Codename:                  [iso['codename']}]                   ${iso['codename']}"       "TEXT"
-  handle_output "# Architecture:              [iso['arch']}]                       ${iso['arch']}"           "TEXT"
-  handle_output "# Work directory:            [iso['workdir']}]                    ${iso['workdir']}"        "TEXT"
+  handle_output "# OS name:                   [iso['osname']}]                     ${iso['osname']}"          "TEXT"
+  handle_output "# Codename:                  [iso['codename']}]                   ${iso['codename']}"        "TEXT"
+  handle_output "# Architecture:              [iso['arch']}]                       ${iso['arch']}"            "TEXT"
+  handle_output "# Work directory:            [iso['workdir']}]                    ${iso['workdir']}"         "TEXT"
   if [ "${options['docker']}" = "true" ]; then
-    handle_output "# Previous Work directory:   [iso['workdir']}]                    ${iso['workdir']}"      "TEXT"
+    handle_output "# Previous Work directory:   [iso['workdir']}]                    ${iso['workdir']}"       "TEXT"
   fi
   if [ "${options['oldinstaller']}" = "true" ]; then
-    handle_output "# Old Work directory:        [old['workdir']}]                ${old['workdir']}"    "TEXT"
-    handle_output "# Old ISO input file:        [old['inputfile']}]              ${old['inputfile']}"  "TEXT"
-    handle_output "# Old ISO URL:               [old['url']}]                    ${old['url']}"        "TEXT"
+    handle_output "# Old Work directory:        [old['workdir']}]                ${old['workdir']}"           "TEXT"
+    handle_output "# Old ISO input file:        [old['inputfile']}]              ${old['inputfile']}"         "TEXT"
+    handle_output "# Old ISO URL:               [old['url']}]                    ${old['url']}"               "TEXT"
   fi
   handle_output "# ISO URL:                   [iso['url']}]                        ${iso['url']}"                                           "TEXT"
   handle_output "# Cloud Image URL:           [iso['ciurl']}]                      ${iso['ciurl']}"                                         "TEXT"
   handle_output "# ISO input file:            [iso['inputfile']}]                  ${iso['inputfile']}"                                     "TEXT"
   handle_output "# Cloud Image input file:    [iso['inputci']}]                    ${iso['inputci']}"                                       "TEXT"
-  handle_output "# Required packages:         [options['requiredpackages']}]       ${options['requiredpackages']}"                          "TEXT"
+  handle_output "# Required packages:         [iso['requiredpackages']}]           ${iso['requiredpackages']}"                              "TEXT"
   handle_output "# ISO output file:           [iso['outputfile']}]                 ${iso['outputfile']}"                                    "TEXT"
   handle_output "# Cloud Image output file:   [iso['outputci']}]                   ${iso['outputci']}"                                      "TEXT"
   handle_output "# SCP command:               [iso['scpcommand']}]                 ${iso['bmcusername']}@${os['ip']}:${iso['outputfile']}"  "TEXT"
@@ -66,11 +66,11 @@ print_env () {
   fi
   handle_output "# Kernel:                    [iso['kernel']}]                     ${iso['kernel']}"                     "TEXT"
   handle_output "# Kernel arguments:          [iso['kernelargs']}]                 ${iso['kernelargs']}"                 "TEXT"
-  handle_output "# Kernel serial arguments:   [iso['kernelserialargs']}]           ${iso['kernelserialargs']}"                 "TEXT"
+  handle_output "# Kernel serial arguments:   [iso['kernelserialargs']}]           ${iso['kernelserialargs']}"           "TEXT"
   handle_output "# Block kernel modules:      [iso['blocklist']}]                  ${iso['blocklist']}"                  "TEXT"
   handle_output "# Allow kernel modules:      [iso['allowlist']}]                  ${iso['allowlist']}"                  "TEXT"
   handle_output "# Allow password login:      [iso['allowpassword']}]              ${iso['allowpassword']}"              "TEXT"
-  handle_output "# Keyboard Layout:           [iso['layout']}]                     ${iso['layout']}"                     "TEXT"
+  handle_output "# Keyboard Layout:           [iso['disksize']}]                     ${iso['disksize']}"                 "TEXT"
   handle_output "# Locale:                    [iso['locale']}]                     ${iso['locale']}"                     "TEXT"
   handle_output "# LC_ALL:                    [iso['lcall']}]                      ${iso['lcall']}"                      "TEXT"
   handle_output "# Root disk(s):              [iso['disk']}]                       ${iso['disk']}"                       "TEXT"
@@ -89,8 +89,8 @@ print_env () {
   handle_output "# Install updates:           [options['packageupdates']}]         ${options['packageupdates']}"         "TEXT"
   handle_output "# Install upgrades:          [options['packageupgrades']}]        ${options['packageupgrades']}"        "TEXT"
   handle_output "# Dist upgrades:             [options['distupgrade']}]            ${options['distupgrade']}"            "TEXT"
-  handle_output "# Swap size:                 [iso['swapsize']}]                   ${iso['swapsize']}"                   "TEXT"
-  handle_output "# VM Memory size:            [vm['ram']}]                         ${vm['ram']}"                      "TEXT"
+  handle_output "# Swap size:                 [iso['swap']}]                       ${iso['swap']}"                       "TEXT"
+  handle_output "# VM Memory size:            [iso['ram']}]                        ${iso['ram']}"                        "TEXT"
   if [ "${options['createexport']}" = "true" ] || [ "${options['createansible']}" = "true" ]; then
     handle_output "# Bootserver IP:             [iso['bootserverip']}]               ${iso['bootserverip']}"             "TEXT"
     handle_output "# Bootserver file:           [iso['bootserverfile']}]             ${iso['bootserverfile']}"           "TEXT"

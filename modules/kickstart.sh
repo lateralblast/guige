@@ -11,7 +11,7 @@
 
 create_kickstart_iso () {
   if [ ! -f "/usr/bin/xorriso" ]; then
-    install_required_packages "${options['requiredpackages']}"
+    install_required_packages "${iso['requiredpackages']}"
   fi
   if [ "${options['testmode']}" = "false" ]; then
     handle_output "# Creating ISO" "TEXT"
@@ -30,8 +30,8 @@ create_kickstart_iso () {
 
 prepare_kickstart_files () {
   iso['ksdir']="${iso['newdir']}/cd/"
-  INCLUDE_DISK_FILE="/tmp/first-disk.cfg"
-  INCLUDE_NIC_FILE="/tmp/first-nic.cfg"
+  include_disk_file="/tmp/first-disk.cfg"
+  include_nic_file="/tmp/first-nic.cfg"
   if [ "${options['isolinuxfile']}" = "true" ] && [ "${options['autoinstall']}" = "true" ]; then
     print_file "${iso['autoinstallfile']}"
     ksvalidator "${iso['autoinstallfile']}"
@@ -50,17 +50,17 @@ prepare_kickstart_files () {
       if [ "${iso['disk']}" = "first-disk" ]; then
         if [ ! "${iso_volmgr}" = "lvm" ]; then
           echo "FIRST_DISK=\$( /bin/lsblk -x TYPE |grep disk |grep -v SWAP |sort |head -1 |awk '{print \$1}' )" > "${iso['ksfile']}"
-          echo "echo \"# First Disk\" > $INCLUDE_DISK_FILE" >> "${iso['ksfile']}"
-          echo "echo \"bootloader --timeout=${iso['grubtimeout']} --location=${iso['bootloader']} --append=\\\"${iso['kernel']}ARGS\\\" --boot-drive=/dev/\\$FIRST_DISK\" >> $INCLUDE_DISK_FILE" >> "${iso['ksfile']}"
-          echo "echo \"clearpart --all --drives=/dev/\\$FIRST_DISK\" >> $INCLUDE_DISK_FILE" >> "${iso['ksfile']}"
-          echo "echo \"part /boot --size=${iso['bootsize']} --fstype=\\\"${iso_volmgr}\\\" --ondisk=/dev/\\$FIRST_DISK\" >> $INCLUDE_DISK_FILE" >> "${iso['ksfile']}"
-          echo "echo \"part ${iso['lvname']} --size=-1 --grow --fstype=\\\"lvmpv\\\" --ondisk=/dev/\\$FIRST_DISK\" >> $INCLUDE_DISK_FILE" >> "${iso['ksfile']}"
-          echo "echo \"part /boot/efi --size=${iso['bootsize']} --asprimary --fstype=\\\"efi\\\" --ondisk=/dev/\\$FIRST_DISK\" >> $INCLUDE_DISK_FILE" >> "${iso['ksfile']}"
+          echo "echo \"# First Disk\" > ${include_disk_file}" >> "${iso['ksfile']}"
+          echo "echo \"bootloader --timeout=${iso['grubtimeout']} --location=${iso['bootloader']} --append=\\\"${iso['kernel']}ARGS\\\" --boot-drive=/dev/\\$FIRST_DISK\" >> ${include_disk_file}" >> "${iso['ksfile']}"
+          echo "echo \"clearpart --all --drives=/dev/\\$FIRST_DISK\" >> ${include_disk_file}" >> "${iso['ksfile']}"
+          echo "echo \"part /boot --size=${iso['bootsize']} --fstype=\\\"${iso_volmgr}\\\" --ondisk=/dev/\\$FIRST_DISK\" >> ${include_disk_file}" >> "${iso['ksfile']}"
+          echo "echo \"part ${iso['lvname']} --size=-1 --grow --fstype=\\\"lvmpv\\\" --ondisk=/dev/\\$FIRST_DISK\" >> ${include_disk_file}" >> "${iso['ksfile']}"
+          echo "echo \"part /boot/efi --size=${iso['bootsize']} --asprimary --fstype=\\\"efi\\\" --ondisk=/dev/\\$FIRST_DISK\" >> ${include_disk_file}" >> "${iso['ksfile']}"
         fi
       fi
       if [ "${iso['nic']}" = "first-nic" ]; then
-        echo "echo\"# First NIC\" > $INCLUDE_NIC_FILE" >> "${iso['ksfile']}"
-        echo "FIRST_NIC=\$(lshw -class network -short |awk '{print \$2}' |grep ^e |head -1)\" >> $INCLUDE_NIC_FILE" >> "${iso['ksfile']}"
+        echo "echo\"# First NIC\" > ${include_nic_file}" >> "${iso['ksfile']}"
+        echo "FIRST_NIC=\$(lshw -class network -short |awk '{print \$2}' |grep ^e |head -1)\" >> ${include_nic_file}" >> "${iso['ksfile']}"
       fi
       echo "%end" >> "${iso['ksfile']}"
       echo "lang ${iso['locale']}" >> "${iso['ksfile']}"
@@ -71,7 +71,7 @@ prepare_kickstart_files () {
         echo "autopart --type=lvm" >> "${iso['ksfile']}"
       else
         if [ "${iso['disk']}" = "first-disk" ]; then
-          echo "%include $INCLUDE_DISK_FILE" >> "${iso['ksfile']}"
+          echo "%include ${include_disk_file}" >> "${iso['ksfile']}"
         else
           echo "bootloader --timeout=${iso['grubtimeout']} --location=${iso['bootloader']} --append=\"${iso['kernel']}ARGS\" --boot-drive=${iso['disk']}" >> "${iso['ksfile']}"
           echo "clearpart --all --drives=${iso['disk']}" >> "${iso['ksfile']}"
@@ -91,54 +91,54 @@ prepare_kickstart_files () {
         echo "firewall --${iso['firewall']}" >> "${iso['ksfile']}"
       fi
       if [ "${iso['nic']}" = "first-nic" ]; then
-        NETWORK="network --hostname=${iso['hostname']} --bootproto=${iso['bootproto']} --device=\$FIRST_NIC --onboot=${iso['onboot']}"
+        network="network --hostname=${iso['hostname']} --bootproto=${iso['bootproto']} --device=\$FIRST_NIC --onboot=${iso['onboot']}"
       else
-        NETWORK="network --hostname=${iso['hostname']} --bootproto=${iso['bootproto']} --device=${iso['nic']} --onboot=${iso['onboot']}"
+        network="network --hostname=${iso['hostname']} --bootproto=${iso['bootproto']} --device=${iso['nic']} --onboot=${iso['onboot']}"
       fi
       if [ "${options['ipv4']}" = "false" ]; then
-        NETWORK="$NETWORK --noipv4"
+        network="${network} --noipv4"
       fi
       if [ "${options['ipv6']}" = "false" ]; then
-        NETWORK="$NETWORK --noipv6"
+        network="${network} --noipv6"
       fi
       if [ "${options['activate']}" = "true" ]; then
-        NETWORK="$NETWORK --activate"
+        network="${network} --activate"
       else
-        NETWORK="$NETWORK --no-activate"
+        network="${network} --no-activate"
       fi
       if [ "${options['defaultroute']}" = "false" ]; then
-        NETWORK="$NETWORK --nodefroute"
+        network="${network} --nodefroute"
       fi
       if [ "${options['dhcp']}" = "false" ]; then
-        NETWORK="$NETWORK --ip=${iso['ip']} --netmask=${iso['netmask']} --gateway=${iso['gateway']} --nameserver=${iso['dns']}"
+        network="${network} --ip=${iso['ip']} --netmask=${iso['netmask']} --gateway=${iso['gateway']} --nameserver=${iso['dns']}"
       fi
       if [ "${iso['nic']}" = "first-nic" ]; then
-        echo "%include $INCLUDE_NIC_FILE" >> "${iso['ksfile']}"
-        echo "echo \"$NETWORK\" >> $INCLUDE_NIC_FILE" >> "${iso['ksfile']}"
+        echo "%include ${include_nic_file}" >> "${iso['ksfile']}"
+        echo "echo \"${network}\" >> ${include_nic_file}" >> "${iso['ksfile']}"
       else
-        echo "$NETWORK" >> "${iso['ksfile']}"
+        echo "$network" >> "${iso['ksfile']}"
       fi
       echo "services --enabled=${iso['enableservice']} --disabled=${iso['disableservice']}" >> "${iso['ksfile']}"
       if [ "${options['plaintextpassword']}" = "true" ]; then
-        ROOT_PW="rootpw --plaintext ${iso['password']}"
-        USER_PW="user --name=${iso['username']} --group=${iso['groups']} --password=${iso['password']} --plaintext --gecos=\"${iso['gecos']}\"" >> "${iso['ksfile']}"
-        SSH_PW="sshpw --username=${iso['installusername']} ${iso['installpassword']}"
+        root_pw="rootpw --plaintext ${iso['password']}"
+        user_pw="user --name=${iso['username']} --group=${iso['groups']} --password=${iso['password']} --plaintext --gecos=\"${iso['gecos']}\"" >> "${iso['ksfile']}"
+        ssh_pw="sshpw --username=${iso['installusername']} ${iso['installpassword']}"
       else
-        ROOT_PW="rootpw --iscrypted ${iso['passwordcrypt']}" >> "${iso['ksfile']}"
-        USER_PW="user --name=${iso['username']} --group=${iso['groups']} --password=${iso['passwordcrypt']} --iscrypted --gecos=\"${iso['gecos']}\"" >> "${iso['ksfile']}"
-        SSH_PW="sshpw --username=${iso['installusername']} --iscrypted --password=${iso['installpasswordcrypt']}"
+        root_pw="rootpw --iscrypted ${iso['passwordcrypt']}" >> "${iso['ksfile']}"
+        user_pw="user --name=${iso['username']} --group=${iso['groups']} --password=${iso['passwordcrypt']} --iscrypted --gecos=\"${iso['gecos']}\"" >> "${iso['ksfile']}"
+        ssh_pw="sshpw --username=${iso['installusername']} --iscrypted --password=${iso['installpasswordcrypt']}"
       fi
       if [ "${options['lockroot']}" = "true" ]; then
-        ROOT_PW="$ROOT_PW --lock"
+        root_pw="$root_pw --lock"
       fi
-      echo "$ROOT_PW" >> "${iso['ksfile']}"
-      echo "$USER_PW" >> "${iso['ksfile']}"
+      echo "${root_pw}" >> "${iso['ksfile']}"
+      echo "${user_pw}" >> "${iso['ksfile']}"
       if [ "${options['installuser']}" = "true" ]; then
-        echo "$SSH_PW" >> "${iso['ksfile']}"
+        echo "${ssh_pw}" >> "${iso['ksfile']}"
       fi
       echo "%packages" >> "${iso['ksfile']}"
-      for PACKAGE in ${iso['packages']}; do
-        echo "$PACKAGE" >> "${iso['ksfile']}"
+      for package in ${iso['packages']}; do
+        echo "${package}" >> "${iso['ksfile']}"
       done
       echo "%end" >> "${iso['ksfile']}"
       print_file "${iso['ksfile']}"
@@ -166,13 +166,13 @@ prepare_kickstart_files () {
 # Prepare kickstart grub, isolinux, etc files
 
 prepare_kickstart_grubmenu () {
-  TMP_LINUX_CFG="${iso['workdir']}/files/isolinux.cfg"
-  TMP_GRUB_CFG="${iso['workdir']}/files/grub.cfg"
-  ISO_LINUX_CFG="${iso['newdir']}/cd/isolinux/isolinux.cfg"
-  ISO_GRUB_CFG="${iso['newdir']}/cd/EFI/BOOT/grub.cfg"
-  iso['label']="${iso['realname']}-${iso['majorrelease']}-${iso['minorrelease']}-${iso['arch']}-$ISO_TYPE"
-  ISO_REPO_DIR="/run/install/repo"
-  echo "default ${iso['grubmenu']}" > "$TMP_LINUX_CFG"
+  tmp_linux_cfg="${iso['workdir']}/files/isolinux.cfg"
+  tmp_grub_cfg="${iso['workdir']}/files/grub.cfg"
+  iso_linux_cfg="${iso['newdir']}/cd/isolinux/isolinux.cfg"
+  iso_grub_cfg="${iso['newdir']}/cd/EFI/BOOT/grub.cfg"
+  iso['label']="${iso['realname']}-${iso['majorrelease']}-${iso['minorrelease']}-${iso['arch']}-${iso['type']}"
+  iso_repo_dir="/run/install/repo"
+  echo "default ${iso['grubmenu']}" > "${tmp_linux_cfg}"
   counter=0
   iso['kernelserialargs']="console=${iso['serialporta']},${iso['serialportspeeda']} console=${iso['serialportb']},${iso['serialportspeedb']}"
   if [ "${options['ksquiet']}" = "true" ]; then
@@ -185,94 +185,94 @@ prepare_kickstart_grubmenu () {
     print_file "${iso['isolinuxfile']}"
     print_file "${iso['grubfile']}"
     if [ "${options['testmode']}" = "false" ]; then
-      sudo cp "${iso['isolinuxfile']}" "$ISO_LINUX_CFG"
-      sudo cp "${iso['grubfile']}" "$ISO_GRUB_CFG"
+      sudo cp "${iso['isolinuxfile']}" "${iso_linux_cfg}"
+      sudo cp "${iso['grubfile']}" "${iso_grub_cfg}"
     fi
   else
     for iso_volmgr in ${iso['volumemanager']}; do
       if ! [ "${iso_volmgr}" = "custom" ]; then
-        echo "label ${counter}" >> "$TMP_LINUX_CFG"
-        echo "  menu label ^${iso['volid']}:${iso_volmgr}:${iso['disk']}:${iso['nic']} (${iso['kernel']}ARGS)" >> "$TMP_LINUX_CFG"
-        echo "  kernel vmlinuz" >> "$TMP_LINUX_CFG"
-        echo "  append initrd=initrd.img inst.stage2=hd:LABEL=${iso['label']} ${iso['kernel']}ARGS inst.ks=hd:LABEL=${iso['label']}:/${iso_volmgr}.cfg" >> "$TMP_LINUX_CFG"
+        echo "label ${counter}" >> "${tmp_linux_cfg}"
+        echo "  menu label ^${iso['volid']}:${iso_volmgr}:${iso['disk']}:${iso['nic']} (${iso['kernel']}ARGS)" >> "${tmp_linux_cfg}"
+        echo "  kernel vmlinuz" >> "${tmp_linux_cfg}"
+        echo "  append initrd=initrd.img inst.stage2=hd:LABEL=${iso['label']} ${iso['kernel']}ARGS inst.ks=hd:LABEL=${iso['label']}:/${iso_volmgr}.cfg" >> "${tmp_linux_cfg}"
         counter=$(( counter+1 ))
       fi
     done
     if [ "${options['autoinstall']}" = "true" ]; then
-      echo "label custom" >> "$TMP_LINUX_CFG"
-      echo "  menu label ^${iso['volid']}:custom (${iso['kernel']}ARGS)" >> "$TMP_LINUX_CFG"
-      echo "  kernel vmlinuz" >> "$TMP_LINUX_CFG"
-      echo "  append initrd=initrd.img inst.stage2=hd:LABEL=${iso['label']} ${iso['kernel']}ARGS inst.ks=hd:LABEL=${iso['label']}:/custom.cfg" >> "$TMP_LINUX_CFG"
+      echo "label custom" >> "${tmp_linux_cfg}"
+      echo "  menu label ^${iso['volid']}:custom (${iso['kernel']}ARGS)" >> "${tmp_linux_cfg}"
+      echo "  kernel vmlinuz" >> "${tmp_linux_cfg}"
+      echo "  append initrd=initrd.img inst.stage2=hd:LABEL=${iso['label']} ${iso['kernel']}ARGS inst.ks=hd:LABEL=${iso['label']}:/custom.cfg" >> "${tmp_linux_cfg}"
     fi
-    echo "label install" >> "$TMP_LINUX_CFG"
-    echo "  menu label ^Install a Rocky Linux system" >> "$TMP_LINUX_CFG"
-    echo "  kernel vmlinuz" >> "$TMP_LINUX_CFG"
-    echo "  append initrd=initrd.img inst.stage2=hd:LABEL=${iso['label']} ${iso['kernel']}ARGS" >> "$TMP_LINUX_CFG"
-    echo "label rescue" >> "$TMP_LINUX_CFG"
-    echo "  menu label ^Rescue a Rocky Linux system" >> "$TMP_LINUX_CFG"
-    echo "  kernel vmlinuz" >> "$TMP_LINUX_CFG"
-    echo "  append initrd=initrd.img inst.stage2=hd:LABEL=${iso['label']} ${iso['kernel']}ARGS" >> "$TMP_LINUX_CFG"
-    echo "label memtest" >> "$TMP_LINUX_CFG"
-    echo "  menu label Test ^Memory" >> "$TMP_LINUX_CFG"
-    echo "  kernel memtest" >> "$TMP_LINUX_CFG"
-    echo "label hd" >> "$TMP_LINUX_CFG"
-    echo "  menu label ^Boot from first hard drive" >> "$TMP_LINUX_CFG"
-    echo "  localboot 0x80" >> "$TMP_LINUX_CFG"
-    print_file "$TMP_LINUX_CFG"
+    echo "label install" >> "${tmp_linux_cfg}"
+    echo "  menu label ^Install a Rocky Linux system" >> "${tmp_linux_cfg}"
+    echo "  kernel vmlinuz" >> "${tmp_linux_cfg}"
+    echo "  append initrd=initrd.img inst.stage2=hd:LABEL=${iso['label']} ${iso['kernel']}ARGS" >> "${tmp_linux_cfg}"
+    echo "label rescue" >> "${tmp_linux_cfg}"
+    echo "  menu label ^Rescue a Rocky Linux system" >> "${tmp_linux_cfg}"
+    echo "  kernel vmlinuz" >> "${tmp_linux_cfg}"
+    echo "  append initrd=initrd.img inst.stage2=hd:LABEL=${iso['label']} ${iso['kernel']}ARGS" >> "${tmp_linux_cfg}"
+    echo "label memtest" >> "${tmp_linux_cfg}"
+    echo "  menu label Test ^Memory" >> "${tmp_linux_cfg}"
+    echo "  kernel memtest" >> "${tmp_linux_cfg}"
+    echo "label hd" >> "${tmp_linux_cfg}"
+    echo "  menu label ^Boot from first hard drive" >> "${tmp_linux_cfg}"
+    echo "  localboot 0x80" >> "${tmp_linux_cfg}"
+    print_file "${tmp_linux_cfg}"
     if [ "${options['testmode']}" = "false" ]; then
-      sudo cp "$TMP_LINUX_CFG" "$ISO_LINUX_CFG"
+      sudo cp "${tmp_linux_cfg}" "${iso_linux_cfg}"
     fi
-    echo "set timeout=${iso['grubtimeout']}" > "$TMP_GRUB_CFG"
-    echo "set default=${iso['grubmenu']}" >> "$TMP_GRUB_CFG"
-    echo "" >> "$TMP_GRUB_CFG"
-    echo "function load_video {" >> "$TMP_GRUB_CFG"
-    echo "  insmod efi_gop" >> "$TMP_GRUB_CFG"
-    echo "  insmod efi_uga" >> "$TMP_GRUB_CFG"
-    echo "  insmod video_bochs" >> "$TMP_GRUB_CFG"
-    echo "  insmod video_cirrus" >> "$TMP_GRUB_CFG"
-    echo "}" >> "$TMP_GRUB_CFG"
-    echo "" >> "$TMP_GRUB_CFG"
-    echo "load_video" >> "$TMP_GRUB_CFG"
-    echo "set gfxpayload=keep" >> "$TMP_GRUB_CFG"
-    echo "insmod gzio" >> "$TMP_GRUB_CFG"
-    echo "insmod part_gpt" >> "$TMP_GRUB_CFG"
-    echo "insmod ext2" >> "$TMP_GRUB_CFG"
-    echo "" >> "$TMP_GRUB_CFG"
-    echo "search --no-floppy --set=root -l '${iso['label']}'" >> "$TMP_GRUB_CFG"
-    echo "" >> "$TMP_GRUB_CFG"
+    echo "set timeout=${iso['grubtimeout']}" > "${tmp_grub_cfg}"
+    echo "set default=${iso['grubmenu']}" >> "${tmp_grub_cfg}"
+    echo "" >> "${tmp_grub_cfg}"
+    echo "function load_video {" >> "${tmp_grub_cfg}"
+    echo "  insmod efi_gop" >> "${tmp_grub_cfg}"
+    echo "  insmod efi_uga" >> "${tmp_grub_cfg}"
+    echo "  insmod video_bochs" >> "${tmp_grub_cfg}"
+    echo "  insmod video_cirrus" >> "${tmp_grub_cfg}"
+    echo "}" >> "${tmp_grub_cfg}"
+    echo "" >> "${tmp_grub_cfg}"
+    echo "load_video" >> "${tmp_grub_cfg}"
+    echo "set gfxpayload=keep" >> "${tmp_grub_cfg}"
+    echo "insmod gzio" >> "${tmp_grub_cfg}"
+    echo "insmod part_gpt" >> "${tmp_grub_cfg}"
+    echo "insmod ext2" >> "${tmp_grub_cfg}"
+    echo "" >> "${tmp_grub_cfg}"
+    echo "search --no-floppy --set=root -l '${iso['label']}'" >> "${tmp_grub_cfg}"
+    echo "" >> "${tmp_grub_cfg}"
     if [ "${options['autoinstall']}" = "true" ]; then
-      echo "menuentry '${iso['volid']}:custom (${iso['kernelserialargs']})' {" >> "$TMP_GRUB_CFG"
-      echo "  linuxefi /images/pxeboot/vmlinuz inst.stage2=hd:LABEL=${iso['label']} ${iso['kernel']}ARGS inst.ks=hd:LABEL=${iso['label']}:/custom.cfg" >> "$TMP_GRUB_CFG"
-      echo "  initrdefi /images/pxeboot/initrd.img" >> "$TMP_GRUB_CFG"
-      echo "}" >> "$TMP_GRUB_CFG"
+      echo "menuentry '${iso['volid']}:custom (${iso['kernelserialargs']})' {" >> "${tmp_grub_cfg}"
+      echo "  linuxefi /images/pxeboot/vmlinuz inst.stage2=hd:LABEL=${iso['label']} ${iso['kernel']}ARGS inst.ks=hd:LABEL=${iso['label']}:/custom.cfg" >> "${tmp_grub_cfg}"
+      echo "  initrdefi /images/pxeboot/initrd.img" >> "${tmp_grub_cfg}"
+      echo "}" >> "${tmp_grub_cfg}"
     fi
     for iso_volmgr in ${iso['volumemanager']}; do
       if ! [ "${iso_volmgr}" = "custom" ]; then
-        echo "menuentry '${iso['volid']}:${iso_volmgr}:${iso['disk']}:${iso['nic']} (${iso['kernelserialargs']})' {" >> "$TMP_GRUB_CFG"
-        echo "  linuxefi /images/pxeboot/vmlinuz inst.stage2=hd:LABEL=${iso['label']} ${iso['kernel']}ARGS inst.ks=hd:LABEL=${iso['label']}:/${iso_volmgr}.cfg" >> "$TMP_GRUB_CFG"
-        echo "  initrdefi /images/pxeboot/initrd.img" >> "$TMP_GRUB_CFG"
-        echo "}" >> "$TMP_GRUB_CFG"
+        echo "menuentry '${iso['volid']}:${iso_volmgr}:${iso['disk']}:${iso['nic']} (${iso['kernelserialargs']})' {" >> "${tmp_grub_cfg}"
+        echo "  linuxefi /images/pxeboot/vmlinuz inst.stage2=hd:LABEL=${iso['label']} ${iso['kernel']}ARGS inst.ks=hd:LABEL=${iso['label']}:/${iso_volmgr}.cfg" >> "${tmp_grub_cfg}"
+        echo "  initrdefi /images/pxeboot/initrd.img" >> "${tmp_grub_cfg}"
+        echo "}" >> "${tmp_grub_cfg}"
       fi
     done
-    echo "menuentry 'Install ${iso['volid']} (${iso['kernelserialargs']})' {" >> "$TMP_GRUB_CFG"
-    echo "  linuxefi /images/pxeboot/vmlinuz inst.stage2=hd:LABEL=${iso['label']} ${iso['kernelserialargs']}" >> "$TMP_GRUB_CFG"
-    echo "  initrdefi /images/pxeboot/initrd.img" >> "$TMP_GRUB_CFG"
-    echo "}" >> "$TMP_GRUB_CFG"
-    echo "menuentry 'Rescue ${iso['volid']} (${iso['kernelserialargs']})' {" >> "$TMP_GRUB_CFG"
-    echo "  linuxefi /images/pxeboot/vmlinuz inst.stage2=hd:LABEL=${iso['label']} ${iso['kernelserialargs']}" >> "$TMP_GRUB_CFG"
-    echo "  initrdefi /images/pxeboot/initrd.img" >> "$TMP_GRUB_CFG"
-    echo "}" >> "$TMP_GRUB_CFG"
-    echo "menuentry 'Boot from next volume' {" >> "$TMP_GRUB_CFG"
-    echo "  exit 1" >> "$TMP_GRUB_CFG"
-    echo "}" >> "$TMP_GRUB_CFG"
+    echo "menuentry 'Install ${iso['volid']} (${iso['kernelserialargs']})' {" >> "${tmp_grub_cfg}"
+    echo "  linuxefi /images/pxeboot/vmlinuz inst.stage2=hd:LABEL=${iso['label']} ${iso['kernelserialargs']}" >> "${tmp_grub_cfg}"
+    echo "  initrdefi /images/pxeboot/initrd.img" >> "${tmp_grub_cfg}"
+    echo "}" >> "${tmp_grub_cfg}"
+    echo "menuentry 'Rescue ${iso['volid']} (${iso['kernelserialargs']})' {" >> "${tmp_grub_cfg}"
+    echo "  linuxefi /images/pxeboot/vmlinuz inst.stage2=hd:LABEL=${iso['label']} ${iso['kernelserialargs']}" >> "${tmp_grub_cfg}"
+    echo "  initrdefi /images/pxeboot/initrd.img" >> "${tmp_grub_cfg}"
+    echo "}" >> "${tmp_grub_cfg}"
+    echo "menuentry 'Boot from next volume' {" >> "${tmp_grub_cfg}"
+    echo "  exit 1" >> "${tmp_grub_cfg}"
+    echo "}" >> "${tmp_grub_cfg}"
     if [[ "${iso['boottype']}" =~ "efi" ]]; then
-      echo "menuentry 'UEFI Firmware Settings' {" >> "$TMP_GRUB_CFG"
-      echo "  fwsetup" >> "$TMP_GRUB_CFG"
-      echo "}" >> "$TMP_GRUB_CFG"
+      echo "menuentry 'UEFI Firmware Settings' {" >> "${tmp_grub_cfg}"
+      echo "  fwsetup" >> "${tmp_grub_cfg}"
+      echo "}" >> "${tmp_grub_cfg}"
     fi
-    print_file "$TMP_GRUB_CFG"
+    print_file "${tmp_grub_cfg}"
     if [ "${options['testmode']}" = "false" ]; then
-      sudo cp "$TMP_GRUB_CFG" "$ISO_GRUB_CFG"
+      sudo cp "${tmp_grub_cfg}" "${iso_grub_cfg}"
     fi
   fi
 }

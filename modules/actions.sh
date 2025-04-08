@@ -44,7 +44,7 @@ process_actions () {
         options['createautoinstall']="true"
         ;;
       createcivm)
-        vm['type']="kvm"
+       iso['type']="kvm"
         options['installrequiredpackages']="true"
         options['createcivm']="true"
         ;;
@@ -84,17 +84,17 @@ process_actions () {
         options['fulliso']="true"
        ;;
       createisovm)
-        vm['type']="kvm"
+       iso['type']="kvm"
         options['installrequiredpackages']="true"
         options['createisovm']="true"
         ;;
       deletecivm)
-        vm['type']="kvm"
+       iso['type']="kvm"
         options['installrequiredpackages']="true"
         options['deletecivm']="true"
         ;;
       deleteisovm)
-        vm['type']="kvm"
+       iso['type']="kvm"
         options['installrequiredpackages']="true"
         options['deleteisovm']="true"
         ;;

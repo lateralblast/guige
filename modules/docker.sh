@@ -64,7 +64,7 @@ check_docker_config () {
           print_file "${iso['workdir']}/${arch_dir}/docker-compose.yml"
           handle_output "# Creating Docker config ${iso['workdir']}/${arch_dir}/Dockerfile" "TEXT"
           echo "FROM ubuntu:${current['dockerubunturelease']}" > "${iso['workdir']}/${arch_dir}/Dockerfile"
-          echo "RUN apt-get update && apt-get -o Dpkg::Options::=\"--force-overwrite\" install -y ${options['requiredpackages']}" >> "${iso['workdir']}/${arch_dir}/Dockerfile"
+          echo "RUN apt-get update && apt-get -o Dpkg::Options::=\"--force-overwrite\" install -y ${iso['requiredpackages']}" >> "${iso['workdir']}/${arch_dir}/Dockerfile"
           print_file "${iso['workdir']}/${arch_dir}/Dockerfile"
           handle_output "# Building docker image ${script['name']}-${current['dockerubunturelease']}-${arch_dir}" "TEXT"
           docker build "${iso['workdir']}/${arch_dir}" --tag "${script['name']}-${current['dockerubunturelease']}-${arch_dir}" --platform "linux/${arch_dir}"
