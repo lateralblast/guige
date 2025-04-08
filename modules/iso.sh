@@ -27,7 +27,7 @@ update_iso_url () {
           iso['url']="https://cdimage.ubuntu.com/${iso['codename']}/daily-live/current/${iso['inputfilebase']}"
         fi
         ;;
-      "desktop"|"server")
+      "desktop"|"server"|"live-server")
         iso['url']="https://releases.ubuntu.com/${iso['release']}/${iso['inputfilebase']}"
         ;;
       *)

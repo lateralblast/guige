@@ -100,8 +100,14 @@ create_docker_iso () {
       exit
     fi
     if [ ! "${options['testmode']}" = "true" ]; then
+      verbose_message "Creating ${local_script}"
       echo "#!/bin/bash" > "${local_script}"
-      echo "${docker['workdir']}/files/${script['bin']} ${script['args']} --workdir ${docker['workdir']}] --preworkdir ${iso['workdir']}" >> "${local_script}"
+      if [[ ! "${script['args']}" =~ release ]]; then
+        script_args="${script['args']} --release ${iso['release']}"
+      else
+        script_args="${script['args']}"
+      fi
+      echo "${docker['workdir']}/files/${script['bin']} ${script_args} --workdir ${docker['workdir']}] --preworkdir ${iso['workdir']}" >> "${local_script}"
       execute_command "chmod +x ${local_script}"
       if [ "${options['docker']}" = "true" ]; then
         docker['outputfilebase']=$( basename "${iso['outputfile']}" )
