@@ -329,11 +329,14 @@ update_output_file_name () {
     temp_file_name=$( basename "${iso['outputfile']}" .iso )
     iso['outputfile']="${temp_dir_name}/${temp_file_name}-custom-grub.iso"
   fi
-  for VOLMGR in ${iso['volumemanager']}; do
-    if [ ! "$VOLMGR" = "custom" ]; then
-      temp_dir_name=$( dirname "${iso['outputfile']}" )
-      temp_file_name=$( basename "${iso['outputfile']}" .iso )
-      iso['outputfile']="${temp_dir_name}/${temp_file_name}-$VOLMGR.iso"
+  iso_volmgrs=$( echo "${iso['volumemanager']}" |sed "s/,/ /g" )
+  for iso_volmgr in ${iso_volmgrs}; do
+    if [ ! "${iso_volmgrs}" = "custom" ]; then
+      if [[ ! "${iso[outputfile]}" =~ $iso_volmgr ]]; then
+        temp_dir_name=$( dirname "${iso['outputfile']}" )
+        temp_file_name=$( basename "${iso['outputfile']}" .iso )
+        iso['outputfile']="${temp_dir_name}/${temp_file_name}-${iso_volmgr}.iso"
+      fi
     fi
   done
   if [ "${options['createisovm']}" = "true" ] || [ "${options['createcivm']}" = "true" ]; then
@@ -397,9 +400,9 @@ update_output_file_name () {
     fi
   fi
   if [ "${options['serial']}" = "true" ]; then
-    iso['kernelargs']="${iso['kernel']}ARGS console=${iso['serialporta']},${iso['serialportspeeda']}"
+    iso['kernelargs']="${iso['kernelargs']} console=${iso['serialporta']},${iso['serialportspeeda']}"
     if ! [ "${iso['serialportb']}" = "" ]; then
-      iso['kernelargs']="${iso['kernel']}ARGS console=${iso['serialportb']},${iso['serialportspeedb']}"
+      iso['kernelargs']="${iso['kernelargs']} console=${iso['serialportb']},${iso['serialportspeedb']}"
     fi
   fi
   if [ "${old['installsquashfile']}" = "" ]; then

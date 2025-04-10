@@ -10,7 +10,6 @@
 
 process_switches () {
   for switch_name in "${!defaults[@]}"; do
-    verbose_message "Processing switch ${switch_name}"
     if [ "${iso[${switch_name}]}" = "" ]; then
       case "${switch_name}" in
         arch)
@@ -123,7 +122,7 @@ process_switches () {
           fi
           ;;
         "volumemanager")
-          if [[ "${iso['volumemanager']}" =~ "fs" ]] || [[ "${iso['volumemanager']}" =~ "custom" ]]; then
+          if [[ "${iso['volumemanager']}" =~ fs ]] || [[ "${iso['volumemanager']}" =~ custom ]]; then
             options['chroot']="true"
             options['unpacksquashfs']="true"
             options['earlypackages']="true"
@@ -140,10 +139,8 @@ process_switches () {
   done
   if [ "${options['autoinstall']}" = "true" ]; then
     if [ ! -f "${iso['autoinstallfile']}" ]; then
-      if [ ! -f "/.dockerenv" ]; then
-        echo "File ${iso['autoinstallfile']} does not exist"
-        exit
-      fi
+      echo "File ${iso['autoinstallfile']} does not exist"
+      exit
     fi
   fi
   if [ "${options['autoinstall']}" = "true" ]; then
@@ -218,5 +215,10 @@ process_switches () {
   fi
   if [ "${options['biosdevname']}" = "true" ]; then
     iso['kernelargs']="${iso['kernelargs']} net.ifnames=0 biosdevname=0"
+  fi
+  if [ "${options['verbose']}" = "true" ]; then
+    for param_name in "${!iso[@]}"; do
+      handle_output "Parameter ${param_name} is set to ${iso[${param_name}]}" "TEXT"
+    done
   fi
 }

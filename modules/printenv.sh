@@ -70,7 +70,7 @@ print_env () {
   handle_output "# Block kernel modules:      [iso['blocklist']}]                  ${iso['blocklist']}"                  "TEXT"
   handle_output "# Allow kernel modules:      [iso['allowlist']}]                  ${iso['allowlist']}"                  "TEXT"
   handle_output "# Allow password login:      [iso['allowpassword']}]              ${iso['allowpassword']}"              "TEXT"
-  handle_output "# Keyboard Layout:           [iso['disksize']}]                     ${iso['disksize']}"                 "TEXT"
+  handle_output "# Keyboard Layout:           [iso['Layout']}]                     ${iso['layout']}"                     "TEXT"
   handle_output "# Locale:                    [iso['locale']}]                     ${iso['locale']}"                     "TEXT"
   handle_output "# LC_ALL:                    [iso['lcall']}]                      ${iso['lcall']}"                      "TEXT"
   handle_output "# Root disk(s):              [iso['disk']}]                       ${iso['disk']}"                       "TEXT"

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Name:         guige (Generic Ubuntu/Unix ISO Generation Engine)
-# Version:      3.4.3
+# Version:      3.5.5
 # Release:      1
 # License:      CC-BA (Creative Commons By Attribution)
 #               http://creativecommons.org/licenses/by/4.0/legalcode
@@ -81,8 +81,6 @@ fi
 if [[ "$*" =~ "debug" ]]; then
   options['verbose']="true"
   set -x
-else
-  options['verbose']="false"
 fi
 
 # Check if we are running inside docker

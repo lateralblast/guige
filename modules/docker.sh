@@ -102,12 +102,31 @@ create_docker_iso () {
     if [ ! "${options['testmode']}" = "true" ]; then
       verbose_message "Creating ${local_script}"
       echo "#!/bin/bash" > "${local_script}"
-      if [[ ! "${script['args']}" =~ release ]]; then
-        script_args="${script['args']} --release ${iso['release']}"
-      else
-        script_args="${script['args']}"
+      script_args="--action ${iso['action']} --options ${iso['options']}"
+      if [ "${options['autoinstall']}" = "true" ]; then
+        if [ -f "${iso['autoinstallfile']}" ]; then
+          execute_command "cp ${iso['autoinstallfile']} ${iso['workdir']}/files/user-data"
+          iso['autoinstallfile']="${docker['workdir']}/files/user-data"
+          script_args="${script_args} --autoinstallfile ${iso['autoinstallfile']}"
+        fi
       fi
-      echo "${docker['workdir']}/files/${script['bin']} ${script_args} --workdir ${docker['workdir']}] --preworkdir ${iso['workdir']}" >> "${local_script}"
+      if [ "${options['sshkey']}" = "true" ]; then
+        get_ssh_key
+        if [ -f "${iso['sshkeyfile']}" ]; then
+          execute_command "cp ${iso['sshkeyfile']} ${iso['workdir']}/files/sshkeyfile"
+          iso['sshkeyfile']="${docker['workdir']}/files/sshkeyfile"
+          script_args="${script_args} --sshkeyfile ${iso['sshkeyfile']}"
+        fi
+      fi
+      for arg_name in release volumemanager; do
+        if [[ ! "${script['args']}" =~ ${arg_name} ]]; then
+          arg_value="${iso[${arg_name}]}"
+          arg_value=$( echo "${arg_value}" |sed "s/^ //g" |sed "s/ $//g" |sed "s/ /,/g" )
+          script_args="${script_args} --${arg_name} ${arg_value}"
+        fi
+      done
+      echo "${docker['workdir']}/files/${script['bin']} ${script_args} --workdir ${docker['workdir']} --preworkdir ${iso['workdir']}" >> "${local_script}"
+      print_file "${local_script}"
       execute_command "chmod +x ${local_script}"
       if [ "${options['docker']}" = "true" ]; then
         docker['outputfilebase']=$( basename "${iso['outputfile']}" )

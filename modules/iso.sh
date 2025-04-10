@@ -108,11 +108,11 @@ copy_iso () {
   else
     if [ "${options['verbose']}" = "true" ]; then
       if [ "${options['testmode']}" = "false" ]; then
-        sudo rsync -av --delete "${iso['mountdir']}/" "${iso['newdir']}/cd"
+        execute_command "sudo rsync -av --delete ${iso['mountdir']}/ ${iso['newdir']}/cd"
       fi
     else
       if [ "${options['testmode']}" = "false" ]; then
-        sudo rsync -a --delete "${iso['mountdir']}/" "${iso['newdir']}/cd"
+        execute_command "sudo rsync -a --delete ${iso['mountdir']}/ ${iso['newdir']}/cd"
       fi
     fi
   fi

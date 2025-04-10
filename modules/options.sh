@@ -13,13 +13,13 @@ process_options () {
   iso['dpkgconf']="${defaults['dpkgconf']}"
   iso['dpkgdepends']="${defaults['dpkgdepends']}"
   if [[ "${iso['options']}" =~ , ]]; then
-    options=$( echo "${iso['options']}" | sed "s/,/ /g" )
+    option_names=$( echo "${iso['options']}" | sed "s/,/ /g" )
   else
-    options="${iso['options']}"
+    option_names="${iso['options']}"
   fi
-  for option in ${options}; do
-    options['${option}']="true"
-    case "${option}" in
+  for option_name in ${option_names}; do
+    options[${option_name}]="true"
+    case "${option_name}" in
       firstboot)
         options['firstboot']="enabled"
         ;;
@@ -72,18 +72,23 @@ process_options () {
         set -eu
         ;;
       *)
-        if [[ "${option}" =~ ^no ]]; then
-          inverse="${option:2}"
-          options['${inverse}']="false"
-          options['${option}']="true"
+        if [[ "${option_name}" =~ ^no ]]; then
+          inverse_name="${option_name:2}"
+          options[${inverse_name}]="false"
+          options[${option_name}]="true"
         else
-          inverse="no${option}"
-          options['${inverse}']="false"
-          options['${option}']="true"
+          inverse_name="no${option_name}"
+          options[${inverse_name}]="false"
+          options[${option_name}]="true"
         fi
         ;;
     esac
   done
+  if [ "${options['verbose']}" = "true" ]; then
+    for option_name in "${!options[@]}"; do
+      handle_output "Option ${option_name} is set to ${options[${option_name}]}" "TEXT"
+    done
+  fi
 }
 
 # Function: get_release_info

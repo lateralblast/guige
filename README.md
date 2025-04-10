@@ -11,7 +11,7 @@ used to hang a shield on the shoulder or neck when not in use.
 Version
 -------
 
-Current version: 3.4.3
+Current version: 3.5.5
 
 Issues
 ------

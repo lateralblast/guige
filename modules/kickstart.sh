@@ -51,7 +51,7 @@ prepare_kickstart_files () {
         if [ ! "${iso_volmgr}" = "lvm" ]; then
           echo "FIRST_DISK=\$( /bin/lsblk -x TYPE |grep disk |grep -v SWAP |sort |head -1 |awk '{print \$1}' )" > "${iso['ksfile']}"
           echo "echo \"# First Disk\" > ${include_disk_file}" >> "${iso['ksfile']}"
-          echo "echo \"bootloader --timeout=${iso['grubtimeout']} --location=${iso['bootloader']} --append=\\\"${iso['kernel']}ARGS\\\" --boot-drive=/dev/\\$FIRST_DISK\" >> ${include_disk_file}" >> "${iso['ksfile']}"
+          echo "echo \"bootloader --timeout=${iso['grubtimeout']} --location=${iso['bootloader']} --append=\\\"${iso['kernelargs']}\\\" --boot-drive=/dev/\\$FIRST_DISK\" >> ${include_disk_file}" >> "${iso['ksfile']}"
           echo "echo \"clearpart --all --drives=/dev/\\$FIRST_DISK\" >> ${include_disk_file}" >> "${iso['ksfile']}"
           echo "echo \"part /boot --size=${iso['bootsize']} --fstype=\\\"${iso_volmgr}\\\" --ondisk=/dev/\\$FIRST_DISK\" >> ${include_disk_file}" >> "${iso['ksfile']}"
           echo "echo \"part ${iso['lvname']} --size=-1 --grow --fstype=\\\"lvmpv\\\" --ondisk=/dev/\\$FIRST_DISK\" >> ${include_disk_file}" >> "${iso['ksfile']}"
@@ -73,7 +73,7 @@ prepare_kickstart_files () {
         if [ "${iso['disk']}" = "first-disk" ]; then
           echo "%include ${include_disk_file}" >> "${iso['ksfile']}"
         else
-          echo "bootloader --timeout=${iso['grubtimeout']} --location=${iso['bootloader']} --append=\"${iso['kernel']}ARGS\" --boot-drive=${iso['disk']}" >> "${iso['ksfile']}"
+          echo "bootloader --timeout=${iso['grubtimeout']} --location=${iso['bootloader']} --append=\"${iso['kernelargs']}\" --boot-drive=${iso['disk']}" >> "${iso['ksfile']}"
           echo "clearpart --all --drives=${iso['disk']}" >> "${iso['ksfile']}"
           echo "part /boot --size=${iso['bootsize']} --fstype=\"${iso_volmgr}\" --ondisk=${iso['disk']}" >> "${iso['ksfile']}"
           echo "part ${iso['lvname']} --size=-1 --grow --fstype=\"${iso_volmgr}\" --ondisk=${iso['disk']}" >> "${iso['ksfile']}"
@@ -192,26 +192,26 @@ prepare_kickstart_grubmenu () {
     for iso_volmgr in ${iso['volumemanager']}; do
       if ! [ "${iso_volmgr}" = "custom" ]; then
         echo "label ${counter}" >> "${tmp_linux_cfg}"
-        echo "  menu label ^${iso['volid']}:${iso_volmgr}:${iso['disk']}:${iso['nic']} (${iso['kernel']}ARGS)" >> "${tmp_linux_cfg}"
+        echo "  menu label ^${iso['volid']}:${iso_volmgr}:${iso['disk']}:${iso['nic']} (${iso['kernelargs']})" >> "${tmp_linux_cfg}"
         echo "  kernel vmlinuz" >> "${tmp_linux_cfg}"
-        echo "  append initrd=initrd.img inst.stage2=hd:LABEL=${iso['label']} ${iso['kernel']}ARGS inst.ks=hd:LABEL=${iso['label']}:/${iso_volmgr}.cfg" >> "${tmp_linux_cfg}"
+        echo "  append initrd=initrd.img inst.stage2=hd:LABEL=${iso['label']} ${iso['kernelargs']} inst.ks=hd:LABEL=${iso['label']}:/${iso_volmgr}.cfg" >> "${tmp_linux_cfg}"
         counter=$(( counter+1 ))
       fi
     done
     if [ "${options['autoinstall']}" = "true" ]; then
       echo "label custom" >> "${tmp_linux_cfg}"
-      echo "  menu label ^${iso['volid']}:custom (${iso['kernel']}ARGS)" >> "${tmp_linux_cfg}"
+      echo "  menu label ^${iso['volid']}:custom (${iso['kernelargs']})" >> "${tmp_linux_cfg}"
       echo "  kernel vmlinuz" >> "${tmp_linux_cfg}"
-      echo "  append initrd=initrd.img inst.stage2=hd:LABEL=${iso['label']} ${iso['kernel']}ARGS inst.ks=hd:LABEL=${iso['label']}:/custom.cfg" >> "${tmp_linux_cfg}"
+      echo "  append initrd=initrd.img inst.stage2=hd:LABEL=${iso['label']} ${iso['kernelargs']} inst.ks=hd:LABEL=${iso['label']}:/custom.cfg" >> "${tmp_linux_cfg}"
     fi
     echo "label install" >> "${tmp_linux_cfg}"
     echo "  menu label ^Install a Rocky Linux system" >> "${tmp_linux_cfg}"
     echo "  kernel vmlinuz" >> "${tmp_linux_cfg}"
-    echo "  append initrd=initrd.img inst.stage2=hd:LABEL=${iso['label']} ${iso['kernel']}ARGS" >> "${tmp_linux_cfg}"
+    echo "  append initrd=initrd.img inst.stage2=hd:LABEL=${iso['label']} ${iso['kernelargs']}" >> "${tmp_linux_cfg}"
     echo "label rescue" >> "${tmp_linux_cfg}"
     echo "  menu label ^Rescue a Rocky Linux system" >> "${tmp_linux_cfg}"
     echo "  kernel vmlinuz" >> "${tmp_linux_cfg}"
-    echo "  append initrd=initrd.img inst.stage2=hd:LABEL=${iso['label']} ${iso['kernel']}ARGS" >> "${tmp_linux_cfg}"
+    echo "  append initrd=initrd.img inst.stage2=hd:LABEL=${iso['label']} ${iso['kernelargs']}" >> "${tmp_linux_cfg}"
     echo "label memtest" >> "${tmp_linux_cfg}"
     echo "  menu label Test ^Memory" >> "${tmp_linux_cfg}"
     echo "  kernel memtest" >> "${tmp_linux_cfg}"
@@ -242,14 +242,14 @@ prepare_kickstart_grubmenu () {
     echo "" >> "${tmp_grub_cfg}"
     if [ "${options['autoinstall']}" = "true" ]; then
       echo "menuentry '${iso['volid']}:custom (${iso['kernelserialargs']})' {" >> "${tmp_grub_cfg}"
-      echo "  linuxefi /images/pxeboot/vmlinuz inst.stage2=hd:LABEL=${iso['label']} ${iso['kernel']}ARGS inst.ks=hd:LABEL=${iso['label']}:/custom.cfg" >> "${tmp_grub_cfg}"
+      echo "  linuxefi /images/pxeboot/vmlinuz inst.stage2=hd:LABEL=${iso['label']} ${iso['kernelargs']} inst.ks=hd:LABEL=${iso['label']}:/custom.cfg" >> "${tmp_grub_cfg}"
       echo "  initrdefi /images/pxeboot/initrd.img" >> "${tmp_grub_cfg}"
       echo "}" >> "${tmp_grub_cfg}"
     fi
     for iso_volmgr in ${iso['volumemanager']}; do
       if ! [ "${iso_volmgr}" = "custom" ]; then
         echo "menuentry '${iso['volid']}:${iso_volmgr}:${iso['disk']}:${iso['nic']} (${iso['kernelserialargs']})' {" >> "${tmp_grub_cfg}"
-        echo "  linuxefi /images/pxeboot/vmlinuz inst.stage2=hd:LABEL=${iso['label']} ${iso['kernel']}ARGS inst.ks=hd:LABEL=${iso['label']}:/${iso_volmgr}.cfg" >> "${tmp_grub_cfg}"
+        echo "  linuxefi /images/pxeboot/vmlinuz inst.stage2=hd:LABEL=${iso['label']} ${iso['kernelargs']} inst.ks=hd:LABEL=${iso['label']}:/${iso_volmgr}.cfg" >> "${tmp_grub_cfg}"
         echo "  initrdefi /images/pxeboot/initrd.img" >> "${tmp_grub_cfg}"
         echo "}" >> "${tmp_grub_cfg}"
       fi

@@ -9,8 +9,20 @@
 # Get SSH key if option set
 
 get_ssh_key () {
-  if ! [ -f "/.dockerenv" ]; then
-    if [ "${options['sshkey']}" = "true" ]; then
+  if [ "${options['sshkey']}" = "true" ]; then
+    if [ -f "/.dockerenv" ]; then
+      if [ "${iso['sshkey']}" = "" ]; then
+        if [ "${iso['sshkeyfile']}" = "" ]; then
+          if [ -f "${iso['workdir']}/files/sshkeyfile" ]; then
+            iso['sshkey']=$(<"${iso['workdir']}/files/sshkeyfile")
+          fi
+        else
+          if [ -f "${iso['sshkeyfile']}" ]; then
+            iso['sshkey']=$(<"${iso['sshkeyfile']}")
+          fi
+        fi
+      fi
+    else
       if [ "${iso['sshkey']}" = "" ]; then
         if [ "${iso['sshkeyfile']}" = "" ]; then
           information_message "Attempting to find SSH key file"

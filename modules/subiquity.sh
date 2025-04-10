@@ -193,7 +193,8 @@ prepare_autoinstall_iso () {
     create_dir "${iso['packagedir']}"
     create_dir "${iso['postscriptdir']}"
     create_dir "${iso['installfilesdir']}"
-    for iso_volmgr in ${iso['volumemanager']}; do
+    iso_volmgrs=$( echo "${iso['volumemanager']}" |sed "s/,/ /g" )
+    for iso_volmgr in ${iso_volmgrs}; do
       handle_output "# Creating directory ${iso['configdir']}/${iso_volmgr}/${iso['disk']}" "TEXT"
       create_dir "${iso['configdir']}/${iso_volmgr}/${iso['disk']}"
       handle_output "# Creating ${iso['configdir']}/${iso_volmgr}/${iso['disk']}/meta-data" "TEXT"
@@ -242,16 +243,17 @@ prepare_autoinstall_iso () {
       echo "default ${iso['grubmenu']}" > "${iso['sourcedir']}/isolinux/txt.cfg"
       counter=0
       iso['kernelserialargs']="console=${iso['serialporta']},${iso['serialportspeeda']} console=${iso['serialportb']},${iso['serialportspeedb']}"
-      for iso_volmgr in ${iso['volumemanager']}; do
+      iso_volmgrs=$( echo "${iso['volumemanager']}" |sed "s/,/ /g" )
+      for iso_volmgr in ${iso_volmgrs}; do
         echo "label ${counter}" >> "${iso['sourcedir']}/isolinux/txt.cfg"
-        if [[ "${iso_volmgr}" =~ "custom" ]]; then
+        if [ "${iso_volmgr}" = "custom" ]; then
           echo "  menu label ^${iso['volid']}:${iso_volmgr}: (${iso['kernelserialargs']})" >> "${iso['sourcedir']}/isolinux/txt.cfg"
           echo "  kernel /casper/vmlinuz" >> "${iso['sourcedir']}/isolinux/txt.cfg"
           echo "  append  initrd=/casper/initrd ${iso['kernelserialargs']} quiet autoinstall fsck.mode=skip ds=nocloud;s=${iso['installmount']}/${iso['autoinstalldir']}/configs/${iso_volmgr}/${iso['disk']}/  ---" >> "${iso['sourcedir']}/isolinux/txt.cfg"
         else
-          echo "  menu label ^${iso['volid']}:${iso_volmgr}:${iso['disk']}:${iso['nic']} (${iso['kernel']}ARGS)" >> "${iso['sourcedir']}/isolinux/txt.cfg"
+          echo "  menu label ^${iso['volid']}:${iso_volmgr}:${iso['disk']}:${iso['nic']} (${iso['kernelargs']}" >> "${iso['sourcedir']}/isolinux/txt.cfg"
           echo "  kernel /casper/vmlinuz" >> "${iso['sourcedir']}/isolinux/txt.cfg"
-          echo "  append  initrd=/casper/initrd ${iso['kernel']}ARGS quiet autoinstall fsck.mode=skip ds=nocloud;s=${iso['installmount']}/${iso['autoinstalldir']}/configs/${iso_volmgr}/${iso['disk']}/  ---" >> "${iso['sourcedir']}/isolinux/txt.cfg"
+          echo "  append  initrd=/casper/initrd ${iso['kernelargs']} quiet autoinstall fsck.mode=skip ds=nocloud;s=${iso['installmount']}/${iso['autoinstalldir']}/configs/${iso_volmgr}/${iso['disk']}/  ---" >> "${iso['sourcedir']}/isolinux/txt.cfg"
         fi
         counter=$(( counter+1 ))
       done
@@ -265,16 +267,16 @@ prepare_autoinstall_iso () {
       echo "set timeout=${iso['grubtimeout']}" > "${iso['sourcedir']}/boot/grub/grub.cfg"
       echo "default=${iso['grubmenu']}" >> "${iso['sourcedir']}/boot/grub/grub.cfg"
       echo "loadfont unicode" >> "${iso['sourcedir']}/boot/grub/grub.cfg"
-      for iso_volmgr in ${iso['volumemanager']}; do
-        if [[ "${iso_volmgr}" =~ "custom" ]]; then
+      iso_volmgrs=$( echo "${iso['volumemanager']}" |sed "s/,/ /g" )
+      for iso_volmgr in ${iso_volmgrs}; do
+        if [ "${iso_volmgr}" = "custom" ]; then
           echo "menuentry '${iso['volid']}:${iso_volmgr}:defaults (${iso['kernelserialargs']})' {" >> "${iso['sourcedir']}/boot/grub/grub.cfg"
           echo "  set gfxpayload=keep" >> "${iso['sourcedir']}/boot/grub/grub.cfg"
-#            echo "  linux   /casper/vmlinuz ${iso['kernelserialargs']} quiet autoinstall fsck.mode=skip ds=nocloud\;s=${iso['installmount']}/${iso['autoinstalldir']}/configs/${iso_volmgr}/${iso['disk']}/  ---" >> "${iso['sourcedir']}/boot/grub/grub.cfg"
           echo "  linux   /casper/vmlinuz autoinstall fsck.mode=skip ds=nocloud\;s=${iso['installmount']}/${iso['autoinstalldir']}/configs/${iso_volmgr}/${iso['disk']}/  ---" >> "${iso['sourcedir']}/boot/grub/grub.cfg"
         else
           echo "menuentry '${iso['volid']}:${iso_volmgr}:${iso['disk']}:${iso['nic']} (${iso['kernelserialargs']})' {" >> "${iso['sourcedir']}/boot/grub/grub.cfg"
           echo "  set gfxpayload=keep" >> "${iso['sourcedir']}/boot/grub/grub.cfg"
-          echo "  linux   /casper/vmlinuz ${iso['kernel']}ARGS quiet autoinstall fsck.mode=skip ds=nocloud\;s=${iso['installmount']}/${iso['autoinstalldir']}/configs/${iso_volmgr}/${iso['disk']}/  ---" >> "${iso['sourcedir']}/boot/grub/grub.cfg"
+          echo "  linux   /casper/vmlinuz ${iso['kernelargs']} quiet autoinstall fsck.mode=skip ds=nocloud\;s=${iso['installmount']}/${iso['autoinstalldir']}/configs/${iso_volmgr}/${iso['disk']}/  ---" >> "${iso['sourcedir']}/boot/grub/grub.cfg"
         fi
         echo "  initrd  /casper/initrd" >> "${iso['sourcedir']}/boot/grub/grub.cfg"
         echo "}" >> "${iso['sourcedir']}/boot/grub/grub.cfg"
@@ -295,17 +297,27 @@ prepare_autoinstall_iso () {
       print_file "${iso['sourcedir']}/boot/grub/grub.cfg"
     fi
   fi
-  for iso_volmgr in ${iso['volumemanager']}; do
+  for iso_volmgr in ${iso_volmgrs}; do
     if [ -e "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data" ]; then
       rm "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
     fi
+    if [ ! -d "${iso['configdir']}/${iso_volmgr}/${iso['disk']}" ]; then
+      sudo_create_dir "${iso['configdir']}/${iso_volmgr}/${iso['disk']}"
+    fi
     if [ "${options['testmode']}" = "false" ]; then
       if [ "${iso_volmgr}" = "custom" ]; then
-        if [ -f "${iso['workdir']}/files/user-data" ]; then
-          sudo_chown "${iso['workdir']}/files/user-data" "${os['user']}" "${os['group']}"
-          chmod +w "${iso['workdir']}/files/user-data"
+        if [ -f "/.dockerenv" ]; then
+          if [ -f "${iso['workdir']}/files/user-data" ]; then
+            execute_command "cp ${iso['workdir']}/files/user-data ${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+          fi
+        else
+          if [ -f "${iso['workdir']}/files/user-data" ]; then
+            sudo_chown "${iso['workdir']}/files/user-data" "${os['user']}" "${os['group']}"
+            chmod +w "${iso['workdir']}/files/user-data"
+          fi
+          execute_command "cp ${iso['workdir']}/files/user-data ${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
         fi
-        cp "${iso['workdir']}/files/user-data" "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+        execute_command "touch ${iso['configdir']}/${iso_volmgr}/${iso['disk']}/meta-data"
         print_file "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
       else
         echo "#cloud-config" > "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
@@ -350,7 +362,7 @@ prepare_autoinstall_iso () {
           echo "  kernel:" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
           echo "    package: ${iso['kernel']}" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
           echo "  keyboard:" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
-          echo "    layout: ${iso['disksize']}" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+          echo "    layout: ${iso['layout']}" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
           echo "  locale: ${iso['locale']}" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
 #          echo "  user-data:" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
 #          echo "    timezone: ${iso['timezone']}" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
@@ -408,7 +420,7 @@ prepare_autoinstall_iso () {
             echo "      device: ${iso['disk']}" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
             echo "      flag: boot" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
             echo "      grub_device: true" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
-            echo "    - id: ${iso['disk']}}1" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+            echo "    - id: ${iso['disk']}1" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
             echo "      type: partition" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
             echo "      number: 2" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
             echo "      size: -1" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
@@ -418,15 +430,15 @@ prepare_autoinstall_iso () {
             echo "      fstype: fat32" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
             echo "      volume: efi" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
             echo "      label: efi" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
-            echo "    - id: ${iso['disk']}}1_root" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+            echo "    - id: ${iso['disk']}_root" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
             echo "      type: format" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
             echo "      fstype: zfsroot" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
-            echo "      volume: ${iso['disk']}}1" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+            echo "      volume: ${iso['disk']}1" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
             echo "      label: 'rootfs'" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
-            echo "    - id: ${iso['disk']}}1_mount" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+            echo "    - id: ${iso['disk']}1_mount" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
             echo "      type: mount" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
             echo "      path: /" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
-            echo "      device: ${iso['disk']}}1_root" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+            echo "      device: ${iso['disk']}1_root" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
             echo "    - id: efi_mount" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
             echo "      device: efi_format" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
             echo "      path: /boot/efi" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
@@ -460,7 +472,7 @@ prepare_autoinstall_iso () {
             echo "      preserve: false" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
             echo "      grub_device: true" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
             echo "      offset: 1048576" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
-            echo "      path: /dev/${iso['disk']}}1" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+            echo "      path: /dev/${iso['disk']}1" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
             echo "      id: partition-0" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
             echo "      type: partition" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
             echo "    - fstype: fat32" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
@@ -475,7 +487,7 @@ prepare_autoinstall_iso () {
             echo "      preserve: false" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
             echo "      grub_device: false" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
             echo "      offset: 1128267776" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
-            echo "      path: /dev/${iso['disk']}}2" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+            echo "      path: /dev/${iso['disk']}2" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
             echo "      id: partition-1" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
             echo "      type: partition" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
             echo "    - fstype: ext4" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
@@ -490,7 +502,7 @@ prepare_autoinstall_iso () {
             echo "      preserve: false" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
             echo "      grub_device: false" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
             echo "      offset: 3275751424" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
-            echo "      path: /dev/${iso['disk']}}3" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+            echo "      path: /dev/${iso['disk']}3" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
             echo "      id: partition-2" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
             echo "      type: partition" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
             echo "    - name: ${iso['vgname']}" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
@@ -615,8 +627,8 @@ prepare_autoinstall_iso () {
           else
             echo "    - \"echo 'GRUB_TERMINAL=\\\"console\\\"' >> ${iso['targetmount']}/etc/default/grub\"" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
           fi
-          echo "    - \"echo 'GRUB_CMDLINE_LINUX=\\\"console=tty0 ${iso['kernel']}ARGS\\\"' >> ${iso['targetmount']}/etc/default/grub\"" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
-          echo "    - \"echo 'iso['grubtimeout']=\\\"${iso['grubtimeout']}\\\"' >> ${iso['targetmount']}/etc/default/grub\"" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+          echo "    - \"echo 'GRUB_CMDLINE_LINUX=\\\"console=tty0 ${iso['kernelargs']}\\\"' >> ${iso['targetmount']}/etc/default/grub\"" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+          echo "    - \"echo 'GRUB_TIMEOUT=\\\"${iso['grubtimeout']}\\\"' >> ${iso['targetmount']}/etc/default/grub\"" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
           echo "    - \"echo '${iso['username']} ALL=(ALL) NOPASSWD: ALL' >> ${iso['targetmount']}/etc/sudoers.d/${iso['username']}\"" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
           if [ "${options['autoupgrade']}" = "false" ]; then
             echo "    - \"echo 'APT::Periodic::Update-Package-Lists \\\"0\\\";' > ${iso['targetmount']}/etc/apt/apt.conf.d/20auto-upgrades\"" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"

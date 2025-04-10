@@ -107,8 +107,8 @@ create_ubuntu_chroot_script () {
         fi
       fi
     fi
-    sudo cp "${orig_script}" "${chroot_script}"
-    sudo chmod +x "${chroot_script}"
+    execute_command "cp ${orig_script} ${chroot_script}"
+    execute_command "sudo chmod +x ${chroot_script}"
     print_file "${orig_script}"
   fi
 }
