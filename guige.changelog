@@ -641,3 +641,7 @@
 # More bug fixes
 # 3.2.1: Fri  4 Apr 2025 22:14:15 AEDT
 # Bug fixes
+# 3.2.2: Sat Apr 12 09:40:29 AEST 2025
+# ISO URL determination fix
+# 3.2.3: Sat Apr 12 10:29:49 AEST 2025
+# Fixed chroot mount/unmounts

@@ -27,10 +27,18 @@ update_iso_url () {
         fi
         ;;
       "desktop"|"server")
-        ISO_URL="https://releases.ubuntu.com/$ISO_RELEASE/$BASE_ISO_INPUTFILE"
+        if [[ "$ISO_ARCH" =~ amd ]]; then
+          ISO_URL="https://releases.ubuntu.com/$ISO_RELEASE/$BASE_ISO_INPUTFILE"
+        else
+          ISO_URL="https://cdimage.ubuntu.com/releases/$ISO_RELEASE/release/$BASE_ISO_INPUTFILE"
+        fi
         ;;
       *)
-        ISO_URL="https://cdimage.ubuntu.com/releases/$ISO_RELEASE/release/$BASE_ISO_INPUTFILE"
+        if [[ "$ISO_ARCH" =~ amd ]]; then
+          ISO_URL="https://releases.ubuntu.com/$ISO_CODENAME/$BASE_ISO_INPUTFILE"
+        else
+          ISO_URL="https://cdimage.ubuntu.com/releases/$ISO_RELEASE/release/$BASE_ISO_INPUTFILE"
+        fi
         ;;
     esac
     if [ "$OLD_ISO_URL" = "" ]; then

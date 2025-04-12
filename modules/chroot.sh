@@ -26,7 +26,15 @@ execute_ubuntu_chroot_script () {
     handle_output "# Executing chroot script" "TEXT"
     handle_output "chroot $ISO_NEW_DIR/custom /tmp/modify_chroot.sh" "TEXT"
     if [ "$DO_ISO_TESTMODE" = "false" ]; then
+      execute_command "sudo mount --bind /dev $ISO_NEW_DIR/custom/dev"
+      execute_command "sudo mount --bind /dev/pts $ISO_NEW_DIR/custom/dev/pts"
+      execute_command "sudo mount --bind /proc $ISO_NEW_DIR/custom/proc"
+      execute_command "sudo mount --bind /sys $ISO_NEW_DIR/custom/sys"
       sudo chroot "$ISO_NEW_DIR/custom" "/tmp/modify_chroot.sh"
+      execute_command "sudo umount $ISO_NEW_DIR/custom/dev/pts"
+      execute_command "sudo umount $ISO_NEW_DIR/custom/dev"
+      execute_command "sudo umount $ISO_NEW_DIR/custom/proc"
+      execute_command "sudo umount $ISO_NEW_DIR/custom/sys"
     fi
   fi
 }
@@ -70,9 +78,6 @@ create_ubuntu_chroot_script () {
   handle_output "# Creating chroot script $ISO_CHROOT_SCRIPT" "TEXT"
   if [ "$DO_ISO_TESTMODE" = "false" ]; then
     echo "#!/usr/bin/bash" > "$ORIG_SCRIPT"
-    echo "mount -t proc none /proc/" >> "$ORIG_SCRIPT"
-    echo "mount -t sysfs none /sys/" >> "$ORIG_SCRIPT"
-    echo "mount -t devpts none /dev/pts" >> "$ORIG_SCRIPT"
     echo "export HOME=/root" >> "$ORIG_SCRIPT"
     echo "export DEBIAN_FRONTEND=noninteractive" >> "$ORIG_SCRIPT"
     if [ ! "$ISO_COUNTRY" = "us" ]; then
@@ -91,9 +96,6 @@ create_ubuntu_chroot_script () {
     echo "apt update" >> "$ORIG_SCRIPT"
     echo "export LC_ALL=C ; apt install -y --download-only $ISO_CHROOTPACKAGES" >> "$ORIG_SCRIPT"
     echo "export LC_ALL=C ; apt install -y $ISO_CHROOTPACKAGES --option=Dpkg::Options::=$ISO_ISO_DPKGCONF" >> "$ORIG_SCRIPT"
-    echo "umount /proc/" >> "$ORIG_SCRIPT"
-    echo "umount /sys/" >> "$ORIG_SCRIPT"
-    echo "umount /dev/pts/" >> "$ORIG_SCRIPT"
     echo "exit" >> "$ORIG_SCRIPT"
     if [ -f "/.dockerenv" ]; then
       if [ ! -d "$ISO_NEW_DIR/custom/tmp" ]; then
