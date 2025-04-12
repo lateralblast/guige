@@ -84,17 +84,17 @@ process_actions () {
         options['fulliso']="true"
        ;;
       createisovm)
-       iso['type']="kvm"
+        iso['type']="kvm"
         options['installrequiredpackages']="true"
         options['createisovm']="true"
         ;;
       deletecivm)
-       iso['type']="kvm"
+        iso['type']="kvm"
         options['installrequiredpackages']="true"
         options['deletecivm']="true"
         ;;
       deleteisovm)
-       iso['type']="kvm"
+        iso['type']="kvm"
         options['installrequiredpackages']="true"
         options['deleteisovm']="true"
         ;;
@@ -105,7 +105,7 @@ process_actions () {
       help|printhelp)
         print_help
         ;;
-      installrequired|checkrequired)
+      installrequired*|checkrequired*)
         options['installrequiredpackages']="true"
         ;;
       justiso)

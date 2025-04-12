@@ -3,6 +3,43 @@
 # shellcheck disable=SC2034
 # shellcheck disable=SC2154
 
+# Function: install_package
+#
+# Install Package
+
+install_package () {
+  package="$1"
+  package_version=""
+  verbose_message "# package: ${package}" TEXT
+  if [ "${os['name']}" = "Darwin" ]; then
+    package_version=$( brew info "${package}" --json |jq -r ".[0].versions.stable" )
+  else
+    if [[ "${iso['release']}" =~ "Arch" ]] || [[ "${iso['release']}" =~ "Endeavour" ]]; then
+      package_version=$( sudo pacman -Q "${package}" 2> /dev/null |awk '{print $2}' )
+    else
+      package_version=$( sudo dpkg -l "${package}" 2>&1 |grep "^ii" |awk '{print $3}' )
+    fi
+  fi
+  verbose_message "# ${package} version: ${package_version}" "TEXT"
+  if [ -z "${package_version}" ]; then
+    if [ "${options['testmode']}" = "false" ]; then
+      verbose_message "# Installing package ${package}"
+      if [ "${os['name']}" = "Darwin" ]; then
+        brew update
+        brew install "${package}"
+      else
+        if [[ "${iso['release']}" =~ "Arch" ]] || [[ "${iso['release']}" =~ "Endeavour" ]]; then
+          sudo pacman -Sy
+          echo Y |sudo pacman -Sy "${package}"
+        else
+          sudo apt update
+          sudo apt install -y "${package}"
+        fi
+      fi
+    fi
+  fi
+}
+
 # Function: install_required_packages
 #
 # Install required packages
@@ -14,35 +51,7 @@ install_required_packages () {
   package_list="$1"
   handle_output "# Checking required packages are installed" "TEXT"
   for package in ${package_list}; do
-    package_version=""
-    verbose_message "# package: ${package}" TEXT
-    if [ "${os['name']}" = "Darwin" ]; then
-      package_version=$( brew info "${package}" --json |jq -r ".[0].versions.stable" )
-    else
-      if [[ "${iso['release']}" =~ "Arch" ]] || [[ "${iso['release']}" =~ "Endeavour" ]]; then
-        package_version=$( sudo pacman -Q "${package}" 2> /dev/null |awk '{print $2}' )
-      else
-        package_version=$( sudo dpkg -l "${package}" 2>&1 |grep "^ii" |awk '{print $3}' )
-      fi
-    fi
-    verbose_message "# ${package} version: ${package_version}" "TEXT"
-    if [ -z "${package_version}" ]; then
-      if [ "${options['testmode']}" = "false" ]; then
-        verbose_message "# Installing package ${package}"
-        if [ "${os['name']}" = "Darwin" ]; then
-          brew update
-          brew install "${package}"
-        else
-          if [[ "${iso['release']}" =~ "Arch" ]] || [[ "${iso['release']}" =~ "Endeavour" ]]; then
-            sudo pacman -Sy
-            echo Y |sudo pacman -Sy "${package}"
-          else
-            sudo apt update
-            sudo apt install -y "${package}"
-          fi
-        fi
-      fi
-    fi
+    install_package "${package}"    
   done
 }
 

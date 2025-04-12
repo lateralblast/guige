@@ -28,7 +28,11 @@ update_iso_url () {
         fi
         ;;
       "desktop"|"server"|"live-server")
-        iso['url']="https://releases.ubuntu.com/${iso['release']}/${iso['inputfilebase']}"
+        if [ "${iso['release']}" = "${current['betarelease']}" ]; then
+          iso['url']="https://releases.ubuntu.com/${iso['codename']}/${iso['inputfilebase']}"
+        else
+          iso['url']="https://releases.ubuntu.com/${iso['release']}/${iso['inputfilebase']}"
+        fi
         ;;
       *)
         iso['url']="https://cdimage.ubuntu.com/releases/${iso['release']}/release/${iso['inputfilebase']}"
@@ -143,10 +147,10 @@ unmount_iso () {
 # sudo umount -l /home/user/ubuntu-old-iso/isomount
 
 unmount_old () {
-  handle_output "sudo umount -l ${old['mountdir']}" ""
   if [ "${options['testmode']}" = "false" ]; then
     mount_test=$( mount | grep -c "${old['mountdir']}" )
     if [ ! "${mount_test}" = "0" ]; then
+      handle_output "sudo umount -l ${old['mountdir']}" ""
       sudo umount -l "${old['mountdir']}"
     fi
   fi

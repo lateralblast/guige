@@ -709,3 +709,21 @@
 # Bug fixes for custom install
 # 3.5.5: Thu 10 Apr 2025 18:11:37 AEST
 # Ubuntu installer bug fixes
+# 3.5.6: Fri Apr 11 14:59:11 AEST 2025
+# Added support for development releases of Ubuntu in release determination
+# 3.5.7: Fri Apr 11 15:24:47 AEST 2025
+# Added ipcalc to required packages
+# 3.5.8: Fri Apr 11 15:44:19 AEST 2025
+# Added check for route
+# 3.5.9: Fri Apr 11 18:45:19 AEST 2025
+# Format fixes
+# 3.6.0: Sat Apr 12 08:32:46 AEST 2025
+# Improved chroot process
+# 3.6.1: Sat Apr 12 08:40:40 AEST 2025
+# Fixed earlypackages and latepackages options
+# 3.6.2: Sat Apr 12 10:26:48 AEST 2025
+# Fixed ZFS storage stanza
+# 3.6.3: Sat Apr 12 14:01:24 AEST 2025
+# Fixed LVM based storage stanza
+# 3.6.4: Sat Apr 12 14:21:16 AEST 2025
+# Added swap partition option to LVM based storage

@@ -190,14 +190,26 @@ process_switches () {
             iso['bootserverfile']="${iso['outputfile']}"
             ;;
          "desktop")
-            iso['inputfile']="${iso['workdir']}/files/${iso['osname']}-${iso['release']}-desktop-${iso['arch']}.iso"
-            iso['outputfile']="${iso['workdir']}/files/${iso['osname']}-${iso['release']}-desktop-${iso['arch']}-${iso['boottype']}-autoinstall.iso"
-            iso['bootserverfile']="${iso['outputfile']}"
+            if [ "${iso['release']}" = "${current['betarelease']}" ]; then
+              iso['inputfile']="${iso['workdir']}/files/${iso['osname']}-${iso['release']}-beta-desktop-${iso['arch']}.iso"
+              iso['outputfile']="${iso['workdir']}/files/${iso['osname']}-${iso['release']}-beta-desktop-${iso['arch']}-${iso['boottype']}-autoinstall.iso"
+              iso['bootserverfile']="${iso['outputfile']}"
+            else
+              iso['inputfile']="${iso['workdir']}/files/${iso['osname']}-${iso['release']}-desktop-${iso['arch']}.iso"
+              iso['outputfile']="${iso['workdir']}/files/${iso['osname']}-${iso['release']}-desktop-${iso['arch']}-${iso['boottype']}-autoinstall.iso"
+              iso['bootserverfile']="${iso['outputfile']}"
+            fi
             ;;
           *)
-            iso['inputfile']="${iso['workdir']}/files/${iso['osname']}-${iso['release']}-live-server-${iso['arch']}.iso"
-            iso['outputfile']="${iso['workdir']}/files/${iso['osname']}-${iso['release']}-live-server-${iso['arch']}-${iso['boottype']}-autoinstall.iso"
-            iso['bootserverfile']="${iso['outputfile']}"
+            if [ "${iso['release']}" = "${current['betarelease']}" ]; then
+              iso['inputfile']="${iso['workdir']}/files/${iso['osname']}-${iso['release']}-beta-live-server-${iso['arch']}.iso"
+              iso['outputfile']="${iso['workdir']}/files/${iso['osname']}-${iso['release']}-beta-live-server-${iso['arch']}-${iso['boottype']}-autoinstall.iso"
+              iso['bootserverfile']="${iso['outputfile']}"
+            else
+              iso['inputfile']="${iso['workdir']}/files/${iso['osname']}-${iso['release']}-live-server-${iso['arch']}.iso"
+              iso['outputfile']="${iso['workdir']}/files/${iso['osname']}-${iso['release']}-live-server-${iso['arch']}-${iso['boottype']}-autoinstall.iso"
+              iso['bootserverfile']="${iso['outputfile']}"
+            fi
             ;;
         esac
       else

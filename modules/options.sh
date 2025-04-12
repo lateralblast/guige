@@ -84,6 +84,10 @@ process_options () {
         ;;
     esac
   done
+  if [[ "${iso['volumemanager']}" =~ fs ]]; then
+    options['earlypackages']="true"
+    options['latepackages']="true"
+  fi
   if [ "${options['verbose']}" = "true" ]; then
     for option_name in "${!options[@]}"; do
       handle_output "Option ${option_name} is set to ${options[${option_name}]}" "TEXT"

@@ -27,7 +27,15 @@ execute_ubuntu_chroot_script () {
     handle_output "# Executing chroot script" "TEXT"
     handle_output "chroot ${iso['newdir']}/custom /tmp/modify_chroot.sh" "TEXT"
     if [ "${options['testmode']}" = "false" ]; then
+      execute_command "sudo mount --bind /dev ${iso['newdir']}/custom/dev"
+      execute_command "sudo mount --bind /dev/pts ${iso['newdir']}/custom/dev/pts"
+      execute_command "sudo mount --bind /proc ${iso['newdir']}/custom/proc"
+      execute_command "sudo mount --bind /sys ${iso['newdir']}/custom/sys"
       sudo chroot "${iso['newdir']}/custom" "/tmp/modify_chroot.sh"
+      execute_command "sudo umount ${iso['newdir']}/custom/dev/pts"
+      execute_command "sudo umount ${iso['newdir']}/custom/dev"
+      execute_command "sudo umount ${iso['newdir']}/custom/proc"
+      execute_command "sudo umount ${iso['newdir']}/custom/sys"
     fi
   fi
 }
@@ -71,9 +79,6 @@ create_ubuntu_chroot_script () {
   handle_output "# Creating chroot script ${chroot_script}" "TEXT"
   if [ "${options['testmode']}" = "false" ]; then
     echo "#!/usr/bin/bash" > "${orig_script}"
-    echo "mount -t proc none /proc/" >> "${orig_script}"
-    echo "mount -t sysfs none /sys/" >> "${orig_script}"
-    echo "mount -t devpts none /dev/pts" >> "${orig_script}"
     echo "export HOME=/root" >> "${orig_script}"
     echo "export DEBIAN_FRONTEND=noninteractive" >> "${orig_script}"
     if [ ! "${iso['country']}" = "us" ]; then
@@ -92,9 +97,6 @@ create_ubuntu_chroot_script () {
     echo "apt update" >> "${orig_script}"
     echo "export LC_ALL=C ; apt install -y --download-only ${iso['chrootpackages']}" >> "${orig_script}"
     echo "export LC_ALL=C ; apt install -y ${iso['chrootpackages']} --option=Dpkg::Options::=${iso['dpkgconf']}" >> "${orig_script}"
-    echo "umount /proc/" >> "${orig_script}"
-    echo "umount /sys/" >> "${orig_script}"
-    echo "umount /dev/pts/" >> "${orig_script}"
     echo "exit" >> "${orig_script}"
     if [ -f "/.dockerenv" ]; then
       if [ ! -d "${iso['newdir']}/custom/tmp" ]; then

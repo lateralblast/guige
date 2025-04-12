@@ -413,6 +413,7 @@ prepare_autoinstall_iso () {
             echo "      name: main_disk" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
             echo "      wipe: superblock" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
             echo "      grub_device: true" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+
             echo "    - id: efi" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
             echo "      type: partition" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
             echo "      size: 2G" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
@@ -420,25 +421,30 @@ prepare_autoinstall_iso () {
             echo "      device: ${iso['disk']}" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
             echo "      flag: boot" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
             echo "      grub_device: true" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+
             echo "    - id: ${iso['disk']}1" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
             echo "      type: partition" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
             echo "      number: 2" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
             echo "      size: -1" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
             echo "      device: ${iso['disk']}" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+
             echo "    - id: efi_format" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
             echo "      type: format" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
             echo "      fstype: fat32" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
             echo "      volume: efi" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
             echo "      label: efi" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
-            echo "    - id: ${iso['disk']}_root" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+
+            echo "    - id: ${iso['disk']}1_root" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
             echo "      type: format" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
             echo "      fstype: zfsroot" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
             echo "      volume: ${iso['disk']}1" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
             echo "      label: 'rootfs'" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+
             echo "    - id: ${iso['disk']}1_mount" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
             echo "      type: mount" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
             echo "      path: /" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
             echo "      device: ${iso['disk']}1_root" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+
             echo "    - id: efi_mount" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
             echo "      device: efi_format" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
             echo "      path: /boot/efi" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
@@ -456,86 +462,124 @@ prepare_autoinstall_iso () {
               done
             fi
           else
+
             echo "    - ptable: gpt" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
             echo "      path: /dev/${iso['disk']}" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
             echo "      wipe: superblock-recursive" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
             echo "      preserve: false" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
-            echo "      name: ''" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
-            echo "      grub_device: false" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
-            echo "      id: disk-${iso['disk']}" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+            echo "      grub_device: true" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
             echo "      type: disk" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+            echo "      id: disk-${iso['disk']}" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+
+            # EFI System Partition (512MB) - Required for UEFI
+
             echo "    - device: disk-${iso['disk']}" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
             echo "      size: 1127219200" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
             echo "      wipe: superblock" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
             echo "      flag: boot" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
-            echo "      number: 1" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
             echo "      preserve: false" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
             echo "      grub_device: true" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
-            echo "      offset: 1048576" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
-            echo "      path: /dev/${iso['disk']}1" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
-            echo "      id: partition-0" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
             echo "      type: partition" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
-            echo "    - fstype: fat32" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
-            echo "      volume: partition-0" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+            echo "      id: partition-efi" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+
+            echo "    - fstype: vfat" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+            echo "      volume: partition-efi" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
             echo "      preserve: false" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
             echo "      type: format" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
-            echo "      id: format-0" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+            echo "      id: format-efi" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+
+            echo "    - path: /boot/efi" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+            echo "      device: format-efi" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+            echo "      type: mount" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+            echo "      id: mount-efi" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+
+            # Boot Partition (2GB)
+
             echo "    - device: disk-${iso['disk']}" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
             echo "      size: 2147483648" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
             echo "      wipe: superblock" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
-            echo "      number: 2" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
             echo "      preserve: false" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
             echo "      grub_device: false" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
-            echo "      offset: 1128267776" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
-            echo "      path: /dev/${iso['disk']}2" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
-            echo "      id: partition-1" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
             echo "      type: partition" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+            echo "      id: partition-boot" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+
             echo "    - fstype: ext4" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
-            echo "      volume: partition-1" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+            echo "      volume: partition-boot" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
             echo "      preserve: false" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
-            echo "      id: format-1" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+            echo "      id: format-boot" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
             echo "      type: format" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+
+            echo "    - path: /boot" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+            echo "      device: format-boot" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+            echo "      type: mount" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+            echo "      id: mount-boot" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+
+            # Root Partition (LVM)
+
             echo "    - device: disk-${iso['disk']}" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
-            echo "      size: 23566745600" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
-            echo "      wipe: superblock" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
-            echo "      number: 3" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
-            echo "      preserve: false" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
-            echo "      grub_device: false" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
-            echo "      offset: 3275751424" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
-            echo "      path: /dev/${iso['disk']}3" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
-            echo "      id: partition-2" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
-            echo "      type: partition" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
-            echo "    - name: ${iso['vgname']}" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
-            echo "      devices:" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
-            echo "      - partition-2" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
-            echo "      preserve: false" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
-            echo "      id: lvm_volgroup-0" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
-            echo "      type: lvm_volgroup" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
-            echo "    - name: ${iso['lvname']}" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
-            echo "      volgroup: lvm_volgroup-0" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
             echo "      size: -1" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
             echo "      wipe: superblock" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
             echo "      preserve: false" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
-            echo "      path: /dev/${iso['vgname']}/${iso['lvname']}" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
-            echo "      id: lvm_partition-0" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
-            echo "      type: lvm_partition" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
-            echo "    - fstype: ${iso_volmgr}" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
-            echo "      volume: lvm_partition-0" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+            echo "      grub_device: false" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+            echo "      type: partition" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+            echo "      id: partition-root" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+
+            # LVM Volume Group
+
+            echo "    - volume: partition-root" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
             echo "      preserve: false" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
-            echo "      id: format-3" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+            echo "      type: lvm_volgroup" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+            echo "      id: ${iso['vgname']}" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+            echo "      name: ${iso['vgname']}" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+            echo "      devices:" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+            echo "      - partition-root" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+
+            # Logical Volume for Swap
+
+            if [ "${options['swap']}" = "true" ]; then
+              echo "    - volgroup: ${iso['vgname']}" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+              echo "      name: ${iso['lvname']}-swap" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+              echo "      size: ${iso['swapsize']}" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+              echo "      type: lvm_partition" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+              echo "      id: ${iso['lvname']}-swap" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+            fi
+
+            # Logical Volume for Root
+
+            echo "    - volgroup: ${iso['vgname']}" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+            echo "      name: ${iso['lvname']}-root" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+            echo "      size: -1" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+            echo "      type: lvm_partition" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+            echo "      id: ${iso['lvname']}-root" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+
+            # Format and Mount Root Filesystem
+
+            echo "    - fstype: ${iso_volmgr}" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+            echo "      volume: ${iso['lvname']}-root" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+            echo "      preserve: false" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
             echo "      type: format" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+            echo "      id: format-root" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+
             echo "    - path: /" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
-            echo "      device: format-3" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
-            echo "      id: mount-3" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+            echo "      device: format-root" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
             echo "      type: mount" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
-            echo "    - path: /boot" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
-            echo "      device: format-1" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
-            echo "      id: mount-1" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
-            echo "      type: mount" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
-            echo "    - path: /boot/${iso['boottype']}" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
-            echo "      device: format-0" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
-            echo "      id: mount-0" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
-            echo "      type: mount" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+            echo "      id: mount-root" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+
+            # Format and Mount Swap
+
+            if [ "${options['swap']}" = "true" ]; then
+              echo "    - fstype: swap" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+              echo "      volume: ${iso['lvname']}-swap" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+              echo "      preserve: false" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+              echo "      type: format" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+              echo "      id: format-swap" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+
+              echo "    - path: ''" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+              echo "      device: format-swap" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+              echo "      type: mount" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+              echo "      id: mount-swap" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+            fi
+
           fi
         fi
         if [ "${options['reorderuefi']}" = "true" ]; then
@@ -692,6 +736,9 @@ handle_ubuntu_pro () {
 copy_custom_user_data () {
   if [ "${options['autoinstall']}" = "true" ]; then
     if [ ! -f "/.dockerenv" ]; then
+      if [ ! -d "${iso['workdir']}/files" ]; then
+        execute_command "mkdir -p ${iso['workdir']}/files"
+      fi
       cp "${iso['autoinstallfile']}" "${iso['workdir']}/files/user-data"
     fi
   fi

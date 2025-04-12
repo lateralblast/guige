@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Name:         guige (Generic Ubuntu/Unix ISO Generation Engine)
-# Version:      3.5.5
+# Version:      3.6.4
 # Release:      1
 # License:      CC-BA (Creative Commons By Attribution)
 #               http://creativecommons.org/licenses/by/4.0/legalcode
@@ -71,9 +71,6 @@ check_shellcheck () {
 
 if [[ "$*" =~ "verbose" ]]; then
   options['verbose']="true"
-  if [ ! -f "/.dockerenv" ]; then
-    set -eu
-  fi
 else
   options['verbose']="false"
 fi
@@ -81,6 +78,9 @@ fi
 if [[ "$*" =~ "debug" ]]; then
   options['verbose']="true"
   set -x
+  if [ ! -f "/.dockerenv" ]; then
+    set -eu
+  fi
 fi
 
 # Check if we are running inside docker

@@ -13,6 +13,7 @@ set_current_defaults () {
   current['arch']="amd64"
   current['codename']="jammy"
   current['devrelease']="25.04"
+  current['betarelease']="25.04"
   current['dockerubunturelease']="24.04"
   current['oldrelease']="23.04"
   current['osname']="ubuntu"
@@ -110,7 +111,7 @@ set_default_defaults () {
   defaults['oeminstall']="auto"
   defaults['oldrelease']="23.04"
   defaults['onboot']="on"
-  defaults['packages']="zfsutils-linux zfs-initramfs xfsprogs btrfs-progs net-tools curl lftp wget sudo file rsync dialog setserial ansible apt-utils whois squashfs-tools duperemove jq btrfs-compsize iproute2"
+  defaults['packages']="zfsutils-linux zfs-initramfs xfsprogs btrfs-progs net-tools curl lftp wget sudo file rsync dialog setserial ansible apt-utils whois squashfs-tools duperemove jq btrfs-compsize iproute2 ipcalc"
   defaults['password']="ubuntu"
   defaults['passwordalgorithm']="sha512"
   defaults['pesize']="32768"
@@ -120,7 +121,7 @@ set_default_defaults () {
   defaults['majorrelease']=$( echo "${defaults['release']}" |cut -f1 -d. )
   defaults['minorrelease']=$( echo "${defaults['release']}" |cut -f2 -d. )
   defaults['dotrelease']=$( echo "${defaults['release']}" |cut -f3 -d. )
-  defaults['requiredpackages']="binwalk casper genisoimage live-boot live-boot-initramfs-tools p7zip-full lftp wget xorriso whois squashfs-tools sudo file rsync net-tools nfs-kernel-server ansible dialog apt-utils jq"
+  defaults['requiredpackages']="binwalk casper genisoimage live-boot live-boot-initramfs-tools p7zip-full lftp wget xorriso whois squashfs-tools sudo file rsync net-tools nfs-kernel-server ansible dialog apt-utils jq ipcalc"
   defaults['rootsize']="-1"
   defaults['search']=""
   defaults['selinux']="enforcing"
@@ -158,7 +159,7 @@ set_defaults () {
   set_option_defaults
   set_iso_defaults
   iso['name']=""
- iso['exists']="false"
+  iso['exists']="false"
   if [ "${os['name']}" = "Linux" ]; then
     iso['requiredkvmpackages']="libvirt-clients libvirt-daemon-system libguestfs-tools qemu-kvm virt-manager"
   else
@@ -182,6 +183,28 @@ reset_defaults () {
   fi
   if [[ "${iso['osname']}" =~ "ubuntu" ]]; then
     defaults['requiredpackages']="iproute2 ${defaults['requiredpackages']}"
+    if [ "${iso['release']}" = "${current['betarelease']}" ]; then
+      if [ "${iso['arch']}" = "" ]; then
+        iso_arch="${defaults['arch']}"
+      else
+        iso_arch="${iso['arch']}"
+      fi
+      if [[ "${iso['build']}" =~ server ]]; then
+        iso_build="live-server"
+      else
+        if [[ "${iso['build']}" =~ desktop ]]; then
+          iso_build="desktop"
+        else
+          if [[ "${defaults['build']}" =~ server ]]; then
+            iso_build="live-server"
+          else
+            iso_build="desktop"
+          fi
+        fi
+      fi
+      defaults['inputfilebase']="ubuntu-${iso['release']}-beta-${iso_build}-${iso_arch}.iso"
+      defaults['inputfile']="${defaults['workdir']}/${defaults['inputfilebase']}"
+    fi
   fi
   if [[ "${iso['osname']}" =~ "rocky" ]]; then
     defaults['volumemanager']="auto ext4 xfs btrfs"
@@ -371,7 +394,12 @@ set_default_arch () {
 set_default_release () {
   if [ -f "/usr/bin/lsb_release" ]; then
     if [ "${os['distro']}" = "Ubuntu" ]; then
-      defaults['release']=$( lsb_release -ds |awk '{print $2}' )
+      distro_info=$( lsb_release -ds )
+      if [[ "${distro_info}" =~ development ]]; then
+        defaults['release']=$( lsb_release -sr )
+      else
+        defaults['release']=$( lsb_release -ds |awk '{print $2}' )
+      fi
     else
       defaults['release']="${current['release']}"
     fi
@@ -533,6 +561,9 @@ set_default_cidr () {
     fi
     if [[ "${defaults['cidr']}" =~ . ]] || [ "${defaults['cidr']}" = "" ]; then
       if [ ! "${bin_test}" = "0" ]; then
+        if [ ! -d "/usr/sbin/route" ]; then
+          install_package "iproute2"
+        fi
         defaults['netmask']=$( route -n |awk '{print $3}' |grep "^255" )
         defaults['cidr']=$( ipcalc "1.1.1.1" "${defaults['netmask']}" | grep ^Netmask |awk '{print $4}' )
       else
