@@ -1,13 +1,14 @@
 #!/usr/bin/env bash
 
 # shellcheck disable=SC2129
+# shellcheck disable=SC2154
 
 # Function: execute_chroot_script
 #
 # Execute chroot script
 
 execute_chroot_script () {
-  case "$ISO_OSNAME" in
+  case "${iso['osname']}" in
     "ubuntu")
       execute_ubuntu_chroot_script
       ;;
@@ -22,19 +23,19 @@ execute_chroot_script () {
 # sudo chroot ./isonew/custom
 
 execute_ubuntu_chroot_script () {
-  if [ "$DO_ISO_CHROOT" = "true" ]; then
+  if [ "${options['chroot']}" = "true" ]; then
     handle_output "# Executing chroot script" "TEXT"
-    handle_output "chroot $ISO_NEW_DIR/custom /tmp/modify_chroot.sh" "TEXT"
-    if [ "$DO_ISO_TESTMODE" = "false" ]; then
-      execute_command "sudo mount --bind /dev $ISO_NEW_DIR/custom/dev"
-      execute_command "sudo mount --bind /dev/pts $ISO_NEW_DIR/custom/dev/pts"
-      execute_command "sudo mount --bind /proc $ISO_NEW_DIR/custom/proc"
-      execute_command "sudo mount --bind /sys $ISO_NEW_DIR/custom/sys"
-      sudo chroot "$ISO_NEW_DIR/custom" "/tmp/modify_chroot.sh"
-      execute_command "sudo umount $ISO_NEW_DIR/custom/dev/pts"
-      execute_command "sudo umount $ISO_NEW_DIR/custom/dev"
-      execute_command "sudo umount $ISO_NEW_DIR/custom/proc"
-      execute_command "sudo umount $ISO_NEW_DIR/custom/sys"
+    handle_output "chroot ${iso['newdir']}/custom /tmp/modify_chroot.sh" "TEXT"
+    if [ "${options['testmode']}" = "false" ]; then
+      execute_command "sudo mount --bind /dev ${iso['newdir']}/custom/dev"
+      execute_command "sudo mount --bind /dev/pts ${iso['newdir']}/custom/dev/pts"
+      execute_command "sudo mount --bind /proc ${iso['newdir']}/custom/proc"
+      execute_command "sudo mount --bind /sys ${iso['newdir']}/custom/sys"
+      sudo chroot "${iso['newdir']}/custom" "/tmp/modify_chroot.sh"
+      execute_command "sudo umount ${iso['newdir']}/custom/dev/pts"
+      execute_command "sudo umount ${iso['newdir']}/custom/dev"
+      execute_command "sudo umount ${iso['newdir']}/custom/proc"
+      execute_command "sudo umount ${iso['newdir']}/custom/sys"
     fi
   fi
 }
@@ -44,8 +45,8 @@ execute_ubuntu_chroot_script () {
 # Create chroot script
 
 create_chroot_script () {
-  if [ "$DO_ISO_CHROOT" = "true" ]; then
-    case "$ISO_OSNAME" in
+  if [ "${options['chroot']}" = "true" ]; then
+    case "${iso['osname']}" in
       "ubuntu")
         create_ubuntu_chroot_script
         ;;
@@ -72,44 +73,44 @@ create_chroot_script () {
 # exit
 
 create_ubuntu_chroot_script () {
-  ORIG_SCRIPT="$ISO_WORKDIR/files/modify_chroot.sh"
-  ISO_CHROOT_SCRIPT="$ISO_NEW_DIR/custom/tmp/modify_chroot.sh"
-  check_file_perms "$ORIG_SCRIPT"
-  handle_output "# Creating chroot script $ISO_CHROOT_SCRIPT" "TEXT"
-  if [ "$DO_ISO_TESTMODE" = "false" ]; then
-    echo "#!/usr/bin/bash" > "$ORIG_SCRIPT"
-    echo "export HOME=/root" >> "$ORIG_SCRIPT"
-    echo "export DEBIAN_FRONTEND=noninteractive" >> "$ORIG_SCRIPT"
-    if [ ! "$ISO_COUNTRY" = "us" ]; then
-      echo "sed -i \"s/\\/archive/\\/$ISO_COUNTRY.archive/g\" /etc/apt/sources.list" >> "$ORIG_SCRIPT"
+  orig_script="${iso['workdir']}/files/modify_chroot.sh"
+  chroot_script="${iso['newdir']}/custom/tmp/modify_chroot.sh"
+  check_file_perms "${orig_chroot}"
+  handle_output "# Creating chroot script ${chroot_script}" "TEXT"
+  if [ "${options['testmode']}" = "false" ]; then
+    echo "#!/usr/bin/bash" > "${orig_script}"
+    echo "export HOME=/root" >> "${orig_script}"
+    echo "export DEBIAN_FRONTEND=noninteractive" >> "${orig_script}"
+    if [ ! "${iso['country']}" = "us" ]; then
+      echo "sed -i \"s/\\/archive/\\/${iso['country']}.archive/g\" /etc/apt/sources.list" >> "${orig_script}"
     fi
-    echo "if [ -d \"/var/cache/apt/archives\" ]; then" >> "$ORIG_SCRIPT"
-    echo "  rm -rf /var/cache/apt/archives" >> "$ORIG_SCRIPT"
-    echo "  mkdir -p /var/cache/apt/archives" >> "$ORIG_SCRIPT"
-    echo "fi" >> "$ORIG_SCRIPT"
-    echo "if [ -f \"/etc/apt/apt.conf.d/20apt-esm-hook.conf\" ]; then" >> "$ORIG_SCRIPT"
-    echo "  rm /etc/apt/apt.conf.d/20apt-esm-hook.conf" >> "$ORIG_SCRIPT"
-    echo "fi" >> "$ORIG_SCRIPT"
-    echo "if [ -f \"/etc/update-motd.d/91-contract-ua-esm-status\" ]; then" >> "$ORIG_SCRIPT"
-    echo "  rm /etc/update-motd.d/91-contract-ua-esm-status" >> "$ORIG_SCRIPT"
-    echo "fi" >> "$ORIG_SCRIPT"
-    echo "apt update" >> "$ORIG_SCRIPT"
-    echo "export LC_ALL=C ; apt install -y --download-only $ISO_CHROOTPACKAGES" >> "$ORIG_SCRIPT"
-    echo "export LC_ALL=C ; apt install -y $ISO_CHROOTPACKAGES --option=Dpkg::Options::=$ISO_ISO_DPKGCONF" >> "$ORIG_SCRIPT"
-    echo "exit" >> "$ORIG_SCRIPT"
+    echo "if [ -d \"/var/cache/apt/archives\" ]; then" >> "${orig_script}"
+    echo "  rm -rf /var/cache/apt/archives" >> "${orig_script}"
+    echo "  mkdir -p /var/cache/apt/archives" >> "${orig_script}"
+    echo "fi" >> "${orig_script}"
+    echo "if [ -f \"/etc/apt/apt.conf.d/20apt-esm-hook.conf\" ]; then" >> "${orig_script}"
+    echo "  rm /etc/apt/apt.conf.d/20apt-esm-hook.conf" >> "${orig_script}"
+    echo "fi" >> "${orig_script}"
+    echo "if [ -f \"/etc/update-motd.d/91-contract-ua-esm-status\" ]; then" >> "${orig_script}"
+    echo "  rm /etc/update-motd.d/91-contract-ua-esm-status" >> "${orig_script}"
+    echo "fi" >> "${orig_script}"
+    echo "apt update" >> "${orig_script}"
+    echo "export LC_ALL=C ; apt install -y --download-only ${iso['chrootpackages']}" >> "${orig_script}"
+    echo "export LC_ALL=C ; apt install -y ${iso['chrootpackages']} --option=Dpkg::Options::=${iso['dpkgconf']}" >> "${orig_script}"
+    echo "exit" >> "${orig_script}"
     if [ -f "/.dockerenv" ]; then
-      if [ ! -d "$ISO_NEW_DIR/custom/tmp" ]; then
-        sudo_create_dir "$ISO_NEW_DIR/custom/tmp"
+      if [ ! -d "${iso['newdir']}/custom/tmp" ]; then
+        sudo_create_dir "${iso['newdir']}/custom/tmp"
       fi
     else
-      if ! [[ "$ISO_OPTIONS" =~ "docker" ]]; then
-        if [ ! -d "$ISO_NEW_DIR/custom/tmp" ]; then
-          sudo_create_dir "$ISO_NEW_DIR/custom/tmp"
+      if ! [[ "${iso['options']}" =~ "docker" ]]; then
+        if [ ! -d "${iso['newdir']}/custom/tmp" ]; then
+          sudo_create_dir "${iso['newdir']}/custom/tmp"
         fi
       fi
     fi
-    sudo cp "$ORIG_SCRIPT" "$ISO_CHROOT_SCRIPT"
-    sudo chmod +x "$ISO_CHROOT_SCRIPT"
-    print_file "$ORIG_SCRIPT"
+    execute_command "cp ${orig_script} ${chroot_script}"
+    execute_command "sudo chmod +x ${chroot_script}"
+    print_file "${orig_script}"
   fi
 }

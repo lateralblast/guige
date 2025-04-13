@@ -639,9 +639,99 @@
 # Bug fixes
 # 3.2.0: Wed 02 Apr 2025 15:43:41 AEDT
 # More bug fixes
-# 3.2.1: Fri  4 Apr 2025 22:14:15 AEDT
+# 3.2.1: Fri  4 Apr 2025 08:17:37 AEDT
+# Initial migration to new script template
+# 3.2.2: Fri  4 Apr 2025 10:07:35 AEDT
 # Bug fixes
-# 3.2.2: Sat Apr 12 09:40:29 AEST 2025
-# ISO URL determination fix
-# 3.2.3: Sat Apr 12 10:29:49 AEST 2025
-# Fixed chroot mount/unmounts
+# 3.2.3: Fri  4 Apr 2025 10:47:02 AEDT
+# More code cleanup
+# 3.2.4: Fri  4 Apr 2025 21:16:09 AEDT
+# Bug fixes
+# 3.2.5: Sat  5 Apr 2025 07:37:10 AEDT
+# Added shellcheck function
+# 3.2.6: Sat  5 Apr 2025 08:35:54 AEDT
+# Bug fixes
+# 3.2.7: Sat  5 Apr 2025 11:27:09 AEDT
+# Code cleanup based on shellcheck suggestions
+# 3.2.8: Sat  5 Apr 2025 12:11:40 AEDT
+# Fixed function to get CIDR from netmask
+# 3.2.9: Sat  5 Apr 2025 12:18:24 AEDT
+# Bug fixes
+# 3.3.0: Sat  5 Apr 2025 12:51:18 AEDT
+# More fixes based on shellcheck recommendations
+# 3.3.1: Sat  5 Apr 2025 13:16:36 AEDT
+# Formatting fixes
+# 3.3.2: Sat  5 Apr 2025 18:46:07 AEDT
+# Replaced general help function
+# 3.3.3: Sun 06 Apr 2025 14:29:23 AEST
+# Updated options processing
+# 3.3.4: Sun 06 Apr 2025 14:33:55 AEST
+# Updated CIDR determination
+# 3.3.5: Sun  6 Apr 2025 14:50:14 AEST
+# Fixed default release determination
+# 3.3.6: Sun  6 Apr 2025 14:59:05 AEST
+# Added code to handle multiple actions
+# 3.3.7: Mon  7 Apr 2025 07:56:01 AEST
+# Cleaned up defaults
+# 3.3.8: Mon  7 Apr 2025 11:51:51 AEST
+# Improved switches processing
+# 3.3.9: Tue  8 Apr 2025 18:13:59 AEST
+# More code cleanup
+# 3.4.0: Tue  8 Apr 2025 18:28:01 AEST
+# Added iproute2 to required packages
+# 3.4.1: Tue  8 Apr 2025 18:34:59 AEST
+# Updated documentation
+# 3.4.2: Tue  8 Apr 2025 18:51:18 AEST
+# Added release switch to docker script
+# 3.4.3: Tue  8 Apr 2025 19:05:31 AEST
+# Fixed live-server ISO URL determination
+# 3.4.4: Wed  9 Apr 2025 11:14:00 AEST
+# Fixed keyboard layout
+# 3.4.5: Wed  9 Apr 2025 12:11:21 AEST
+# Added code to output parameter and option value
+# 3.4.6: Wed  9 Apr 2025 16:30:24 AEST
+# Fixed docker command
+# 3.4.7: Wed  9 Apr 2025 17:05:26 AEST
+# Fixed volumemanager list handling
+# 3.4.8: Thu 10 Apr 2025 09:32:13 AEST
+# Fixed kernel args parameter
+# 3.4.9: Thu 10 Apr 2025 10:13:57 AEST
+# Fixed grub timeout
+# 3.5.0: Thu 10 Apr 2025 10:48:27 AEST
+# Fixed disk entry
+# 3.5.1: Thu 10 Apr 2025 15:43:28 AEST
+# Added SSH key support to docker ISO creation
+# 3.5.2: Thu 10 Apr 2025 15:52:48 AEST
+# Fixed volumemanager code for grubmenu creation
+# 3.5.3: Thu 10 Apr 2025 16:34:54 AEST
+# Added custom install file support to docker ISO creation
+# 3.5.4: Thu 10 Apr 2025 17:18:51 AEST
+# Bug fixes for custom install
+# 3.5.5: Thu 10 Apr 2025 18:11:37 AEST
+# Ubuntu installer bug fixes
+# 3.5.6: Fri Apr 11 14:59:11 AEST 2025
+# Added support for development releases of Ubuntu in release determination
+# 3.5.7: Fri Apr 11 15:24:47 AEST 2025
+# Added ipcalc to required packages
+# 3.5.8: Fri Apr 11 15:44:19 AEST 2025
+# Added check for route
+# 3.5.9: Fri Apr 11 18:45:19 AEST 2025
+# Format fixes
+# 3.6.0: Sat Apr 12 08:32:46 AEST 2025
+# Improved chroot process
+# 3.6.1: Sat Apr 12 08:40:40 AEST 2025
+# Fixed earlypackages and latepackages options
+# 3.6.2: Sat Apr 12 10:26:48 AEST 2025
+# Fixed ZFS storage stanza
+# 3.6.3: Sat Apr 12 14:01:24 AEST 2025
+# Fixed LVM based storage stanza
+# 3.6.4: Sat Apr 12 14:21:16 AEST 2025
+# Added swap partition option to LVM based storage
+# 3.6.5: Sun Apr 13 07:30:36 AEST 2025
+# Documentation update
+# 3.6.6: Sun Apr 13 07:49:49 AEST 2025
+# Added docker test
+# 3.6.7: Sun Apr 13 09:35:57 AEST 2025
+# Fixed work directory in docker mode
+# 3.6.8: Sun Apr 13 10:24:28 AEST 2025
+# Documentation update

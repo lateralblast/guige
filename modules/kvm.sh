@@ -1,22 +1,23 @@
 #!/usr/bin/env bash
 
-# shellcheck disable=SC2129
-# shellcheck disable=SC2034
 # shellcheck disable=SC2007
+# shellcheck disable=SC2034
+# shellcheck disable=SC2129
+# shellcheck disable=SC2154
 
 # Function: check_kvm_vm_existd
 #
 # Check if KVM VM exists
 
 check_kvm_vm_exists () {
-  if [ "$OS_NAME" = "Darwin" ]; then
-    KVM_TEST=$(virsh list --all |awk '{ print $2 }' |grep "^$VM_NAME" |wc -l |sed "s/ //g" )
+  if [ "${os['name']}" = "Darwin" ]; then
+    kvm_test=$(virsh list --all |awk '{ print $2 }' |grep -c "^${iso['name']}" )
   else
-    KVM_TEST=$(sudo virsh list --all |awk '{ print $2 }' |grep "^$VM_NAME" |wc -l |sed "s/ //g" )
+    kvm_test=$(sudo virsh list --all |awk '{ print $2 }' |grep -c "^${iso['name']}" )
   fi
-  if [ ! "$KVM_TEST" = "0" ]; then
-    warning_message "KVM VM $VM_NAME exists"
-    VM_EXISTS="true"
+  if [ ! "${kvm_testi}" = "0" ]; then
+    warning_message "KVM VM ${iso['name']} exists"
+   iso['exists']="true"
   fi
 }
 
@@ -25,12 +26,12 @@ check_kvm_vm_exists () {
 # Check user KVM permissions
 
 check_kvm_user () {
-  KVM_GROUPS="kvm libvirt libvirt-qemu libvirt-dnsmasq"
-  for KVM_GROUP in $KVM_GROUPS; do
-    GROUP_MEMBERS=$( grep "^$KVM_GROUP" /etc/group |cut -f2 -d: )
-    if [ -n "$GROUP_MEMBERS" ]; then
-      if ! [[ "$KVM_GROUP" =~ $USER ]]; then
-        sudo usermod -a -G "$KVM_GROUP" "$USER"
+  iso['kvmgroups']="kvm libvirt libvirt-qemu libvirt-dnsmasq"
+  for kvm_group in ${iso['kvmgroups']}; do
+    group_members=$( grep "^${kvm_group}" /etc/group |cut -f2 -d: )
+    if [ -n "${group_members}" ]; then
+      if ! [[ "${kvm_group}" =~ $USER ]]; then
+        sudo usermod -a -G "${kvm_group}" "$USER"
       fi
     fi
   done
@@ -42,38 +43,40 @@ check_kvm_user () {
 
 check_kvm_config () {
   if [ -z "$( command -v virsh )" ]; then
-    install_required_packages "$REQUIRED_KVM_PACKAGES"
+    install_required_packages "${iso['requiredkvmpackages']}"
   fi
-  if [ "$OS_NAME" = "Darwin" ]; then
-    BREW_DIR="/opt/homebrew/Cellar"
-    if [ ! -d "$BREW_DIR" ]; then
-      BREW_DIR="/usr/local/Cellar"
-      VIRT_DIR="$BREW_DIR/libvirt"
-      BIN_DIR="/usr/local/bin"
+  if [ "${os['name']}" = "Darwin" ]; then
+    iso['brewdir']="/opt/homebrew/Cellar"
+    if [ ! -d "${iso['brewdir']}" ]; then
+      iso['brewdir']="/usr/local/Cellar"
+      iso['virtdir']="${iso['brewdir']}/libvirt"
+      iso['bindir']="/usr/local/bin"
     else
-      VIRT_DIR="/opt/homebrew/var/lib/libvirt"
-      BIN_DIR="/opt/homebrew/bin"
+      iso['virtdir']="/opt/homebrew/var/lib/libvirt"
+      iso['bindir']="/opt/homebrew/bin"
     fi
-    IMAGE_DIR="$VIRT_DIR/images"
-    if [ ! -d "$VIRT_DIR" ]; then
-      sudo_create_dir "$VIRT_DIR"
-      sudo_chown "$VIRT_DIR" "$OS_USER" "$OS_GROUP"
+    iso['imagedir']="${iso['virtdir']}/images"
+    if [ ! -d "${iso['virtdir']}" ]; then
+      sudo_create_dir "${iso['virtdir']}"
+      sudo_chown "${iso['virtdir']}" "${os['user']}" "${os['group']}"
     fi
-    if [ ! -d "$IMAGE_DIR" ]; then
-      sudo_create_dir "$IMAGE_DIR"
-      sudo_chown "$IMAGE_DIR" "$OS_USER" "$OS_GROUP"
+    if [ ! -d "${iso['imagedir']}" ]; then
+      sudo_create_dir "${iso['imagedir']}"
+      sudo_chown "${iso['imagedir']}" "${os['user']}" "${os['group']}"
     fi
   else
-    VIRT_DIR="/var/lib/libvirt"
-    IMAGE_DIR="$VIRT_DIR/images"
-    if [ ! -d "$VIRT_DIR" ]; then
-      sudo_create_dir "$VIRT_DIR"
+    iso['virtdir']="/var/lib/libvirt"
+    iso['imagedir']="${iso['virtdir']}/images"
+    if [ ! -d "${iso['virtdir']}" ]; then
+      sudo_create_dir "${iso['virtdir']}"
     fi
-    if [ ! -d "$IMAGE_DIR" ]; then
-      sudo_create_dir "$IMAGE_DIR"
+    if [ ! -d "${iso['imagedir']}" ]; then
+      sudo_create_dir "${iso['imagedir']}"
     fi
   fi
-  VM_DISK="$ISO_WORKDIR/$VM_NAME.qcow2"
+  if [ "${iso['diskfile']}" ]; then
+    iso['diskfile']="${iso['workdir']}/${iso['name']}.qcow2"
+  fi
   check_kvm_user
 }
 
@@ -92,350 +95,350 @@ create_kvm_ci_vm () {
 
 create_kvm_iso_vm () {
   check_kvm_config
-  if [ "$OS_NAME" = "Darwin" ]; then
-    QEMU_VER=$( brew info qemu --json |jq -r ".[0].versions.stable" )
-    VIRT_VER=$( echo "$QEMU_VER" |awk -F. '{print $1"."$2}' )
-    if [ "$ISO_ARCH" = "amd64" ] || [ "$ISO_ARCH" = "x86_64" ]; then
-      VARS_FILE="$BREW_DIR/qemu/$QEMU_VER/share/qemu/edk2-i386-vars.fd"
-      BIOS_FILE="$BREW_DIR/qemu/$QEMU_VER/share/qemu/edk2-x86_64-code.fd"
-      QEMU_ARCH="x86_64"
-      QEMU_EMU="$BIN_DIR/qemu-system-x86_64"
-      MACHINE="pc-q35-$VIRT_VER"
-      SERIAL="isa-serial"
+  if [ "${os['name']}" = "Darwin" ]; then
+    iso['qemuver']=$( brew info qemu --json |jq -r ".[0].versions.stable" )
+    iso['qemuvir']=$( echo "${iso['qemuver']}" |awk -F. '{print $1"."$2}' )
+    if [ "${iso['arch']}" = "amd64" ] || [ "${iso['arch']}" = "x86_64" ]; then
+      iso['varsfile']="${iso['brewdir']}/qemu/${iso['qemuver']}/share/qemu/edk2-i386-vars.fd"
+      iso['biosfile']="${iso['brewdir']}/qemu/${iso['qemuver']}/share/qemu/edk2-x86_64-code.fd"
+      iso['qemuarch']="x86_64"
+      iso['qemu']="${iso['bindir']}/qemu-system-x86_64"
+      iso['machine']="pc-q35-${iso['qemuvir']}"
+      iso['serial']="isa-serial"
     else
-      VARS_FILE="$BREW_DIR/qemu/$QEMU_VER/share/qemu/edk2-arm-vars.fd"
-      BIOS_FILE="$BREW_DIR/qemu/$QEMU_VER/share/qemu/edk2-aarch64-code.fd"
-      QEMU_ARCH="aarch64"
-      QEMU_EMU="$BIN_DIR/qemu-system-aarch64"
-      MACHINE="virt-$VIRT_VER"
-      SERIAL="system-serial"
+      iso['varsfile']="${iso['brewdir']}/qemu/${iso['qemuver']}/share/qemu/edk2-arm-vars.fd"
+      iso['biosfile']="${iso['brewdir']}/qemu/${iso['qemuver']}/share/qemu/edk2-aarch64-code.fd"
+      iso['qemuarch']="aarch64"
+      iso['qemu']="${iso['bindir']}/qemu-system-aarch64"
+      iso['machine']="virt-${iso['qemuvir']}"
+      iso['serial']="system-serial"
     fi
-    DOM_TYPE="qemu"
-    VIDEO="vga"
-    INPUT_BUS="usb"
-    IF_TYPE="user"
-    CD_BUS="scsi"
-    DO_ISO_SECUREBOOT="false"
+    iso['domaintype']="qemu"
+    iso['video']="vga"
+    iso['inputbus']="usb"
+    iso['iftype']="user"
+    iso['cdbus']="scsi"
+    options['secureboot']="false"
   else
-    QEMU_VER=$( qemu-system-amd64 --version |head -1 |awk '{print $4}' |awk -F"." '{print $1"."$2}' )
-    if [ "$DO_ISO_SECUREBOOT" = "true" ]; then
-      VARS_FILE="/usr/share/OVMF/OVMF_VARS_4M.ms.fd"
-      BIOS_FILE="/usr/share/OVMF/OVMF_CODE_4M.ms.fd"
+    iso['qemuver']=$( qemu-system-amd64 --version |head -1 |awk '{print $4}' |awk -F"." '{print $1"."$2}' )
+    if [ "${options['secureboot']}" = "true" ]; then
+      iso['varsfile']="/usr/share/OVMF/OVMF_VARS_4M.ms.fd"
+      iso['biosfile']="/usr/share/OVMF/OVMF_CODE_4M.ms.fd"
     else
-      VARS_FILE="/usr/share/OVMF/OVMF_VARS.fd"
-      BIOS_FILE="/usr/share/OVMF/OVMF_CODE.fd"
+      iso['varsfile']="/usr/share/OVMF/OVMF_VARS.fd"
+      iso['biosfile']="/usr/share/OVMF/OVMF_CODE.fd"
     fi
-    QEMU_ARCH="x86_64"
-    QEMU_EMU="/usr/bin/qemu-system-x86_64"
-    DOM_TYPE="kvm"
-    MACHINE="pc-q35-$QEMU_VER"
-    VIDEO="qxl"
-    SERIAL="isa-serial"
-    INPUT_BUS="ps2"
-    IF_TYPE="network"
-    CD_BUS="sata"
+    iso['qemuarch']="x86_64"
+    iso['qemu']="/usr/bin/qemu-system-x86_64"
+    iso['domaintype']="kvm"
+    iso['machine']="pc-q35-${iso['qemuver']}"
+    iso['video']="qxl"
+    iso['serial']="isa-serial"
+    iso['inputbus']="ps2"
+    iso['iftype']="network"
+    iso['cdbus']="sata"
   fi
-  if [ "$ISO_OSNAME" = "ubuntu" ]; then
-    OS_INFO_SITE="ubuntu.com"
+  if [ "${iso['osname']}" = "ubuntu" ]; then
+    iso['infosite']="ubuntu.com"
   else
-    OS_INFO_SITE="rockylinux.org"
+    iso['infosite']="rockylinux.org"
   fi
-  QEMU_DIR="$VIRT_DIR/qemu"
-  QEMU_MAC=$( printf '52:54:00:%02X:%02X:%02X\n' $[RANDOM%256] $[RANDOM%256] $[RANDOM%256] )
-  NVRAM_DIR="$QEMU_DIR/nvram"
-  if [ ! -d "$NVRAM_DIR" ]; then
-    sudo_create_dir "$NVRAM_DIR"
-    sudo_chown "$NVRAM_DIR" "$OS_USER" "$OS_GROUP"
+  iso['qemudir']="${iso['virtdir']}/qemu"
+  iso['macaddress']=$( printf '52:54:00:%02X:%02X:%02X\n' $[RANDOM%256] $[RANDOM%256] $[RANDOM%256] )
+  iso['nvramdir']="${iso['qemudir']}/nvram"
+  if [ ! -d "${iso['nvramdir']}" ]; then
+    sudo_create_dir "${iso['nvramdir']}"
+    sudo_chown "${iso['nvramdir']}" "${os['user']}" "${os['group']}"
   fi
-  NVRAM_FILE="$NVRAM_DIR/${VM_NAME}_VARS.fd"
-  if ! [ -f "$BIOS_FILE" ]; then
-    BIOS_FILE="/usr/share/edk2/x64/OVMF_CODE.fd"
-    VARS_FILE="/usr/share/edk2/x64/OVMF_VARS.fd"
+  iso['nvramfile']="${iso['nvramdir']}=/${iso['name']}}_VARS.fd"
+  if ! [ -f "${iso['biosfile']}" ]; then
+    iso['biosfile']="/usr/share/edk2/x64/OVMF_CODE.fd"
+    iso['varsfile']="/usr/share/edk2/x64/OVMF_VARS.fd"
   fi
-  if ! [ -f "$BIOS_FILE" ]; then
-    TEMP_DO_ISO_VERBOSEMODE="true"
-    warning_message "Could not find BIOS file (tried $BIOS_FILE)"
+  if ! [ -f "${iso['biosfile']}" ]; then
+    temp['verbose']="true"
+    warning_message "Could not find BIOS file (tried ${iso['biosfile']})"
     exit
   fi
-  information_message "Creating VM disk $VM_DISK"
-  execute_message "sudo qemu-img create -f qcow2 $VM_DISK $VM_SIZE"
-  if [ "$DO_ISO_TESTMODE" = "false" ]; then
-    if [ "$OS_NAME" = "Darwin" ]; then
-      qemu-img create -f qcow2 "$VM_DISK" "$VM_SIZE"
+  information_message "Creating VM disk ${iso['diskfile']}"
+  execute_message "sudo qemu-img create -f qcow2 ${iso['diskfile']} ${iso['disksize']}"
+  if [ "${options['testmode']}" = "false" ]; then
+    if [ "${os['name']}" = "Darwin" ]; then
+      qemu-img create -f qcow2 "${iso['diskfile']}" "${iso['disksize']}"
     else
-      sudo qemu-img create -f qcow2 "$VM_DISK" "$VM_SIZE"
+      sudo qemu-img create -f qcow2 "${iso['diskfile']}" "${disk['disksize']}"
     fi
   fi
-  information_message "Generating VM config $XML_FILE"
-  XML_FILE="/tmp/$VM_NAME.xml"
-  echo "<domain type='$DOM_TYPE'>" > "$XML_FILE"
-  echo "  <name>$VM_NAME</name>" >> "$XML_FILE"
-  echo "  <metadata>" >> "$XML_FILE"
-  echo "    <libosinfo:libosinfo xmlns:libosinfo=\"http://libosinfo.org/xmlns/libvirt/domain/1.0\">" >> "$XML_FILE"
-  echo "      <libosinfo:os id=\"http://$OS_INFO_SITE/$ISO_OSNAME/$ISO_MAJORRELEASE.$ISO_MINORRELEASE\"/>" >> "$XML_FILE"
-  echo "    </libosinfo:libosinfo>" >> "$XML_FILE"
-  echo "  </metadata>" >> "$XML_FILE"
-  echo "  <memory unit='KiB'>$VM_RAM</memory>" >> "$XML_FILE"
-  echo "  <currentMemory unit='KiB'>$VM_RAM</currentMemory>" >> "$XML_FILE"
-  echo "  <vcpu placement='static'>$VM_CPUS</vcpu>" >> "$XML_FILE"
-  echo "  <resource>" >> "$XML_FILE"
-  echo "    <partition>/machine</partition>" >> "$XML_FILE"
-  echo "  </resource>" >> "$XML_FILE"
-  if [ "$ISO_BOOTTYPE" = "bios" ]; then
-    echo "  <os>" >> "$XML_FILE"
-    echo "    <type arch='$QEMU_ARCH' machine='$MACHINE'>hvm</type>" >> "$XML_FILE"
+  information_message "Generating VM config ${iso['xmlfile']}"
+  iso['xmlfile']="/tmp/${iso['name']}.xml"
+  echo "<domain type='$iso['domaintype']='>" > "${iso['xmlfile']}"
+  echo "  <name>${iso['name']}</name>" >> "${iso['xmlfile']}"
+  echo "  <metadata>" >> "${iso['xmlfile']}"
+  echo "    <libosinfo:libosinfo xmlns:libosinfo=\"http://libosinfo.org/xmlns/libvirt/domain/1.0\">" >> "${iso['xmlfile']}"
+  echo "      <libosinfo:os id=\"http://${iso['infosite']}/${iso['osname']}/${iso['majorrelease']}.${iso['minorrelease']}\"/>" >> "${iso['xmlfile']}"
+  echo "    </libosinfo:libosinfo>" >> "${iso['xmlfile']}"
+  echo "  </metadata>" >> "${iso['xmlfile']}"
+  echo "  <memory unit='KiB'>${iso['ram']}</memory>" >> "${iso['xmlfile']}"
+  echo "  <currentMemory unit='KiB'>${iso['ram']}</currentMemory>" >> "${iso['xmlfile']}"
+  echo "  <vcpu placement='static'>${vm['cpus']}</vcpu>" >> "${iso['xmlfile']}"
+  echo "  <resource>" >> "${iso['xmlfile']}"
+  echo "    <partition>/iso['machine']}</partition>" >> "${iso['xmlfile']}"
+  echo "  </resource>" >> "${iso['xmlfile']}"
+  if [ "${iso['boottype']}" = "bios" ]; then
+    echo "  <os>" >> "${iso['xmlfile']}"
+    echo "    <type arch='${iso['qemuarch']}' machine='${iso['machine']}'>hvm</type>" >> "${iso['xmlfile']}"
   else
-    echo "  <os firmware='efi'>" >> "$XML_FILE"
-    echo "    <type arch='$QEMU_ARCH' machine='$MACHINE'>hvm</type>" >> "$XML_FILE"
-    echo "    <firmware>" >> "$XML_FILE"
-    if [ "$DO_ISO_SECUREBOOT" = "true" ]; then
-      echo "      <feature enabled='yes' name='enrolled-keys'/>" >> "$XML_FILE"
-      echo "      <feature enabled='yes' name='secure-boot'/>" >> "$XML_FILE"
-      echo "    </firmware>" >> "$XML_FILE"
-      echo "    <loader readonly='yes' secure='yes' type='pflash'>$BIOS_FILE</loader>" >> "$XML_FILE"
-      echo "    <nvram template='$VARS_FILE'>$NVRAM_FILE</nvram>" >> "$XML_FILE"
+    echo "  <os firmware='efi'>" >> "${iso['xmlfile']}"
+    echo "    <type arch='${iso['qemuarch']}' machine='${iso['machine']}'>hvm</type>" >> "${iso['xmlfile']}"
+    echo "    <firmware>" >> "${iso['xmlfile']}"
+    if [ "${options['secureboot']}" = "true" ]; then
+      echo "      <feature enabled='yes' name='enrolled-keys'/>" >> "${iso['xmlfile']}"
+      echo "      <feature enabled='yes' name='secure-boot'/>" >> "${iso['xmlfile']}"
+      echo "    </firmware>" >> "${iso['xmlfile']}"
+      echo "    <loader readonly='yes' secure='yes' type='pflash'>${iso['biosfile']}</loader>" >> "${iso['xmlfile']}"
+      echo "    <nvram template='${iso['varsfile']}'>${iso['nvramfile']}=</nvram>" >> "${iso['xmlfile']}"
     else
-      echo "      <feature enabled='no' name='enrolled-keys'/>" >> "$XML_FILE"
-      echo "      <feature enabled='no' name='secure-boot'/>" >> "$XML_FILE"
-      echo "    </firmware>" >> "$XML_FILE"
-      echo "    <loader readonly='yes' type='pflash'>$BIOS_FILE</loader>" >> "$XML_FILE"
-      echo "    <nvram template='$VARS_FILE'>$NVRAM_FILE</nvram>" >> "$XML_FILE"
+      echo "      <feature enabled='no' name='enrolled-keys'/>" >> "${iso['xmlfile']}"
+      echo "      <feature enabled='no' name='secure-boot'/>" >> "${iso['xmlfile']}"
+      echo "    </firmware>" >> "${iso['xmlfile']}"
+      echo "    <loader readonly='yes' type='pflash'>${iso['biosfile']}</loader>" >> "${iso['xmlfile']}"
+      echo "    <nvram template='${iso['varsfile']}'>${iso['nvramfile']}=</nvram>" >> "${iso['xmlfile']}"
     fi
-    echo "    <bootmenu enable='yes'/>" >> "$XML_FILE"
+    echo "    <bootmenu enable='yes'/>" >> "${iso['xmlfile']}"
   fi
-  echo "  </os>" >> "$XML_FILE"
-  echo "  <features>" >> "$XML_FILE"
-  if [ "$OS_NAME" = "Darwin" ]; then
-    echo "    <acpi/>" >> "$XML_FILE"
-    if [ "$ISO_ARCH" = "amd64" ] || [ "$ISO_ARCH" = "x86_64" ]; then
-      CPU_FALLBACK="qemu64"
+  echo "  </os>" >> "${iso['xmlfile']}"
+  echo "  <features>" >> "${iso['xmlfile']}"
+  if [ "${os['name']}" = "Darwin" ]; then
+    echo "    <acpi/>" >> "${iso['xmlfile']}"
+    if [ "${iso['arch']}" = "amd64" ] || [ "${iso['arch']}" = "x86_64" ]; then
+      iso['cpufallback']=="qemu64"
     else
-      echo "    <gic version='2'/>" >> "$XML_FILE"
-      CPU_FALLBACK="cortex-a57"
+      echo "    <gic version='2'/>" >> "${iso['xmlfile']}"
+      iso['cpufallback']=="cortex-a57"
     fi
-    echo "  </features>" >> "$XML_FILE"
-    echo "  <cpu mode='custom' match='exact' check='partial'>" >> "$XML_FILE"
-    echo "    <model fallback='forbid'>$CPU_FALLBACK</model>" >> "$XML_FILE"
-    echo "  </cpu>" >> "$XML_FILE"
-    echo "  <clock offset='utc'/>" >> "$XML_FILE"
-    echo "  <on_poweroff>destroy</on_poweroff>" >> "$XML_FILE"
-    echo "  <on_reboot>restart</on_reboot>" >> "$XML_FILE"
-    echo "  <on_crash>destroy</on_crash>" >> "$XML_FILE"
+    echo "  </features>" >> "${iso['xmlfile']}"
+    echo "  <cpu mode='custom' match='exact' check='partial'>" >> "${iso['xmlfile']}"
+    echo "    <model fallback='forbid'>${iso['cpufallback']}=</model>" >> "${iso['xmlfile']}"
+    echo "  </cpu>" >> "${iso['xmlfile']}"
+    echo "  <clock offset='utc'/>" >> "${iso['xmlfile']}"
+    echo "  <on_poweroff>destroy</on_poweroff>" >> "${iso['xmlfile']}"
+    echo "  <on_reboot>restart</on_reboot>" >> "${iso['xmlfile']}"
+    echo "  <on_crash>destroy</on_crash>" >> "${iso['xmlfile']}"
   else
-    echo "    <acpi/>" >> "$XML_FILE"
-    echo "    <apic/>" >> "$XML_FILE"
-    echo "    <vmport state='off'/>" >> "$XML_FILE"
-    echo "  </features>" >> "$XML_FILE"
-    echo "  <cpu mode='host-passthrough' check='none' migratable='on'/>" >> "$XML_FILE"
-    echo "  <clock offset='utc'>" >> "$XML_FILE"
-    echo "    <timer name='rtc' tickpolicy='catchup'/>" >> "$XML_FILE"
-    echo "    <timer name='pit' tickpolicy='delay'/>" >> "$XML_FILE"
-    echo "    <timer name='hpet' present='no'/>" >> "$XML_FILE"
-    echo "  </clock>" >> "$XML_FILE"
-    echo "  <on_poweroff>destroy</on_poweroff>" >> "$XML_FILE"
-    echo "  <on_reboot>restart</on_reboot>" >> "$XML_FILE"
-    echo "  <on_crash>destroy</on_crash>" >> "$XML_FILE"
-    echo "  <pm>" >> "$XML_FILE"
-    echo "    <suspend-to-mem enabled='no'/>" >> "$XML_FILE"
-    echo "    <suspend-to-disk enabled='no'/>" >> "$XML_FILE"
-    echo "  </pm>" >> "$XML_FILE"
+    echo "    <acpi/>" >> "${iso['xmlfile']}"
+    echo "    <apic/>" >> "${iso['xmlfile']}"
+    echo "    <vmport state='off'/>" >> "${iso['xmlfile']}"
+    echo "  </features>" >> "${iso['xmlfile']}"
+    echo "  <cpu mode='host-passthrough' check='none' migratable='on'/>" >> "${iso['xmlfile']}"
+    echo "  <clock offset='utc'>" >> "${iso['xmlfile']}"
+    echo "    <timer name='rtc' tickpolicy='catchup'/>" >> "${iso['xmlfile']}"
+    echo "    <timer name='pit' tickpolicy='delay'/>" >> "${iso['xmlfile']}"
+    echo "    <timer name='hpet' present='no'/>" >> "${iso['xmlfile']}"
+    echo "  </clock>" >> "${iso['xmlfile']}"
+    echo "  <on_poweroff>destroy</on_poweroff>" >> "${iso['xmlfile']}"
+    echo "  <on_reboot>restart</on_reboot>" >> "${iso['xmlfile']}"
+    echo "  <on_crash>destroy</on_crash>" >> "${iso['xmlfile']}"
+    echo "  <pm>" >> "${iso['xmlfile']}"
+    echo "    <suspend-to-mem enabled='no'/>" >> "${iso['xmlfile']}"
+    echo "    <suspend-to-disk enabled='no'/>" >> "${iso['xmlfile']}"
+    echo "  </pm>" >> "${iso['xmlfile']}"
   fi
-  echo "  <devices>" >> "$XML_FILE"
-  echo "    <emulator>$QEMU_EMU</emulator>" >> "$XML_FILE"
-  echo "    <disk type='file' device='disk'>" >> "$XML_FILE"
-  echo "      <driver name='qemu' type='qcow2' discard='unmap'/>" >> "$XML_FILE"
-  echo "      <source file='$VM_DISK'/>" >> "$XML_FILE"
-  echo "      <target dev='vda' bus='virtio'/>" >> "$XML_FILE"
-#  echo "      <boot order='2'/>" >> "$XML_FILE"
-  echo "      <address type='pci' domain='0x0000' bus='0x04' slot='0x00' function='0x0'/>" >> "$XML_FILE"
-  echo "    </disk>" >> "$XML_FILE"
-  if [ "$OS_NAME" = "Darwin" ]; then
-    echo "    <disk type='file' device='cdrom'>" >> "$XML_FILE"
-    echo "      <driver name='qemu' type='raw'/>" >> "$XML_FILE"
-    echo "      <source file='$VM_ISO'/>" >> "$XML_FILE"
-    echo "      <backingStore/>" >> "$XML_FILE"
-    echo "      <target dev='sda' bus='$CD_BUS'/>" >> "$XML_FILE"
-    echo "      <readonly/>" >> "$XML_FILE"
-#    echo "      <boot order='1'/>" >> "$XML_FILE"
-    echo "      <alias name='scsi0-0-0-0'/>" >> "$XML_FILE"
-    echo "      <address type='drive' controller='0' bus='0' target='0' unit='0'/>" >> "$XML_FILE"
-    echo "    </disk>" >> "$XML_FILE"
-    echo "    <controller type='scsi' index='0' model='virtio-scsi'>" >> "$XML_FILE"
-    echo "      <alias name='scsi0'/>" >> "$XML_FILE"
-    echo "      <address type='pci' domain='0x0000' bus='0x03' slot='0x00' function='0x0'/>" >> "$XML_FILE"
-    echo "    </controller>" >> "$XML_FILE"
-    echo "    <controller type='virtio-serial' index='0'>" >> "$XML_FILE"
-    echo "      <address type='pci' domain='0x0000' bus='0x07' slot='0x00' function='0x0'/>" >> "$XML_FILE"
-    echo "    </controller>" >> "$XML_FILE"
+  echo "  <devices>" >> "${iso['xmlfile']}"
+  echo "    <emulator>${iso['qemu']}</emulator>" >> "${iso['xmlfile']}"
+  echo "    <disk type='file' device='disk'>" >> "${iso['xmlfile']}"
+  echo "      <driver name='qemu' type='qcow2' discard='unmap'/>" >> "${iso['xmlfile']}"
+  echo "      <source file='${iso['diskfile']}'/>" >> "${iso['xmlfile']}"
+  echo "      <target dev='vda' bus='virtio'/>" >> "${iso['xmlfile']}"
+#  echo "      <boot order='2'/>" >> "${iso['xmlfile']}"
+  echo "      <address type='pci' domain='0x0000' bus='0x04' slot='0x00' function='0x0'/>" >> "${iso['xmlfile']}"
+  echo "    </disk>" >> "${iso['xmlfile']}"
+  if [ "${os['name']}" = "Darwin" ]; then
+    echo "    <disk type='file' device='cdrom'>" >> "${iso['xmlfile']}"
+    echo "      <driver name='qemu' type='raw'/>" >> "${iso['xmlfile']}"
+    echo "      <source file='${vm['inputfile']}'/>" >> "${iso['xmlfile']}"
+    echo "      <backingStore/>" >> "${iso['xmlfile']}"
+    echo "      <target dev='sda' bus='$iso['cdbus']'/>" >> "${iso['xmlfile']}"
+    echo "      <readonly/>" >> "${iso['xmlfile']}"
+#    echo "      <boot order='1'/>" >> "${iso['xmlfile']}"
+    echo "      <alias name='scsi0-0-0-0'/>" >> "${iso['xmlfile']}"
+    echo "      <address type='drive' controller='0' bus='0' target='0' unit='0'/>" >> "${iso['xmlfile']}"
+    echo "    </disk>" >> "${iso['xmlfile']}"
+    echo "    <controller type='scsi' index='0' model='virtio-scsi'>" >> "${iso['xmlfile']}"
+    echo "      <alias name='scsi0'/>" >> "${iso['xmlfile']}"
+    echo "      <address type='pci' domain='0x0000' bus='0x03' slot='0x00' function='0x0'/>" >> "${iso['xmlfile']}"
+    echo "    </controller>" >> "${iso['xmlfile']}"
+    echo "    <controller type='virtio-serial' index='0'>" >> "${iso['xmlfile']}"
+    echo "      <address type='pci' domain='0x0000' bus='0x07' slot='0x00' function='0x0'/>" >> "${iso['xmlfile']}"
+    echo "    </controller>" >> "${iso['xmlfile']}"
   else
-    echo "    <disk type='file' device='cdrom'>" >> "$XML_FILE"
-    echo "      <driver name='qemu' type='raw'/>" >> "$XML_FILE"
-    echo "      <source file='$VM_ISO'/>" >> "$XML_FILE"
-    echo "      <target dev='sda' bus='$CD_BUS'/>" >> "$XML_FILE"
-    echo "      <readonly/>" >> "$XML_FILE"
-    echo "      <boot order='1'/>" >> "$XML_FILE"
-    echo "      <address type='drive' controller='0' bus='0' target='0' unit='0'/>" >> "$XML_FILE"
-    echo "    </disk>" >> "$XML_FILE"
-    echo "    <controller type='virtio-serial' index='0'>" >> "$XML_FILE"
-    echo "      <address type='pci' domain='0x0000' bus='0x03' slot='0x00' function='0x0'/>" >> "$XML_FILE"
-    echo "    </controller>" >> "$XML_FILE"
+    echo "    <disk type='file' device='cdrom'>" >> "${iso['xmlfile']}"
+    echo "      <driver name='qemu' type='raw'/>" >> "${iso['xmlfile']}"
+    echo "      <source file='${vm['inputfile']}'/>" >> "${iso['xmlfile']}"
+    echo "      <target dev='sda' bus='$iso['cdbus']'/>" >> "${iso['xmlfile']}"
+    echo "      <readonly/>" >> "${iso['xmlfile']}"
+    echo "      <boot order='1'/>" >> "${iso['xmlfile']}"
+    echo "      <address type='drive' controller='0' bus='0' target='0' unit='0'/>" >> "${iso['xmlfile']}"
+    echo "    </disk>" >> "${iso['xmlfile']}"
+    echo "    <controller type='virtio-serial' index='0'>" >> "${iso['xmlfile']}"
+    echo "      <address type='pci' domain='0x0000' bus='0x03' slot='0x00' function='0x0'/>" >> "${iso['xmlfile']}"
+    echo "    </controller>" >> "${iso['xmlfile']}"
   fi
-  echo "    <controller type='usb' index='0' model='qemu-xhci' ports='15'>" >> "$XML_FILE"
-  echo "      <address type='pci' domain='0x0000' bus='0x02' slot='0x00' function='0x0'/>" >> "$XML_FILE"
-  echo "    </controller>" >> "$XML_FILE"
-  echo "    <controller type='pci' index='0' model='pcie-root'/>" >> "$XML_FILE"
-  echo "    <controller type='pci' index='1' model='pcie-root-port'>" >> "$XML_FILE"
-  echo "      <model name='pcie-root-port'/>" >> "$XML_FILE"
-  echo "      <target chassis='1' port='0x10'/>" >> "$XML_FILE"
-  echo "      <address type='pci' domain='0x0000' bus='0x00' slot='0x02' function='0x0' multifunction='on'/>" >> "$XML_FILE"
-  echo "    </controller>" >> "$XML_FILE"
-  echo "    <controller type='pci' index='2' model='pcie-root-port'>" >> "$XML_FILE"
-  echo "      <model name='pcie-root-port'/>" >> "$XML_FILE"
-  echo "      <target chassis='2' port='0x11'/>" >> "$XML_FILE"
-  echo "      <address type='pci' domain='0x0000' bus='0x00' slot='0x02' function='0x1'/>" >> "$XML_FILE"
-  echo "    </controller>" >> "$XML_FILE"
-  echo "    <controller type='pci' index='3' model='pcie-root-port'>" >> "$XML_FILE"
-  echo "      <model name='pcie-root-port'/>" >> "$XML_FILE"
-  echo "      <target chassis='3' port='0x12'/>" >> "$XML_FILE"
-  echo "      <address type='pci' domain='0x0000' bus='0x00' slot='0x02' function='0x2'/>" >> "$XML_FILE"
-  echo "    </controller>" >> "$XML_FILE"
-  echo "    <controller type='pci' index='4' model='pcie-root-port'>" >> "$XML_FILE"
-  echo "      <model name='pcie-root-port'/>" >> "$XML_FILE"
-  echo "      <target chassis='4' port='0x13'/>" >> "$XML_FILE"
-  echo "      <address type='pci' domain='0x0000' bus='0x00' slot='0x02' function='0x3'/>" >> "$XML_FILE"
-  echo "    </controller>" >> "$XML_FILE"
-  echo "    <controller type='pci' index='5' model='pcie-root-port'>" >> "$XML_FILE"
-  echo "      <model name='pcie-root-port'/>" >> "$XML_FILE"
-  echo "      <target chassis='5' port='0x14'/>" >> "$XML_FILE"
-  echo "      <address type='pci' domain='0x0000' bus='0x00' slot='0x02' function='0x4'/>" >> "$XML_FILE"
-  echo "    </controller>" >> "$XML_FILE"
-  echo "    <controller type='pci' index='6' model='pcie-root-port'>" >> "$XML_FILE"
-  echo "      <model name='pcie-root-port'/>" >> "$XML_FILE"
-  echo "      <target chassis='6' port='0x15'/>" >> "$XML_FILE"
-  echo "      <address type='pci' domain='0x0000' bus='0x00' slot='0x02' function='0x5'/>" >> "$XML_FILE"
-  echo "    </controller>" >> "$XML_FILE"
-  echo "    <controller type='pci' index='7' model='pcie-root-port'>" >> "$XML_FILE"
-  echo "      <model name='pcie-root-port'/>" >> "$XML_FILE"
-  echo "      <target chassis='7' port='0x16'/>" >> "$XML_FILE"
-  echo "      <address type='pci' domain='0x0000' bus='0x00' slot='0x02' function='0x6'/>" >> "$XML_FILE"
-  echo "    </controller>" >> "$XML_FILE"
-  echo "    <controller type='pci' index='8' model='pcie-root-port'>" >> "$XML_FILE"
-  echo "      <model name='pcie-root-port'/>" >> "$XML_FILE"
-  echo "      <target chassis='8' port='0x17'/>" >> "$XML_FILE"
-  echo "      <address type='pci' domain='0x0000' bus='0x00' slot='0x02' function='0x7'/>" >> "$XML_FILE"
-  echo "    </controller>" >> "$XML_FILE"
-  echo "    <controller type='pci' index='9' model='pcie-root-port'>" >> "$XML_FILE"
-  echo "      <model name='pcie-root-port'/>" >> "$XML_FILE"
-  echo "      <target chassis='9' port='0x18'/>" >> "$XML_FILE"
-  echo "      <address type='pci' domain='0x0000' bus='0x00' slot='0x03' function='0x0' multifunction='on'/>" >> "$XML_FILE"
-  echo "    </controller>" >> "$XML_FILE"
-  echo "    <controller type='pci' index='10' model='pcie-root-port'>" >> "$XML_FILE"
-  echo "      <model name='pcie-root-port'/>" >> "$XML_FILE"
-  echo "      <target chassis='10' port='0x19'/>" >> "$XML_FILE"
-  echo "      <address type='pci' domain='0x0000' bus='0x00' slot='0x03' function='0x1'/>" >> "$XML_FILE"
-  echo "    </controller>" >> "$XML_FILE"
-  echo "    <controller type='pci' index='11' model='pcie-root-port'>" >> "$XML_FILE"
-  echo "      <model name='pcie-root-port'/>" >> "$XML_FILE"
-  echo "      <target chassis='11' port='0x1a'/>" >> "$XML_FILE"
-  echo "      <address type='pci' domain='0x0000' bus='0x00' slot='0x03' function='0x2'/>" >> "$XML_FILE"
-  echo "    </controller>" >> "$XML_FILE"
-  echo "    <controller type='pci' index='12' model='pcie-root-port'>" >> "$XML_FILE"
-  echo "      <model name='pcie-root-port'/>" >> "$XML_FILE"
-  echo "      <target chassis='12' port='0x1b'/>" >> "$XML_FILE"
-  echo "      <address type='pci' domain='0x0000' bus='0x00' slot='0x03' function='0x3'/>" >> "$XML_FILE"
-  echo "    </controller>" >> "$XML_FILE"
-  echo "    <controller type='pci' index='13' model='pcie-root-port'>" >> "$XML_FILE"
-  echo "      <model name='pcie-root-port'/>" >> "$XML_FILE"
-  echo "      <target chassis='13' port='0x1c'/>" >> "$XML_FILE"
-  echo "      <address type='pci' domain='0x0000' bus='0x00' slot='0x03' function='0x4'/>" >> "$XML_FILE"
-  echo "    </controller>" >> "$XML_FILE"
-  echo "    <controller type='pci' index='14' model='pcie-root-port'>" >> "$XML_FILE"
-  echo "      <model name='pcie-root-port'/>" >> "$XML_FILE"
-  echo "      <target chassis='14' port='0x1d'/>" >> "$XML_FILE"
-  echo "      <address type='pci' domain='0x0000' bus='0x00' slot='0x03' function='0x5'/>" >> "$XML_FILE"
-  echo "    </controller>" >> "$XML_FILE"
-  echo "    <controller type='sata' index='0'>" >> "$XML_FILE"
-  echo "      <address type='pci' domain='0x0000' bus='0x00' slot='0x1f' function='0x2'/>" >> "$XML_FILE"
-  echo "    </controller>" >> "$XML_FILE"
-  echo "    <interface type='$IF_TYPE'>" >> "$XML_FILE"
-  echo "      <mac address='$QEMU_MAC'/>" >> "$XML_FILE"
-  if [ ! "$OS_NAME" = "Darwin" ]; then
-    echo "      <source network='default'/>" >> "$XML_FILE"
+  echo "    <controller type='usb' index='0' model='qemu-xhci' ports='15'>" >> "${iso['xmlfile']}"
+  echo "      <address type='pci' domain='0x0000' bus='0x02' slot='0x00' function='0x0'/>" >> "${iso['xmlfile']}"
+  echo "    </controller>" >> "${iso['xmlfile']}"
+  echo "    <controller type='pci' index='0' model='pcie-root'/>" >> "${iso['xmlfile']}"
+  echo "    <controller type='pci' index='1' model='pcie-root-port'>" >> "${iso['xmlfile']}"
+  echo "      <model name='pcie-root-port'/>" >> "${iso['xmlfile']}"
+  echo "      <target chassis='1' port='0x10'/>" >> "${iso['xmlfile']}"
+  echo "      <address type='pci' domain='0x0000' bus='0x00' slot='0x02' function='0x0' multifunction='on'/>" >> "${iso['xmlfile']}"
+  echo "    </controller>" >> "${iso['xmlfile']}"
+  echo "    <controller type='pci' index='2' model='pcie-root-port'>" >> "${iso['xmlfile']}"
+  echo "      <model name='pcie-root-port'/>" >> "${iso['xmlfile']}"
+  echo "      <target chassis='2' port='0x11'/>" >> "${iso['xmlfile']}"
+  echo "      <address type='pci' domain='0x0000' bus='0x00' slot='0x02' function='0x1'/>" >> "${iso['xmlfile']}"
+  echo "    </controller>" >> "${iso['xmlfile']}"
+  echo "    <controller type='pci' index='3' model='pcie-root-port'>" >> "${iso['xmlfile']}"
+  echo "      <model name='pcie-root-port'/>" >> "${iso['xmlfile']}"
+  echo "      <target chassis='3' port='0x12'/>" >> "${iso['xmlfile']}"
+  echo "      <address type='pci' domain='0x0000' bus='0x00' slot='0x02' function='0x2'/>" >> "${iso['xmlfile']}"
+  echo "    </controller>" >> "${iso['xmlfile']}"
+  echo "    <controller type='pci' index='4' model='pcie-root-port'>" >> "${iso['xmlfile']}"
+  echo "      <model name='pcie-root-port'/>" >> "${iso['xmlfile']}"
+  echo "      <target chassis='4' port='0x13'/>" >> "${iso['xmlfile']}"
+  echo "      <address type='pci' domain='0x0000' bus='0x00' slot='0x02' function='0x3'/>" >> "${iso['xmlfile']}"
+  echo "    </controller>" >> "${iso['xmlfile']}"
+  echo "    <controller type='pci' index='5' model='pcie-root-port'>" >> "${iso['xmlfile']}"
+  echo "      <model name='pcie-root-port'/>" >> "${iso['xmlfile']}"
+  echo "      <target chassis='5' port='0x14'/>" >> "${iso['xmlfile']}"
+  echo "      <address type='pci' domain='0x0000' bus='0x00' slot='0x02' function='0x4'/>" >> "${iso['xmlfile']}"
+  echo "    </controller>" >> "${iso['xmlfile']}"
+  echo "    <controller type='pci' index='6' model='pcie-root-port'>" >> "${iso['xmlfile']}"
+  echo "      <model name='pcie-root-port'/>" >> "${iso['xmlfile']}"
+  echo "      <target chassis='6' port='0x15'/>" >> "${iso['xmlfile']}"
+  echo "      <address type='pci' domain='0x0000' bus='0x00' slot='0x02' function='0x5'/>" >> "${iso['xmlfile']}"
+  echo "    </controller>" >> "${iso['xmlfile']}"
+  echo "    <controller type='pci' index='7' model='pcie-root-port'>" >> "${iso['xmlfile']}"
+  echo "      <model name='pcie-root-port'/>" >> "${iso['xmlfile']}"
+  echo "      <target chassis='7' port='0x16'/>" >> "${iso['xmlfile']}"
+  echo "      <address type='pci' domain='0x0000' bus='0x00' slot='0x02' function='0x6'/>" >> "${iso['xmlfile']}"
+  echo "    </controller>" >> "${iso['xmlfile']}"
+  echo "    <controller type='pci' index='8' model='pcie-root-port'>" >> "${iso['xmlfile']}"
+  echo "      <model name='pcie-root-port'/>" >> "${iso['xmlfile']}"
+  echo "      <target chassis='8' port='0x17'/>" >> "${iso['xmlfile']}"
+  echo "      <address type='pci' domain='0x0000' bus='0x00' slot='0x02' function='0x7'/>" >> "${iso['xmlfile']}"
+  echo "    </controller>" >> "${iso['xmlfile']}"
+  echo "    <controller type='pci' index='9' model='pcie-root-port'>" >> "${iso['xmlfile']}"
+  echo "      <model name='pcie-root-port'/>" >> "${iso['xmlfile']}"
+  echo "      <target chassis='9' port='0x18'/>" >> "${iso['xmlfile']}"
+  echo "      <address type='pci' domain='0x0000' bus='0x00' slot='0x03' function='0x0' multifunction='on'/>" >> "${iso['xmlfile']}"
+  echo "    </controller>" >> "${iso['xmlfile']}"
+  echo "    <controller type='pci' index='10' model='pcie-root-port'>" >> "${iso['xmlfile']}"
+  echo "      <model name='pcie-root-port'/>" >> "${iso['xmlfile']}"
+  echo "      <target chassis='10' port='0x19'/>" >> "${iso['xmlfile']}"
+  echo "      <address type='pci' domain='0x0000' bus='0x00' slot='0x03' function='0x1'/>" >> "${iso['xmlfile']}"
+  echo "    </controller>" >> "${iso['xmlfile']}"
+  echo "    <controller type='pci' index='11' model='pcie-root-port'>" >> "${iso['xmlfile']}"
+  echo "      <model name='pcie-root-port'/>" >> "${iso['xmlfile']}"
+  echo "      <target chassis='11' port='0x1a'/>" >> "${iso['xmlfile']}"
+  echo "      <address type='pci' domain='0x0000' bus='0x00' slot='0x03' function='0x2'/>" >> "${iso['xmlfile']}"
+  echo "    </controller>" >> "${iso['xmlfile']}"
+  echo "    <controller type='pci' index='12' model='pcie-root-port'>" >> "${iso['xmlfile']}"
+  echo "      <model name='pcie-root-port'/>" >> "${iso['xmlfile']}"
+  echo "      <target chassis='12' port='0x1b'/>" >> "${iso['xmlfile']}"
+  echo "      <address type='pci' domain='0x0000' bus='0x00' slot='0x03' function='0x3'/>" >> "${iso['xmlfile']}"
+  echo "    </controller>" >> "${iso['xmlfile']}"
+  echo "    <controller type='pci' index='13' model='pcie-root-port'>" >> "${iso['xmlfile']}"
+  echo "      <model name='pcie-root-port'/>" >> "${iso['xmlfile']}"
+  echo "      <target chassis='13' port='0x1c'/>" >> "${iso['xmlfile']}"
+  echo "      <address type='pci' domain='0x0000' bus='0x00' slot='0x03' function='0x4'/>" >> "${iso['xmlfile']}"
+  echo "    </controller>" >> "${iso['xmlfile']}"
+  echo "    <controller type='pci' index='14' model='pcie-root-port'>" >> "${iso['xmlfile']}"
+  echo "      <model name='pcie-root-port'/>" >> "${iso['xmlfile']}"
+  echo "      <target chassis='14' port='0x1d'/>" >> "${iso['xmlfile']}"
+  echo "      <address type='pci' domain='0x0000' bus='0x00' slot='0x03' function='0x5'/>" >> "${iso['xmlfile']}"
+  echo "    </controller>" >> "${iso['xmlfile']}"
+  echo "    <controller type='sata' index='0'>" >> "${iso['xmlfile']}"
+  echo "      <address type='pci' domain='0x0000' bus='0x00' slot='0x1f' function='0x2'/>" >> "${iso['xmlfile']}"
+  echo "    </controller>" >> "${iso['xmlfile']}"
+  echo "    <interface type='$iso['iftype']'>" >> "${iso['xmlfile']}"
+  echo "      <mac address='$iso['macaddress']'/>" >> "${iso['xmlfile']}"
+  if [ ! "${os['name']}" = "Darwin" ]; then
+    echo "      <source network='default'/>" >> "${iso['xmlfile']}"
   fi
-  echo "      <model type='virtio'/>" >> "$XML_FILE"
-  echo "      <address type='pci' domain='0x0000' bus='0x01' slot='0x00' function='0x0'/>" >> "$XML_FILE"
-  echo "    </interface>" >> "$XML_FILE"
-  echo "    <serial type='pty'>" >> "$XML_FILE"
-  echo "      <target type='$SERIAL' port='0'>" >> "$XML_FILE"
-  echo "        <alias name='$SERIAL'/>" >> "$XML_FILE"
-  echo "      </target>" >> "$XML_FILE"
-  echo "    </serial>" >> "$XML_FILE"
-  echo "    <console type='pty'>" >> "$XML_FILE"
-  echo "      <target type='serial' port='0'/>" >> "$XML_FILE"
-  echo "    </console>" >> "$XML_FILE"
-  echo "    <channel type='unix'>" >> "$XML_FILE"
-  echo "      <target type='virtio' name='org.qemu.guest_agent.0'/>" >> "$XML_FILE"
-  echo "      <address type='virtio-serial' controller='0' bus='0' port='1'/>" >> "$XML_FILE"
-  echo "    </channel>" >> "$XML_FILE"
-  echo "    <input type='tablet' bus='usb'>" >> "$XML_FILE"
-  echo "      <address type='usb' bus='0' port='1'/>" >> "$XML_FILE"
-  echo "    </input>" >> "$XML_FILE"
-  echo "    <input type='mouse' bus='$INPUT_BUS'/>" >> "$XML_FILE"
-  echo "    <input type='keyboard' bus='$INPUT_BUS'/>" >> "$XML_FILE"
-  echo "    <sound model='ich9'>" >> "$XML_FILE"
-  echo "      <address type='pci' domain='0x0000' bus='0x00' slot='0x1b' function='0x0'/>" >> "$XML_FILE"
-  echo "    </sound>" >> "$XML_FILE"
-  echo "    <video>" >> "$XML_FILE"
-  if [ "$OS_NAME" = "Darwin" ]; then
-    echo "      <model type='$VIDEO' vram='65536' heads='1' primary='yes'/>" >> "$XML_FILE"
+  echo "      <model type='virtio'/>" >> "${iso['xmlfile']}"
+  echo "      <address type='pci' domain='0x0000' bus='0x01' slot='0x00' function='0x0'/>" >> "${iso['xmlfile']}"
+  echo "    </interface>" >> "${iso['xmlfile']}"
+  echo "    <serial type='pty'>" >> "${iso['xmlfile']}"
+  echo "      <target type='${iso['serial']}' port='0'>" >> "${iso['xmlfile']}"
+  echo "        <alias name='${iso['serial']}'/>" >> "${iso['xmlfile']}"
+  echo "      </target>" >> "${iso['xmlfile']}"
+  echo "    </serial>" >> "${iso['xmlfile']}"
+  echo "    <console type='pty'>" >> "${iso['xmlfile']}"
+  echo "      <target type='serial' port='0'/>" >> "${iso['xmlfile']}"
+  echo "    </console>" >> "${iso['xmlfile']}"
+  echo "    <channel type='unix'>" >> "${iso['xmlfile']}"
+  echo "      <target type='virtio' name='org.qemu.guest_agent.0'/>" >> "${iso['xmlfile']}"
+  echo "      <address type='virtio-serial' controller='0' bus='0' port='1'/>" >> "${iso['xmlfile']}"
+  echo "    </channel>" >> "${iso['xmlfile']}"
+  echo "    <input type='tablet' bus='usb'>" >> "${iso['xmlfile']}"
+  echo "      <address type='usb' bus='0' port='1'/>" >> "${iso['xmlfile']}"
+  echo "    </input>" >> "${iso['xmlfile']}"
+  echo "    <input type='mouse' bus='$iso['inputbus']'/>" >> "${iso['xmlfile']}"
+  echo "    <input type='keyboard' bus='$iso['inputbus']'/>" >> "${iso['xmlfile']}"
+  echo "    <sound model='ich9'>" >> "${iso['xmlfile']}"
+  echo "      <address type='pci' domain='0x0000' bus='0x00' slot='0x1b' function='0x0'/>" >> "${iso['xmlfile']}"
+  echo "    </sound>" >> "${iso['xmlfile']}"
+  echo "    <video>" >> "${iso['xmlfile']}"
+  if [ "${os['name']}" = "Darwin" ]; then
+    echo "      <model type='${iso['video']}' vram='65536' heads='1' primary='yes'/>" >> "${iso['xmlfile']}"
   else
-    echo "      <model type='$VIDEO' ram='65536' vram='65536' vgamem='16384' heads='1' primary='yes'/>" >> "$XML_FILE"
+    echo "      <model type='${iso['video']}' ram='65536' vram='65536' vgamem='16384' heads='1' primary='yes'/>" >> "${iso['xmlfile']}"
   fi
-  echo "      <alias name='video0'/>" >> "$XML_FILE"
-  echo "      <address type='pci' domain='0x0000' bus='0x00' slot='0x01' function='0x0'/>" >> "$XML_FILE"
-  echo "    </video>" >> "$XML_FILE"
-  if [ ! "$OS_NAME" = "Darwin" ]; then
-    echo "    <audio id='1' type='spice'/>" >> "$XML_FILE"
-    echo "    <channel type='spicevmc'>" >> "$XML_FILE"
-    echo "      <target type='virtio' name='com.redhat.spice.0'/>" >> "$XML_FILE"
-    echo "      <address type='virtio-serial' controller='0' bus='0' port='2'/>" >> "$XML_FILE"
-    echo "    </channel>" >> "$XML_FILE"
-    echo "    <graphics type='spice' autoport='yes' listen='127.0.0.1'>" >> "$XML_FILE"
-    echo "      <listen type='address' address='127.0.0.1'/>" >> "$XML_FILE"
-    echo "      <image compression='off'/>" >> "$XML_FILE"
-    echo "    </graphics>" >> "$XML_FILE"
-    echo "    <redirdev bus='usb' type='spicevmc'>" >> "$XML_FILE"
-    echo "      <address type='usb' bus='0' port='2'/>" >> "$XML_FILE"
-    echo "    </redirdev>" >> "$XML_FILE"
-    echo "    <redirdev bus='usb' type='spicevmc'>" >> "$XML_FILE"
-    echo "      <address type='usb' bus='0' port='3'/>" >> "$XML_FILE"
-    echo "    </redirdev>" >> "$XML_FILE"
-    echo "    <watchdog model='itco' action='reset'/>" >> "$XML_FILE"
+  echo "      <alias name='video0'/>" >> "${iso['xmlfile']}"
+  echo "      <address type='pci' domain='0x0000' bus='0x00' slot='0x01' function='0x0'/>" >> "${iso['xmlfile']}"
+  echo "    </video>" >> "${iso['xmlfile']}"
+  if [ ! "${os['name']}" = "Darwin" ]; then
+    echo "    <audio id='1' type='spice'/>" >> "${iso['xmlfile']}"
+    echo "    <channel type='spicevmc'>" >> "${iso['xmlfile']}"
+    echo "      <target type='virtio' name='com.redhat.spice.0'/>" >> "${iso['xmlfile']}"
+    echo "      <address type='virtio-serial' controller='0' bus='0' port='2'/>" >> "${iso['xmlfile']}"
+    echo "    </channel>" >> "${iso['xmlfile']}"
+    echo "    <graphics type='spice' autoport='yes' listen='127.0.0.1'>" >> "${iso['xmlfile']}"
+    echo "      <listen type='address' address='127.0.0.1'/>" >> "${iso['xmlfile']}"
+    echo "      <image compression='off'/>" >> "${iso['xmlfile']}"
+    echo "    </graphics>" >> "${iso['xmlfile']}"
+    echo "    <redirdev bus='usb' type='spicevmc'>" >> "${iso['xmlfile']}"
+    echo "      <address type='usb' bus='0' port='2'/>" >> "${iso['xmlfile']}"
+    echo "    </redirdev>" >> "${iso['xmlfile']}"
+    echo "    <redirdev bus='usb' type='spicevmc'>" >> "${iso['xmlfile']}"
+    echo "      <address type='usb' bus='0' port='3'/>" >> "${iso['xmlfile']}"
+    echo "    </redirdev>" >> "${iso['xmlfile']}"
+    echo "    <watchdog model='itco' action='reset'/>" >> "${iso['xmlfile']}"
   fi
-  echo "    <memballoon model='virtio'>" >> "$XML_FILE"
-  echo "      <address type='pci' domain='0x0000' bus='0x05' slot='0x00' function='0x0'/>" >> "$XML_FILE"
-  echo "    </memballoon>" >> "$XML_FILE"
-  echo "    <rng model='virtio'>" >> "$XML_FILE"
-  echo "      <backend model='random'>/dev/urandom</backend>" >> "$XML_FILE"
-  echo "      <address type='pci' domain='0x0000' bus='0x06' slot='0x00' function='0x0'/>" >> "$XML_FILE"
-  echo "    </rng>" >> "$XML_FILE"
-  echo "  </devices>" >> "$XML_FILE"
-  echo "</domain>" >> "$XML_FILE"
-  print_file "$XML_FILE"
-  information_message "Importing VM config $XML_FILE"
-  if [ "$DO_ISO_TESTMODE" = "false" ]; then
-    if [ "$OS_NAME" = "Darwin" ]; then
-      execute_message "virsh define $XML_FILE"
-      virsh define "$XML_FILE"
+  echo "    <memballoon model='virtio'>" >> "${iso['xmlfile']}"
+  echo "      <address type='pci' domain='0x0000' bus='0x05' slot='0x00' function='0x0'/>" >> "${iso['xmlfile']}"
+  echo "    </memballoon>" >> "${iso['xmlfile']}"
+  echo "    <rng model='virtio'>" >> "${iso['xmlfile']}"
+  echo "      <backend model='random'>/dev/urandom</backend>" >> "${iso['xmlfile']}"
+  echo "      <address type='pci' domain='0x0000' bus='0x06' slot='0x00' function='0x0'/>" >> "${iso['xmlfile']}"
+  echo "    </rng>" >> "${iso['xmlfile']}"
+  echo "  </devices>" >> "${iso['xmlfile']}"
+  echo "</domain>" >> "${iso['xmlfile']}"
+  print_file "${iso['xmlfile']}"
+  information_message "Importing VM config ${iso['xmlfile']}"
+  if [ "${options['testmode']}" = "false" ]; then
+    if [ "${os['name']}" = "Darwin" ]; then
+      execute_message "virsh define ${iso['xmlfile']}"
+      virsh define "${iso['xmlfile']}"
       verbose_message "To start the VM and connect to console run the following command:" TEXT
       verbose_message "" TEXT
-      verbose_message "virsh start $VM_NAME ; virsh console $VM_NAME" TEXT
+      verbose_message "virsh start ${iso['name']} ; virsh console ${iso['name']}" TEXT
     else
-      execute_message "sudo virsh define $XML_FILE"
-      sudo virsh define "$XML_FILE"
+      execute_message "sudo virsh define ${iso['xmlfile']}"
+      sudo virsh define "${iso['xmlfile']}"
       verbose_message "To start the VM and connect to console run the following command:" TEXT
       verbose_message "" TEXT
-      verbose_message "sudo virsh start $VM_NAME ; sudo virsh console $VM_NAME" TEXT
+      verbose_message "sudo virsh start ${iso['name']} ; sudo virsh console ${iso['name']}" TEXT
     fi
   fi
 }
@@ -446,24 +449,24 @@ create_kvm_iso_vm () {
 
 delete_kvm_vm () {
   if [ -z "$( command -v virsh )" ]; then
-    install_required_packages "$REQUIRED_KVM_PACKAGES"
+    install_required_packages "${iso['requiredkvmpackages']}"
   fi
-  if [ "$DO_ISO_TESTMODE" = "false" ]; then
-    VM_STATUS=$( virsh list --all |grep "shut off" |wc -l |sed "s/ //g" )
-    if [ "$OS_NAME" = "Darwin" ]; then
-      if [ "$VM_STATUS" = "0" ]; then
-        information_message "Stopping KVM VM $VM_NAME"
-        execute_command "virsh -c \"qemu:///session\" shutdown $VM_NAME 2> /dev/null"
+  if [ "${options['testmode']}" = "false" ]; then
+    iso['status']=$( virsh list --all |grep -c "shut off" )
+    if [ "${os['name']}" = "Darwin" ]; then
+      if [ "${iso['status']}" = "0" ]; then
+        information_message "Stopping KVM VM ${iso['name']}"
+        execute_command "virsh -c \"qemu:///session\" shutdown ${iso['name']} 2> /dev/null"
       fi
-      information_message "Deleting VM $VM_NAME"
-      execute_command "virsh -c \"qemu:///session\" undefine $VM_NAME --nvram 2> /dev/null"
+      information_message "Deleting VM ${iso['name']}"
+      execute_command "virsh -c \"qemu:///session\" undefine ${iso['name']} --nvram 2> /dev/null"
     else
-      if [ "$VM_STATUS" = "0" ]; then
-        information_message "Stopping KVM VM $VM_NAME"
-        execute_command "sudo virsh shutdown $VM_NAME 2> /dev/null"
+      if [ "${iso['status']}" = "0" ]; then
+        information_message "Stopping KVM VM ${iso['name']}"
+        execute_command "sudo virsh shutdown ${iso['name']} 2> /dev/null"
       fi
-      information_message "Deleting VM $VM_NAME"
-      execute_command "sudo virsh undefine $VM_NAME --nvram 2> /dev/null"
+      information_message "Deleting VM ${iso['name']}"
+      execute_command "sudo virsh undefine ${iso['name']} --nvram 2> /dev/null"
     fi
   fi
 }
@@ -474,9 +477,9 @@ delete_kvm_vm () {
 
 list_kvm_vm () {
   if [ -z "$( command -v virsh )" ]; then
-    install_required_packages "$REQUIRED_KVM_PACKAGES"
+    install_required_packages "${iso['requiredkvmpackages']}"
   fi
-  if [ "$OS_NAME" = "Darwin" ]; then
+  if [ "${os['name']}" = "Darwin" ]; then
     virsh list --all
   else
     sudo virsh list --all

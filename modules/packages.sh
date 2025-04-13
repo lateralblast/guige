@@ -1,6 +1,44 @@
 #!/usr/bin/env bash
 
 # shellcheck disable=SC2034
+# shellcheck disable=SC2154
+
+# Function: install_package
+#
+# Install Package
+
+install_package () {
+  package="$1"
+  package_version=""
+  verbose_message "# package: ${package}" TEXT
+  if [ "${os['name']}" = "Darwin" ]; then
+    package_version=$( brew info "${package}" --json |jq -r ".[0].versions.stable" )
+  else
+    if [[ "${iso['release']}" =~ "Arch" ]] || [[ "${iso['release']}" =~ "Endeavour" ]]; then
+      package_version=$( sudo pacman -Q "${package}" 2> /dev/null |awk '{print $2}' )
+    else
+      package_version=$( sudo dpkg -l "${package}" 2>&1 |grep "^ii" |awk '{print $3}' )
+    fi
+  fi
+  verbose_message "# ${package} version: ${package_version}" "TEXT"
+  if [ -z "${package_version}" ]; then
+    if [ "${options['testmode']}" = "false" ]; then
+      verbose_message "# Installing package ${package}"
+      if [ "${os['name']}" = "Darwin" ]; then
+        brew update
+        brew install "${package}"
+      else
+        if [[ "${iso['release']}" =~ "Arch" ]] || [[ "${iso['release']}" =~ "Endeavour" ]]; then
+          sudo pacman -Sy
+          echo Y |sudo pacman -Sy "${package}"
+        else
+          sudo apt update
+          sudo apt install -y "${package}"
+        fi
+      fi
+    fi
+  fi
+}
 
 # Function: install_required_packages
 #
@@ -10,38 +48,10 @@
 # sudo apt install -y p7zip-full lftp wget xorriso
 
 install_required_packages () {
-  PACKAGE_LIST="$1"
+  package_list="$1"
   handle_output "# Checking required packages are installed" "TEXT"
-  for PACKAGE in $PACKAGE_LIST; do
-    PACKAGE_VERSION=""
-    verbose_message "# Package: $PACKAGE" TEXT
-    if [ "$OS_NAME" = "Darwin" ]; then
-      PACKAGE_VERSION=$( brew info "$PACKAGE" --json |jq -r ".[0].versions.stable" )
-    else
-      if [[ "$LSB_RELEASE" =~ "Arch" ]] || [[ "$LSB_RELEASE" =~ "Endeavour" ]]; then
-        PACKAGE_VERSION=$( sudo pacman -Q "$PACKAGE" 2> /dev/null |awk '{print $2}' )
-      else
-        PACKAGE_VERSION=$( sudo dpkg -l "$PACKAGE" 2>&1 |grep "^ii" |awk '{print $3}' )
-      fi
-    fi
-    verbose_message "# $PACKAGE version: $PACKAGE_VERSION" TEXT
-    if [ -z "$PACKAGE_VERSION" ]; then
-      if [ "$DO_ISO_TESTMODE" = "false" ]; then
-        verbose_message "# Installing package $PACKAGE"
-        if [ "$OS_NAME" = "Darwin" ]; then
-          brew update
-          brew install "$PACKAGE"
-        else
-          if [[ "$LSB_RELEASE" =~ "Arch" ]] || [[ "$LSB_RELEASE" =~ "Endeavour" ]]; then
-            sudo pacman -Sy
-            echo Y |sudo pacman -Sy "$PACKAGE"
-          else
-            sudo apt update
-            sudo apt install -y "$PACKAGE"
-          fi
-        fi
-      fi
-    fi
+  for package in ${package_list}; do
+    install_package "${package}"    
   done
 }
 
@@ -50,13 +60,13 @@ install_required_packages () {
 # Handle BIOS and EFI options
 
 handle_bios () {
-  if [[ "$ISO_BOOTTYPE" =~ "efi" ]]; then
-    ISO_PACKAGES="$ISO_PACKAGES grub-efi"
-    ISO_CHROOTPACKAGES="$ISO_CHROOTPACKAGES grub-efi"
+  if [[ "${iso['boottype']}" =~ "efi" ]]; then
+    iso['packages']="${iso['packages']} grub-efi"
+    iso['chrootpackages']="${iso['chrootpackages']} grub-efi"
   fi
-  if [[ "$ISO_BOOTTYPE" =~ "bios" ]]; then
-    ISO_PACKAGES="$ISO_PACKAGES grub-pc"
-    ISO_CHROOTPACKAGES="$ISO_CHROOTPACKAGES grub-pc"
+  if [[ "${iso['boottype']}" =~ "bios" ]]; then
+    iso['packages']="${iso['packages']} grub-pc"
+    iso['chrootpackages']="${iso['chrootpackages']} grub-pc"
   fi
 }
 
@@ -65,34 +75,34 @@ handle_bios () {
 # Process postinstall switch
 
 process_post_install () {
-  if [[ "$ISO_POSTINSTALL" =~ "dist" ]]; then
-    DO_INSTALL_ISO_NETWORK_UPDATES="true"
-    DO_INSTALL_ISO_DIST_UPGRADE="true"
+  if [[ "${iso['postinstall']}" =~ "dist" ]]; then
+    options['networkupdates']="true"
+    options['distupgrade']="true"
   fi
-  if [[ "$ISO_POSTINSTALL" =~ "packages" ]]; then
-    DO_INSTALL_ISO_NETWORK_UPDATES="true"
-    DO_INSTALL_ISO_PACKAGES="true"
+  if [[ "${iso['postinstall']}" =~ "packages" ]]; then
+    options['networkupdates']="true"
+    options['installpackages']="true"
   fi
-  if [[ "$ISO_POSTINSTALL" =~ "updates" ]]; then
-    DO_INSTALL_ISO_NETWORK_UPDATES="true"
-    DO_INSTALL_ISO_UPDATE="true"
-    DO_INSTALL_ISO_UPGRADE="true"
+  if [[ "${iso['postinstall']}" =~ "updates" ]]; then
+    options['networkupdates']="true"
+    options['packageupdates']="true"
+    options['packageupgrades']="true"
   fi
-  if [[ "$ISO_POSTINSTALL" =~ "autoupgrades" ]]; then
-    DO_ISO_AUTOUPGRADES="true"
+  if [[ "${iso['postinstall']}" =~ "autoupgrades" ]]; then
+    options['autoupgrade']="true"
   fi
-  if [[ "$ISO_POSTINSTALL" =~ "all" ]]; then
-    DO_INSTALL_ISO_NETWORK_UPDATES="true"
-    DO_INSTALL_ISO_UPDATE="true"
-    DO_INSTALL_ISO_UPGRADE="true"
-    DO_INSTALL_ISO_DIST_UPGRADE="true"
-    DO_INSTALL_ISO_PACKAGES="true"
+  if [[ "${iso['postinstall']}" =~ "all" ]]; then
+    options['networkupdates']="true"
+    options['packageupdates']="true"
+    options['packageupgrades']="true"
+    options['distupgrade']="true"
+    options['installpackages']="true"
   fi
-  if [ "$ISO_POSTINSTALL" = "none" ]; then
-    DO_INSTALL_ISO_NETWORK_UPDATES="false"
-    DO_INSTALL_ISO_UPDATE="false"
-    DO_INSTALL_ISO_UPGRADE="false"
-    DO_INSTALL_ISO_DIST_UPGRADE="false"
-    DO_INSTALL_ISO_PACKAGES="false"
+  if [ "${iso['postinstall']}" = "none" ]; then
+    options['networkupdates']="false"
+    options['packageupdates']="false"
+    options['packageupgrades']="false"
+    options['distupgrade']="false"
+    options['installpackages']="false"
   fi
 }

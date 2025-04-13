@@ -1,13 +1,14 @@
 #!/usr/bin/env bash
 
 # shellcheck disable=SC2129
+# shellcheck disable=SC2154
 
 # Function: print_usage
 #
 # Print script usage information
 
 print_actions () {
-  cat <<-ISO_ACTIONS
+  cat <<-actions_usage
 
 actions
 -------
@@ -35,32 +36,32 @@ listalliso:             List all ISOs
 listiso:                List ISOs
 createkvmvm:            Create KVM VM
 deletekvmvm:            Delete KVM VM
-ISO_ACTIONS
+actions_usage
 }
 
 print_options () {
-  cat <<-ISO_OPTIONS
+  cat <<-options_usage
 
 options
 -------
 
-cluster:                Install cluster related packages (pcs, gluster, etc)  (default: $DO_ISO_CLUSTERPACKAGES)
-kvm:                    Install KVM related packages (virt-manager, cloud-image-utils, etc) (default: $DO_KVM_PACKAGES)
-sshkey:                 Add SSH key from ~/.ssh if present (default $DO_ISO_SSHKEY)
-biosdevname:            Enable biosdevname kernel parameters (default: $ISO_BIOSDEVNAME)
-nounmount:              Don't unmount filesystems (useful for troubleshooting) (default: $DO_ISO_NOUNMOUNT)
-testmode:               Don't execute commands (useful for testing and generating a script) (default: $DO_ISO_TESTMODE)
+cluster:                Install cluster related packages (pcs, gluster, etc)  (default: ${options['clusterpackages']})
+kvm:                    Install KVM related packages (virt-manager, cloud-image-utils, etc) (default: ${options['kvmpackages']})
+sshkey:                 Add SSH key from ~/.ssh if present (default ${options['sshkey']})
+biosdevname:            Enable biosdevname kernel parameters (default: ${options['biosdevname']})
+nounmount:              Don't unmount filesystems (useful for troubleshooting) (default: ${options['nounmount']})
+testmode:               Don't execute commands (useful for testing and generating a script) (default: ${options['testmode']})
 efi:                    Create UEFI based ISO
 bios:                   Create BIOS based ISO
-verbose:                Verbose output (default: $DO_ISO_VERBOSEMODE)
-interactive:            Interactively ask questions (default: $DO_ISO_INTERACTIVEMODE)
+verbose:                Verbose output (default: ${options['verbose']})
+interactive:            Interactively ask questions (default: ${options['interactivemode']})
 autoupgrades:           Allow autoupgrades
-hwekernel:              Don't install HWE kernel packages (Ubuntu) (default: $DO_ISO_HWEKERNEL)
+hwekernel:              Don't install HWE kernel packages (Ubuntu) (default: ${options['hwekernel']})
 nohwekernel:            Don't install HWE kernel packages
-multipath:              Don't load multipath kernel module (default: $DO_MULTIPATH)
+multipath:              Don't load multipath kernel module (default: ${options['multipath']})
 nomultipath:            Don't load multipath kernel module
-plaintextpassword:      Use plaintext password (default: $DO_ISO_PLAINTEXTPASSWORD)
-mediacheck:             Do media check (default: $DO_ISO_MEDIACHECK)
+plaintextpassword:      Use plaintext password (default: ${options['plaintextpassword']})
+mediacheck:             Do media check (default: ${options['mediacheck']})
 nolockroot:             Don't lock root account
 noactivate:             Don't activate network
 noipv4:                 Disable IPv4
@@ -68,27 +69,27 @@ noipv6:                 Disable IPv6
 plaintext:              Plain text password
 staticip:               Use static IP
 dhcp:                   Use DHCP
-nochroot:               Don't run chroot script (default: $DO_ISO_CHROOT)
+nochroot:               Don't run chroot script (default: ${options['chroot']})
 chroot:                 Run chroot script
-refreshinstaller:       Refresh installer (default: $DO_ISO_REFRESHINSTALLER)
+refreshinstaller:       Refresh installer (default: ${options['refreshinstaller']})
 norefreshinstaller:     Don't refresh installer
-nvme:                   Additional NVMe config (default: $DO_ISO_NVME)
+nvme:                   Additional NVMe config (default: ${options['nvme']})
 nonvme:                 No additional NVMe config
-geoip:                  Use Geo IP (default: $DO_ISO_GEOIP)
+geoip:                  Use Geo IP (default: ${options['geoip']})
 nogeoip:                Don't use Geo IP
-reorderuefi:            Reorder UEFI devices on reboot (default: $DO_ISO_REORDERUEFI)
+reorderuefi:            Reorder UEFI devices on reboot (default: ${options['reorderuefi']})
 noreorderuefi:          Don't reorder UEFI devices on reboot
-compression:            Compress filesystem(s) if supported (default: $DO_ISO_COMPRESSION)
+compression:            Compress filesystem(s) if supported (default: ${options['compression']})
 nocompression:          Don't compress filesystem(s)
-strict:                 Enable -eu shell options (useful for debuging) (default: $DO_ISO_STRICT)
+strict:                 Enable -eu shell options (useful for debuging) (default: ${options['strict']})
 nostrict:               Disable -eu shell options
-debug:                  Enable -x shell option (useful for debuging)   (default: $DO_ISO_DEBUG)
+debug:                  Enable -x shell option (useful for debuging)   (default: ${options['debug']})
 nodebug:                Disable -x shell option
-ISO_OPTIONS
+options_usage
 }
 
 print_postinstall () {
-  cat <<-ISO_POSTINSTALL
+  cat <<-postinstall_usage
 
 postinstall
 -----------
@@ -98,11 +99,11 @@ packages:               Install packages as part of install process
 updates:                Do updates as part of install process
 upgrades:               Do upgrades as part of install process
 all:                    Do all updates as part of install process
-ISO_POSTINSTALL
+postinstall_usage
 }
 
 print_examples () {
-  cat <<-ISO_EXAMPLES
+  cat <<-examples
 
 Examples
 --------
@@ -110,7 +111,7 @@ Examples
 Create an ISO with a static IP configuration:
 
 ${0##*/} --action createiso --options verbose --ip 192.168.1.211 --cidr 24 --dns 8.8.8.8 --gateway 192.168.1.254
-ISO_EXAMPLES
+examples
 }
 
 

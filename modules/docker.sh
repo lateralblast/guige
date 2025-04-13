@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 
-# shellcheck disable=SC2129
 # shellcheck disable=SC2034
+# shellcheck disable=SC2129
+# shellcheck disable=SC2154
 
 # Function: create_docker_config
 #
@@ -29,44 +30,49 @@
 check_docker_config () {
   if ! [ -f "/.dockerenv" ]; then
     handle_output "# Checking Docker configs" "TEXT"
-    for DIR_ARCH in $DOCKER_ARCH; do
-      if ! [ -d "$ISO_WORKDIR/$DIR_ARCH" ]; then
-        handle_output "Creating directory $ISO_WORKDIR/$DIR_ARCH" "TEXT"
-        create_dir "$ISO_WORKDIR/$DIR_ARCH"
+    docker_test=$( command -v docker )
+    if [ -z "${docker_test}" ]; then
+      warning_message "Docker not installed"
+      exit
+    fi
+    for arch_dir in ${iso['dockerarch']}; do
+      if ! [ -d "${iso['workdir']}/${arch_dir}" ]; then
+        handle_output "Creating directory ${iso['workdir']}/${arch_dir}" "TEXT"
+        create_dir "${iso['workdir']}/${arch_dir}"
       fi
       handle_output "# Checking docker images" "TEXT"
-      DOCKER_IMAGE_CHECK=$( docker images |grep "^$SCRIPT_NAME-$CURRENT_DOCKER_UBUNTU_RELEASE-$DIR_ARCH" |awk '{print $1}' )
+      docker_image_check=$( docker images |grep "^${script['name']}-${current['dockerubunturelease']}-${arch_dir}" |awk '{print $1}' )
       handle_output "# Checking volume images" "TEXT"
-      DOCKER_VOLUME_CHECK=$( docker volume list |grep "^$SCRIPT_NAME-$CURRENT_DOCKER_UBUNTU_RELEASE-$DIR_ARCH" |awk '{print $1}' )
-      if ! [ "$DOCKER_VOLUME_CHECK" = "$SCRIPT_NAME-$CURRENT_DOCKER_UBUNTU_RELEASE-$DIR_ARCH" ]; then
-        if [ "$DO_ISO_TESTMODE" = "false" ]; then
-          docker volume create "$SCRIPT_NAME-$CURRENT_DOCKER_UBUNTU_RELEASE-$DIR_ARCH"
+      docker_volume_check=$( docker volume list |grep "^${script['name']}-${current['dockerubunturelease']}-${arch_dir}" |awk '{print $1}' )
+      if ! [ "$docker_volume_check" = "${script['name']}-${current['dockerubunturelease']}-${arch_dir}" ]; then
+        if [ "${options['testmode']}" = "false" ]; then
+          docker volume create "${script['name']}-${current['dockerubunturelease']}-${arch_dir}"
         fi
       fi
-      if ! [ "$DOCKER_IMAGE_CHECK" = "$SCRIPT_NAME-$CURRENT_DOCKER_UBUNTU_RELEASE-$DIR_ARCH" ]; then
-        if [ "$DO_ISO_TESTMODE" = "false" ]; then
-          handle_output "# Creating Docker compose file $ISO_WORKDIR/$DIR_ARCH/docker-compose.yml" "TEXT"
-          echo "version: \"3\"" > "$ISO_WORKDIR/$DIR_ARCH/docker-compose.yml"
-          echo "" >> "$ISO_WORKDIR/$DIR_ARCH/docker-compose.yml"
-          echo "services:" >> "$ISO_WORKDIR/$DIR_ARCH/docker-compose.yml"
-          echo "  $SCRIPT_NAME-$CURRENT_DOCKER_UBUNTU_RELEASE-$DIR_ARCH:" >> "$ISO_WORKDIR/$DIR_ARCH/docker-compose.yml"
-          echo "    build:" >> "$ISO_WORKDIR/$DIR_ARCH/docker-compose.yml"
-          echo "      context: ." >> "$ISO_WORKDIR/$DIR_ARCH/docker-compose.yml"
-          echo "      dockerfile: Dockerfile" >> "$ISO_WORKDIR/$DIR_ARCH/docker-compose.yml"
-          echo "    image: $SCRIPT_NAME-$CURRENT_DOCKER_UBUNTU_RELEASE-$DIR_ARCH" >> "$ISO_WORKDIR/$DIR_ARCH/docker-compose.yml"
-          echo "    container_name: $SCRIPT_NAME-$CURRENT_DOCKER_UBUNTU_RELEASE-$DIR_ARCH" >> "$ISO_WORKDIR/$DIR_ARCH/docker-compose.yml"
-          echo "    entrypoint: /bin/bash" >> "$ISO_WORKDIR/$DIR_ARCH/docker-compose.yml"
-          echo "    working_dir: /root" >> "$ISO_WORKDIR/$DIR_ARCH/docker-compose.yml"
-          echo "    platform: linux/$DIR_ARCH" >> "$ISO_WORKDIR/$DIR_ARCH/docker-compose.yml"
-          echo "    volumes:" >> "$ISO_WORKDIR/$DIR_ARCH/docker-compose.yml"
-          echo "      - /docker/$SCRIPT_NAME-$CURRENT_DOCKER_UBUNTU_RELEASE-$DIR_ARCH/:/root/$SCRIPT_NAME/" >> "$ISO_WORKDIR/$DIR_ARCH/docker-compose.yml"
-          print_file "$ISO_WORKDIR/$DIR_ARCH/docker-compose.yml"
-          handle_output "# Creating Docker config $ISO_WORKDIR/$DIR_ARCH/Dockerfile" "TEXT"
-          echo "FROM ubuntu:$CURRENT_DOCKER_UBUNTU_RELEASE" > "$ISO_WORKDIR/$DIR_ARCH/Dockerfile"
-          echo "RUN apt-get update && apt-get -o Dpkg::Options::=\"--force-overwrite\" install -y $REQUIRED_PACKAGES" >> "$ISO_WORKDIR/$DIR_ARCH/Dockerfile"
-          print_file "$ISO_WORKDIR/$DIR_ARCH/Dockerfile"
-          handle_output "# Building docker image $SCRIPT_NAME-$CURRENT_DOCKER_UBUNTU_RELEASE-$DIR_ARCH" "TEXT"
-          docker build "$ISO_WORKDIR/$DIR_ARCH" --tag "$SCRIPT_NAME-$CURRENT_DOCKER_UBUNTU_RELEASE-$DIR_ARCH" --platform "linux/$DIR_ARCH"
+      if ! [ "${docker_image_check}" = "${script['name']}-${current['dockerubunturelease']}-${arch_dir}" ]; then
+        if [ "${options['testmode']}" = "false" ]; then
+          handle_output "# Creating Docker compose file ${iso['workdir']}/${arch_dir}/docker-compose.yml" "TEXT"
+          echo "version: \"3\"" > "${iso['workdir']}/${arch_dir}/docker-compose.yml"
+          echo "" >> "${iso['workdir']}/${arch_dir}/docker-compose.yml"
+          echo "services:" >> "${iso['workdir']}/${arch_dir}/docker-compose.yml"
+          echo "  ${script['name']}-${current['dockerubunturelease']}-${arch_dir}:" >> "${iso['workdir']}/${arch_dir}/docker-compose.yml"
+          echo "    build:" >> "${iso['workdir']}/${arch_dir}/docker-compose.yml"
+          echo "      context: ." >> "${iso['workdir']}/${arch_dir}/docker-compose.yml"
+          echo "      dockerfile: Dockerfile" >> "${iso['workdir']}/${arch_dir}/docker-compose.yml"
+          echo "    image: ${script['name']}-${current['dockerubunturelease']}-${arch_dir}" >> "${iso['workdir']}/${arch_dir}/docker-compose.yml"
+          echo "    container_name: ${script['name']}-${current['dockerubunturelease']}-${arch_dir}" >> "${iso['workdir']}/${arch_dir}/docker-compose.yml"
+          echo "    entrypoint: /bin/bash" >> "${iso['workdir']}/${arch_dir}/docker-compose.yml"
+          echo "    working_dir: /root" >> "${iso['workdir']}/${arch_dir}/docker-compose.yml"
+          echo "    platform: linux/${arch_dir}" >> "${iso['workdir']}/${arch_dir}/docker-compose.yml"
+          echo "    volumes:" >> "${iso['workdir']}/${arch_dir}/docker-compose.yml"
+          echo "      - /docker/${script['name']}-${current['dockerubunturelease']}-${arch_dir}/:/root/${script['name']}/" >> "${iso['workdir']}/${arch_dir}/docker-compose.yml"
+          print_file "${iso['workdir']}/${arch_dir}/docker-compose.yml"
+          handle_output "# Creating Docker config ${iso['workdir']}/${arch_dir}/Dockerfile" "TEXT"
+          echo "FROM ubuntu:${current['dockerubunturelease']}" > "${iso['workdir']}/${arch_dir}/Dockerfile"
+          echo "RUN apt-get update && apt-get -o Dpkg::Options::=\"--force-overwrite\" install -y ${iso['requiredpackages']}" >> "${iso['workdir']}/${arch_dir}/Dockerfile"
+          print_file "${iso['workdir']}/${arch_dir}/Dockerfile"
+          handle_output "# Building docker image ${script['name']}-${current['dockerubunturelease']}-${arch_dir}" "TEXT"
+          docker build "${iso['workdir']}/${arch_dir}" --tag "${script['name']}-${current['dockerubunturelease']}-${arch_dir}" --platform "linux/${arch_dir}"
         fi
       fi
     done
@@ -79,37 +85,62 @@ check_docker_config () {
 
 create_docker_iso () {
   if ! [ -f "/.dockerenv" ]; then
-    check_ISO_WORKDIR
-    DOCKER_BIN="$ISO_WORKDIR/files/$SCRIPT_BIN"
-    DOCKER_MODULE_DIR="$ISO_WORKDIR/files/modules"
-    if [ ! -d "$DOCKER_MODULE_DIR" ]; then
-      mkdir -p "$DOCKER_MODULE_DIR"
+    check_workdir
+    docker['bin']="${iso['workdir']}/files/${script['bin']}"
+    docker['moduledir']="${iso['workdir']}/files/modules"
+    if [ ! -d "${docker['moduledir']}" ]; then
+      mkdir -p "${docker['moduledir']}"
     fi
-    execute_command "cp $MODULE_PATH/* $DOCKER_MODULE_DIR"
-    LOCAL_SCRIPT="$ISO_WORKDIR/files/guige_docker_script.sh"
-    DOCKER_SCRIPT="$DOCKER_ISO_WORKDIR/files/guige_docker_script.sh"
-    execute_command "cp $SCRIPT_FILE $DOCKER_BIN"
-    chmod +x "$DOCKER_BIN"
-    if [ "$DO_ISO_OLDINSTALLER" = "true" ]; then
-      check_old_ISO_WORKDIR
+    execute_command "cp ${script['modules']}/* ${docker['moduledir']}"
+    local_script="${iso['workdir']}/files/guige_docker_script.sh"
+    docker['script']="${docker['workdir']}/files/guige_docker_script.sh"
+    execute_command "cp ${script['file']} ${docker['bin']}"
+    execute_command "chmod +x ${docker['bin']}"
+    if [ "${options['oldinstaller']}" = "true" ]; then
+      check_old_workdir
     fi
     check_docker_config
     handle_output "" ""
-    if [ "$DO_ISO_DOCKER" = "false" ]; then
+    if [ "${options['docker']}" = "false" ]; then
       exit
     fi
-    if ! [ "$DO_ISO_TESTMODE" = "true" ]; then
-      echo "#!/bin/bash" > "$LOCAL_SCRIPT"
-      echo "$DOCKER_ISO_WORKDIR/files/$SCRIPT_BIN $SCRIPT_ARGS --workdir $DOCKER_ISO_WORKDIR --preworkdir $ISO_WORKDIR" >> "$LOCAL_SCRIPT"
-      if [ "$DO_ISO_DOCKER" = "true" ]; then
-        BASE_DOCKER_ISO_OUTPUTFILE=$( basename "$ISO_OUTPUTFILE" )
-        echo "# Output file will be at \"$ISO_WORKDIR/files/$BASE_DOCKER_ISO_OUTPUTFILE\""
+    if [ ! "${options['testmode']}" = "true" ]; then
+      verbose_message "Creating ${local_script}"
+      echo "#!/bin/bash" > "${local_script}"
+      script_args="--action ${iso['action']} --options ${iso['options']}"
+      if [ "${options['autoinstall']}" = "true" ]; then
+        if [ -f "${iso['autoinstallfile']}" ]; then
+          execute_command "cp ${iso['autoinstallfile']} ${iso['workdir']}/files/user-data"
+          iso['autoinstallfile']="${docker['workdir']}/files/user-data"
+          script_args="${script_args} --autoinstallfile ${iso['autoinstallfile']}"
+        fi
       fi
-      NEW_DIR="$ISO_OSNAME/$ISO_BUILDTYPE/$ISO_RELEASE"
-      verbose_message "# Executing: exec docker run --privileged=true --cap-add=CAP_MKNOD --device-cgroup-rule=\"b 7:* rmw\" --platform \"linux/$ISO_ARCH\" --mount source=\"$SCRIPT_NAME-$CURRENT_DOCKER_UBUNTU_RELEASE-$ISO_ARCH,target=/root/$SCRIPT_NAME\" --mount type=bind,source=\"$ISO_WORKDIR/files,target=/root/$SCRIPT_NAME/$NEW_DIR/files\"  \"$SCRIPT_NAME-$CURRENT_DOCKER_UBUNTU_RELEASE-$ISO_ARCH\" /bin/bash \"$DOCKER_SCRIPT\""
-      exec docker run --privileged=true --cap-add=CAP_MKNOD --device-cgroup-rule="b 7:* rmw" --platform "linux/$ISO_ARCH" --mount source="$SCRIPT_NAME-$CURRENT_DOCKER_UBUNTU_RELEASE-$ISO_ARCH,target=/root/$SCRIPT_NAME" --mount type=bind,source="$ISO_WORKDIR/files,target=/root/$SCRIPT_NAME/$NEW_DIR/files"  "$SCRIPT_NAME-$CURRENT_DOCKER_UBUNTU_RELEASE-$ISO_ARCH" /bin/bash "$DOCKER_SCRIPT"
+      if [ "${options['sshkey']}" = "true" ]; then
+        get_ssh_key
+        if [ -f "${iso['sshkeyfile']}" ]; then
+          execute_command "cp ${iso['sshkeyfile']} ${iso['workdir']}/files/sshkeyfile"
+          iso['sshkeyfile']="${docker['workdir']}/files/sshkeyfile"
+          script_args="${script_args} --sshkeyfile ${iso['sshkeyfile']}"
+        fi
+      fi
+      for arg_name in release volumemanager; do
+        if [[ ! "${script['args']}" =~ ${arg_name} ]]; then
+          arg_value="${iso[${arg_name}]}"
+          arg_value=$( echo "${arg_value}" |sed "s/^ //g" |sed "s/ $//g" |sed "s/ /,/g" )
+          script_args="${script_args} --${arg_name} ${arg_value}"
+        fi
+      done
+      echo "${docker['workdir']}/files/${script['bin']} ${script_args} --workdir ${docker['workdir']} --preworkdir ${iso['workdir']}" >> "${local_script}"
+      print_file "${local_script}"
+      execute_command "chmod +x ${local_script}"
+      if [ "${options['docker']}" = "true" ]; then
+        docker['outputfilebase']=$( basename "${iso['outputfile']}" )
+        echo "# Output file will be at \"${iso['workdir']}/files/${docker['outputfilebase']}\""
+      fi
+      verbose_message "# Executing: exec docker run --privileged=true --cap-add=CAP_MKNOD --device-cgroup-rule=\"b 7:* rmw\" --platform \"linux/${iso['arch']}\" --mount source=\"${script['name']}-${current['dockerubunturelease']}-${iso['arch']},target=/root/${script['name']}\" --mount type=bind,source=\"${iso['workdir']}/files,target=/root/${script['name']}/${iso['osname']}/${iso['build']}/${iso['release']}/files\"  \"${script['name']}-${current['dockerubunturelease']}-${iso['arch']}\" /bin/bash \"${docker['script']}\""
+      exec docker run --privileged=true --cap-add=CAP_MKNOD --device-cgroup-rule="b 7:* rmw" --platform "linux/${iso['arch']}" --mount source="${script['name']}-${current['dockerubunturelease']}-${iso['arch']},target=/root/${script['name']}" --mount type=bind,source="${iso['workdir']}/files,target=/root/${script['name']}/${iso['osname']}/${iso['build']}/${iso['release']}/files"  "${script['name']}-${current['dockerubunturelease']}-${iso['arch']}" /bin/bash "${docker['script']}"
       exit
     fi
   fi
-  DO_PRINT_HELP="false"
+  options['help']="false"
 }

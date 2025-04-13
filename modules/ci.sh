@@ -1,22 +1,23 @@
 #!/usr/bin/env bash
 
-# shellcheck disable=SC2129
 # shellcheck disable=SC2034
+# shellcheck disable=SC2129
 # shellcheck disable=SC2153
+# shellcheck disable=SC2154
 
-# Funtion update_iso_url
+# Funtion update_ci_url
 #
 # Update CI URL
 
 update_ci_url () {
-  BASE_ISO_INPUTCI=$( basename "$ISO_INPUTCI" )
-  if [ "$ISO_OSNAME" = "ubuntu" ]; then
-    case $ISO_BUILDTYPE in
+  iso['inputcibase']=$( basename "${iso['inputci']}" )
+  if [ "${iso['osname']}" = "ubuntu" ]; then
+    case ${iso['build']} in
       "daily-live"|"daily-live-server")
-        CI_URL="https://cloud-images.ubuntu.com/daily/server/$ISO_CODENAME/current/$BASE_ISO_INPUTCI"
+        iso['ciurl']="https://cloud-images.ubuntu.com/daily/server/${iso['codename']}/current/${iso['inputcibase']}"
         ;;
       *)
-        CI_URL="https://cloud-images.ubuntu.com/releases/$ISO_RELEASE/release/$BASE_ISO_INPUTCI"
+        iso['ciurl']="https://cloud-images.ubuntu.com/releases/${iso['release']}/release/${iso['inputcibase']}"
         ;;
     esac
   fi
@@ -28,25 +29,25 @@ update_ci_url () {
 
 get_base_ci () {
   handle_output "# Check source Cloud Image exists and grab it if it doesn't" "TEXT"
-  BASE_ISO_INPUTCI=$( basename "$ISO_INPUTCI" )
-  CI_DIR=$( dirname $ISO_INPUTCI )
-  if [ ! -d "$CI_DIR" ]; then
-    sudo_create_dir "$CI_DIR"
-    sudo_chown "$CI_DIR" "$OS_USER" "$OS_GROUP"
+  iso['inputcibase']=$( basename "${iso['inputci']}" )
+  iso['cidir']=$( dirname "${iso['inputci']}" )
+  if [ ! -d "${iso['cidir']}" ]; then
+    sudo_create_dir "${iso['cidir']}"
+    sudo_chown "${iso['cidir']}" "${os['user']}" "${os['group']}"
   fi
-  if [ "$DO_ISO_FULLFORCEMODE" = "true" ]; then
-    handle_output "rm $ISO_WORKDIR/files/$BASE_ISO_INPUTCI" ""
-    if [ "$DO_ISO_TESTMODE" = "false" ]; then
-      rm "$ISO_WORKDIR/files/$BASE_ISO_INPUTCI"
+  if [ "${options['forceall']}" = "true" ]; then
+    handle_output "rm ${iso['workdir']}/files/${iso['inputcibase']}" ""
+    if [ "${options['testmode']}" = "false" ]; then
+      rm "${iso['workdir']}/files/${iso['inputcibase']}"
     fi
   fi
   check_base_ci_file
-  if [ "$DO_CHECK_CI" = "true" ]; then
-    cd "$ISO_WORKDIR/files" || exit ; wget -N "$CI_URL"
+  if [ "${options['checkci']}" = "true" ]; then
+    cd "${iso['workdir']}/files" || exit ; wget -N "${iso['ciurl']}"
   else
-    if ! [ -f "$ISO_WORKDIR/files/$BASE_ISO_INPUTCI" ]; then
-      if [ "$DO_ISO_TESTMODE" = "false" ]; then
-        wget "$CI_URL" -O "$ISO_WORKDIR/files/$BASE_ISO_INPUTCI"
+    if ! [ -f "${iso['workdir']}/files/${iso['inputcibase']}" ]; then
+      if [ "${options['testmode']}" = "false" ]; then
+        wget "${iso['ciurl']}" -O "${iso['workdir']}/files/${iso['inputcibase']}"
       fi
     fi
   fi
@@ -57,11 +58,11 @@ get_base_ci () {
 # Check base Cloud Image file exists
 
 check_base_ci_file () {
-  if [ -f "$ISO_INPUTCI" ]; then
-    BASE_ISO_INPUTCI=$( basename "$ISO_INPUTCI" )
-    FILE_TYPE=$( file "$ISO_WORKDIR/files/$BASE_ISO_INPUTCI" |cut -f2 -d: |grep -E "QCOW" |wc -l |sed "s/ //g" )
-    if [ "$FILE_TYPE" = "0" ]; then
-      warning_message "$ISO_WORKDIR/files/$BASE_ISO_INPUTCI is not a valid Cloud Image file"
+  if [ -f "${iso['inputci']}" ]; then
+    iso['inputcibase']=$( basename "${iso['inputci']}" )
+    file_type=$( file "${iso['workdir']}/files/${iso['inputcibase']}" |cut -f2 -d: |grep -cE "QCOW" )
+    if [ "${file_type}" = "0" ]; then
+      warning_message "${iso['workdir']}/files/${iso['inputcibase']} is not a valid Cloud Image file"
       exit
     fi
   fi

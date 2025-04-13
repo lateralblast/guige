@@ -1,19 +1,20 @@
 #!/usr/bin/env bash
 
 # shellcheck disable=SC2129
+# shellcheck disable=SC2154
 
 # Function: execute_racadm
 #
 # Execute racadm commands
 
 execute_racadm () {
-  if [ "$DO_ISO_TESTMODE" = "false" ]; then
+  if [ "${options['testmode']}" = "false" ]; then
     handle_output "# Executing racadm" "TEXT"
-    $RACADM_BIN -H "$ISO_BMCIP" -u "$ISO_BMCUSERNAME" -p "$ISO_BMCPASSWORD" -c "remoteimage -d"
-    $RACADM_BIN -H "$ISO_BMCIP" -u "$ISO_BMCUSERNAME" -p "$ISO_BMCPASSWORD" -c "remoteimage -c -l $ISO_BOOTSERVERIP:ISO_BOOTSERVERFILE"
-    $RACADM_BIN -H "$ISO_BMCIP" -u "$ISO_BMCUSERNAME" -p "$ISO_BMCPASSWORD" -c "config -g cfgServerInfo -o cfgServerBootOnce 1"
-    $RACADM_BIN -H "$ISO_BMCIP" -u "$ISO_BMCUSERNAME" -p "$ISO_BMCPASSWORD" -c "config -g cfgServerInfo -o cfgServerFirstBootDevice VCD-DVD"
-    $RACADM_BIN -H "$ISO_BMCIP" -u "$ISO_BMCUSERNAME" -p "$ISO_BMCPASSWORD" -c "serveraction powercycle"
+    ${iso['racadm']} -H "${iso['bmcip']}" -u "${iso['bmcusername']}" -p "${iso['bmcpassword']}" -c "remoteimage -d"
+    ${iso['racadm']} -H "${iso['bmcip']}" -u "${iso['bmcusername']}" -p "${iso['bmcpassword']}" -c "remoteimage -c -l ${iso['bootserverip']}:iso['bootserverfile']}"
+    ${iso['racadm']} -H "${iso['bmcip']}" -u "${iso['bmcusername']}" -p "${iso['bmcpassword']}" -c "config -g cfgServerInfo -o cfgServerBootOnce 1"
+    ${iso['racadm']} -H "${iso['bmcip']}" -u "${iso['bmcusername']}" -p "${iso['bmcpassword']}" -c "config -g cfgServerInfo -o cfgServerFirstBootDevice VCD-DVD"
+    ${iso['racadm']} -H "${iso['bmcip']}" -u "${iso['bmcusername']}" -p "${iso['bmcpassword']}" -c "serveraction powercycle"
   fi
 }
 
@@ -23,17 +24,17 @@ execute_racadm () {
 
 check_racadm () {
   handle_output "# Checking racadm" "TEXT"
-  RACADM_TEST=$( which racadm |grep "^/" )
-  if [ -z "$RACADM_TEST" ]; then
+  racadm_test=$( which racadm |grep "^/" )
+  if [ -z "${racadm_test}" ]; then
     if ! [ -f "$HOME/.local/bin/racadm" ]; then
-      PIP_TEST=$( which pip |grep "^/" )
-      if [ -n "$PIP_TEST" ]; then
-        PIP_TEST=$( pip list |grep rac |awk '{print $1}')
-        if [ -z "$PIP_TEST" ]; then
+      pip_test=$( which pip |grep "^/" )
+      if [ -n "${pip_test}" ]; then
+        pip_test=$( pip list |grep rac |awk '{print $1}')
+        if [ -z "${pip_testi}" ]; then
           handle_output "pip install --user rac" "TEXT"
-          if [ "$DO_ISO_TESTMODE" = "false" ]; then
+          if [ "${options['testmode']}" = "false" ]; then
             pip install --user rac
-            RACADM_BIN="$HOME/.local/bin/racadm"
+            iso['racadm']="$HOME/.local/bin/racadm"
           else
             handle_output "# No racadm found" "TEXT"
             exit
@@ -45,9 +46,9 @@ check_racadm () {
         fi
       fi
     else
-      RACADM_BIN="$HOME/.local/bin/racadm"
+      iso['racadm']="$HOME/.local/bin/racadm"
     fi
   else
-    RACADM_BIN="$RACADM_TEST"
+    iso['racadm']="${racadm_test}"
   fi
 }

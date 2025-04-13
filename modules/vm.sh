@@ -1,18 +1,19 @@
 #!/usr/bin/env bash
 
 # shellcheck disable=SC2129
+# shellcheck disable=SC2154
 
 # Function: delete_vm
 #
 # Delete a VM
 
 delete_vm () {
-  if [ "$VM_TYPE" = "kvm" ]; then
+  if [ "${iso['type']}" = "kvm" ]; then
     check_kvm_vm_exists
-    if [ "$VM_EXISTS" = "true" ]; then
+    if [ "${iso['exists']}" = "true" ]; then
       delete_kvm_vm
     else
-      information_message "KVM VM $VM_NAME does not exist"
+      information_message "KVM VM ${iso['name']} does not exist"
     fi
   fi
 }
@@ -22,12 +23,12 @@ delete_vm () {
 # Create a VM for testing cloud init
 
 create_ci_vm () {
-  if [ "$VM_TYPE" = "kvm" ]; then
+  if [ "${iso['type']}" = "kvm" ]; then
     check_kvm_vm_exists
-    if [ "$VM_EXISTS" = "false" ]; then
+    if [ "${iso['exists']}" = "false" ]; then
       create_kvm_ci_vm
     else
-      information_message "KVM VM $VM_NAME already exists"
+      information_message "KVM VM ${iso['name']} already exists"
     fi
   fi
 }
@@ -37,17 +38,17 @@ create_ci_vm () {
 # Create a VM for testing an ISO
 
 create_iso_vm () {
-  if [ "$VM_ISO" = "" ]; then
-    if ! [ "$ISO_OUTPUTFILE" = "" ]; then
-      VM_ISO="$ISO_OUTPUTFILE"
+  if [ "${vm['inputfile']}" = "" ]; then
+    if ! [ "${iso['outputfile']}" = "" ]; then
+     iso['inputfile']="${iso['outputfile']}"
     fi
   fi
-  if [ "$VM_TYPE" = "kvm" ]; then
+  if [ "${iso['type']}" = "kvm" ]; then
     check_kvm_vm_exists
-    if [ "$VM_EXISTS" = "false" ]; then
+    if [ "${iso['exists']}" = "false" ]; then
       create_kvm_iso_vm
     else
-      information_message "KVM VM $VM_NAME already exists"
+      information_message "KVM VM ${iso['name']} already exists"
     fi
   fi
 }
@@ -57,7 +58,7 @@ create_iso_vm () {
 # List VMs
 
 list_vm () {
-  if [ "$VM_TYPE" = "kvm" ]; then
+  if [ "${iso['type']}" = "kvm" ]; then
     list_kvm_vm
   fi
 }

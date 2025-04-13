@@ -1,14 +1,15 @@
 #!/usr/bin/env bash
 
-# shellcheck disable=SC2129
 # shellcheck disable=SC2046
+# shellcheck disable=SC2129
+# shellcheck disable=SC2154
 
 # Function: unmount_squashfs
 #
 # Unmount squashfs filesystem
 
 unmount_squashfs () {
-  case "$ISO_OSNAME" in
+  case "${iso['osname']}" in
     "ubuntu")
       unmount_ubuntu_squashfs
       ;;
@@ -21,12 +22,12 @@ unmount_squashfs () {
 # Unmount ubuntu squashfs filesystem
 
 unmount_ubuntu_squashfs () {
-  if [ "$DO_ISO_SQUASHFS_UPDATE" = "true" ]; then
-    handle_output "# Unmounting squashfs $ISO_NEW_DIR/squashfs" "TEXT"
-    if [ "$DO_ISO_TESTMODE" = "false" ]; then
-      MOUNT_TEST=$( mount | grep "$ISO_NEW_DIR/squashfs" | wc -l )
-      if [ ! "$MOUNT_TEST" = "0" ]; then
-        sudo umount "$ISO_NEW_DIR/squashfs"
+  if [ "${options['updatesquashfs']}" = "true" ]; then
+    handle_output "# Unmounting squashfs ${iso['newdir']}/squashfs" "TEXT"
+    if [ "${options['testmode']}" = "false" ]; then
+      mount_test=$( mount | grep -c "${iso['newdir']}/squashfs" )
+      if [ ! "${mount_test}" = "0" ]; then
+        sudo umount "${iso['newdir']}/squashfs"
       fi
     fi
   fi
@@ -37,7 +38,7 @@ unmount_ubuntu_squashfs () {
 # Copy ISO squashfs
 
 copy_squashfs () {
-  case "$ISO_OSNAME" in
+  case "${iso['osname']}" in
     "ubuntu")
       copy_ubuntu_squashfs
       ;;
@@ -55,31 +56,31 @@ copy_squashfs () {
 
 copy_ubuntu_squashfs () {
   if [ ! -f "/usr/bin/rsync" ]; then
-    install_required_packages "$REQUIRED_PACKAGES"
+    install_required_packages "${iso['requiredpackages']}"
   fi
-  if [ "$DO_ISO_SQUASHFS_UPDATE" = "true" ] || [ "$DO_ISO_SQUASHFS_UNPACK" = "true" ]; then
+  if [ "${options['updatesquashfs']}" = "true" ] || [ "${options['unpacksquashfs']}" = "true" ]; then
     handle_output "# Copying squashfs files" "TEXT"
-    CURRENT_KERNEL=$( uname -r )
-    if [ -f "$CURRENT_KERNEL" ]; then
-      if [ "$DO_ISO_TESTMODE" = "false" ]; then
-        sudo mount -t squashfs -o loop "$ISO_SQUASHFSFILE" "$ISO_NEW_DIR/squashfs"
+    current['kernel']=$( uname -r )
+    if [ -f "${current['kernel']}" ]; then
+      if [ "${options['testmode']}" = "false" ]; then
+        sudo mount -t squashfs -o loop "${iso['squashfsfile']}" "${iso['newdir']}/squashfs"
       fi
-      if [ "$DO_ISO_VERBOSEMODE" = "true" ]; then
-        if [ "$DO_ISO_TESTMODE" = "false" ]; then
-          sudo rsync -av "$ISO_NEW_DIR/squashfs/" "$ISO_NEW_DIR/custom"
+      if [ "${options['verbose']}" = "true" ]; then
+        if [ "${options['testmode']}" = "false" ]; then
+          sudo rsync -av "${iso['newdir']}/squashfs/" "${iso['newdir']}/custom"
         fi
       else
-        if [ "$DO_ISO_TESTMODE" = "false" ]; then
-          sudo rsync -a "$ISO_NEW_DIR/squashfs/" "$ISO_NEW_DIR/custom"
+        if [ "${options['testmode']}" = "false" ]; then
+          sudo rsync -a "${iso['newdir']}/squashfs/" "${iso['newdir']}/custom"
         fi
       fi
     else
-      if [ "$DO_ISO_TESTMODE" = "false" ]; then
-        sudo unsquashfs -f -d "$ISO_NEW_DIR/custom" "$ISO_SQUASHFSFILE"
+      if [ "${options['testmode']}" = "false" ]; then
+        sudo unsquashfs -f -d "${iso['newdir']}/custom" "${iso['squashfsfile']}"
       fi
     fi
-    if [ "$DO_ISO_TESTMODE" = "false" ]; then
-      sudo cp /etc/resolv.conf /etc/hosts "$ISO_NEW_DIR/custom/etc"
+    if [ "${options['testmode']}" = "false" ]; then
+      sudo cp /etc/resolv.conf /etc/hosts "${iso['newdir']}/custom/etc"
     fi
   fi
 }
@@ -89,7 +90,7 @@ copy_ubuntu_squashfs () {
 # Update ISO squashfs
 
 update_iso_squashfs () {
-  case "$ISO_OSNAME" in
+  case "${iso['osname']}" in
     "ubuntu")
       update_ubuntu_iso_squashfs
       ;;
@@ -101,16 +102,16 @@ update_iso_squashfs () {
 # Update Ubuntu ISO squashfs
 
 update_ubuntu_iso_squashfs () {
-  if [ "$DO_ISO_SQUASHFS_UPDATE" = "true" ]; then
+  if [ "${options['updatesquashfs']}" = "true" ]; then
     handle_output "# Making squashfs (this will take a while)" "TEXT"
-    if [ "$DO_ISO_TESTMODE" = "false" ]; then
-      sudo mksquashfs "$ISO_NEW_DIR/custom" "$ISO_NEW_DIR/mksquash/filesystem.squashfs" -noappend
-      sudo cp "$ISO_NEW_DIR/mksquash/filesystem.squashfs" "$NEW_SQUASHFS_FILE"
-      sudo chmod 0444 i"$NEW_SQUASHFS_FILE"
-      sudo echo -n $( sudo du -s --block-size=1 "$ISO_NEW_DIR/custom" | tail -1 | awk '{print $1}') | sudo tee "$ISO_NEW_DIR/mksquash/filesystem.size"
-      sudo cp "$ISO_NEW_DIR/mksquash/filesystem.size" "$ISO_SOURCE_DIR/casper/filesystem.size"
-      sudo chmod 0444 "$ISO_SOURCE_DIR/casper/filesystem.size"
-      sudo find "$ISO_SOURCE_DIR" -type f -print0 | xargs -0 md5sum | sed "s@${ISO_NEW_DIR}@.@" | grep -v md5sum.txt | sudo tee "$ISO_SOURCE_DIR/md5sum.txt"
+    if [ "${options['testmode']}" = "false" ]; then
+      sudo mksquashfs "${iso['newdir']}/custom" "${iso['newdir']}/mksquash/filesystem.squashfs" -noappend
+      sudo cp "${iso['newdir']}/mksquash/filesystem.squashfs" "${iso['newsquashfsfile']}"
+      sudo chmod 0444 i"${iso['newsquashfsfile']}"
+      sudo echo -n $( sudo du -s --block-size=1 "${iso['newdir']}/custom" | tail -1 | awk '{print $1}') | sudo tee "${iso['newdir']}/mksquash/filesystem.size"
+      sudo cp "${iso['newdir']}/mksquash/filesystem.size" "${iso['sourcedir']}/casper/filesystem.size"
+      sudo chmod 0444 "${iso['sourcedir']}/casper/filesystem.size"
+      sudo find "${iso['sourcedir']}" -type f -print0 | xargs -0 md5sum | sed "s@${iso['newdir']}}@.@" | grep -v md5sum.txt | sudo tee "${iso['sourcedir']}/md5sum.txt"
     fi
   fi
 }

@@ -1,17 +1,18 @@
 #!/usr/bin/env bash
 
-# shellcheck disable=SC2129
 # shellcheck disable=SC2001
+# shellcheck disable=SC2129
+# shellcheck disable=SC2154
 
 # Function: execute_command
 #
 # Execute a command
 
 execute_command () {
-  COMMAND="$1"
-  execute_message "$COMMAND"
-  if [ "$DO_ISO_TESTMODE" = "false" ]; then
-    eval "$COMMAND"
+  command="$1"
+  execute_message "${command}"
+  if [ "${options['testmode']}" = "false" ]; then
+    eval "${command}"
   fi
 }
 
@@ -20,12 +21,12 @@ execute_command () {
 # Print contents of file
 
 print_file () {
-  FILE_NAME="$1"
+  file_name="$1"
   echo ""
-  handle_output "# Contents of file $FILE_NAME" "TEXT"
+  handle_output "# Contents of file ${file_name}" "TEXT"
   echo ""
-  if [ "$DO_ISO_TESTMODE" = "false" ]; then
-    cat "$FILE_NAME"
+  if [ "${options['testmode']}" = "false" ]; then
+    cat "${file_name}"
   fi
 }
 
@@ -34,9 +35,9 @@ print_file () {
 #  Print command
 
 execute_message () {
-  OUTPUT_TEXT="$1"
-  OUTPUT_TYPE="COMMAND"
-  handle_output "$OUTPUT_TEXT" "$OUTPUT_TYPE"
+  output_text="$1"
+  output_type="COMMAND"
+  handle_output "${output_text}" "${output_type}"
 }
 
 # Function: information_message
@@ -44,9 +45,9 @@ execute_message () {
 # Print informational message
 
 information_message () {
-  OUTPUT_TEXT="$1"
-  OUTPUT_TYPE="TEXT"
-  handle_output "# Information: $OUTPUT_TEXT" "$OUTPUT_TYPE"
+  output_text="$1"
+  output_type="TEXT"
+  handle_output "# Information: ${output_text}" "${output_type}"
 }
 
 # Function: verbose_message
@@ -54,11 +55,11 @@ information_message () {
 # Print verbose message
 
 verbose_message () {
-  OUTPUT_TEXT="$1"
-  OUTPUT_TYPE="TEXT"
-  TEMP_DO_ISO_VERBOSEMODE="true"
-  handle_output "$OUTPUT_TEXT" "$OUTPUT_TYPE"
-  TEMP_DO_ISO_VERBOSEMODE="false"
+  output_text="$1"
+  output_type="TEXT"
+  temp['verbose']="true"
+  handle_output "${output_text}" "${output_type}"
+  temp['verbose']="false"
 }
 
 # Function: warning_message
@@ -66,11 +67,11 @@ verbose_message () {
 # Print warning message
 
 warning_message () {
-  OUTPUT_TEXT="$1"
-  OUTPUT_TYPE="TEXT"
-  TEMP_DO_ISO_VERBOSEMODE="true"
-  handle_output "# Warning: $OUTPUT_TEXT" "$OUTPUT_TYPE"
-  TEMP_DO_ISO_VERBOSEMODE="false"
+  output_text="$1"
+  output_type="TEXT"
+  temp['verbose']="true"
+  handle_output "# Warning: ${output_text}" "${output_type}"
+  temp['verbose']="false"
 }
 
 # Function: handle_output
@@ -78,16 +79,16 @@ warning_message () {
 # Handle text output
 
 handle_output () {
-  OUTPUT_TEXT="$1"
-  OUTPUT_TYPE="$2"
-  if [ "$DO_ISO_VERBOSEMODE" = "true" ] || [ "$TEMP_DO_ISO_VERBOSEMODE" = "true" ]; then
-    if [ "$DO_ISO_TESTMODE" = "true" ]; then
-      echo "$OUTPUT_TEXT"
+  output_text="$1"
+  output_type="$2"
+  if [ "${options['verbose']}" = "true" ] || [ "${temp['verbose']}" = "true" ]; then
+    if [ "${options['testmode']}" = "true" ]; then
+      echo "${output_text}"
     else
-      if [ "$OUTPUT_TYPE" = "TEXT" ]; then
-        echo "$OUTPUT_TEXT"
+      if [ "${output_type}" = "TEXT" ]; then
+        echo "${output_text}"
       else
-        echo "# Executing: $OUTPUT_TEXT"
+        echo "# Executing: ${output_text}"
       fi
     fi
   fi
@@ -98,13 +99,13 @@ handle_output () {
 # Change ownership
 
 sudo_chown () {
-  OBJECT="$1"
-  USER=$2
-  GROUP=$3
-  handle_output "# Checking ownership of $OBJECT is $USER:$GROUP" "TEXT"
-  if [ "$DO_ISO_TESTMODE" = "false" ]; then
+  object="$1"
+  user="$2"
+  group="$3"
+  handle_output "# Checking ownership of ${object} is ${user}:${group}" "TEXT"
+  if [ "${options['testmode']}" = "false" ]; then
     if [ ! -f "/.dockerenv" ]; then
-      sudo chown $USER:$GROUP $OBJECT
+      sudo chown "${user}":"${group}" "${object}"
     fi
   fi
 }
@@ -114,11 +115,11 @@ sudo_chown () {
 # Create directory
 
 create_dir () {
-  CREATE_DIR="$1"
-  handle_output "# Checking directory $CREATE_DIR exists" "TEXT"
-  if [ ! -d "$CREATE_DIR" ]; then
-    if [ "$DO_ISO_TESTMODE" = "false" ]; then
-      mkdir -p "$CREATE_DIR"
+  create_dir="$1"
+  handle_output "# Checking directory ${create_dir} exists" "TEXT"
+  if [ ! -d "${create_dir}" ]; then
+    if [ "${options['testmode']}" = "false" ]; then
+      mkdir -p "${create_dir}"
     fi
   fi
 }
@@ -128,67 +129,67 @@ create_dir () {
 # Create directory
 
 sudo_create_dir () {
-  CREATE_DIR="$1"
-  handle_output "# Checking directory $CREATE_DIR exists" "TEXT"
-  if [ ! -d "$CREATE_DIR" ]; then
-    if [ "$DO_ISO_TESTMODE" = "false" ]; then
+  create_dir="$1"
+  handle_output "# Checking directory ${create_dir} exists" "TEXT"
+  if [ ! -d "${create_dir}" ]; then
+    if [ "${options['testmode']}" = "false" ]; then
       if [ -f "/.dockerenv" ]; then
-        mkdir -p "$CREATE_DIR"
+        mkdir -p "${create_dir}"
       else
-        sudo mkdir -p "$CREATE_DIR"
+        sudo mkdir -p "${create_dir}"
       fi
     fi
   fi
 }
 
-# Function: remove_dir
+# Function: delete_dir
 #
 # Remove directory
 
-remove_dir () {
-  REMOVE_DIR="$1"
-  handle_output "# Checking directory $REMOVE_DIR exists" "TEXT"
-  if [ ! "$REMOVE_DIR" = "/" ]; then
-    if [[ $REMOVE_DIR =~ [0-9a-zA-Z] ]]; then
-      if [ -d "$REMOVE_DIR" ]; then
-        if [ "$DO_ISO_TESTMODE" = "false" ]; then
-          sudo rm -f "$REMOVE_DIR"
+delete_dir () {
+  delete_dir="$1"
+  handle_output "# Checking directory ${delete_dir} exists" "TEXT"
+  if [ ! "${delete_dir}" = "/" ]; then
+    if [[ ${delete_dir} =~ [0-9a-zA-Z] ]]; then
+      if [ -d "${delete_dir}" ]; then
+        if [ "${options['testmode']}" = "false" ]; then
+          sudo rm -f "${delete_dir}"
         fi
       fi
     fi
   fi
 }
 
-# Function: check_ISO_WORKDIR
+# Function: check_workdir
 #
 # Check work directories exist
 #
 # Example:
 # mkdir -p ./isomount ./isonew/squashfs ./isonew/cd ./isonew/custom
 
-check_ISO_WORKDIR () {
+check_workdir () {
   handle_output "# Check work directories" "TEXT"
-  for ISO_DIR in $ISO_MOUNTDIR $ISO_NEW_DIR/squashfs $ISO_NEW_DIR/mksquash $ISO_NEW_DIR/cd $ISO_NEW_DIR/custom $ISO_WORKDIR/bin $ISO_WORKDIR/files; do
-    handle_output "# Check directory $ISO_DIR exists" "TEXT"
-    if [ "$DO_ISO_FORCEMODE" = "true" ]; then
-      remove_dir "$ISO_DIR"
+  for iso_dir in ${iso['mountdir']} ${iso['newdir']}/squashfs ${iso['newdir']}/mksquash ${iso['newdir']}/cd ${iso['newdir']}/custom ${iso['workdir']}/bin ${iso['workdir']}/files; do
+    handle_output "# Check directory ${iso_dir} exists" "TEXT"
+    if [ "${options['force']}" = "true" ]; then
+      delete_dir "${iso_dir}"
     fi
-    create_dir "$ISO_DIR"
+    create_dir "${iso_dir}"
   done
 }
 
-# Function: check_old_ISO_WORKDIR
+# Function: check_old_workdir
 #
 # Check old release work directory
 # Used when copying files from old release to a new release
 
-check_old_ISO_WORKDIR () {
+check_old_workdir () {
   handle_output "# Check old release work directories exist" "TEXT"
-  for ISO_DIR in $OLD_ISO_MOUNTDIR $OLD_ISO_WORKDIR/files; do
-    if [ "$DO_ISO_FORCEMODE" = "true" ]; then
-      remove_dir "$ISO_DIR"
+  for iso_dir in ${old['mountdir']} ${old['workdir']}/files; do
+    if [ "${options['force']}" = "true" ]; then
+      delete_dir "${iso_dir}"
     fi
-    create_dir "$ISO_DIR"
+    create_dir "${iso_dir}"
   done
 }
 
@@ -197,15 +198,15 @@ check_old_ISO_WORKDIR () {
 # Check file permissions of file
 
 check_file_perms () {
-  CHECK_FILE="$1"
-  handle_output "# Checking file permissions for $CHECK_FILE" "TEXT"
-  if [ -f "$CHECK_FILE" ]; then
-    MY_USER="$OS_USER"
-    MY_GROUP=$(groups |awk '{print $1}')
-    FILE_USER=$(find "$ISO_OUTPUTFILE" -ls |awk '{print $5}')
-    if [ ! "$FILE_USER" = "$MY_USER" ]; then
-      sudo chown "$MY_USER" "$CHECK_FILE"
-      sudo chgrp "$MY_GROUP" "$CHECK_FILE"
+  check_file="$1"
+  handle_output "# Checking file permissions for ${check_file}" "TEXT"
+  if [ -f "${check_file}" ]; then
+    my_user="${os['user']}"
+    my_group=$(groups |awk '{print $1}')
+    file_user=$(find "${iso['outputfile']}" -ls |awk '{print $5}')
+    if [ ! "${file_user}" = "${my_user}" ]; then
+      sudo chown "${my_user}" "${check_file}"
+      sudo chgrp "${my_group}" "${check_file}"
     fi
   fi
 }
@@ -215,24 +216,24 @@ check_file_perms () {
 # Setup NFS server to export ISO
 
 create_export () {
-  NFS_DIR="$ISO_WORKDIR/files"
-  EXPORTS_FILE="/etc/exports"
+  nfs_dir="${iso['workdir']}/files"
+  exports_file="/etc/exports"
   handle_output "# Check NFS export is enabled" "TEXT"
-  if [ -f "$EXPORTS_FILE" ]; then
-    EXPORT_CHECK=$( grep -v "^#" < "$EXPORTS_FILE" |grep "$NFS_DIR" |grep "$ISO_BMCIP" |awk '{print $1}' | head -1 )
+  if [ -f "${exports_file}" ]; then
+    export_check=$( grep -v "^#" < "${exports_file}" |grep "${nfs_dir}" |grep "${iso['bmcip']}" |awk '{print $1}' | head -1 )
   else
-    EXPORT_CHECK=""
+    export_check=""
   fi
-  if [ -z "$EXPORT_CHECK" ]; then
-    if [ "$OS_NAME" = "Darwin" ]; then
-      echo "$NFS_DIR --mapall=$OS_USER $ISO_BMCIP" |sudo tee -a "$EXPORTS_FILE"
+  if [ -z "${export_check}" ]; then
+    if [ "${os['name']}" = "Darwin" ]; then
+      echo "${nfs_dir} --mapall=${os['user']} ${iso['bmcip']}" |sudo tee -a "${exports_file}"
       sudo nfsd enable
       sudo nfsd restart
     else
-      echo "$NFS_DIR $ISO_BMCIP(sync,wdelay,hide,no_subtree_check,sec=sys,rw,secure,root_squash,no_all_squash)" |sudo tee -a "$EXPORTS_FILE"
+      echo "${nfs_dir} ${iso['bmcip']}(sync,wdelay,hide,no_subtree_check,sec=sys,rw,secure,root_squash,no_all_squash)" |sudo tee -a "${exports_file}"
       sudo exportfs -a
     fi
-    print_file "$EXPORTS_FILE"
+    print_file "${exports_file}"
   fi
 }
 
@@ -241,173 +242,176 @@ create_export () {
 # Update output file name based on switched and options
 
 update_output_file_name () {
-  if ! [ "$ISO_HOSTNAME" = "$DEFAULT_ISO_HOSTNAME" ]; then
-    TEMP_DIR_NAME=$( dirname "$ISO_OUTPUTFILE" )
-    TEMP_FILE_NAME=$( basename "$ISO_OUTPUTFILE" .iso )
-    ISO_OUTPUTFILE="$TEMP_DIR_NAME/$TEMP_FILE_NAME-$ISO_HOSTNAME.iso"
+  if ! [ "${iso['hostname']}" = "${defaults['hostname']}" ]; then
+    temp_dir_name=$( dirname "${iso['outputfile']}" )
+    temp_file_name=$( basename "${iso['outputfile']}" .iso )
+    iso['outputfile']="${temp_dir_name}/${temp_file_name}-${iso['hostname']}.iso"
   fi
-  if ! [ "$ISO_NIC" = "$DEFAULT_ISO_NIC" ]; then
-    TEMP_DIR_NAME=$( dirname "$ISO_OUTPUTFILE" )
-    TEMP_FILE_NAME=$( basename "$ISO_OUTPUTFILE" .iso )
-    ISO_OUTPUTFILE="$TEMP_DIR_NAME/$TEMP_FILE_NAME-$ISO_NIC.iso"
+  if ! [ "${iso['nic']}" = "${defaults['nic']}" ]; then
+    temp_dir_name=$( dirname "${iso['outputfile']}" )
+    temp_file_name=$( basename "${iso['outputfile']}" .iso )
+    iso['outputfile']="${temp_dir_name}/${temp_file_name}-${iso['nic']}.iso"
   fi
-  if [ "$DO_ISO_DHCP" = "false" ]; then
-    if ! [ "$ISO_IP" = "$DEFAULT_ISO_IP" ]; then
-      TEMP_DIR_NAME=$( dirname "$ISO_OUTPUTFILE" )
-      TEMP_FILE_NAME=$( basename "$ISO_OUTPUTFILE" .iso )
-      ISO_OUTPUTFILE="$TEMP_DIR_NAME/$TEMP_FILE_NAME-$ISO_IP.iso"
+  if [ "${options['dhcp']}" = "false" ]; then
+    if ! [ "${iso['ip']}" = "${defaults['ip']}" ]; then
+      temp_dir_name=$( dirname "${iso['outputfile']}" )
+      temp_file_name=$( basename "${iso['outputfile']}" .iso )
+      iso['outputfile']="${temp_dir_name}/${temp_file_name}-${iso['ip']}.iso"
     fi
-    if ! [ "$ISO_GATEWAY" = "$DEFAULT_ISO_GATEWAY" ]; then
-      TEMP_DIR_NAME=$( dirname "$ISO_OUTPUTFILE" )
-      TEMP_FILE_NAME=$( basename "$ISO_OUTPUTFILE" .iso )
-      ISO_OUTPUTFILE="$TEMP_DIR_NAME/$TEMP_FILE_NAME-$ISO_GATEWAY.iso"
+    if ! [ "${iso['gateway']}" = "${defaults['gateway']}" ]; then
+      temp_dir_name=$( dirname "${iso['outputfile']}" )
+      temp_file_name=$( basename "${iso['outputfile']}" .iso )
+      iso['outputfile']="${temp_dir_name}/${temp_file_name}-${iso['gateway']}.iso"
     fi
-    if ! [ "$ISO_DNS" = "$DEFAULT_ISO_DNS" ]; then
-      TEMP_DIR_NAME=$( dirname "$ISO_OUTPUTFILE" )
-      TEMP_FILE_NAME=$( basename "$ISO_OUTPUTFILE" .iso )
-      ISO_OUTPUTFILE="$TEMP_DIR_NAME/$TEMP_FILE_NAME-$ISO_DNS.iso"
+    if ! [ "${iso['dns']}" = "${defaults['dns']}" ]; then
+      temp_dir_name=$( dirname "${iso['outputfile']}" )
+      temp_file_name=$( basename "${iso['outputfile']}" .iso )
+      iso['outputfile']="${temp_dir_name}/${temp_file_name}-${iso['dns']}.iso"
     fi
   fi
-  if ! [ "$ISO_USERNAME" = "$DEFAULT_ISO_USERNAME" ]; then
-    TEMP_DIR_NAME=$( dirname "$ISO_OUTPUTFILE" )
-    TEMP_FILE_NAME=$( basename "$ISO_OUTPUTFILE" .iso )
-    ISO_OUTPUTFILE="$TEMP_DIR_NAME/$TEMP_FILE_NAME-$ISO_USERNAME.iso"
+  if ! [ "${iso['username']}" = "${defaults['username']}" ]; then
+    temp_dir_name=$( dirname "${iso['outputfile']}" )
+    temp_file_name=$( basename "${iso['outputfile']}" .iso )
+    iso['outputfile']="${temp_dir_name}/${temp_file_name}-${iso['username']}.iso"
   fi
-  if ! [ "$ISO_DISK" = "$DEFAULT_ISO_DISK" ]; then
-    TEMP_DIR_NAME=$( dirname "$ISO_OUTPUTFILE" )
-    TEMP_FILE_NAME=$( basename "$ISO_OUTPUTFILE" .iso )
-    ISO_OUTPUTFILE="$TEMP_DIR_NAME/$TEMP_FILE_NAME-$ISO_DISK.iso"
+  if ! [ "${iso['disk']}" = "${defaults['disk']}" ]; then
+    temp_dir_name=$( dirname "${iso['outputfile']}" )
+    temp_file_name=$( basename "${iso['outputfile']}" .iso )
+    iso['outputfile']="${temp_dir_name}/${temp_file_name}-${iso['disk']}.iso"
   fi
-  if ! [ "$ISO_PREFIX" = "" ]; then
-    TEMP_DIR_NAME=$( dirname "$ISO_OUTPUTFILE" )
-    TEMP_FILE_NAME=$( basename "$ISO_OUTPUTFILE" .iso )
-    ISO_OUTPUTFILE="$TEMP_DIR_NAME/$ISO_PREFIX-$TEMP_FILE_NAME.iso"
+  if ! [ "${iso['prefix']}" = "" ]; then
+    temp_dir_name=$( dirname "${iso['outputfile']}" )
+    temp_file_name=$( basename "${iso['outputfile']}" .iso )
+    iso['outputfile']="${temp_dir_name}/${iso['prefix']}-${temp_file_name}.iso"
   fi
-  if ! [ "$ISO_SUFFIX" = "" ]; then
-    TEMP_DIR_NAME=$( dirname "$ISO_OUTPUTFILE" )
-    TEMP_FILE_NAME=$( basename "$ISO_OUTPUTFILE" .iso )
-    ISO_OUTPUTFILE="$TEMP_DIR_NAME/$TEMP_FILE_NAME-$ISO_SUFFIX.iso"
+  if ! [ "${iso['suffix']}" = "" ]; then
+    temp_dir_name=$( dirname "${iso['outputfile']}" )
+    temp_file_name=$( basename "${iso['outputfile']}" .iso )
+    iso['outputfile']="${temp_dir_name}/${temp_file_name}-${iso['suffix']}.iso"
   fi
-  if [[ "$ISO_OPTIONS" =~ "cluster" ]]; then
-    TEMP_DIR_NAME=$( dirname "$ISO_OUTPUTFILE" )
-    TEMP_FILE_NAME=$( basename "$ISO_OUTPUTFILE" .iso )
-    ISO_OUTPUTFILE="$TEMP_DIR_NAME/$TEMP_FILE_NAME-cluster.iso"
+  if [[ "${iso['options']}" =~ "cluster" ]]; then
+    temp_dir_name=$( dirname "${iso['outputfile']}" )
+    temp_file_name=$( basename "${iso['outputfile']}" .iso )
+    iso['outputfile']="${temp_dir_name}/${temp_file_name}-cluster.iso"
   fi
-  if [[ "$ISO_OPTIONS" =~ "kvm" ]]; then
-    TEMP_DIR_NAME=$( dirname "$ISO_OUTPUTFILE" )
-    TEMP_FILE_NAME=$( basename "$ISO_OUTPUTFILE" .iso )
-    ISO_OUTPUTFILE="$TEMP_DIR_NAME/$TEMP_FILE_NAME-kvm.iso"
+  if [[ "${iso['options']}" =~ "kvm" ]]; then
+    temp_dir_name=$( dirname "${iso['outputfile']}" )
+    temp_file_name=$( basename "${iso['outputfile']}" .iso )
+    iso['outputfile']="${temp_dir_name}/${temp_file_name}-kvm.iso"
   fi
-  if [[ "$ISO_OPTIONS" =~ "biosdevname" ]]; then
-    TEMP_DIR_NAME=$( dirname "$ISO_OUTPUTFILE" )
-    TEMP_FILE_NAME=$( basename "$ISO_OUTPUTFILE" .iso )
-    ISO_OUTPUTFILE="$TEMP_DIR_NAME/$TEMP_FILE_NAME-biosdevname.iso"
+  if [[ "${iso['options']}" =~ "biosdevname" ]]; then
+    temp_dir_name=$( dirname "${iso['outputfile']}" )
+    temp_file_name=$( basename "${iso['outputfile']}" .iso )
+    iso['outputfile']="${temp_dir_name}/${temp_file_name}-biosdevname.iso"
   fi
-  if [ "$DO_ISO_SSHKEY" = "true" ]; then
-    TEMP_DIR_NAME=$( dirname "$ISO_OUTPUTFILE" )
-    TEMP_FILE_NAME=$( basename "$ISO_OUTPUTFILE" .iso )
-    ISO_OUTPUTFILE="$TEMP_DIR_NAME/$TEMP_FILE_NAME-sshkey.iso"
+  if [ "${options['sshkey']}" = "true" ]; then
+    temp_dir_name=$( dirname "${iso['outputfile']}" )
+    temp_file_name=$( basename "${iso['outputfile']}" .iso )
+    iso['outputfile']="${temp_dir_name}/${temp_file_name}-sshkey.iso"
   fi
-  if [ "$DO_ISO_NVME" = "true" ]; then
-    TEMP_DIR_NAME=$( dirname "$ISO_OUTPUTFILE" )
-    TEMP_FILE_NAME=$( basename "$ISO_OUTPUTFILE" .iso )
-    ISO_OUTPUTFILE="$TEMP_DIR_NAME/$TEMP_FILE_NAME-nvme.iso"
+  if [ "${options['nvme']}" = "true" ]; then
+    temp_dir_name=$( dirname "${iso['outputfile']}" )
+    temp_file_name=$( basename "${iso['outputfile']}" .iso )
+    iso['outputfile']="${temp_dir_name}/${temp_file_name}-nvme.iso"
   fi
-  if [ "$DO_ISO_DHCP" = "true" ]; then
-    TEMP_DIR_NAME=$( dirname "$ISO_OUTPUTFILE" )
-    TEMP_FILE_NAME=$( basename "$ISO_OUTPUTFILE" .iso )
-    ISO_OUTPUTFILE="$TEMP_DIR_NAME/$TEMP_FILE_NAME-dhcp.iso"
+  if [ "${options['dhcp']}" = "true" ]; then
+    temp_dir_name=$( dirname "${iso['outputfile']}" )
+    temp_file_name=$( basename "${iso['outputfile']}" .iso )
+    iso['outputfile']="${temp_dir_name}/${temp_file_name}-dhcp.iso"
   fi
-  if [ "$DO_ISO_AUTOINSTALL" = "true" ]; then
-    TEMP_DIR_NAME=$( dirname "$ISO_OUTPUTFILE" )
-    TEMP_FILE_NAME=$( basename "$ISO_OUTPUTFILE" .iso )
-    ISO_OUTPUTFILE="$TEMP_DIR_NAME/$TEMP_FILE_NAME-custom-user-data.iso"
+  if [ "${options['autoinstall']}" = "true" ]; then
+    temp_dir_name=$( dirname "${iso['outputfile']}" )
+    temp_file_name=$( basename "${iso['outputfile']}" .iso )
+    iso['outputfile']="${temp_dir_name}/${temp_file_name}-custom-user-data.iso"
   fi
-  if [ "$DO_ISO_GRUBFILE" = "true" ]; then
-    TEMP_DIR_NAME=$( dirname "$ISO_OUTPUTFILE" )
-    TEMP_FILE_NAME=$( basename "$ISO_OUTPUTFILE" .iso )
-    ISO_OUTPUTFILE="$TEMP_DIR_NAME/$TEMP_FILE_NAME-custom-grub.iso"
+  if [ "${options['grubfile']}" = "true" ]; then
+    temp_dir_name=$( dirname "${iso['outputfile']}" )
+    temp_file_name=$( basename "${iso['outputfile']}" .iso )
+    iso['outputfile']="${temp_dir_name}/${temp_file_name}-custom-grub.iso"
   fi
-  for VOLMGR in $ISO_VOLMGRS; do
-    if [ ! "$VOLMGR" = "custom" ]; then
-      TEMP_DIR_NAME=$( dirname "$ISO_OUTPUTFILE" )
-      TEMP_FILE_NAME=$( basename "$ISO_OUTPUTFILE" .iso )
-      ISO_OUTPUTFILE="$TEMP_DIR_NAME/$TEMP_FILE_NAME-$VOLMGR.iso"
+  iso_volmgrs=$( echo "${iso['volumemanager']}" |sed "s/,/ /g" )
+  for iso_volmgr in ${iso_volmgrs}; do
+    if [ ! "${iso_volmgrs}" = "custom" ]; then
+      if [[ ! "${iso[outputfile]}" =~ $iso_volmgr ]]; then
+        temp_dir_name=$( dirname "${iso['outputfile']}" )
+        temp_file_name=$( basename "${iso['outputfile']}" .iso )
+        iso['outputfile']="${temp_dir_name}/${temp_file_name}-${iso_volmgr}.iso"
+      fi
     fi
   done
-  if [ "$DO_ISO_CREATEISOVM" = "true" ] || [ "$DO_ISO_CREATECIVM" = "true" ]; then
-    if [ "$VM_TYPE" = "kvm" ]; then
-      if [ "$OS_NAME" = "Darwin" ]; then
-        REQUIRED_PACKAGES="$REQUIRED_PACKAGES qemu libvirt dnsmasq libosinfo virt-manager"
+  if [ "${options['createisovm']}" = "true" ] || [ "${options['createcivm']}" = "true" ]; then
+    if [ "${iso['type']}" = "kvm" ]; then
+      if [ "${os['name']}" = "Darwin" ]; then
+        iso['requiredpackages']="${iso['requiredpackages']} qemu libvirt dnsmasq libosinfo virt-manager"
       else
-        REQUIRED_PACKAGES="$REQUIRED_PACKAGES qemu-full virt-manager virt-viewer dnsmasq bridge-utils libguestfs ebtables vde2 openbsd-netcat cloud-image-utils libosinfo"
+        iso['requiredpackages']="${iso['requiredpackages']} qemu-full virt-manager virt-viewer dnsmasq bridge-utils libguestfs ebtables vde2 openbsd-netcat cloud-image-utils libosinfo"
       fi
     fi
   fi
-  if [ "$VM_TYPE" = "" ]; then
-    VM_TYPE="$DEFAULT_VM_TYPE"
+  if [ "${iso['type']}" = "" ]; then
+   iso['type']="${defaults['type']}"
   fi
-  if [ "$VM_NIC" = "" ]; then
-    VM_NIC="$DEFAULT_VM_NIC"
+  if [ "${iso['nic']}" = "" ]; then
+    iso['nic']="${defaults['nic']}"
   fi
-  if [ "$VM_SIZE" = "" ]; then
-    VM_SIZE="$DEFAULT_VM_SIZE"
+  if [ "${iso['disksize']}" = "" ]; then
+    iso['disksize']="${defaults['disksize']}"
   fi
-  if [ "$VM_CPUS" = "" ]; then
-    VM_CPUS="$DEFAULT_VM_CPUS"
+  if [ "${iso['cpus']}" = "" ]; then
+    iso['cpus']="${defaults['cpus']}"
   fi
-  if [[ "$ISO_ACTION" =~ "vm" ]]; then
-    if [[ "$ISO_ACTION" =~ "create" ]]; then
-      if [ "$VM_RAM" = "" ]; then
-        VM_RAM="$DEFAULT_VM_RAM"
+  if [[ "${iso['action']}" =~ "vm" ]]; then
+    if [[ "${iso['action']}" =~ "create" ]]; then
+      if [ "${iso['ram']}" = "" ]; then
+        iso['ram']="${defaults['ram']}"
       else
-        if [[ "$VM_RAM" =~ "G" ]] || [[ "$VM_RAM" =~ "g" ]]; then
-          VM_RAM=$(echo "$VM_RAM" |sed "s/[G,g]//g")
-          VM_RAM=$(echo "$VM_RAM*1024*1024" |bc -l)
+        if [[ "${iso['ram']}" =~ "G" ]] || [[ "${iso['ram']}" =~ "g" ]]; then
+          iso['ram']=$(echo "${iso['ram']}" |sed "s/[G,g]//g")
+          iso['ram']=$(echo "${iso['ram']}*1024*1024" |bc -l)
         fi
-        if [ "$VM_RAM" -lt 1024000 ]; then
+        if [ "${iso['ram']}" -lt 1024000 ]; then
           warning_message "Insufficient RAM specified for VM"
           exit
         fi
       fi
     fi
-    if [ "$VM_NAME" = "" ]; then
-      if [ "$ISO_BUILDTYPE" = "" ]; then
-        if [[ "$ISO_ACTION" =~ "ci" ]]; then
-          VM_NAME="$SCRIPT_NAME-ci-$ISO_OSNAME-$ISO_RELEASE-$ISO_BOOTTYPE-$ISO_ARCH"
+    if [ "${iso['name']}" = "" ]; then
+      if [ "${iso['build']}" = "" ]; then
+        if [[ "${iso['action']}" =~ "ci" ]]; then
+          iso['name']="${script['name']}-ci-${iso['osname']}-${iso['release']}-${iso['boottype']}-${iso['arch']}"
         else
-          VM_NAME="$SCRIPT_NAME-iso-$ISO_OSNAME-$ISO_RELEASE-$ISO_BOOTTYPE-$ISO_ARCH"
+          iso['name']="${script['name']}-iso-${iso['osname']}-${iso['release']}-${iso['boottype']}-${iso['arch']}"
         fi
       else
-        if [[ "$ISO_ACTION" =~ "ci" ]]; then
-          VM_NAME="$SCRIPT_NAME-ci-$ISO_OSNAME-$ISO_BUILDTYPE-$ISO_RELEASE-$ISO_BOOTTYPE-$ISO_ARCH"
+        if [[ "${iso['action']}" =~ "ci" ]]; then
+          iso['name']="${script['name']}-ci-${iso['osname']}-${iso['build']}-${iso['release']}-${iso['boottype']}-${iso['arch']}"
         else
-          VM_NAME="$SCRIPT_NAME-iso-$ISO_OSNAME-$ISO_BUILDTYPE-$ISO_RELEASE-$ISO_BOOTTYPE-$ISO_ARCH"
+          iso['name']="${script['name']}-iso-${iso['osname']}-${iso['build']}-${iso['release']}-${iso['boottype']}-${iso['arch']}"
         fi
       fi
     fi
-    if [[ "$ISO_ACTION" =~ "create" ]]; then
-      if ! [ "$VM_ISO" = "" ]; then
-        if ! [ -f "$VM_ISO" ]; then
-          warning_message "ISO $VM_ISO does not exist"
+    if [[ "${iso['action']}" =~ "create" ]]; then
+      if ! [ "${iso['inputfile']}" = "" ]; then
+        if ! [ -f "${iso['inputfile']}" ]; then
+          warning_message "ISO ${iso['inputfile']} does not exist"
           exit
         fi
       fi
     fi
   fi
-  if [ "$DO_ISO_SERIAL" = "true" ]; then
-    ISO_KERNELARGS="$ISO_KERNELARGS console=$ISO_SERIALPORT0,$ISO_SERIALPORTSPEED0"
-    if ! [ "$ISO_SERIAL_PORT1" = "" ]; then
-      ISO_KERNELARGS="$ISO_KERNELARGS console=$ISO_SERIAL_PORT1,$ISO_SERIAL_PORT_SPEED1"
+  if [ "${options['serial']}" = "true" ]; then
+    iso['kernelargs']="${iso['kernelargs']} console=${iso['serialporta']},${iso['serialportspeeda']}"
+    if ! [ "${iso['serialportb']}" = "" ]; then
+      iso['kernelargs']="${iso['kernelargs']} console=${iso['serialportb']},${iso['serialportspeedb']}"
     fi
   fi
-  if [ "$OLD_ISO_INSTALLSQUASHFSFILE" = "" ]; then
-    OLD_ISO_INSTALLSQUASHFSFILE="$DEFAULT_OLD_ISO_INSTALLSQUASHFSFILE"
+  if [ "${old['installsquashfile']}" = "" ]; then
+    old['installsquashfile']="${defaults['oldinstallsquashfsfile']}"
   fi
-  if [ "$OLD_ISO_WORKDIR" = "" ]; then
-    OLD_ISO_WORKDIR="$DEFAULT_OLD_ISO_WORKDIR"
+  if [ "${old['workdir']}" = "" ]; then
+    old['workdir']="${defaults['oldworkdir']}"
   fi
-  if [ "$VM_ISO" = "" ]; then
-    VM_ISO="$ISO_OUTPUTFILE"
+  if [ "${iso['inputfile']}" = "" ]; then
+   iso['inputfile']="${iso['outputfile']}"
   fi
 }

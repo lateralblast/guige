@@ -11,21 +11,25 @@ used to hang a shield on the shoulder or neck when not in use.
 Version
 -------
 
-Current version: 3.2.3
+Current version: 3.6.8
 
 Issues
 ------
 
-Current issues:
+Current status/issues:
 
-- The code is currently in the process of being cleaned 
+- The code is currently in the process of being cleaned up
   - ZFS root has been tested and currently works
   - btrfs root has been tested and currently works
   - xfs root has been tested and currently works
+  - I'm working on a more complex ZFS storage configuration, but it is not currently working
+    - The basic default configuration is working
 - Default mode is UEFI with ZFS and LVM install options
 - BIOS ISO does not support ZFS
 - BIOS ISO mode will build installer with only LVM install
-- I've noticed some race conditions in the Ubuntu installer where the installer will crash sometimes and not others, I'm yet to determine what causes this race condition
+- I've noticed some race conditions in the Ubuntu installer where the installer will crash sometimes and not others
+  - I'm yet to determine what causes this race condition
+  - Simplifying storage configurations appears to help
 
 Prerequisites
 -------------
@@ -126,105 +130,117 @@ Usage
 You can get help using the -h or --help switch:
 
 ```
-Usage: guige.sh [OPTIONS...]
+./guige.sh --help
 
---action                Action to perform (e.g. createiso, justiso, runchrootscript, checkdocker, installrequired)
---allow                 Load additional kernel modules(s)
---allowpassword         Allow password access via SSH (default: false)
---allowservice          Allow Services (default: ssh)
---arch                  Architecture (default: amd64)
---autoinstalldir        Directory where autoinstall config files are stored on ISO
---block                 Block kernel module(s)
---bmcip                 BMC/iDRAC IP (default: 192.168.1.3)
---bmcpassword           BMC/iDRAC password (default: calvin)
---bmcusername           BMC/iDRAC User (default: root)
---bootdisk              Boot Disk devices (default: first-disk)
---bootloader            Boot Loader Location (default: mbr)
---bootserverfile        Boot sever file (default: ubuntu-22.04.3-live-server-amd64-efi-autoinstall.iso)
---bootserverip          NFS/Bootserver IP
---bootsize              Boot partition size (default: 2048)
---build                 Type of ISO to build (default: live-server)
---chrootpackages        List of packages to add to ISO (default: zfsutils-linux zfs-initramfs xfsprogs btrfs-progs net-tools curl lftp wget sudo file rsync dialog setserial ansible apt-utils whois squashfs-tools duperemove jq btrfs-compsize)
---cidr                  CIDR (default: 24)
---codename|--disto      Linux release codename or distribution
---compression           Compression algorithm (default: lzo)
---country               Country (used for sources.list mirror - default: us)
---debug                 Set debug flag (set -x)
---delete                Remove previously created files (default: false)
---disableservice        Disable Service (default: cupsd)
---diskserial            Disk Serial
---diskwwn               Disk WWN
---dns                   DNS Server (ddefault: 8.8.8.8)
---enableservice         Enable Service (default: sshd)
---fallback              Installation fallback (default: continue-anyway)
---firewall              Firewall (default: enabled)
---firstoption           First menu option (default: btrfs)
---gateway               Gateway (default 192.168.1.254)
---gecos                 GECOS Field Entry (default: cupsd)
---groupts               Groups (default: dialout,kvm,libvirt,qemu,wheel)
---grubfile              GRUB file
---grubmenu              Set default grub menu (default: 0)
---grubtimeout           Grub timeout (default: 10)
---help                  Help/Usage Information
---hostname              Hostname (default: ubuntu)
---inputiso|--vmiso      Input/base ISO file
---installmode           Install Mode (default: text)
---installmount          Where the install mounts the CD during install (default: /cdrom)
---installpassword       Temporary install password for remote access during install (default: install)
---installsource         Install Source (default: cdrom)
---installtarget         Where the install mounts the target filesystem (default: /target)
---installuser           Temporary install username for remote access during install (default: install)
---ip                    IP Address (default: 192.168.1.2)
---isolinux              External isolinux file to import
---isopackages           List of packages to install (default: zfsutils-linux zfs-initramfs xfsprogs btrfs-progs net-tools curl lftp wget sudo file rsync dialog setserial ansible apt-utils whois squashfs-tools duperemove jq btrfs-compsize)
---isourl                Specify ISO URL
---isovolid              ISO Volume ID
---kernel                Kernel (default: linux-generic)
---kernelargs            Kernel arguments (default: console=tty0 console=vt0)
---layout|--vmsize       Layout or VM disk size (default: us/20G)
---lcall                 LC_ALL (default: en_US)
---locale                LANGUAGE (default: en_US.UTF-8)
---lvname                Volume Group Name (default: pv.1)
---netmask               Netmask (default: 255.255.252.0)
---nic|--vmnic           Network device (default: first-nic/default)
---oeminstall            OEM Install Type (default: auto)
---oldinputfile          Old release ISO (used with --oldrelease)
---oldisourl             Old release ISO URL (used with --oldrelease)
---oldrelease            Old release (used for copying file from an older release ISO)
---onboot                Enable Network on Boot (default: on)
---options               Options (e.g. nounmount, testmode, bios, uefi, verbose, interactive)
---outputiso             Output ISO file (default: ubuntu-22.04.3-live-server-amd64-efi-autoinstall.iso)
---password              Password (default: ubuntu)
---passwordalgorithm     Password Algorithm (default: sha512)
---pesize                PE size (default: 32768)
---postinstall           Postinstall action (e.g. installpackages, upgrade, distupgrade, installdrivers, all, autoupgrades)
---prefix                Prefix to add to ISO name
---preworkdir            Docker work directory (used internally)
---realname              Realname (default Ubuntu)
---release               LSB release (default: 22.04.3)
---rootsize              Root partition size (default: -1)
---search                Search output for value (eg --action listallisos --search efi)
---selinux               SELinux Mode (default: enforcing)
---serialport            Serial Port (default: ttyS0,ttyS1)
---serialportaddress     Serial Port Address (default: 0x03f8,0x02f8)
---serialportspeed       Serial Port Speed (default: 115200,115200)
---sourceid              Source ID (default: ubuntu-server)
---squashfsfile          Squashfs file (default: ubuntu-server-minimal.squashfs)
---sshkeyfile            SSH key file to use as SSH key (default: /Users/testuser/.ssh/id_rsa.pub)
---suffix                Suffix to add to ISO name
---swapsize|--vmram      Swap or VM memory size (default 2G/2048000)
---timezone              Timezone (default: Australia/Melbourne)
---updates               Updates to install (default: security)
---userdata              Use a custom user-data file (default: generate automatically)
---username              Username (default: ubuntu)
---version               Display Script Version
---vgname                Volume Group Name (default: system)
---vmcpus                No ov VM CPUs (default: 2)
---vmname                Set VM name (default: guige)
---vmtype                VM type (default: kvm)
---volumemanager         Volume Managers (default: zfs auto ext4 xfs btrfs)
---workdir               Work directory (default: /Users/testuser/guige/ubuntu/22.04.3)
---zfsfilesystems        ZFS filesystems (default: /var /var/lib /var/lib/AccountsService /var/lib/apt /var/lib/dpkg /var/lib/NetworkManager /srv /usr /usr/local /var/games /var/log /var/mail /var/snap /var/spool /var/www)
+Usage: guige --action [action] --options [options]
+
+--action                 Action to perform
+--allowlist              Allow/load additional kernel modules(s)
+--allowpassword          Allow password access via SSH (default: false)
+--allowservice           Allow Services (default: ssh)
+--arch                   Architacture (default: amd64)
+--autoinstalldir         Directory where autoinstall config files are stored on ISO (default: autoinstall)
+--blocklist              Block kernel module(s)
+--bmcip                  BMC/iDRAC IP (default: 192.168.1.3)
+--bmcpassword            BMC/iDRAC password (default: calvin)
+--bmcusername            BMC/iDRAC User (default: root)
+--disk                   Boot Disk devices (default: first-disk)
+--bootloader             Boot Loader Location (default: mbr)
+--bootserverfile         Boot sever file (default: /home/user/guige/ubuntu/live-server/24.04.2/files/ubuntu-24.04.2-live-server-amd64-efi-autoinstall.iso)
+--bootserverip           NFS/Bootserver IP
+--bootsize               Boot partition size (default: 2048)
+--build                  Type of ISO to build (default: live-server)
+--chrootpackages         List of packages to add to ISO (default: zfsutils-linux zfs-initramfs xfsprogs btrfs-progs net-tools curl lftp wget sudo file rsync dialog setserial ansible apt-utils whois squashfs-tools duperemove jq btrfs-compsize iproute2)
+--cidr                   CIDR (default: 22)
+--codename               Linux release codename or distribution (default: jammy)
+--compression            Compression algorithm (default: lzo)
+--country                Country (default: us)
+--debug                  Set debug flag (set -x)
+--delete                 Remove previously created files
+--disableservice         Disable service(s) (default: cupsd)
+--diskfile               Disk file
+--diskserial             Disk serial (default: first-serial)
+--disksize               Disk size (default: 20G)
+--diskwwn                Disk WWN (default: first-wwn)
+--dns                    DNS server IP (default: 8.8.8.8)
+--enableservice          Enable service(s) (default: sshd)
+--fallback               Installation fallback (default: continue-anyway)
+--firewall               Firewall (default: enabled)
+--firstoption            First menu option (e.g. grub menu) (default: zfs)
+--gateway                Gateway IP (default: 192.168.1.254)
+--gecos                  User GECOS field (default: Administrator)
+--groups                 Groups to add user to (default: dialout,kvm,libvirt,qemu,wheel)
+--grubfile               Import grub file (default: /home/user/guige/ubuntu/live-server/24.04.2/grub.cfg)
+--grubmenu               Import grub menu (default: 0)
+--grubtimeout            Grub timeout (default: 10)
+--help                   Print help
+--hostname               Hostname (default: ubuntu)
+--inputci                Import Cloud Image (default: /home/user/guige/ubuntu/live-server/24.04.2/files/ubuntu-24.04.2-server-cloudimg-amd64.img)
+--inputfile              Import ISO (default: /home/user/guige/ubuntu/live-server/24.04.2/files/ubuntu-24.04.2-live-server-amd64.iso)
+--installmode            Install mode (default: text)
+--installmount           Where the install mounts the CD during install (default: /cdrom)
+--installpassword        Temporary install password for remote access during install (default: install)
+--installsource          Install source (default: cdrom)
+--targetmount            Install target (default: /target)
+--installusername        Install user (default: install)
+--ip                     IP address (default: 192.168.1.2)
+--kernel                 Kernel to install (default: linux-generic)
+--isokernelargs          Kernel arguments
+--isolinuxfile           Import isolinux file
+--packages               Additional packages to install (default: zfsutils-linux zfs-initramfs xfsprogs btrfs-progs net-tools curl lftp wget sudo file rsync dialog setserial ansible apt-utils whois squashfs-tools duperemove jq btrfs-compsize iproute2)
+--url                    ISO URL
+--volid                  ISO Volume ID (default: Ubuntu 24.04.2 Server)
+--layout                 Keyboard layout (default: us)
+--lcall                  LC_ALL (default: en_US)
+--locale                 Local (default: en_US.UTF-8)
+--lvname                 Logical Volume Name (default: ubuntu-lv)
+--netmask                Netmask (default: 255.255.252.0)
+--nic                    NIC to use for installation (default: first-nic)
+--oeminstall             OEM Install (default: auto)
+--oldinputfile           Old release ISO (default: /home/user/guige/ubuntu/live-server/23.04/files/ubuntu-23.04-live-server-amd64.iso)
+--oldisourl              Old ISO URL
+--oldrelease             Old release (default: 23.04)
+--onboot                 Enable network on boot (default: on)
+--options                Options (e.g. verbose)
+--outputci               Output CI file (default: /home/user/guige/ubuntu/live-server/24.04.2/files/ubuntu-24.04.2-server-cloudimg-amd64-efi-autoinstall.img)
+--outputfile             Output ISO file (default: /home/user/guige/ubuntu/live-server/24.04.2/files/ubuntu-24.04.2-live-server-amd64-efi-autoinstall.iso)
+--password               Password (default: ubuntu)
+--passwordalgorithm      Password Algorithm (default: sha512)
+--pesize                 PE size (default: 32768)
+--postinstall            Import post install script
+--prefix                 Output file name prefix
+--preworkdir             Docker work directory
+--pvname                 Physical Volume Name (default: ubuntu-pv)
+--ram                    RAM size (default: 2048000)
+--realname               User real name field (default: Ubuntu)
+--release                OS release (default: 24.04.2)
+--rootsize               Root volume size (default: -1)
+--search                 Search output for value
+--selinux                SELinux Mode (default: enforcing)
+--serialport             Serial port
+--serialportaddress      Serial port address
+--serialportspeed        Serial port speed
+--sourceid               Source ID (default: ubuntu-server)
+--squashfsfile           Squashfs file (default: /home/user/guige/ubuntu/live-server/23.04/isomount/casper/ubuntu-server-minimal.squashfs)
+--sshkey                 SSH key
+--sshkeyfile             SSH key file (default: /home/user/.ssh/id_rsa.pub)
+--suffix                 Output file name suffix
+--swap                   Swap device
+--swapsize               Swap size (default: 2G)
+--timezone               Timezone (default: Australia/Melbourne)
+--updates                Updates to install (default: security)
+--autoinstallfile        Import autoinstall config file
+--username               Username (default: ubuntu)
+--usage                  Usage information
+--version                Display version
+--vgname                 Volume Group Name (default: ubuntu-vg)
+--vmcpus                 Number of CPUs
+--vmname                 VM name
+--vmtype                 VM type
+--volumemanager          Volumemanager(s) (default: zfs auto ext4 xfs btrfs)
+--workdir                Work directory (default: /home/user/guige/ubuntu/live-server/24.04.2)
+--zfsfilesystems         Additional ZFS filesystems (default: /var /var/lib /var/lib/AccountsService /var/lib/apt /var/lib/dpkg /var/lib/NetworkManager /srv /usr /usr/local /var/games /var/log /var/mail /var/snap /var/spool /var/www)
+--zfsroot                ZFS root name (default: zfsroot)
 ```
 
 You can get more usage information by using the usage tag with the action switch:
@@ -368,7 +384,7 @@ To start the VM and connect to console run the following commands:
 sudo virsh start test ; sudo virsh console test
 ```
 
-Delete a test KVM VM named test
+iso['delete']} a test KVM VM named test
 
 ```
 ./guige.sh --action deletekvmvm --vmname test

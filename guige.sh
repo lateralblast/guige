@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Name:         guige (Generic Ubuntu/Unix ISO Generation Engine)
-# Version:      3.2.3
+# Version:      3.6.8
 # Release:      1
 # License:      CC-BA (Creative Commons By Attribution)
 #               http://creativecommons.org/licenses/by/4.0/legalcode
@@ -13,68 +13,98 @@
 # Packager:     Richard Spindler <richard@lateralblast.com.au>
 # Description:  Shell script designed to simplify creation of custom Ubuntu Install ISOs
 
-# shellcheck disable=SC2129
+# shellcheck disable=SC1090
 # shellcheck disable=SC2034
 # shellcheck disable=SC2045
-# shellcheck disable=SC1090
+# shellcheck disable=SC2129
 
-SCRIPT_ARGS="$*"
-SCRIPT_FILE="$0"
-SCRIPT_NAME="guige"
-START_PATH=$( pwd )
-SCRIPT_BIN=$( basename "$0" |sed "s/^\.\///g")
-SCRIPT_FILE="$START_PATH/$SCRIPT_BIN"
-SCRIPT_VERSION=$( grep '^# Version' < "$0" | awk '{print $3}' )
-OS_NAME=$( uname )
-OS_ARCH=$( uname -m |sed "s/aarch64/arm64/g" |sed "s/x86_64/amd64/g")
-OS_USER=$( whoami )
-OS_GROUP=$( id -gn )
+# Create arrays for options and actions
+
+declare -A os
+declare -A vm
+declare -A new 
+declare -A old
+declare -A iso
+declare -A temp
+declare -A script
+declare -A docker
+declare -A options
+declare -A current
+declare -A defaults
+
+script['args']="$*"
+script['file']="$0"
+script['file']=$( realpath "${script['file']}" )
+script['name']="guige"
+script['path']=$( pwd )
+script['bin']=$( basename "$0" |sed "s/^\.\///g")
+script['file']="${script['path']}/${script['bin']}"
+script['version']=$( grep '^# Version' < "$0" | awk '{print $3}' )
+os['name']=$( uname )
+os['arch']=$( uname -m |sed "s/aarch64/arm64/g" |sed "s/x86_64/amd64/g")
+os['user']=$( whoami )
+os['group']=$( id -gn )
 if [ -f "/usr/bin/lsb_release" ]; then
-  OS_DISTRO=$( lsb_release -is )
+  os['distro']=$( lsb_release -is )
 else
-  OS_DISTRO="$OS_NAME"
+  os['distro']="${os['name']}"
 fi
+
+# Run shellcheck
+
+check_shellcheck () {
+  bin_test=$( command -v shellcheck | grep -c shellcheck )
+  if [ ! "$bin_test" = "0" ]; then
+    shellcheck "${script['file']}"
+  fi
+  if [ -d "${script['modules']}" ]; then
+    for module in $( ls "${script['modules']}"/*.sh ); do
+      if [[ "${script['args']}" =~ "verbose" ]]; then
+        echo "Loading Module: ${module}"
+      fi
+      shellcheck "${module}"
+    done
+  fi
+}
 
 # Handle verbose and debug early so it's enabled early
 
 if [[ "$*" =~ "verbose" ]]; then
-  DO_VERBOSE="true"
-  if [ ! -f "/.dockerenv" ]; then
-    set -eu
-  fi
+  options['verbose']="true"
 else
-  DO_VERBOSE="false"
+  options['verbose']="false"
 fi
 
 if [[ "$*" =~ "debug" ]]; then
-  DO_VERBOSE="true"
+  options['verbose']="true"
   set -x
-else
-  DO_VERBOSE="false"
+  if [ ! -f "/.dockerenv" ]; then
+    set -eu
+  fi
 fi
 
 # Check if we are running inside docker
 
 if [ -f /.dockerenv ]; then
-  START_PATH=$( dirname "$0" )
-  MODULE_PATH="$START_PATH/modules"
+  script['path']=$( dirname "$0" )
+  script['modules']="${script['path']}/modules"
 else
-  MODULE_PATH="$START_PATH/modules"
+  script['modules']="${script['path']}/modules"
 fi
 
 # Load modules
 
-if [ -d "$MODULE_PATH" ]; then
-  for MODULE in $( ls "$MODULE_PATH"/*.sh ); do
-    if [[ "$SCRIPT_ARGS" =~ "verbose" ]]; then
-      echo "Loading Module: $MODULE"
+if [ -d "${script['modules']}" ]; then
+  for module in $( ls "${script['modules']}"/*.sh ); do
+    if [[ "${script['args']}" =~ "verbose" ]]; then
+      echo "Loading Module: ${module}"
     fi
-    . "$MODULE"
+    . "${module}"
   done
 fi
 
 set_defaults
-set_default_os_name
+set_default_osname
 set_default_release
 set_default_dirs
 set_default_files
@@ -82,339 +112,430 @@ set_default_flags
 
 # Function: Handle command line arguments
 
-if [ "$SCRIPT_ARGS" = "" ]; then
+if [ "${script['args']}" = "" ]; then
   print_help
 fi
 
+# switchstart
+
 while test $# -gt 0
 do
-  case $1 in
+  case "$1" in
     --action|--actions)
-      ISO_ACTION="$2"
+      # Action to perform
+      iso['action']="$2"
       shift 2
       ;;
-    --allow)
-      ISO_ALLOWLIST="$2"
+    --allowlist|--allow)
+      # Allow/load additional kernel modules(s)
+      iso['allowlist']="$2"
       shift 2
       ;;
     --allowpassword|--allow-password)
-      ISO_ALLOWPASSWORD="true"
+      # Allow password access via SSH
+      iso['allowpassword']="true"
       shift
       ;;
-    --allowservice|--service)
-      ISO_ALLOWSERVICE="$2"
+    --allowservice|--allowservices|--service|--services)
+      # Allow Services
+      iso['allowservice']="$2"
       shift 2
       ;;
     --arch)
-      ISO_ARCH="$2"
+      # Architacture
+      iso['arch']="$2"
       shift 2
-      ISO_ARCH=$( echo "$ISO_ARCH" |sed "s/aarch64/arm64/g" |sed "s/x86_64/amd64/g" |sed "s/x86/amd64/g" )
+      iso['arch']=$( echo "${iso['arch']}" |sed "s/aarch64/arm64/g" |sed "s/x86_64/amd64/g" |sed "s/x86/amd64/g" )
       ;;
     --autoinstalldir|--aidir)
-      ISO_AUTOINSTALLDIR="$2"
+      # Directory where autoinstall config files are stored on ISO
+      iso['autoinstalldir']="$2"
       shift 2
       ;;
-    --block)
-      ISO_BLOCKLIST="$2"
+    --blocklist|--block)
+      # Block kernel module(s)
+      iso['blocklist']="$2"
       shift 2
       ;;
     --bmcip)
-      ISO_BMCIP="$2"
+      # BMC/iDRAC IP
+      iso['bmcip']="$2"
       shift 2
       ;;
-    ----bmcpass|--bmcpassword)
-      ISO_BMCPASSWORD="$2"
+    --bmcpassword|--bmcpass)
+      # BMC/iDRAC password
+      iso['bmcpassword']="$2"
       shift 2
       ;;
-    --bmcuser|--bmcusername)
-      ISO_BMCUSERNAME="$2"
+    --bmcusername|--bmcuser)
+      # BMC/iDRAC User
+      iso['bmcusername']="$2"
       shift 2
       ;;
-    --bootdisk|--disk|--installdisk|--firstdisk)
-      ISO_DISK="$2"
+    --disk|--bootdisk|--installdisk|--firstdisk)
+      # Boot Disk devices
+      iso['disk']="$2"
       shift 2
       ;;
     --bootloader)
-      ISO_BOOTLOADER="$2"
+      # Boot Loader Location
+      iso['bootloader']="$2"
       shift 2
       ;;
     --bootserverfile)
-      ISO_BOOTSERVERFILE="$2"
-      DO_ISO_BOOTSERVERFILE="true"
+      # Boot sever file
+      iso['bootserverfile']="$2"
+      options['bootserverfile']="true"
       shift 2
       ;;
     --bootserverip)
-      ISO_BOOTSERVERIP="$2"
+      # NFS/Bootserver IP
+      iso['bootserverip']="$2"
       shift 2
       ;;
     --bootsize)
-      ISO_BOOTSIZE="$2"
+      # Boot partition size
+      iso['bootsize']="$2"
       shift 2
       ;;
     --build|--buildtype)
-      ISO_BUILDTYPE="$2"
-      case "$ISO_BUILDTYPE" in
+      # Type of ISO to build
+      iso['build']="$2"
+      case "${iso['build']}" in
         "daily")
-          DO_ISO_DAILY="true"
+          options['daily']="true"
           ;;
       esac
       shift 2
       ;;
     --chrootpackages)
-      ISO_CHROOTPACKAGES="$2"
+      # List of packages to add to ISO
+      iso['chrootpackages']="$2"
       shift 2
       ;;
     --cidr)
-      ISO_CIDR="$2"
+      # CIDR
+      iso['cidr']="$2"
       shift 2
       ;;
     --codename|--distro)
-      ISO_CODENAME="$2"
+      # Linux release codename or distribution
+      iso['codename']="$2"
       shift 2
       ;;
     --compression)
-      ISO_COMPRESSION="$2"
-      DO_ISO_COMPRESSION="true"
+      # Compression algorithm
+      iso['compression']="$2"
+      options['compression']="true"
       shift 2
       ;;
     --country)
-      ISO_COUNTRY="$2"
+      # Country
+      iso['country']="$2"
       shift 2
       ;;
     --debug)
+      # Set debug flag (set -x)
       set -x
       shift
       ;;
     --delete)
-      DELETE="$2"
+      # Remove previously created files
+      iso['delete']="$2"
       shift 2
       ;;
-    --disableservice|--disable)
-      ISO_DISABLESERVICE="$2"
+    --disableservice|--disableservices|--disable)
+      # Disable service(s)
+      iso['disableservice']="$2"
+      shift 2
+      ;;
+    --diskfile)
+      # Disk file
+      iso['diskfile']="$2"
       shift 2
       ;;
     --diskserial)
-      ="$2"
+      # Disk serial
+      iso['diskserial']="$2"
+      shift 2
+      ;;
+    --disksize)
+      # Disk size
+      iso['diskize']="$2"
       shift 2
       ;;
     --diskwwn)
-      ISO_DISK_WWN="$2"
+      # Disk WWN
+      iso['diskwwn']="$2"
       shift 2
       ;;
     --dns|--nameserver)
-      ISO_DNS="$2"
+      # DNS server IP
+      iso['dns']="$2"
       shift 2
       ;;
-    --enableservice|--enable)
-      ISO_ENABLESERVICE="$2"
+    --enableservice|--enableservices|--enable)
+      # Enable service(s)
+      iso['enableservice']="$2"
       shift 2
       ;;
     --fallback)
-      ISO_FALLBACK="$2"
+      # Installation fallback 
+      iso['fallback']="$2"
       shift 2
       ;;
     --firewall)
-      ISO_FIREWALL="$2"
+      # Firewall
+      iso['firewall']="$2"
       shift 2
       ;;
     --firstoption|--first-option)
-      ISO_OPTION="$2"
+      # First menu option (e.g. grub menu)
+      iso['firstoption']="$2"
       shift 2
       ;;
     --gateway)
-      ISO_GATEWAY="$2"
+      # Gateway IP
+      iso['gateway']="$2"
       shift 2
-      DO_ISO_DHCP="false"
+      options['dhcp']="false"
       ;;
     --gecos)
-      ISO_GECOS="$2"
+      # User GECOS field
+      iso['gecos']="$2"
       shift 2
       ;;
     --groups)
-      ISO_GROUPS="$2"
+      # Groups to add user to
+      iso['groups']="$2"
       shift 2
       ;;
-    --grub|--grubfile)
-      DO_ISO_GRUBFILE="true"
-      ISO_GRUBFILE="$2"
+    --grubfile|--grub)
+      # Import grub file
+      options['grubfile']="true"
+      iso['grubfile']="$2"
       shift 2
       ;;
     --grubmenu)
-      ISO_GRUBMENU="$2"
+      # Import grub menu
+      iso['grubmenu']="$2"
       shift 2
       ;;
     --grubtimeout|--grub-timeout)
-      ISO_GRUBTIMEOUT="$2"
+      # Grub timeout
+      iso['grubtimeout']="$2"
       shift 2
       ;;
-    -h|--help)
-      print_help ""
+    --help|-h)
+      # Print help
+      print_help "cli"
       ;;
     --hostname)
-      ISO_HOSTNAME="$2"
-      shift 2
-      ;;
-    --inputiso|--vmiso)
-      ISO_INPUTFILE="$2"
-      VM_ISO="$2"
+      # Hostname
+      iso['hostname']="$2"
       shift 2
       ;;
     --inputci|--vmci)
-      ISO_INPUTCI="$2"
+      # Import Cloud Image
+      iso['inputci']="$2"
+      shift 2
+      ;;
+    --inputfile|--inputiso|--vmiso)
+      # Import ISO
+      iso['inputfile']="$2"
       shift 2
       ;;
     --installmode|--install-mode)
-      ISO_INSTALLMODE="$2"
+      # Install mode
+      iso['installmode']="$2"
       shift 2
       ;;
     --installmount)
-      ISO_INSTALLMOUNT="$2"
+      # Where the install mounts the CD during install
+      iso['installmount']="$2"
       shift 2
       ;;
     --installpassword|--install-password|--installpass|--install-pass)
-      ISO_INSTALLPASSWORD="$2"
+      iso['installpassword']="$2"
+      # Temporary install password for remote access during install
       shift 2
       ;;
     --installsource|--install-source)
-      ISO_INSTALLSOURCE="$2"
+      # Install source
+      iso['installsource']="$2"
       shift 2
       ;;
-    --installtarget)
-      ISO_TARGETMOUNT="$2"
+    --targetmount|--installtarget)
+      # Install target
+      iso['targetmount']="$2"
       shift 2
       ;;
-    --installuser|--install-user)
-      ISO_INSTALLUSERNAME="$2"
+    --installusername|--installuser|--install-user)
+      # Install user
+      iso['installusername']="$2"
       shift 2
       ;;
     --ip)
-      ISO_IP="$2"
+      # IP address
+      iso['ip']="$2"
       shift 2
-      DO_ISO_DHCP="false"
+      options['dhcp']="false"
       ;;
-    --isolinux|--isolinuxfile)
-      DO_ISO_ISOLINUXFILE="true"
-      ISO_ISOLINUXFILE="$2"
-      shift 2
-      ;;
-    --isopackages|--packages)
-      ISO_PACKAGES="$2"
-      shift 2
-      ;;
-    --isourl|--url)
-      ISO_URL="$2"
-      shift 2
-      ;;
-    --isovolid|--volid)
-      ISO_VOLID="$2"
-      shift 2
-      ;;
-    --isokernel|--kernel)
-      ISO_KERNEL="$2"
+    --kernel|--isokernel)
+      # Kernel to install
+      iso['kernel']="$2"
       shift 2
       ;;
     --isokernelargs|--kernelargs)
-      ISO_KERNELARGS="$2"
+      # Kernel arguments
+      iso['kernelargs']="$2"
       shift 2
       ;;
-    --layout|--vmsize)
-      ISO_LAYOUT="$2"
-      VM_SIZE=$2
+    --isolinuxfile|--isolinux)
+      # Import isolinux file
+      options['isolinuxfile']="true"
+      iso['isolinuxfile']="$2"
+      shift 2
+      ;;
+    --packages|--isopackages)
+      # Additional packages to install
+      iso['packages']="$2"
+      shift 2
+      ;;
+    --url|--isourl)
+      # ISO URL
+      iso['url']="$2"
+      shift 2
+      ;;
+    --volid|--isovolid)
+      # ISO Volume ID
+      iso['volid']="$2"
+      shift 2
+      ;;
+    --layout)
+      # Keyboard layout
+      iso['layout']=$2
       shift 2
       ;;
     --lcall)
-      ISO_LCALL="$2"
+      # LC_ALL
+      iso['lcall']="$2"
       shift 2
       ;;
     --locale)
-      ISO_LOCALE="$2"
+      # Local
+      iso['locale']="$2"
       shift 2
       ;;
     --lvname)
-      ISO_LVNAME="$2"
+      # Logical Volume Name
+      iso['lvname']="$2"
       shift 2
       ;;
     --netmask)
-      ISO_NETMASK="$2"
+      # Netmask
+      iso['netmask']="$2"
       shift 2
       ;;
     --nic|--vmnic|--installnic|--bootnic|--firstnic)
-      ISO_NIC="$2"
-      VM_NIC="$2"
+      # NIC to use for installation
+      iso['nic']="$2"
       shift 2
       ;;
     --oeminstall)
-      ISO_OEMINSTALL="$2"
+      # OEM Install
+      iso['oeminstall']="$2"
       shift 2
       ;;
     --oldinputfile)
-      OLD_ISO_INPUTFILE="$2"
+      # Old release ISO
+      old['inputfile']="$2"
       shift 2
       ;;
     --oldisourl)
-      OLD_ISO_URL="$2"
+      # Old ISO URL
+      old['url']="$2"
       shift 2
       ;;
     --oldrelease)
-      OLD_ISO_RELEASE="$2"
+      # Old release
+      old['release']="$2"
       shift 2
       ;;
     --onboot)
-      ISO_ONBOOT="$2"
+      # Enable network on boot
+      iso['onboot']="$2"
       shift 2
       ;;
-    --option|--options)
-      ISO_OPTIONS="$2";
-      shift 2
-      ;;
-    --outputiso)
-      ISO_OUTPUTFILE="$2"
+    --options|--option)
+      # Options (e.g. verbose)
+      iso['options']="$2";
       shift 2
       ;;
     --outputci)
-      ISO_OUTPUTCI="$2"
+      # Output CI file
+      iso['outputci']="$2"
+      shift 2
+      ;;
+    --outputfile|--outputiso)
+      # Output ISO file
+      iso['outputfile']="$2"
       shift 2
       ;;
     --password)
-      ISO_PASSWORD="$2"
+      # Password
+      iso['password']="$2"
       shift 2
       ;;
-    --passalgo|--passwordalgorithm|--password-algorithm)
-      ISO_PASSWORDALGORITHM="$2"
+    --passwordalgorithm|--password-algorithm|--passalgo|--algoritm)
+      # Password Algorithm
+      iso['passwordalgorithm']="$2"
       shift 2
       ;;
     --pesize)
-      ISO_PESIZE="$2"
+      # PE size
+      iso['pesize']="$2"
       shift 2
       ;;
     --postinstall)
-      ISO_POSTINSTALL="$2"
+      # Import post install script
+      iso['postinstall']="$2"
       shift 2
       ;;
     --prefix)
-      ISO_PREFIX="$2"
+      # Output file name prefix
+      iso['prefix']="$2"
       shift 2
       ;;
     --preworkdir)
-      ISO_PREWORKDIR="$2"
+      # Docker work directory
+      iso['preworkdir']="$2"
       shift 2
       ;;
     --pvname)
-      ISO_PVNAME="$2"
+      # Physical Volume Name
+      iso['pvname']="$2"
+      shift 2
+      ;;
+    --ram|--vmram)
+      # RAM size
+      iso['ram']="$2"
       shift 2
       ;;
     --realname)
-      ISO_REALNAME="$2"
+      # User real name field
+      iso['realname']="$2"
       shift 2
       ;;
     --release)
-      ISO_RELEASE="$2"
+      # OS release
+      iso['release']="$2"
       shift 2
-      case $ISO_RELEASE in
-        "$CURRENT_ISO_DEVRELEASE")
-          if [ "$ISO_BUILDTYPE" = "" ]; then
-            ISO_BUILDTYPE="daily-live"
-            DO_ISO_DAILY="true"
+      case ${iso['release']} in
+        "${current['devrelease']}")
+          if [ "${iso['build']}" = "" ]; then
+            iso['build']="daily-live"
+            options['daily']="true"
           fi
           ;;
       esac
@@ -423,110 +544,144 @@ do
       get_build_type
       ;;
     --rootsize)
-      ISO_ROOTSIZE="$2"
+      # Root volume size
+      iso['rootsize']="$2"
       shift 2
       ;;
     --search)
-      ISO_SEARCH="$2"
+      # Search output for value
+      iso['search']="$2"
       shift 2
       ;;
     --selinux)
-      ISO_SELINUX="$2"
+      # SELinux Mode
+      iso['selinux']="$2"
       shift 2
       ;;
     --serialport)
-      ISO_SERIALPORT0="$2"
+      # Serial port
+      iso['serialport']="$2"
       shift 2
       ;;
     --serialportaddress)
-      ISO_SERIALPORTADDRESS0="$2"
+      # Serial port address
+      iso['serialportaddress']="$2"
       shift 2
       ;;
     --serialportspeed)
-      ISO_SERIALPORTSPEED0="$2"
+      # Serial port speed
+      iso['serialportspeed']="$2"
       shift 2
       ;;
     --sourceid)
-      ISO_SOURCEID="$2"
+      # Source ID
+      iso['sourceid']="$2"
       shift 2
       ;;
     --squashfsfile)
-      ISO_SQUASHFSFILE="$2"
+      # Squashfs file
+      iso['squashfsfile']="$2"
       shift 2
       ;;
     --sshkey)
-      ISO_SSHKEY="$2"
-      DO_ISO_SSHKEY="true"
+      # SSH key
+      iso['sshkey']="$2"
+      options['sshkey']="true"
       shift 2
       ;;
     --sshkeyfile)
-      ISO_SSHKEYFILE="$2"
-      DO_ISO_SSHKEY="true"
+      # SSH key file
+      iso['sshkeyfile']="$2"
+      options['sshkey']="true"
       shift 2
       ;;
     --suffix)
-      ISO_SUFFIX="$2"
+      # Output file name suffix
+      iso['suffix']="$2"
       shift 2
       ;;
-    --swapsize|--vmram)
-      ISO_SWAPSIZE="$2"
-      VM_RAM="$2"
+    --swap|--vmswap)
+      # Swap device 
+      iso['swap']="$2"
+      shift 2
+      ;;
+    --swapsize|--vmswapsize)
+      # Swap size
+      iso['swapsize']="$2"
       shift 2
       ;;
     --timezone)
-      ISO_TIMEZONE="$2"
+      # Timezone
+      iso['timezone']="$2"
       shift 2
       ;;
     --updates)
-      ISO_UPDATES="$2"
+      # Updates to install
+      iso['updates']="$2"
       shift 2
       ;;
-    --userdata|--autoinstall|--kickstart)
-      DO_ISO_AUTOINSTALL="true"
-      ISO_VOLMGRS="custom"
-      ISO_AUTOINSTALLFILE="$2"
+    --autoinstallfile|--userdata|--autoinstall|--kickstart)
+      # Import autoinstall config file
+      options['autoinstall']="true"
+      iso['volumemanager']="custom"
+      iso['autoinstallfile']="$2"
       shift 2
       ;;
-    --user|--username)
-      ISO_USERNAME="$2"
+    --username|--user)
+      # Username
+      iso['username']="$2"
       shift 2
       ;;
     --usage)
+      # Usage information
       print_usage "$2"
       exit
       ;;
-    -V|--version)
-      echo "$SCRIPT_VERSION"
+    --version|-V)
+      # Display version
+      echo "${script['version']}"
       shift
       exit
       ;;
     --vgname)
-      ISO_VGNAME="$2"
+      # Volume Group Name
+      iso['vgname']="$2"
       shift 2
       ;;
-    --vmcpus)
-      VM_CPUS="$2"
+    --vmcpus|--cpus)
+      # Number of CPUs
+      iso['cpus']="$2"
       shift 2
       ;;
-    --vmname)
-      VM_NAME="$2"
+    --vmname|--name)
+      # VM name
+      iso['name']="$2"
       shift 2
       ;;
-    --vmtype)
-      VM_TYPE="$2"
+    --vmtype|--type)
+      # VM type
+      iso['type']="$2"
       shift 2
       ;;
     --volumemanager|--volumemanagers|--volmgr|--volmgrs)
-      ISO_VOLMGRS="$2"
+      # Volumemanager(s)
+      iso['volumemanager']="$2"
       shift 2
       ;;
     --workdir)
-      ISO_WORKDIR="$2"
+      # Work directory
+      iso['workdir']="$2"
       shift 2
       ;;
-    --zfs|--zfsfilesystems)
-      DO_ISO_ZFSFILESYSTEMS="true"
-      ISO_ZFSFILESYSTEMS="$2"
+    --zfsfilesystems|--zfs)
+      # Additional ZFS filesystems
+      options['zfsfilesystems']="true"
+      iso['zfsfilesystems']="$2"
+      shift 2
+      ;;
+    --zfsroot)
+      # ZFS root name
+      options['zfsroot']="$2"
       shift 2
       ;;
     --)
@@ -540,9 +695,11 @@ do
   esac
 done
 
+# switchend
+
 # Setup functions
 
-set_default_os_name
+set_default_osname
 set_default_arch
 set_default_release
 set_default_codename
@@ -558,7 +715,7 @@ process_options
 process_actions
 process_post_install
 update_required_packages
-update_ISO_PACKAGES
+update_iso_packages
 update_output_file_name
 update_iso_url
 update_ci_url
@@ -569,30 +726,30 @@ get_iso_type
 
 # Output variables
 
-if [ "$DO_PRINT_ENV" = "true" ] || [ "$DO_ISO_INTERACTIVEMODE" = "true" ]; then
-  TEMP_DO_ISO_VERBOSEMODE="true"
+if [ "${options['printenv']}" = "true" ] || [ "${options['interactivemode']}" = "true" ]; then
+  temp['verbose']="true"
 fi
 
 get_ssh_key
-get_my_ip
-ISO_PASSWORD_CRYPT=$( get_password_crypt "$ISO_PASSWORD" )
-if [ "$DO_ISO_INSTALLUSER" = "true" ]; then
-  ISO_INSTALLPASSWORD_CRYPT=$( get_password_crypt "$ISO_INSTALLPASSWORD" )
+get_os_ip
+iso['passwordcrypt']=$( get_password_crypt "${iso['password']}" )
+if [ "${options['installuser']}" = "true" ]; then
+  iso['installpasswordcrypt']=$( get_password_crypt "${iso['installpassword']}" )
 fi
 print_env
 
 # If run in interactive mode ask for values for required parameters
 # Set any unset values to defaults
 
-if [ "$DO_ISO_INTERACTIVEMODE" = "true" ]; then
+if [ "${options['interactivemode']}" = "true" ]; then
   get_interactive_input
 fi
 
 # Do test outputs
 
-if [ "$ISO_ACTION" = "test" ]; then
-  check_ISO_WORKDIR
-  if [ "$DO_ISO_KSTEST" = "true" ]; then
+if [ "${iso['action']}" = "test" ]; then
+  check_workdir
+  if [ "${options['kstest']}" = "true" ]; then
     prepare_kickstart_files
     exit
   fi
@@ -600,66 +757,66 @@ fi
 
 # Handle specific functions
 
-if [ "$DO_ISO_LISTVM" = "true" ]; then
+if [ "${options['listvms']}" = "true" ]; then
   list_vm
   exit
 fi
 
-if [ "$DO_ISO_DOCKER" = "true" ] || [ "$DO_ISO_CHECKDOCKER" = "true" ]; then
+if [ "${options['docker']}" = "true" ] || [ "${options['checkdocker']}" = "true" ]; then
   create_docker_iso
 fi
-if [ "$DO_DELETE_VM" = "true" ]; then
+if [ "${options['deletevm']}" = "true" ]; then
   delete_vm
   exit
 fi
-if [ "$DO_ISO_CREATEISOVM" = "true" ]; then
+if [ "${options['createisovm']}" = "true" ]; then
   get_info_from_iso
   create_iso_vm
   exit
 fi
-if [ "$DO_ISO_CREATECIVM" = "true" ]; then
+if [ "${options['createcivm']}" = "true" ]; then
   create_ci_vm
   exit
 fi
-if [ "$DO_ISO_CHECKRACADM" = "true" ]; then
+if [ "${options['checkracadm']}" = "true" ]; then
   check_racadm
   exit
 fi
-if [ "$DO_ISO_EXECUTERACADM" = "true" ]; then
+if [ "${options['executeracadm']}" = "true" ]; then
   check_racadm
   execute_racadm
   exit
 fi
-if [ "$DO_ISO_CHECKWORKDIR" = "true" ]; then
-  DO_PRINT_HELP="false"
-  check_ISO_WORKDIR
-  if [ "$DO_ISO_OLDINSTALLER" = "true" ]; then
-    check_old_ISO_WORKDIR
+if [ "${options['checkworkdir']}" = "true" ]; then
+  options['help']="false"
+  check_workdir
+  if [ "${options['oldinstaller']}" = "true" ]; then
+    check_old_workdir
   fi
 fi
-if [ "$DO_ISO_INSTALLREQUIREDPACKAGES" = "true" ]; then
-  DO_PRINT_HELP="false"
-  install_required_packages "$REQUIRED_PACKAGES"
+if [ "${options['installrequiredpackages']}" = "true" ]; then
+  options['help']="false"
+  install_required_packages "${iso['requiredpackages']}"
 fi
-if [ "$DO_CREATE_EXPORT" = "true" ]; then
+if [ "${options['createexport']}" = "true" ]; then
   create_export
 fi
-if [ "$DO_CREATE_ANSIBLE" = "true" ]; then
+if [ "${options['createansible']}" = "true" ]; then
   check_ansible
   create_ansible
 fi
-if [ "$DO_INSTALL_SERVER" = "true" ]; then
+if [ "${options['installserver']}" = "true" ]; then
   install_server
 fi
-if [ "$DO_ISO_GETISO" = "true" ]; then
-  DO_PRINT_HELP="false"
+if [ "${options['getiso']}" = "true" ]; then
+  options['help']="false"
   get_base_iso
-  if [ "$ISO_ACTION" = "getiso" ]; then
+  if [ "${iso['action']}" = "getiso" ]; then
     exit
   fi
 fi
-if [ "$DO_ISO_FULLISO" = "true" ]; then
-  DO_PRINT_HELP="false"
+if [ "${options['fulliso']}" = "true" ]; then
+  options['help']="false"
   unmount_iso
   unmount_squashfs
   mount_iso
@@ -667,41 +824,41 @@ if [ "$DO_ISO_FULLISO" = "true" ]; then
   copy_squashfs
   create_chroot_script
   execute_chroot_script
-  if [ "$DO_ISO_SQUASHFS_UPDATE" = "true" ]; then
+  if [ "${options['updatesquashfs']}" = "true" ]; then
     update_iso_squashfs
   fi
   prepare_iso
   create_iso
-  if ! [ "$DO_ISO_NOUNMOUNT" = "true" ]; then
+  if ! [ "${options['nounmount']}" = "true" ]; then
     unmount_iso
     unmount_squashfs
   fi
 else
-  if [ "$DO_ISO_RUNCHROOTSCRIPT" = "true" ]; then
-    DO_PRINT_HELP="false"
+  if [ "${options['runchrootscript']}" = "true" ]; then
+    options['help']="false"
     mount_iso
     execute_chroot_script
   fi
-  if [ "$DO_ISO_CREATEAUTOINSTALL" = "true" ]; then
-    DO_PRINT_HELP="false"
+  if [ "${options['createautoinstall']}" = "true" ]; then
+    options['help']="false"
     prepare_iso
   fi
-  if [ "$DO_ISO_JUSTISO" = "true" ]; then
-    DO_PRINT_HELP="false"
+  if [ "${options['justiso']}" = "true" ]; then
+    options['help']="false"
     prepare_iso
     create_iso
   fi
-  if [ "$DO_ISO_UNMOUNT" = "true" ]; then
-    DO_PRINT_HELP="false"
+  if [ "${options['unmount']}" = "true" ]; then
+    options['help']="false"
     unmount_iso
     unmount_squashfs
   fi
 fi
-if [ "$DO_ISO_LIST" = "true" ]; then
+if [ "${options['listisos']}" = "true" ]; then
   list_isos
   exit
 fi
 
-if [ "$DO_PRINT_HELP" = "true" ]; then
+if [ "${options['help']}" = "true" ]; then
   print_help
 fi

@@ -1,78 +1,75 @@
 #!/usr/bin/env bash
 
-# shellcheck disable=SC2129
 # shellcheck disable=SC2034
+# shellcheck disable=SC2129
 # shellcheck disable=SC2153
+# shellcheck disable=SC2154
 
 # Funtion update_iso_url
 #
 # Update ISO URL
 
 update_iso_url () {
-  BASE_ISO_INPUTFILE=$( basename "$ISO_INPUTFILE" )
-  if [ "$ISO_OSNAME" = "ubuntu" ]; then
-    case $ISO_BUILDTYPE in
+  iso['inputfilebase']=$( basename "${iso['inputfile']}" )
+  if [ "${iso['osname']}" = "ubuntu" ]; then
+    case "${iso['build']}" in
       "daily-live"|"daily-live-server")
-        if [ "$ISO_RELEASE" = "$CURRENT_ISO_DEVRELEASE" ] || [ "$ISO_OSNAME" = "$CURRENT_ISO_CODENAME" ]; then
-          ISO_URL="https://cdimage.ubuntu.com/ubuntu-server/daily-live/current/$ISO_OSNAME-live-server-$ISO_ARCH.iso"
+        if [ "${iso['release']}" = "${current['devrelease']}" ] || [ "${iso['osname']}" = "${current['codename']}" ]; then
+          iso['url']="https://cdimage.ubuntu.com/ubuntu-server/daily-live/current/${iso['osname']}-live-server-${iso['arch']}.iso"
         else
-          ISO_URL="https://cdimage.ubuntu.com/ubuntu-server/$ISO_CODENAME/daily-live/current/$BASE_ISO_INPUTFILE"
+          iso['url']="https://cdimage.ubuntu.com/ubuntu-server/${iso['codename']}/daily-live/current/${iso['inputfilebase']}"
         fi
         ;;
       "daily-desktop")
-        if [ "$ISO_RELEASE" = "$CURRENT_ISO_DEVRELEASE" ] || [ "$ISO_CODENAME" = "$CURRENT_ISO_CODENAME" ]; then
-          ISO_URL="https://cdimage.ubuntu.com/daily-live/current/$BASE_ISO_INPUTFILE"
+        if [ "${iso['release']}" = "${current['devrelease']}" ] || [ "${iso['codename']}" = "${current['codename']}" ]; then
+          iso['url']="https://cdimage.ubuntu.com/daily-live/current/${iso['inputfilebase']}"
         else
-          ISO_URL="https://cdimage.ubuntu.com/$ISO_CODENAME/daily-live/current/$BASE_ISO_INPUTFILE"
+          iso['url']="https://cdimage.ubuntu.com/${iso['codename']}/daily-live/current/${iso['inputfilebase']}"
         fi
         ;;
-      "desktop"|"server")
-        if [[ "$ISO_ARCH" =~ amd ]]; then
-          ISO_URL="https://releases.ubuntu.com/$ISO_RELEASE/$BASE_ISO_INPUTFILE"
+      "desktop"|"server"|"live-server")
+        if [ "${iso['release']}" = "${current['betarelease']}" ]; then
+          iso['url']="https://releases.ubuntu.com/${iso['codename']}/${iso['inputfilebase']}"
         else
-          ISO_URL="https://cdimage.ubuntu.com/releases/$ISO_RELEASE/release/$BASE_ISO_INPUTFILE"
+          iso['url']="https://releases.ubuntu.com/${iso['release']}/${iso['inputfilebase']}"
         fi
         ;;
       *)
-        if [[ "$ISO_ARCH" =~ amd ]]; then
-          ISO_URL="https://releases.ubuntu.com/$ISO_CODENAME/$BASE_ISO_INPUTFILE"
-        else
-          ISO_URL="https://cdimage.ubuntu.com/releases/$ISO_RELEASE/release/$BASE_ISO_INPUTFILE"
-        fi
+        iso['url']="https://cdimage.ubuntu.com/releases/${iso['release']}/release/${iso['inputfilebase']}"
         ;;
     esac
-    if [ "$OLD_ISO_URL" = "" ]; then
-      OLD_ISO_URL="$DEFAULT_OLD_ISO_URL"
+    if [ "${old['url']}" = "" ]; then
+      old['url']="${defaults['oldworkdir']}"
     fi
   else
-    if [ "$ISO_OSNAME" = "rocky" ]; then
-      if [ "$ISO_URL" = "" ]; then
-        ISO_URL="https://download.rockylinux.org/pub/rocky/$ISO_MAJORRELEASE/isos/$ISO_ARCH/$BASE_ISO_INPUTFILE"
+    if [ "${iso['osname']}" = "rocky" ]; then
+      if [ "${iso['url']}" = "" ]; then
+        iso['url']="https://download.rockylinux.org/pub/rocky/${iso['majorrelease']}/isos/${iso['arch']}/${iso['inputfilebase']}"
       fi
     fi
   fi
 }
 
-# Function: update_required_packages
+# Function: update_iso['requiredpackages']}
 #
 # Update required packages
 
 update_required_packages () {
-  if [ "$OS_NAME" = "Darwin" ]; then
-    if ! [[ "$ISO_ACTION" =~ "docker" ]]; then
-      REQUIRED_PACKAGES="p7zip lftp wget xorriso ansible squashfs"
+  if [ "${os['name']}" = "Darwin" ]; then
+    if ! [[ "${iso['action']}" =~ "docker" ]]; then
+      iso['requiredpackages']="p7zip lftp wget xorriso ansible squashfs"
     fi
   fi
 }
 
-# Function: update_ISO_PACKAGES
+# Function: update_iso['packages']}
 #
 # Update packages to include in ISO
 
-update_ISO_PACKAGES () {
-  if [ "$ISO_OSNAME" = "ubuntu" ]; then
-    if [ "$DO_ISO_HWEKERNEL" = "true" ]; then
-      ISO_PACKAGES="$ISO_PACKAGES linux-image-generic-hwe-$ISO_MAJORRELEASE.$ISO_MINORRELEASE"
+update_iso_packages () {
+  if [ "${iso['osname']}" = "ubuntu" ]; then
+    if [ "${options['hwekernel']}" = "true" ]; then
+      iso['packages']="${iso['packages']} linux-image-generic-hwe-${iso['majorrelease']}.${iso['minorrelease']}"
     fi
   fi
 }
@@ -82,8 +79,8 @@ update_ISO_PACKAGES () {
 # Prepare ISO
 
 create_iso () {
-  if [ "$DO_ISO_CREATEISO" = "true" ]; then
-    case "$ISO_OSNAME" in
+  if [ "${options['createiso']}" = "true" ]; then
+    case "${iso['osname']}" in
       "ubuntu")
         create_autoinstall_iso
         ;;
@@ -103,23 +100,23 @@ create_iso () {
 # rsync -av ./isomount/ ./isonew/cd
 
 copy_iso () {
-  handle_output "# Copying ISO files from $ISO_MOUNTDIR to $ISO_NEW_DIR/cd" "TEXT"
+  handle_output "# Copying ISO files from ${iso['mountdir']} to ${iso['newdir']}/cd" "TEXT"
   if [ ! -f "/usr/bin/rsync" ]; then
-    install_required_packages "$REQUIRED_PACKAGES"
+    install_required_packages "${iso['requiredpackages']}"
   fi
-  UC_TEST_DIR="$ISO_MOUNTDIR/EFI"
-  LC_TEST_DIR="$ISO_MOUNTDIR/efi"
-  if [ ! -d "$UC_TEST_DIR" ] && [ ! -d "$LC_TEST_DIR" ]; then
-    warning_message "ISO $ISO_INPUTFILE not mounted"
+  uc_test_dir="${iso['mountdir']}/EFI"
+  lc_test_dir="${iso['mountdir']}/efi"
+  if [ ! -d "${uc_test_dir}" ] && [ ! -d "${lc_test_dir}" ]; then
+    warning_message "ISO ${iso['inputfile']} not mounted"
     exit
   else
-    if [ "$DO_ISO_VERBOSEMODE" = "true" ]; then
-      if [ "$DO_ISO_TESTMODE" = "false" ]; then
-        sudo rsync -av --delete "$ISO_MOUNTDIR/" "$ISO_NEW_DIR/cd"
+    if [ "${options['verbose']}" = "true" ]; then
+      if [ "${options['testmode']}" = "false" ]; then
+        execute_command "sudo rsync -av --delete ${iso['mountdir']}/ ${iso['newdir']}/cd"
       fi
     else
-      if [ "$DO_ISO_TESTMODE" = "false" ]; then
-        sudo rsync -a --delete "$ISO_MOUNTDIR/" "$ISO_NEW_DIR/cd"
+      if [ "${options['testmode']}" = "false" ]; then
+        execute_command "sudo rsync -a --delete ${iso['mountdir']}/ ${iso['newdir']}/cd"
       fi
     fi
   fi
@@ -133,28 +130,28 @@ copy_iso () {
 # sudo umount -l /home/user/ubuntu-iso/isomount
 
 unmount_iso () {
-  handle_output "sudo umount -l $ISO_MOUNTDIR" ""
-  if [ "$DO_ISO_TESTMODE" = "false" ]; then
-    MOUNT_TEST=$( mount | grep "$ISO_MOUNTDIR" | wc -l )
-    if [ ! "$MOUNT_TEST" = "0" ]; then
-      sudo umount -l "$ISO_MOUNTDIR"
+  handle_output "sudo umount -l ${iso['mountdir']}" ""
+  if [ "${options['testmode']}" = "false" ]; then
+    mount_test=$( mount | grep -c "${iso['mountdir']}" )
+    if [ ! "${mount_test}" = "0" ]; then
+      sudo umount -l "${iso['mountdir']}"
     fi
   fi
 }
 
-# Function: unmounat_old_iso
+# Function: unmounat_old
 #
 # unmount loopback older release ISO filesystem
 #
 # Examples:
 # sudo umount -l /home/user/ubuntu-old-iso/isomount
 
-unmount_old_iso () {
-  handle_output "sudo umount -l $OLD_ISO_MOUNTDIR" ""
-  if [ "$DO_ISO_TESTMODE" = "false" ]; then
-    MOUNT_TEST=$( mount | grep "$OLD_ISO_MOUNTDIR" | wc -l )
-    if [ ! "$MOUNT_TEST" = "0" ]; then
-      sudo umount -l "$OLD_ISO_MOUNTDIR"
+unmount_old () {
+  if [ "${options['testmode']}" = "false" ]; then
+    mount_test=$( mount | grep -c "${old['mountdir']}" )
+    if [ ! "${mount_test}" = "0" ]; then
+      handle_output "sudo umount -l ${old['mountdir']}" ""
+      sudo umount -l "${old['mountdir']}"
     fi
   fi
 }
@@ -168,26 +165,26 @@ unmount_old_iso () {
 mount_iso () {
   get_base_iso
   check_base_iso_file
-  handle_output "# Mounting ISO $ISO_WORKDIR/files/$BASE_ISO_INPUTFILE at $ISO_MOUNTDIR" "TEXT"
-  handle_output "sudo mount -o loop \"$ISO_WORKDIR/files/$BASE_ISO_INPUTFILE\" \"$ISO_MOUNTDIR\" 2> /dev/null" ""
-  if [ "$DO_ISO_TESTMODE" = "false" ]; then
-    sudo mount -o loop "$ISO_WORKDIR/files/$BASE_ISO_INPUTFILE" "$ISO_MOUNTDIR" 2> /dev/null
+  handle_output "# Mounting ISO ${iso['workdir']}/files/${iso['inputfilebase']} at ${iso['mountdir']}" "TEXT"
+  handle_output "sudo mount -o loop \"${iso['workdir']}/files/${iso['inputfilebase']}\" \"${iso['mountdir']}\" 2> /dev/null" ""
+  if [ "${options['testmode']}" = "false" ]; then
+    sudo mount -o loop "${iso['workdir']}/files/${iso['inputfilebase']}" "${iso['mountdir']}" 2> /dev/null
   fi
 }
 
-# Function: unmount_old_iso
+# Function: unmount_old
 #
 # Mount older revision base ISO as loopback device so contents can be copied
 #
 # sudo mount -o loop ./ubuntu-22.04.1-live-server-arm64.iso ./isomount 2> /dev/null
 
-mount_old_iso () {
+mount_old () {
   get_old_base_iso
   check_old_base_iso_file
-  handle_output "# Mounting ISO $OLD_ISO_WORKDIR/files/$OLD_BASE_ISO_INPUTFILE at $OLD_ISO_MOUNTDIR" "TEXT"
-  handle_output "sudo mount -o loop \"$OLD_ISO_WORKDIR/files/$OLD_BASE_ISO_INPUTFILE\" \"$OLD_ISO_MOUNTDIR\" 2> /dev/null" ""
-  if [ "$DO_ISO_TESTMODE" = "false" ]; then
-    sudo mount -o loop "$OLD_ISO_WORKDIR/files/$OLD_BASE_ISO_INPUTFILE" "$OLD_ISO_MOUNTDIR" 2> /dev/null
+  handle_output "# Mounting ISO ${old['workdir']}/files/${old['inputfilebase']} at ${old['mountdir']}" "TEXT"
+  handle_output "sudo mount -o loop \"${old['workdir']}/files/${old['inputfilebase']}\" \"${old['mountdir']}\" 2> /dev/null" ""
+  if [ "${options['testmode']}" = "false" ]; then
+    sudo mount -o loop "${old['workdir']}/files/${old['inputfilebase']}" "${old['mountdir']}" 2> /dev/null
   fi
 }
 
@@ -196,20 +193,20 @@ mount_old_iso () {
 # List ISOs
 
 list_isos () {
-  TEMP_DO_ISO_VERBOSEMODE="true"
-  if [ "$ISO_SEARCH" = "" ]; then
-    FILE_LIST=$(find "$ISO_WORKDIR" -name "*.iso" 2> /dev/null)
+  temp['verbose']="true"
+  if [ "${iso['search']}" = "" ]; then
+    file_list=$(find "${iso['workdir']}" -name "*.iso" 2> /dev/null)
   else
-    FILE_LIST=$(find "$ISO_WORKDIR" -name "*.iso" 2> /dev/null |grep "$ISO_SEARCH" )
+    file_list=$(find "${iso['workdir']}" -name "*.iso" 2> /dev/null |grep "${iso['search']}" )
   fi
-  for FILE_NAME in $FILE_LIST; do
-    if [ "$DO_ISO_SCPHEADER" = "true" ]; then
-      handle_output "$ISO_BMCUSERNAME@$MY_IP:$FILE_NAME" "TEXT"
+  for file_name in ${file_list}; do
+    if [ "${options['scpheader']}" = "true" ]; then
+      handle_output "${iso['bmcusername']}@${os['ip']}:${file_name}" "TEXT"
     else
-      handle_output "$FILE_NAME" "TEXT"
+      handle_output "${file_name}" "TEXT"
     fi
   done
-  TEMP_DO_ISO_VERBOSEMODE="false"
+  temp['verbose']="false"
 }
 
 # Function: check_base_iso_file
@@ -217,11 +214,11 @@ list_isos () {
 # Check base ISO file exists
 
 check_base_iso_file () {
-  if [ -f "$ISO_INPUTFILE" ]; then
-    BASE_ISO_INPUTFILE=$( basename "$ISO_INPUTFILE" )
-    FILE_TYPE=$( file "$ISO_WORKDIR/files/$BASE_ISO_INPUTFILE" |cut -f2 -d: |grep -E "MBR|ISO" |wc -l |sed "s/ //g" )
-    if [ "$FILE_TYPE" = "0" ]; then
-      warning_message "$ISO_WORKDIR/files/$BASE_ISO_INPUTFILE is not a valid ISO file"
+  if [ -f "${iso['inputfile']}" ]; then
+    iso['inputfilebase']=$( basename "${iso['inputfile']}" )
+    file_type=$( file "${iso['workdir']}/files/${iso['inputfilebase']}" |cut -f2 -d: |grep -cE "MBR|ISO" )
+    if [ "${file_type}" = "0" ]; then
+      warning_message "${iso['workdir']}/files/${iso['inputfilebase']} is not a valid ISO file"
       exit
     fi
   fi
@@ -233,11 +230,11 @@ check_base_iso_file () {
 # Used when copying files from an old release to a new release
 
 check_old_base_iso_file () {
-  if [ -f "$OLD_ISO_INPUTFILE" ]; then
-    OLD_BASE_ISO_INPUTFILE=$( basename "$OLD_ISO_INPUTFILE" )
-    OLD_FILE_TYPE=$( file "$OLD_ISO_WORKDIR/files/$OLD_BASE_ISO_INPUTFILE" |cut -f2 -d: |grep -E "MBR|ISO")
-    if [ -z "$OLD_FILE_TYPE" ]; then
-      warning_message "$OLD_ISO_WORKDIR/files/$OLD_BASE_ISO_INPUTFILE is not a valid ISO file"
+  if [ -f "${old['inputfile']}" ]; then
+    old['inputfilebase']=$( basename "${old['inputfile']}" )
+    file_type=$( file "${old['workdir']}/files/${old['inputfilebase']}" |cut -f2 -d: |grep -E "MBR|ISO")
+    if [ -z "${file_type}" ]; then
+      warning_message "${old['workdir']}/files/${old['inputfilebase']} is not a valid ISO file"
       exit
     fi
   fi
@@ -269,20 +266,20 @@ check_old_base_iso_file () {
 
 get_base_iso () {
   handle_output "# Check source ISO exists and grab it if it doesn't" "TEXT"
-  BASE_ISO_INPUTFILE=$( basename "$ISO_INPUTFILE" )
-  if [ "$DO_ISO_FULLFORCEMODE" = "true" ]; then
-    handle_output "rm $ISO_WORKDIR/files/$BASE_ISO_INPUTFILE" ""
-    if [ "$DO_ISO_TESTMODE" = "false" ]; then
-      rm "$ISO_WORKDIR/files/$BASE_ISO_INPUTFILE"
+  iso['inputfilebase']=$( basename "${iso['inputfile']}" )
+  if [ "${options['forceall']}" = "true" ]; then
+    handle_output "rm ${iso['workdir']}/files/${iso['inputfilebase']}" ""
+    if [ "${options['testmode']}" = "false" ]; then
+      rm "${iso['workdir']}/files/${iso['inputfilebase']}"
     fi
   fi
   check_base_iso_file
-  if [ "$DO_ISO_LATEST" = "true" ]; then
-    cd "$ISO_WORKDIR/files" || exit ; wget -N "$ISO_URL"
+  if [ "${options['latest']}" = "true" ]; then
+    cd "${iso['workdir']}/files" || exit ; wget -N "${iso['url']}"
   else
-    if ! [ -f "$ISO_WORKDIR/files/$BASE_ISO_INPUTFILE" ]; then
-      if [ "$DO_ISO_TESTMODE" = "false" ]; then
-        wget "$ISO_URL" -O "$ISO_WORKDIR/files/$BASE_ISO_INPUTFILE"
+    if ! [ -f "${iso['workdir']}/files/${iso['inputfilebase']}" ]; then
+      if [ "${options['testmode']}" = "false" ]; then
+        wget "${iso['url']}" -O "${iso['workdir']}/files/${iso['inputfilebase']}"
       fi
     fi
   fi
@@ -294,20 +291,20 @@ get_base_iso () {
 
 get_old_base_iso () {
   handle_output "# Check old source ISO exists and grab it if it doesn't" "TEXT"
-  OLD_BASE_ISO_INPUTFILE=$( basename "$OLD_ISO_INPUTFILE" )
-  if [ "$DO_ISO_FULLFORCEMODE" = "true" ]; then
-    handle_output "rm $ISO_WORKDIR/files/$OLD_BASE_ISO_INPUTFILE" ""
-    if [ "$DO_ISO_TESTMODE" = "false" ]; then
-      rm "$OLD_ISO_WORKDIR/files/$OLD_BASE_ISO_INPUTFILE"
+  old['inputfilebase']=$( basename "${old['inputfile']}" )
+  if [ "${options['forceall']}" = "true" ]; then
+    handle_output "rm ${iso['workdir']}/files/${old['inputfilebase']}" ""
+    if [ "${options['testmode']}" = "false" ]; then
+      rm "${old['workdir']}/files/${old['inputfilebase']}"
     fi
   fi
   check_old_base_iso_file
-  if [ "$DO_ISO_LATEST" = "true" ]; then
-    cd "$OLD_ISO_WORKDIR/files" || exit ; wget -N "$OLD_ISO_URL"
+  if [ "${options['latest']}" = "true" ]; then
+    cd "${old['workdir']}/files" || exit ; wget -N "${old['url']}"
   else
-    if ! [ -f "$OLD_ISO_WORKDIR/files/$OLD_BASE_ISO_INPUTFILE" ]; then
-      if [ "$DO_ISO_TESTMODE" = "false" ]; then
-        wget "$OLD_ISO_URL" -O "$OLD_ISO_WORKDIR/files/$OLD_BASE_ISO_INPUTFILE"
+    if ! [ -f "${old['workdir']}/files/${old['inputfilebase']}" ]; then
+      if [ "${options['testmode']}" = "false" ]; then
+        wget "${old['url']}" -O "${old['workdir']}/files/${old['inputfilebase']}"
       fi
     fi
   fi
@@ -318,8 +315,8 @@ get_old_base_iso () {
 # Get ISO type
 
 get_iso_type () {
-  if [[ "$ISO_INPUTFILE" =~ "dvd" ]]; then
-    ISO_TYPE="dvd"
+  if [[ "${iso['inputfile']}" =~ "dvd" ]]; then
+    iso['type']="dvd"
   fi
 }
 
@@ -328,7 +325,7 @@ get_iso_type () {
 # Prepare ISO
 
 prepare_iso () {
-  case "$ISO_OSNAME" in
+  case "${iso['osname']}" in
     "ubuntu")
       prepare_autoinstall_iso
       ;;
@@ -343,68 +340,69 @@ prepare_iso () {
 # Get info from iso
 
 get_info_from_iso () {
-  handle_output "# Analysing $ISO_INPUTFILE" "TEXT"
-  TEST_FILE=$( basename "$ISO_INPUTFILE" )
-  TEST_NAME=$( echo "$TEST_FILE" | cut -f1 -d- )
-  TEST_TYPE=$( echo "$TEST_FILE" | cut -f2 -d- )
-  ISO_DISTRO="Ubuntu"
-  case $TEST_NAME in
-    "bionic")
-      ISO_RELEASE="$CURRENT_ISO_RELEASE_1804"
-      ;;
-    "focal")
-      ISO_RELEASE="$CURRENT_ISO_RELEASE_2004"
-      ;;
-    "jammy")
-      ISO_RELEASE="$CURRENT_ISO_RELEASE_2204"
-      ;;
-    "kinetic")
-      ISO_RELEASE="$CURRENT_ISO_RELEASE_2210"
-      ;;
-    "lunar")
-      ISO_RELEASE="$CURRENT_ISO_RELEASE_2304"
-      ;;
-    "mantic")
-      ISO_RELEASE="$CURRENT_ISO_RELEASE_2310"
-      ;;
-    "noble")
-      ISO_RELEASE="$CURRENT_ISO_RELEASE_2404"
-      ;;
-    "oracular")
-      ISO_RELEASE="$CURRENT_ISO_RELEASE_2410"
-      ;;
-    "plucky")
-      ISO_RELEASE="$CURRENT_ISO_RELEASE_2504"
-      ;;
-    "ubuntu")
-      ISO_RELEASE=$(echo "$TEST_FILE" |cut -f2 -d- )
-      ;;
-    *)
-      ISO_RELEASE="$DEFAULT_ISO_RELEASE"
-      ;;
-  esac
-  if [ "$TEST_NAME" = "ubuntu" ]; then
-    if [ "$TEST_TYPE" = "desktop" ]; then
-      ISO_ARCH=$( echo "$TEST_FILE" |cut -f4 -d- |cut -f1 -d. )
+  if [ "${iso['osname']}" = "ubuntu" ]; then
+    handle_output "# Analysing ${iso['inputfile']}" "TEXT"
+    test_file=$( basename "${iso['inputfile']}" )
+    test_name=$( echo "${test_file}" | cut -f1 -d- )
+    test_type=$( echo "${test_file}" | cut -f2 -d- )
+    case "${test_name}" in
+      "bionic")
+        iso['release']="${current['release1804']}"
+        ;;
+      "focal")
+        iso['release']="${current['release2004']}"
+        ;;
+      "jammy")
+        iso['release']="${current['release2204']}"
+        ;;
+      "kinetic")
+        iso['release']="${current['release2210']}"
+        ;;
+      "lunar")
+        iso['release']="${current['release2304']}"
+        ;;
+      "mantic")
+        iso['release']="${current['release2310']}"
+        ;;
+      "noble")
+        iso['release']="${current['release2404']}"
+        ;;
+      "oracular")
+        iso['release']="${current['release2410']}"
+        ;;
+      "plucky")
+        iso['release']="${current['release2504']}"
+        ;;
+      "ubuntu")
+        iso['release']=$(echo "${test_file}" |cut -f2 -d- )
+        ;;
+      *)
+        iso['release']="${defaults['release']}"
+        ;;
+    esac
+    if [ "${test_name}" = "ubuntu" ]; then
+      if [ "${test_type}" = "desktop" ]; then
+        iso['arch']=$( echo "${test_file}" |cut -f4 -d- |cut -f1 -d. )
+      else
+        iso['arch']=$( echo "${test_file}" |cut -f5 -d- |cut -f1 -d. )
+        test_type="live-server"
+      fi
     else
-      ISO_ARCH=$( echo "$TEST_FILE" |cut -f5 -d- |cut -f1 -d. )
-      TEST_TYPE="live-server"
+      if [ "${test_type}" = "desktop" ]; then
+        iso['arch']=$( echo "${test_file}" |cut -f3 -d- |cut -f1 -d. )
+      else
+        iso['arch']=$( echo "${test_file}" |cut -f4 -d- |cut -f1 -d. )
+        test_type="live-server"
+      fi
     fi
-  else
-    if [ "$TEST_TYPE" = "desktop" ]; then
-      ISO_ARCH=$( echo "$TEST_FILE" |cut -f3 -d- |cut -f1 -d. )
-    else
-      ISO_ARCH=$( echo "$TEST_FILE" |cut -f4 -d- |cut -f1 -d. )
-      TEST_TYPE="live-server"
-    fi
+    iso['outputfile']="${iso['workdir']}/files/${test_name}-${iso['release']}-${test_type}-${iso['arch']}.iso"
+    handle_output "# Input ISO:     ${iso['inputfile']}"  "TEXT"
+    handle_output "# Distribution:  ${iso['distro']}"     "TEXT"
+    handle_output "# Release:       ${iso['release']}"    "TEXT"
+    handle_output "# Codename:      ${iso['codename']}"   "TEXT"
+    handle_output "# Architecture:  ${iso['arch']}"       "TEXT"
+    handle_output "# Output ISO:    ${iso['outputfile']}" "TEXT"
   fi
-  ISO_OUTPUTFILE="$ISO_WORKDIR/files/$TEST_NAME-$ISO_RELEASE-$TEST_TYPE-$ISO_ARCH.iso"
-  handle_output "# Input ISO:     $ISO_INPUTFILE"  "TEXT"
-  handle_output "# Distribution:  $ISO_DISTRO"     "TEXT"
-  handle_output "# Release:       $ISO_RELEASE"    "TEXT"
-  handle_output "# Codename:      $ISO_CODENAME"   "TEXT"
-  handle_output "# Architecture:  $ISO_ARCH"       "TEXT"
-  handle_output "# Output ISO:    $ISO_OUTPUTFILE" "TEXT"
 }
 
 # Function: create_autoinstall_iso
@@ -454,54 +452,54 @@ get_info_from_iso () {
 
 create_autoinstall_iso () {
   if [ ! -f "/usr/bin/xorriso" ]; then
-    install_required_packages "$REQUIRED_PACKAGES"
+    install_required_packages "${iso['requiredpackages']}"
   fi
-  check_file_perms "$ISO_OUTPUTFILE"
+  check_file_perms "${iso['outputfile']}"
   handle_output "# Creating ISO" "TEXT"
-  ISO_MBR_PART_TYPE=$( xorriso -indev "$ISO_INPUTFILE" -report_el_torito as_mkisofs |grep iso_mbr_part_type |tail -1 |awk '{print $2}' 2>&1 )
-  BOOT_CATALOG=$( xorriso -indev "$ISO_INPUTFILE" -report_el_torito as_mkisofs |grep "^-c " |tail -1 |awk '{print $2}' |cut -f2 -d"'" 2>&1 )
-  BOOT_IMAGE=$( xorriso -indev "$ISO_INPUTFILE" -report_el_torito as_mkisofs |grep "^-b " |tail -1 |awk '{print $2}' |cut -f2 -d"'" 2>&1 )
-  UEFI_BOOT_SIZE=$( xorriso -indev "$ISO_INPUTFILE" -report_el_torito as_mkisofs |grep "^-boot-load-size" |tail -1 |awk '{print $2}' |cut -f2 -d"'" 2>&1 )
-  DOS_BOOT_SIZE=$( xorriso -indev "$ISO_INPUTFILE" -report_el_torito as_mkisofs |grep "^-boot-load-size" |head -1 |awk '{print $2}' |cut -f2 -d"'" 2>&1 )
-  if [ "$ISO_MAJORRELEASE" -gt 22 ]; then
-    APPEND_PART=$( xorriso -indev "$ISO_INPUTFILE" -report_el_torito as_mkisofs |grep append_partition |tail -1 |awk '{print $3}' 2>&1 )
+  ISO_MBR_PART_TYPE=$( xorriso -indev "${iso['inputfile']}" -report_el_torito as_mkisofs |grep iso_mbr_part_type |tail -1 |awk '{print $2}' 2>&1 )
+  BOOT_CATALOG=$( xorriso -indev "${iso['inputfile']}" -report_el_torito as_mkisofs |grep "^-c " |tail -1 |awk '{print $2}' |cut -f2 -d"'" 2>&1 )
+  BOOT_IMAGE=$( xorriso -indev "${iso['inputfile']}" -report_el_torito as_mkisofs |grep "^-b " |tail -1 |awk '{print $2}' |cut -f2 -d"'" 2>&1 )
+  UEFI_BOOT_SIZE=$( xorriso -indev "${iso['inputfile']}" -report_el_torito as_mkisofs |grep "^-boot-load-size" |tail -1 |awk '{print $2}' |cut -f2 -d"'" 2>&1 )
+  DOS_BOOT_SIZE=$( xorriso -indev "${iso['inputfile']}" -report_el_torito as_mkisofs |grep "^-boot-load-size" |head -1 |awk '{print $2}' |cut -f2 -d"'" 2>&1 )
+  if [ "${iso['majorrelease']}" -gt 22 ]; then
+    APPEND_PART=$( xorriso -indev "${iso['inputfile']}" -report_el_torito as_mkisofs |grep append_partition |tail -1 |awk '{print $3}' 2>&1 )
     UEFI_IMAGE="--interval:appended_partition_2:::"
   else
     APPEND_PART="0xef"
-    UEFI_IMAGE=$( xorriso -indev "$ISO_INPUTFILE" -report_el_torito as_mkisofs |grep "^-e " |tail -1 |awk '{print $2}' |cut -f2 -d"'" 2>&1 )
+    UEFI_IMAGE=$( xorriso -indev "${iso['inputfile']}" -report_el_torito as_mkisofs |grep "^-e " |tail -1 |awk '{print $2}' |cut -f2 -d"'" 2>&1 )
   fi
-  if [ "$DO_ISO_TESTMODE" = "false" ]; then
-    if [ "$ISO_ARCH" = "amd64" ]; then
+  if [ "${options['testmode']}" = "false" ]; then
+    if [ "${iso['arch']}" = "amd64" ]; then
       verbose_message "# Executing:"
-      verbose_message "xorriso -as mkisofs -r -V \"$ISO_VOLID\" -o \"$ISO_OUTPUTFILE\" \\"
-      verbose_message "--grub2-mbr \"$ISO_WORKDIR/BOOT/1-Boot-NoEmul.img\" --protective-msdos-label -partition_cyl_align off \\"
-      verbose_message "-partition_offset 16 --mbr-force-bootable -append_partition 2 \"$APPEND_PART\" \"$ISO_WORKDIR/BOOT/2-Boot-NoEmul.img\" \\"
+      verbose_message "xorriso -as mkisofs -r -V \"${iso['volid']}\" -o \"${iso['outputfile']}\" \\"
+      verbose_message "--grub2-mbr \"${iso['workdir']}/BOOT/1-Boot-NoEmul.img\" --protective-msdos-label -partition_cyl_align off \\"
+      verbose_message "-partition_offset 16 --mbr-force-bootable -append_partition 2 \"$APPEND_PART\" \"${iso['workdir']}/BOOT/2-Boot-NoEmul.img\" \\"
       verbose_message "-appended_part_as_gpt -iso_mbr_part_type \"$ISO_MBR_PART_TYPE\" -c \"$BOOT_CATALOG\" -b \"$BOOT_IMAGE\" \\"
       verbose_message "-no-emul-boot -boot-load-size \"$DOS_BOOT_SIZE\" -boot-info-table --grub2-boot-info -eltorito-alt-boot \\"
-      verbose_message "-e \"$UEFI_IMAGE\" -no-emul-boot -boot-load-size \"$UEFI_BOOT_SIZE\" \"$ISO_SOURCE_DIR\""
-      xorriso -as mkisofs -r -V "$ISO_VOLID" -o "$ISO_OUTPUTFILE" \
-      --grub2-mbr "$ISO_WORKDIR/BOOT/1-Boot-NoEmul.img" --protective-msdos-label -partition_cyl_align off \
-      -partition_offset 16 --mbr-force-bootable -append_partition 2 "$APPEND_PART" "$ISO_WORKDIR/BOOT/2-Boot-NoEmul.img" \
+      verbose_message "-e \"$UEFI_IMAGE\" -no-emul-boot -boot-load-size \"$UEFI_BOOT_SIZE\" \"${iso['sourcedir']}\""
+      xorriso -as mkisofs -r -V "${iso['volid']}" -o "${iso['outputfile']}" \
+      --grub2-mbr "${iso['workdir']}/BOOT/1-Boot-NoEmul.img" --protective-msdos-label -partition_cyl_align off \
+      -partition_offset 16 --mbr-force-bootable -append_partition 2 "$APPEND_PART" "${iso['workdir']}/BOOT/2-Boot-NoEmul.img" \
       -appended_part_as_gpt -iso_mbr_part_type "$ISO_MBR_PART_TYPE" -c "$BOOT_CATALOG" -b "$BOOT_IMAGE" \
       -no-emul-boot -boot-load-size "$DOS_BOOT_SIZE" -boot-info-table --grub2-boot-info -eltorito-alt-boot \
-      -e "$UEFI_IMAGE" -no-emul-boot -boot-load-size "$UEFI_BOOT_SIZE" "$ISO_SOURCE_DIR"
+      -e "$UEFI_IMAGE" -no-emul-boot -boot-load-size "$UEFI_BOOT_SIZE" "${iso['sourcedir']}"
     else
       verbose_message "# Executing:"
-      verbose_message "xorriso -as mkisofs -r -V \"$ISO_VOLID\" -o \"$ISO_OUTPUTFILE\" \\"
+      verbose_message "xorriso -as mkisofs -r -V \"${iso['volid']}\" -o \"${iso['outputfile']}\" \\"
       verbose_message "-partition_cyl_align all -partition_offset 16 -partition_hd_cyl 86 -partition_sec_hd 32 \\"
-      verbose_message "-append_partition 2 \"$APPEND_PART\" \"$ISO_WORKDIR/BOOT/Boot-NoEmul.img\" -G \"$ISO_WORKDIR/BOOT/Boot-NoEmul.img\" \\"
+      verbose_message "-append_partition 2 \"$APPEND_PART\" \"${iso['workdir']}/BOOT/Boot-NoEmul.img\" -G \"${iso['workdir']}/BOOT/Boot-NoEmul.img\" \\"
       verbose_message "-iso_mbr_part_type \"$ISO_MBR_PART_TYPE\" -c \"$BOOT_CATALOG\" \\"
-      verbose_message "-e \"$UEFI_IMAGE\" -no-emul-boot -boot-load-size \"$UEFI_BOOT_SIZE\" \"$ISO_SOURCE_DIR\""
-      xorriso -as mkisofs -r -V "$ISO_VOLID" -o "$ISO_OUTPUTFILE" \
+      verbose_message "-e \"$UEFI_IMAGE\" -no-emul-boot -boot-load-size \"$UEFI_BOOT_SIZE\" \"${iso['sourcedir']}\""
+      xorriso -as mkisofs -r -V "${iso['volid']}" -o "${iso['outputfile']}" \
       -partition_cyl_align all -partition_offset 16 -partition_hd_cyl 86 -partition_sec_hd 32 \
-      -append_partition 2 "$APPEND_PART" "$ISO_WORKDIR/BOOT/Boot-NoEmul.img" -G "$ISO_WORKDIR/BOOT/Boot-NoEmul.img" \
+      -append_partition 2 "$APPEND_PART" "${iso['workdir']}/BOOT/Boot-NoEmul.img" -G "${iso['workdir']}/BOOT/Boot-NoEmul.img" \
       -iso_mbr_part_type "$ISO_MBR_PART_TYPE" -c "$BOOT_CATALOG" \
-      -e "$UEFI_IMAGE" -no-emul-boot -boot-load-size "$UEFI_BOOT_SIZE" "$ISO_SOURCE_DIR"
+      -e "$UEFI_IMAGE" -no-emul-boot -boot-load-size "$UEFI_BOOT_SIZE" "${iso['sourcedir']}"
     fi
-    if [ "$DO_ISO_DOCKER" = "true" ]; then
-      BASE_DOCKER_ISO_OUTPUTFILE=$( basename "$ISO_OUTPUTFILE" )
-      echo "# Output file will be at \"$ISO_PREWORKDIR/files/$BASE_DOCKER_ISO_OUTPUTFILE\""
+    if [ "${options['docker']}" = "true" ]; then
+      docker['outputfilebase']=$( basename "${iso['outputfile']}" )
+      echo "# Output file will be at \"${iso['preworkdir']}/files/${docker['outputfilebase']}\""
     fi
   fi
-  check_file_perms "$ISO_OUTPUTFILE"
+  check_file_perms "${iso['outputfile']}"
 }
