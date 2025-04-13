@@ -297,6 +297,7 @@ prepare_autoinstall_iso () {
       print_file "${iso['sourcedir']}/boot/grub/grub.cfg"
     fi
   fi
+  iso_volmgrs=$( echo "${iso['volumemanager']}" |sed "s/,/ /g" )
   for iso_volmgr in ${iso_volmgrs}; do
     if [ -e "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data" ]; then
       rm "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
@@ -405,61 +406,252 @@ prepare_autoinstall_iso () {
         else
           echo "    config:" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
           if [ "${iso_volmgr}" = "zfs" ]; then
-            # Creates rpool/ROOT/zfsroot
-            echo "    - id: ${iso['disk']}" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
-            echo "      type: disk" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
-            echo "      ptable: gpt" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
-            echo "      path: /dev/${iso['disk']}" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
-            echo "      name: main_disk" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
-            echo "      wipe: superblock" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
-            echo "      grub_device: true" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
-
-            echo "    - id: efi" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
-            echo "      type: partition" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
-            echo "      size: 2G" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
-            echo "      number: 1" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
-            echo "      device: ${iso['disk']}" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
-            echo "      flag: boot" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
-            echo "      grub_device: true" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
-
-            echo "    - id: ${iso['disk']}1" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
-            echo "      type: partition" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
-            echo "      number: 2" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
-            echo "      size: -1" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
-            echo "      device: ${iso['disk']}" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
-
-            echo "    - id: efi_format" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
-            echo "      type: format" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
-            echo "      fstype: fat32" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
-            echo "      volume: efi" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
-            echo "      label: efi" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
-
-            echo "    - id: ${iso['disk']}1_root" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
-            echo "      type: format" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
-            echo "      fstype: zfsroot" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
-            echo "      volume: ${iso['disk']}1" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
-            echo "      label: 'rootfs'" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
-
-            echo "    - id: ${iso['disk']}1_mount" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
-            echo "      type: mount" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
-            echo "      path: /" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
-            echo "      device: ${iso['disk']}1_root" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
-
-            echo "    - id: efi_mount" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
-            echo "      device: efi_format" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
-            echo "      path: /boot/efi" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
-            echo "      type: mount" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
             if [ "${options['zfsfilesystems']}" = "true" ]; then
-              zfs_fs_counter=0
+              part_num=0
+              echo "    - ptable: gpt" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+              echo "      path: /dev/${iso['disk']}" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+              echo "      wipe: superblock-recursive" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+              echo "      preserve: false" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+              echo "      name: ''" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+              echo "      grub_device: true" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+              echo "      id: disk-${iso['disk']}" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+              echo "      type: disk" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+
+              echo "    - device: disk-${iso['disk']}" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+              echo "      size: 1127219200" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+              echo "      wipe: superblock" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+              echo "      flag: boot" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+              echo "      number: 1" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+              echo "      preserve: false" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+              echo "      grub_device: true" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+              echo "      path: /dev/${iso['disk']}1" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+              echo "      id: partition-0" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+              echo "      type: partition" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+
+              echo "    - fstype: vfat" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+              echo "      volume: partition-0" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+              echo "      preserve: false" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+              echo "      id: format-0" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+              echo "      type: format" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+
+              echo "    - device: disk-${iso['disk']}" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+              echo "      size: 2G" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+              echo "      number: 2" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+              echo "      preserve: false" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+              echo "      path: /dev/${iso['disk']}2" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+              echo "      id: partition-1" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+              echo "      type: partition" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+
+              echo "    - device: disk-${iso['disk']}" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+              echo "      size: ${iso['swapsize']}" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+              echo "      wipe: superblock" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+              echo "      flag: swap" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+              echo "      number: 3" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+              echo "      preserve: false" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+              echo "      path: /dev/${iso['disk']}3" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+              echo "      id: partition-2" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+              echo "      type: partition" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+
+              echo "    - fstype: swap" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+              echo "      volume: partition-${part_num}" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+              echo "      preserve: false" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+              echo "      id: format-1" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+              echo "      type: format" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+
+              echo "    - path: ''" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+              echo "      device: format-1" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+              echo "      id: mount-1" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+              echo "      type: mount" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+
+              echo "    - device: disk-${iso['disk']}" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+              echo "      size: -1" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+              echo "      number: 4" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+              echo "      preserve: false" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+              echo "      path: /dev/${iso['disk']}4" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+              echo "      id: partition-3" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+              echo "      type: partition" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+
+              echo "    - vdevs:" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+              echo "      - partition-1" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+              echo "      pool: bpool" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+              echo "      mountpoint: /boot" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+              echo "      pool_properties:" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+              echo "        ashift: 12" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+              echo "        autotrim: 'on'" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+              echo "        feature@async_destroy: enabled" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+              echo "        feature@bookmarks: enabled" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+              echo "        feature@embedded_data: enabled" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+              echo "        feature@empty_bpobj: enabled" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+              echo "        feature@enabled_txg: enabled" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+              echo "        feature@extensible_dataset: enabled" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+              echo "        feature@filesystem_limits: enabled" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+              echo "        feature@hole_birth: enabled" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+              echo "        feature@large_blocks: enabled" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+              echo "        feature@lz4_compress: enabled" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+              echo "        feature@spacemap_histogram: enabled" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+              echo "        version: null" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+              echo "      fs_properties:" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+              echo "        acltype: posixacl" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+              echo "        atime: null" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+              echo "        canmount: 'off'" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+              echo "        compression: lz4" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+              echo "        devices: 'off'" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+              echo "        normalization: formD" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+              echo "        relatime: 'on'" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+              echo "        sync: standard" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+              echo "        xattr: sa" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+              echo "      default_features: false" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+              echo "      id: zpool-0" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+              echo "      type: zpool" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+
+              echo "    - pool: zpool-0" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+              echo "      volume: BOOT" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+              echo "      properties:" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+              echo "        canmount: 'off'" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+              echo "        mountpoint: none" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+              echo "      id: zfs-0" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+              echo "      type: zfs" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+
+              echo "    - vdevs:" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+              echo "      - partition-3" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+              echo "      pool: rpool" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+              echo "      mountpoint: /" >>  "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+              echo "      pool_properties:" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+              echo "        ashift: 12" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+              echo "        autotrim: 'on'" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+              echo "        version: null" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+              echo "      fs_properties:" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+              echo "        acltype: posixacl" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+              echo "        atime: null" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+              echo "        canmount: 'off'" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+              echo "        compression: lz4" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+              echo "        devices: 'off'" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+              echo "        dnodesize: auto" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+              echo "        normalization: formD" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+              echo "        relatime: 'on'" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+              echo "        sync: standard" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+              echo "        xattr: sa" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+              echo "      default_features: true" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+              echo "      id: zpool-1" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+              echo "      type: zpool" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+
+              zfs_num=2 
+              echo "    - pool: zpool-1" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+              echo "      volume: ROOT" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+              echo "      properties:" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+              echo "        canmount: 'off'" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+              echo "        mountpoint: none" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+              echo "      id: zfs-${zfs_num}" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+              echo "      type: zfs" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+
+              zfs_num=$(( zfs_num+1 ))
+              echo "    - pool: zpool-1" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+              echo "      volume: ROOT/${iso['zfsroot']}" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+              echo "      properties:" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+              echo "        canmount: 'on'" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+              echo "        mountpoint: /" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+              echo "      id: zfs-${zfs_num}" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+              echo "      type: zfs" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+
+              zfs_filesystems=$( echo "${iso['zfsfilesystems']}" |sed "s/,/ /g" )
               for zfs_filesystem in ${iso['zfsfilesystems']}; do
-                echo "    - pool: rpool" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
-                echo "      volume: rpool${zfs_filesystem}" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+                hash_num="${zfs_filesystem//[^\/]}"
+                if [ "${#hash_num}" = "1" ]; then
+                  can_mount="off"
+                else
+                  can_mount="on"
+                fi
+                zfs_num=$(( zfs_num+1 ))
+                echo "    - pool: zpool-1" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+                echo "      volume: ROOT/${iso['zfsroot']}${zfs_filesystem}" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+                echo "      properties:" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+                echo "        canmount: '${can_mount}'" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+                echo "      id: zfs-${zfs_num}" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+                echo "      type: zfs" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+              done
+
+              zfs_num=$(( zfs_num+1 ))
+              echo "    - pool: zpool-1" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+              echo "      volume: USERDATA" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+              echo "      properties:" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+              echo "        canmount: 'off'" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+              echo "        mountpoint: none" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+              echo "      id: zfs-${zfs_num}" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+              echo "      type: zfs" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+
+              for user_fs in /root /home; do
+                zfs_num=$(( zfs_num+1 ))
+                echo "    - pool: zpool-1" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+                echo "      volume: USERDATA${user_fs}" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
                 echo "      properties:" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
                 echo "        canmount: 'on'" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
-                echo "      id: zfs-${zfs_fs_counter}" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+                echo "        mountpoint: ${user_fs}" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+                echo "      id: zfs-${zfs_num}" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
                 echo "      type: zfs" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
-                zfs_fs_counter=$(( zfs_fs_counter+1 ))
               done
+
+              echo "    - pool: zpool-0" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+              echo "      volume: BOOT/${iso['zfsroot']}" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+              echo "      properties:" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+              echo "        canmount: 'on'" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+              echo "        mountpoint: /boot" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+              echo "      id: zfs-1" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+              echo "      type: zfs" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+
+              echo "    - path: /boot/efi" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+              echo "      device: format-0" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+              echo "      id: mount-0" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+              echo "      type: mount" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+
+
+              echo "    swap:" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+              echo "      size: 0" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+
+            else
+              # Creates rpool/ROOT/zfsroot
+              echo "    - id: ${iso['disk']}" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+              echo "      type: disk" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+              echo "      ptable: gpt" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+              echo "      path: /dev/${iso['disk']}" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+              echo "      name: main_disk" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+              echo "      wipe: superblock" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+              echo "      grub_device: true" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+
+              echo "    - id: efi" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+              echo "      type: partition" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+              echo "      size: 2G" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+              echo "      number: 1" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+              echo "      device: ${iso['disk']}" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+              echo "      flag: boot" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+              echo "      grub_device: true" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+
+              echo "    - id: ${iso['disk']}1" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+              echo "      type: partition" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+              echo "      number: 2" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+              echo "      size: -1" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+              echo "      device: ${iso['disk']}" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+
+              echo "    - id: efi_format" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+              echo "      type: format" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+              echo "      fstype: fat32" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+              echo "      volume: efi" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+              echo "      label: efi" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+
+              echo "    - id: ${iso['disk']}1_root" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+              echo "      type: format" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+              echo "      fstype: zfsroot" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+              echo "      volume: ${iso['disk']}1" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+              echo "      label: 'rootfs'" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+
+              echo "    - id: ${iso['disk']}1_mount" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+              echo "      type: mount" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+              echo "      path: /" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+              echo "      device: ${iso['disk']}1_root" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+
+              echo "    - id: efi_mount" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+              echo "      device: efi_format" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+              echo "      path: /boot/efi" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+              echo "      type: mount" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
             fi
           else
 

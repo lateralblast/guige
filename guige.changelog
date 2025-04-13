@@ -727,3 +727,11 @@
 # Fixed LVM based storage stanza
 # 3.6.4: Sat Apr 12 14:21:16 AEST 2025
 # Added swap partition option to LVM based storage
+# 3.6.5: Sun Apr 13 07:30:36 AEST 2025
+# Documentation update
+# 3.6.6: Sun Apr 13 07:49:49 AEST 2025
+# Added docker test
+# 3.6.7: Sun Apr 13 09:35:57 AEST 2025
+# Fixed work directory in docker mode
+# 3.6.8: Sun Apr 13 10:24:28 AEST 2025
+# Documentation update

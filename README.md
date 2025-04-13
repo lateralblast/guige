@@ -11,21 +11,25 @@ used to hang a shield on the shoulder or neck when not in use.
 Version
 -------
 
-Current version: 3.6.4
+Current version: 3.6.8
 
 Issues
 ------
 
-Current issues:
+Current status/issues:
 
-- The code is currently in the process of being cleaned 
+- The code is currently in the process of being cleaned up
   - ZFS root has been tested and currently works
   - btrfs root has been tested and currently works
   - xfs root has been tested and currently works
+  - I'm working on a more complex ZFS storage configuration, but it is not currently working
+    - The basic default configuration is working
 - Default mode is UEFI with ZFS and LVM install options
 - BIOS ISO does not support ZFS
 - BIOS ISO mode will build installer with only LVM install
-- I've noticed some race conditions in the Ubuntu installer where the installer will crash sometimes and not others, I'm yet to determine what causes this race condition
+- I've noticed some race conditions in the Ubuntu installer where the installer will crash sometimes and not others
+  - I'm yet to determine what causes this race condition
+  - Simplifying storage configurations appears to help
 
 Prerequisites
 -------------
@@ -236,6 +240,7 @@ Usage: guige --action [action] --options [options]
 --volumemanager          Volumemanager(s) (default: zfs auto ext4 xfs btrfs)
 --workdir                Work directory (default: /home/user/guige/ubuntu/live-server/24.04.2)
 --zfsfilesystems         Additional ZFS filesystems (default: /var /var/lib /var/lib/AccountsService /var/lib/apt /var/lib/dpkg /var/lib/NetworkManager /srv /usr /usr/local /var/games /var/log /var/mail /var/snap /var/spool /var/www)
+--zfsroot                ZFS root name (default: zfsroot)
 ```
 
 You can get more usage information by using the usage tag with the action switch:
@@ -382,7 +387,7 @@ sudo virsh start test ; sudo virsh console test
 iso['delete']} a test KVM VM named test
 
 ```
-./guige.sh --action iso['delete']}kvmvm --vmname test
+./guige.sh --action deletekvmvm --vmname test
 ```
 
 Create a KVM VM and specify the amount of RAM and number of CPUs

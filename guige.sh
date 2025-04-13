@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Name:         guige (Generic Ubuntu/Unix ISO Generation Engine)
-# Version:      3.6.4
+# Version:      3.6.8
 # Release:      1
 # License:      CC-BA (Creative Commons By Attribution)
 #               http://creativecommons.org/licenses/by/4.0/legalcode
@@ -677,6 +677,11 @@ do
       # Additional ZFS filesystems
       options['zfsfilesystems']="true"
       iso['zfsfilesystems']="$2"
+      shift 2
+      ;;
+    --zfsroot)
+      # ZFS root name
+      options['zfsroot']="$2"
       shift 2
       ;;
     --)

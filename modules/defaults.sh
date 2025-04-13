@@ -44,8 +44,6 @@ set_option_defaults () {
   options['interactivemode']="false"
   options['biosdevname']="false"
   options['dotrelease']=""
-  iso['brewdir']=""
-  iso['bindir']=""
 }
 
 # Function: set_default_defaults
@@ -65,7 +63,7 @@ set_default_defaults () {
   defaults['bootproto']="dhcp"
   defaults['bootsize']="2048"
   defaults['boottype']="efi"
-  defaults['build']="live-server"
+  defaults['build']="server"
   defaults['chrootpackages']="zfsutils-linux zfs-initramfs xfsprogs btrfs-progs net-tools curl lftp wget sudo file rsync dialog setserial ansible apt-utils whois squashfs-tools duperemove jq btrfs-compsize iproute2"
   defaults['cidr']="24"
   defaults['compression']="lzo"
@@ -146,6 +144,7 @@ set_default_defaults () {
   defaults['pvname']="${defaults['vgbase']}-pv"
   defaults['volumemanager']="zfs auto ext4 xfs btrfs"
   defaults['zfsfilesystems']="/var /var/lib /var/lib/AccountsService /var/lib/apt /var/lib/dpkg /var/lib/NetworkManager /srv /usr /usr/local /var/games /var/log /var/mail /var/snap /var/spool /var/www"
+  defaults['zfsroot']="zfsroot"
 }
 
 # Function: set_defaults
@@ -190,13 +189,13 @@ reset_defaults () {
         iso_arch="${iso['arch']}"
       fi
       if [[ "${iso['build']}" =~ server ]]; then
-        iso_build="live-server"
+        iso_build="server"
       else
         if [[ "${iso['build']}" =~ desktop ]]; then
           iso_build="desktop"
         else
           if [[ "${defaults['build']}" =~ server ]]; then
-            iso_build="live-server"
+            iso_build="server"
           else
             iso_build="desktop"
           fi

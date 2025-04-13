@@ -30,6 +30,11 @@
 check_docker_config () {
   if ! [ -f "/.dockerenv" ]; then
     handle_output "# Checking Docker configs" "TEXT"
+    docker_test=$( command -v docker )
+    if [ -z "${docker_test}" ]; then
+      warning_message "Docker not installed"
+      exit
+    fi
     for arch_dir in ${iso['dockerarch']}; do
       if ! [ -d "${iso['workdir']}/${arch_dir}" ]; then
         handle_output "Creating directory ${iso['workdir']}/${arch_dir}" "TEXT"
