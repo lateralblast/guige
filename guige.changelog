@@ -737,3 +737,5 @@
 # Documentation update
 # 3.6.9: Mon Apr 14 10:57:04 AEST 2025
 # Improved handling for 25.04
+# 3.7.0: Mon Apr 14 11:09:10 AEST 2025
+# Fixed iproute2 package check
