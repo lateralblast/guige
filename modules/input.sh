@@ -154,12 +154,12 @@ get_code_name () {
 # Get build type based on release
 
 get_build_type () {
-  case "${iso['codename']}" in
-    "plucky")
-      defaults['build']="daily-live"
-      iso['build']="daily-live"
-      ;;
-  esac
+#  case "${iso['codename']}" in
+#    "plucky")
+#      defaults['build']="daily-live"
+#      iso['build']="daily-live"
+#      ;;
+#  esac
 }
 
 # Function: get_interactive_input
