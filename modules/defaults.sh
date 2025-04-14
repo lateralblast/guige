@@ -560,7 +560,7 @@ set_default_cidr () {
     fi
     if [[ "${defaults['cidr']}" =~ . ]] || [ "${defaults['cidr']}" = "" ]; then
       if [ ! "${bin_test}" = "0" ]; then
-        if [ ! -d "/usr/sbin/route" ]; then
+        if [ ! -f "/usr/sbin/route" ]; then
           install_package "iproute2"
         fi
         defaults['netmask']=$( route -n |awk '{print $3}' |grep "^255" )

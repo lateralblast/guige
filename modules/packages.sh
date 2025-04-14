@@ -10,7 +10,7 @@
 install_package () {
   package="$1"
   package_version=""
-  verbose_message "# package: ${package}" TEXT
+  information_message "# package: ${package}"
   if [ "${os['name']}" = "Darwin" ]; then
     package_version=$( brew info "${package}" --json |jq -r ".[0].versions.stable" )
   else
@@ -20,7 +20,7 @@ install_package () {
       package_version=$( sudo dpkg -l "${package}" 2>&1 |grep "^ii" |awk '{print $3}' )
     fi
   fi
-  verbose_message "# ${package} version: ${package_version}" "TEXT"
+  information_message "# ${package} version: ${package_version}"
   if [ -z "${package_version}" ]; then
     if [ "${options['testmode']}" = "false" ]; then
       verbose_message "# Installing package ${package}"
