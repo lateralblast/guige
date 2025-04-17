@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Name:         guige (Generic Ubuntu/Unix ISO Generation Engine)
-# Version:      3.6.9
+# Version:      3.7.3
 # Release:      1
 # License:      CC-BA (Creative Commons By Attribution)
 #               http://creativecommons.org/licenses/by/4.0/legalcode
@@ -531,14 +531,6 @@ do
       # OS release
       iso['release']="$2"
       shift 2
-      case ${iso['release']} in
-        "${current['devrelease']}")
-          if [ "${iso['build']}" = "" ]; then
-            iso['build']="daily-live"
-            options['daily']="true"
-          fi
-          ;;
-      esac
       get_release_info
       get_code_name
       get_build_type
@@ -698,7 +690,6 @@ done
 # switchend
 
 # Setup functions
-
 set_default_osname
 set_default_arch
 set_default_release

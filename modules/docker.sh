@@ -4,6 +4,16 @@
 # shellcheck disable=SC2129
 # shellcheck disable=SC2154
 
+# Function: docker_exit
+#
+# Only exit if inside docker
+
+docker_exit () {
+  if [ -f "/.dockerenv" ]; then
+    exit
+  fi
+}
+
 # Function: create_docker_config
 #
 # Create a docker config so we can run this from a non Linux platform
@@ -123,11 +133,16 @@ create_docker_iso () {
           script_args="${script_args} --sshkeyfile ${iso['sshkeyfile']}"
         fi
       fi
-      for arg_name in release volumemanager; do
-        if [[ ! "${script['args']}" =~ ${arg_name} ]]; then
-          arg_value="${iso[${arg_name}]}"
-          arg_value=$( echo "${arg_value}" |sed "s/^ //g" |sed "s/ $//g" |sed "s/ /,/g" )
+      verbose_message "# Checking command line arguements to pass to docker container"
+      for arg_name in release volumemanager build; do
+        verbose_message "# Checking ${arg_name}"
+        arg_value="${iso[${arg_name}]}"
+        arg_value=$( echo "${arg_value}" |sed "s/^ //g" |sed "s/ $//g" |sed "s/ /,/g" )
+        if [[ ! "${script_args}" =~ ${arg_name} ]]; then
           script_args="${script_args} --${arg_name} ${arg_value}"
+          verbose_message "# Adding --${arg_name} ${arg_value}"
+        else
+          verbose_message "# command line contains --${arg_name} ${arg_value}"
         fi
       done
       echo "${docker['workdir']}/files/${script['bin']} ${script_args} --workdir ${docker['workdir']} --preworkdir ${iso['workdir']}" >> "${local_script}"
