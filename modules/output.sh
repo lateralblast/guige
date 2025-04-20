@@ -339,6 +339,11 @@ update_output_file_name () {
       fi
     fi
   done
+  if [ "${options['grubparse']}" = "true" ] || [ "${options['grubparser']}" = "true" ]; then
+    temp_dir_name=$( dirname "${iso['outputfile']}" )
+    temp_file_name=$( basename "${iso['outputfile']}" .iso )
+    iso['outputfile']="${temp_dir_name}/${temp_file_name}-grubparser.iso"
+  fi
   if [ "${options['createisovm']}" = "true" ] || [ "${options['createcivm']}" = "true" ]; then
     if [ "${iso['type']}" = "kvm" ]; then
       if [ "${os['name']}" = "Darwin" ]; then

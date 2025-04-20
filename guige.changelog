@@ -763,3 +763,5 @@
 # Added kernel, layout and locale to grubparser
 # 3.8.2: Sun 20 Apr 2025 16:17:34 AEST
 # Added IP, CIDR, DNS and gateway to grubparser
+# 3.8.3: Sun 20 Apr 2025 16:58:36 AEST
+# Added grubparser to output ISO name
