@@ -11,7 +11,7 @@ used to hang a shield on the shoulder or neck when not in use.
 Version
 -------
 
-Current version: 3.8.1
+Current version: 3.8.2
 
 Introduction
 ------------
@@ -225,8 +225,12 @@ Usage: guige --action [action] --options [options]
 --grubmenu               Import grub menu (default: 0)
 --grubtimeout            Grub timeout (default: 10)
 --grubparseall           Parse grub for all parameters
+--grubcidr               Pass CIDR to config from grub boot command
 --grubdisk               Pass disk to config from grub boot command
+--grubdns                Pass nameserver to config from grub boot command
+--grubgateway            Pass gateway to config from grub boot command
 --grubhostname           Pass hostname to config from grub boot command
+--grubip                 Pass IP to config from grub boot command
 --grubkernel             Pass kernel package to config from grub boot command
 --grublocale             Pass locale to config from grub boot command
 --grublayout             Pass keyboard layout to config from grub boot command

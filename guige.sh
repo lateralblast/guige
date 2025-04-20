@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Name:         guige (Generic Ubuntu/Unix ISO Generation Engine)
-# Version:      3.8.1
+# Version:      3.8.2
 # Release:      1
 # License:      CC-BA (Creative Commons By Attribution)
 #               http://creativecommons.org/licenses/by/4.0/legalcode
@@ -368,6 +368,14 @@ do
       options['grubparseall']="true"
       shift
       ;;
+    --grubcidr)
+      # Pass CIDR to config from grub boot command
+      check_value "$1" "$2"
+      iso['grubcidr']="$2"
+      iso['cidr']="$2"
+      options['grubparse']="true"
+      shift 2
+      ;;
     --grubdisk)
       # Pass disk to config from grub boot command
       check_value "$1" "$2"
@@ -376,11 +384,36 @@ do
       options['grubparse']="true"
       shift 2
       ;;
+    --grubdns)
+      # Pass nameserver to config from grub boot command
+      check_value "$1" "$2"
+      iso['grubdns']="$2"
+      iso['dns']="$2"
+      options['grubparse']="true"
+      shift 2
+      ;;
+    --grubgateway)
+      # Pass gateway to config from grub boot command
+      check_value "$1" "$2"
+      iso['grubgateway']="$2"
+      iso['gateway']="$2"
+      options['grubparse']="true"
+      shift 2
+      ;;
     --grubhostname)
       # Pass hostname to config from grub boot command
       check_value "$1" "$2"
       iso['grubhostname']="$2"
       iso['hostname']="$2"
+      options['grubparse']="true"
+      shift 2
+      ;;
+    --grubip)
+      # Pass IP to config from grub boot command
+      check_value "$1" "$2"
+      iso['grubip']="$2"
+      iso['ip']="$2"
+      options['dhcp']="false"
       options['grubparse']="true"
       shift 2
       ;;

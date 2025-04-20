@@ -761,3 +761,5 @@
 # Updated documentation
 # 3.8.1: Sun 20 Apr 2025 12:03:27 AEST
 # Added kernel, layout and locale to grubparser
+# 3.8.2: Sun 20 Apr 2025 16:17:34 AEST
+# Added IP, CIDR, DNS and gateway to grubparser

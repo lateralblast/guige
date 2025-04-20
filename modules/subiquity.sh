@@ -404,18 +404,34 @@ prepare_autoinstall_iso () {
           fi
           echo "  network:" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
           echo "    ethernets:" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
-          echo "      ${iso['nic']}:" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+          if [ "${iso['grubnic']}" = "" ]; then
+            echo "      ${iso['nic']}:" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+          else
+            echo "      grubnic:" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+          fi
           if [ "${options['dhcp']}" = "true" ]; then
             echo "        critical: true" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
             echo "        dhcp-identifier: mac" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
             echo "        dhcp4: ${options['dhcp']}" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
           else
             echo "        addresses:" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
-            echo "        - ${iso['ip']}/${iso['cidr']}" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
-            echo "        gateway4: ${iso['gateway']}" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+            if [ "${iso['grubip']}" = "" ]; then
+              echo "        - ${iso['ip']}/${iso['cidr']}" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+            else
+              echo "        - grubip/grubcidr" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+            fi
+            if [ "${iso['grubgateway']}" = "" ]; then
+              echo "        gateway4: ${iso['gateway']}" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+            else
+              echo "        gateway4: grubgateway" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+            fi
             echo "        nameservers:" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
             echo "          addresses:" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
-            echo "          - ${iso['dns']}" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+            if [ "${iso['grubdns']}" = "" ]; then
+              echo "          - ${iso['dns']}" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+            else
+              echo "          - grubdns" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+            fi
           fi
           echo "    version: 2" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
 #          echo "  refresh-installer:" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
