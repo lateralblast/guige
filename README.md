@@ -164,6 +164,10 @@ Currently, the following parameters are supported:
 - Kernel
 - Layout
 - Locale
+- IP
+- CIDR
+- DNS
+- Gateway
 
 These options then become part of the grub boot command line on the ISO, and can thus be edited:
 
