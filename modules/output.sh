@@ -242,49 +242,49 @@ create_export () {
 # Update output file name based on switched and options
 
 update_output_file_name () {
-  if ! [ "${iso['hostname']}" = "${defaults['hostname']}" ]; then
+  if [ "${iso['hostname']}" != "${defaults['hostname']}" ]; then
     temp_dir_name=$( dirname "${iso['outputfile']}" )
     temp_file_name=$( basename "${iso['outputfile']}" .iso )
     iso['outputfile']="${temp_dir_name}/${temp_file_name}-${iso['hostname']}.iso"
   fi
-  if ! [ "${iso['nic']}" = "${defaults['nic']}" ]; then
+  if [ "${iso['nic']}" != "${defaults['nic']}" ]; then
     temp_dir_name=$( dirname "${iso['outputfile']}" )
     temp_file_name=$( basename "${iso['outputfile']}" .iso )
     iso['outputfile']="${temp_dir_name}/${temp_file_name}-${iso['nic']}.iso"
   fi
   if [ "${options['dhcp']}" = "false" ]; then
-    if ! [ "${iso['ip']}" = "${defaults['ip']}" ]; then
+    if [ "${iso['ip']}" != "${defaults['ip']}" ]; then
       temp_dir_name=$( dirname "${iso['outputfile']}" )
       temp_file_name=$( basename "${iso['outputfile']}" .iso )
       iso['outputfile']="${temp_dir_name}/${temp_file_name}-${iso['ip']}.iso"
     fi
-    if ! [ "${iso['gateway']}" = "${defaults['gateway']}" ]; then
+    if [ "${iso['gateway']}" != "${defaults['gateway']}" ]; then
       temp_dir_name=$( dirname "${iso['outputfile']}" )
       temp_file_name=$( basename "${iso['outputfile']}" .iso )
       iso['outputfile']="${temp_dir_name}/${temp_file_name}-${iso['gateway']}.iso"
     fi
-    if ! [ "${iso['dns']}" = "${defaults['dns']}" ]; then
+    if [ "${iso['dns']}" != "${defaults['dns']}" ]; then
       temp_dir_name=$( dirname "${iso['outputfile']}" )
       temp_file_name=$( basename "${iso['outputfile']}" .iso )
       iso['outputfile']="${temp_dir_name}/${temp_file_name}-${iso['dns']}.iso"
     fi
   fi
-  if ! [ "${iso['username']}" = "${defaults['username']}" ]; then
+  if [ "${iso['username']}" != "${defaults['username']}" ]; then
     temp_dir_name=$( dirname "${iso['outputfile']}" )
     temp_file_name=$( basename "${iso['outputfile']}" .iso )
     iso['outputfile']="${temp_dir_name}/${temp_file_name}-${iso['username']}.iso"
   fi
-  if ! [ "${iso['disk']}" = "${defaults['disk']}" ]; then
+  if [ "${iso['disk']}" != "${defaults['disk']}" ]; then
     temp_dir_name=$( dirname "${iso['outputfile']}" )
     temp_file_name=$( basename "${iso['outputfile']}" .iso )
     iso['outputfile']="${temp_dir_name}/${temp_file_name}-${iso['disk']}.iso"
   fi
-  if ! [ "${iso['prefix']}" = "" ]; then
+  if [ "${iso['prefix']}" != "" ]; then
     temp_dir_name=$( dirname "${iso['outputfile']}" )
     temp_file_name=$( basename "${iso['outputfile']}" .iso )
     iso['outputfile']="${temp_dir_name}/${iso['prefix']}-${temp_file_name}.iso"
   fi
-  if ! [ "${iso['suffix']}" = "" ]; then
+  if [ "${iso['suffix']}" != "" ]; then
     temp_dir_name=$( dirname "${iso['outputfile']}" )
     temp_file_name=$( basename "${iso['outputfile']}" .iso )
     iso['outputfile']="${temp_dir_name}/${temp_file_name}-${iso['suffix']}.iso"
@@ -331,7 +331,7 @@ update_output_file_name () {
   fi
   iso_volmgrs=$( echo "${iso['volumemanager']}" |sed "s/,/ /g" )
   for iso_volmgr in ${iso_volmgrs}; do
-    if [ ! "${iso_volmgrs}" = "custom" ]; then
+    if [ "${iso_volmgrs}" != "custom" ]; then
       if [[ ! "${iso[outputfile]}" =~ $iso_volmgr ]]; then
         temp_dir_name=$( dirname "${iso['outputfile']}" )
         temp_file_name=$( basename "${iso['outputfile']}" .iso )

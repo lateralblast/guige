@@ -765,3 +765,5 @@
 # Added IP, CIDR, DNS and gateway to grubparser
 # 3.8.3: Sun 20 Apr 2025 16:58:36 AEST
 # Added grubparser to output ISO name
+# 3.8.4: Sun 20 Apr 2025 17:12:15 AEST
+# Fixed issue with username not being passed to docker ISO build
