@@ -11,12 +11,31 @@ used to hang a shield on the shoulder or neck when not in use.
 Version
 -------
 
-Current version: 3.7.3
+Current version: 3.8.0
 
-Issues
+Introduction
+------------
+
+This script provides a wrapper for the Ubuntu ISO creation process.
+I wrote this as I didn't want to have to install and use Cubic or a similar GUI point and click tool to create an ISO.
+I wanted to be able to automate the process.
+
+Features
+--------
+
+The script has the following features/capabilites:
+
+- Import a an existing custom cloud-init config file
+- Add packages to the ISO so that they can be installed without needing network
+- Do ZFS based root installs
+- Pass parameters to the install via the grub boot command line
+- Install to the first SCSI/NVME disk by default
+- Configure the first network with link by default
+
+Status
 ------
 
-Current status/issues:
+Current status:
 
 - The code is currently in the process of being cleaned up
   - ZFS root has been tested and currently works
@@ -70,12 +89,8 @@ Hints / Observations:
   - iDRAC version 7 and earlier appear to do this
   - Booting to a USB stick created with a GPT partition and UEFI (non CSM) with Rufus addresses this issue
 
-Introduction
-------------
-
-This script provides a wrapper for the Ubuntu ISO creation process.
-I wrote this as I didn't want to have to fire up Cubic or a similar GUI tool to create an ISO.
-I wanted to be able to automate the process.
+Description
+-----------
 
 By default this script creates a DHCP based install ISO with four additonal install options:
 - ZFS based install to the first non USB drive available using the first network device with link
@@ -124,6 +139,39 @@ I've added a strict option (does a set -eu) and a debug option (does a set -x)
 to help with debugging and finding bugs. I also periodically run shellcheck
 against the script to help find bugs.
 
+Parsing Grub Boot Command
+-------------------------
+
+To make the script more flexible I've added the ability to parse config options to the cloud-init
+config by editing the grub boot command line. This can be enabled in a number of ways, on a per
+parameter basis, e.g. specifying --grubhostname, or by using the grubparseall option, i.e.
+--options grubparseall.
+
+This is useful if you want to create a generic boot ISO that you can modify things like the
+username, disk, NIC, etc on a per case basis. With past install options, like preseed based
+installations of older version of Ubuntu, this was somewhat possible, e.g. deciding the locale, etc.
+Currently with subiquity based cloud-init installations, this does not appear to be possible
+out of the box, thus I've added the capability.
+
+Currently, the following parameters are supported:
+
+- Username
+- Realname
+- Hostname
+- Password
+- Disk
+- NIC
+
+These options then become part of the grub boot command line on the ISO, and can thus be edited:
+
+```
+menuentry 'Ubuntu 24.04.2 Server arm64:zfs:first-disk:first-nic (console=ttyS0,115200 console=ttyS1,115200)' {
+  set gfxpayload=keep
+  linux   /casper/vmlinuz console=tty0 console=vt0 console=ttyS0,115200 console=ttyS1,115200 quiet autoinstall fsck.mode=skip ds=nocloud\;s=/cdrom/autoinstall/configs/zfs/first-disk/ hostname=ubuntu realname=Ubuntu username=ubuntu password=ubuntu disk=first-disk nic=first-nic ---
+  initrd  /casper/initrd
+}
+```
+
 Usage
 -----
 
@@ -138,7 +186,7 @@ Usage: guige --action [action] --options [options]
 --allowlist              Allow/load additional kernel modules(s)
 --allowpassword          Allow password access via SSH (default: false)
 --allowservice           Allow Services (default: ssh)
---arch                   Architacture (default: amd64)
+--arch                   Architacture (default: arm64)
 --autoinstalldir         Directory where autoinstall config files are stored on ISO (default: autoinstall)
 --blocklist              Block kernel module(s)
 --bmcip                  BMC/iDRAC IP (default: 192.168.1.3)
@@ -146,12 +194,12 @@ Usage: guige --action [action] --options [options]
 --bmcusername            BMC/iDRAC User (default: root)
 --disk                   Boot Disk devices (default: first-disk)
 --bootloader             Boot Loader Location (default: mbr)
---bootserverfile         Boot sever file (default: /home/user/guige/ubuntu/live-server/24.04.2/files/ubuntu-24.04.2-live-server-amd64-efi-autoinstall.iso)
+--bootserverfile         Boot sever file (default: /Users/user/guige/ubuntu/server/24.04.2/files/ubuntu-24.04.2-live-server-arm64-efi-autoinstall.iso)
 --bootserverip           NFS/Bootserver IP
 --bootsize               Boot partition size (default: 2048)
---build                  Type of ISO to build (default: live-server)
+--build                  Type of ISO to build (default: server)
 --chrootpackages         List of packages to add to ISO (default: zfsutils-linux zfs-initramfs xfsprogs btrfs-progs net-tools curl lftp wget sudo file rsync dialog setserial ansible apt-utils whois squashfs-tools duperemove jq btrfs-compsize iproute2)
---cidr                   CIDR (default: 22)
+--cidr                   CIDR (default: 24)
 --codename               Linux release codename or distribution (default: jammy)
 --compression            Compression algorithm (default: lzo)
 --country                Country (default: us)
@@ -169,14 +217,21 @@ Usage: guige --action [action] --options [options]
 --firstoption            First menu option (e.g. grub menu) (default: zfs)
 --gateway                Gateway IP (default: 192.168.1.254)
 --gecos                  User GECOS field (default: Administrator)
---groups                 Groups to add user to (default: dialout,kvm,libvirt,qemu,wheel)
---grubfile               Import grub file (default: /home/user/guige/ubuntu/live-server/24.04.2/grub.cfg)
+--groups                 Groups to add user to (default: adm,cdrom,dip,plugdev,lxd,sudo)
+--grubfile               Import grub file (default: /Users/user/guige/ubuntu/server/24.04.2/grub.cfg)
 --grubmenu               Import grub menu (default: 0)
 --grubtimeout            Grub timeout (default: 10)
+--grubparseall           Parse grub for all parameters
+--grubusername           Pass username to config from grub boot command
+--grubpassword           Pass password to config from grub boot command
+--grubdisk               Pass password to config from grub boot command
+--grubnic                Pass password to config from grub boot command
+--grubhostname           Pass password to config from grub boot command
+--grubrealname           Pass realname to config from grub boot command
 --help                   Print help
 --hostname               Hostname (default: ubuntu)
---inputci                Import Cloud Image (default: /home/user/guige/ubuntu/live-server/24.04.2/files/ubuntu-24.04.2-server-cloudimg-amd64.img)
---inputfile              Import ISO (default: /home/user/guige/ubuntu/live-server/24.04.2/files/ubuntu-24.04.2-live-server-amd64.iso)
+--inputci                Import Cloud Image (default: /Users/user/guige/ubuntu/server/24.04.2/files/ubuntu-24.04.2-server-cloudimg-arm64.img)
+--inputfile              Import ISO (default: /Users/user/guige/ubuntu/server/24.04.2/files/ubuntu-24.04.2-live-server-arm64.iso)
 --installmode            Install mode (default: text)
 --installmount           Where the install mounts the CD during install (default: /cdrom)
 --installpassword        Temporary install password for remote access during install (default: install)
@@ -187,23 +242,23 @@ Usage: guige --action [action] --options [options]
 --kernel                 Kernel to install (default: linux-generic)
 --isokernelargs          Kernel arguments
 --isolinuxfile           Import isolinux file
---packages               Additional packages to install (default: zfsutils-linux zfs-initramfs xfsprogs btrfs-progs net-tools curl lftp wget sudo file rsync dialog setserial ansible apt-utils whois squashfs-tools duperemove jq btrfs-compsize iproute2)
+--packages               Additional packages to install (default: zfsutils-linux zfs-initramfs xfsprogs btrfs-progs net-tools curl lftp wget sudo file rsync dialog setserial ansible apt-utils whois squashfs-tools duperemove jq btrfs-compsize iproute2 ipcalc)
 --url                    ISO URL
 --volid                  ISO Volume ID (default: Ubuntu 24.04.2 Server)
 --layout                 Keyboard layout (default: us)
 --lcall                  LC_ALL (default: en_US)
 --locale                 Local (default: en_US.UTF-8)
 --lvname                 Logical Volume Name (default: ubuntu-lv)
---netmask                Netmask (default: 255.255.252.0)
+--netmask                Netmask (default: 255.255.255.0)
 --nic                    NIC to use for installation (default: first-nic)
 --oeminstall             OEM Install (default: auto)
---oldinputfile           Old release ISO (default: /home/user/guige/ubuntu/live-server/23.04/files/ubuntu-23.04-live-server-amd64.iso)
+--oldinputfile           Old release ISO (default: /Users/user/guige/ubuntu/server/23.04/files/ubuntu-23.04-live-server-arm64.iso)
 --oldisourl              Old ISO URL
 --oldrelease             Old release (default: 23.04)
 --onboot                 Enable network on boot (default: on)
 --options                Options (e.g. verbose)
---outputci               Output CI file (default: /home/user/guige/ubuntu/live-server/24.04.2/files/ubuntu-24.04.2-server-cloudimg-amd64-efi-autoinstall.img)
---outputfile             Output ISO file (default: /home/user/guige/ubuntu/live-server/24.04.2/files/ubuntu-24.04.2-live-server-amd64-efi-autoinstall.iso)
+--outputci               Output CI file (default: /Users/user/guige/ubuntu/server/24.04.2/files/ubuntu-24.04.2-server-cloudimg-arm64-efi-autoinstall.img)
+--outputfile             Output ISO file (default: /Users/user/guige/ubuntu/server/24.04.2/files/ubuntu-24.04.2-live-server-arm64-efi-autoinstall.iso)
 --password               Password (default: ubuntu)
 --passwordalgorithm      Password Algorithm (default: sha512)
 --pesize                 PE size (default: 32768)
@@ -220,10 +275,12 @@ Usage: guige --action [action] --options [options]
 --serialport             Serial port
 --serialportaddress      Serial port address
 --serialportspeed        Serial port speed
+--shell                  User shell (default: /bin/bash)
 --sourceid               Source ID (default: ubuntu-server)
---squashfsfile           Squashfs file (default: /home/user/guige/ubuntu/live-server/23.04/isomount/casper/ubuntu-server-minimal.squashfs)
+--squashfsfile           Squashfs file (default: /Users/user/guige/ubuntu/server/23.04/isomount/casper/ubuntu-server-minimal.squashfs)
 --sshkey                 SSH key
---sshkeyfile             SSH key file (default: /home/user/.ssh/id_rsa.pub)
+--sshkeyfile             SSH key file (default: /Users/user/.ssh/id_rsa.pub)
+--sudoers                Sudoers entry (default: ALL=(ALL) NOPASSWD: ALL)
 --suffix                 Output file name suffix
 --swap                   Swap device
 --swapsize               Swap size (default: 2G)
@@ -238,7 +295,7 @@ Usage: guige --action [action] --options [options]
 --vmname                 VM name
 --vmtype                 VM type
 --volumemanager          Volumemanager(s) (default: zfs auto ext4 xfs btrfs)
---workdir                Work directory (default: /home/user/guige/ubuntu/live-server/24.04.2)
+--workdir                Work directory (default: /Users/user/guige/ubuntu/server/24.04.2)
 --zfsfilesystems         Additional ZFS filesystems (default: /var /var/lib /var/lib/AccountsService /var/lib/apt /var/lib/dpkg /var/lib/NetworkManager /srv /usr /usr/local /var/games /var/log /var/mail /var/snap /var/spool /var/www)
 --zfsroot                ZFS root name (default: zfsroot)
 ```
@@ -341,7 +398,7 @@ Todo
 
 Things I plan to do:
 
-- Get ZFS root to work with BIOS baes installs (currently ZFS root only works with EFI based installs)
+- Get ZFS root to work with BIOS based installs (currently ZFS root only works with EFI based installs)
 
 Thanks
 ------

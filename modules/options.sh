@@ -93,6 +93,14 @@ process_options () {
       handle_output "Option ${option_name} is set to ${options[${option_name}]}" "TEXT"
     done
   fi
+  if [ "${options['grubparseall']}" = "true" ]; then
+    for param in ${iso['grubparams']}; do
+      grub_param="grub${param}"
+      if [ "${iso[${grub_param}]}" = "" ]; then
+        iso[${grub_param}]="${iso[${param}]}"
+      fi
+    done
+  fi
 }
 
 # Function: get_release_info

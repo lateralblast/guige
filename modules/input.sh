@@ -4,6 +4,36 @@
 # shellcheck disable=SC2129
 # shellcheck disable=SC2154
 
+# Function: check_value
+## check value (make sure that command line arguments that take values have values)
+
+check_value () {
+  param="$1"
+  value="$2"
+  if [[ "${value}" =~ "--" ]]; then
+    verbose_message "Value '${value}' for parameter '${param}' looks like a parameter" "verbose"
+    echo ""
+    if [ "${do_force}" = "false" ]; then
+      do_exit
+    fi
+  else
+    if [ "${value}" = "" ]; then
+      verbose_message "No value given for parameter ${param}" "verbose"
+      echo ""
+      if [[ "${param}" =~ "option" ]]; then
+        print_options
+      else
+        if [[ "${param}" =~ "action" ]]; then
+          print_actions
+        else
+          print_help
+        fi
+      fi
+      exit
+    fi
+  fi
+}
+
 # Function: get_password_crypt
 #
 # Get password crypt

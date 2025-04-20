@@ -276,8 +276,17 @@ prepare_autoinstall_iso () {
         else
           echo "menuentry '${iso['volid']}:${iso_volmgr}:${iso['disk']}:${iso['nic']} (${iso['kernelserialargs']})' {" >> "${iso['sourcedir']}/boot/grub/grub.cfg"
           echo "  set gfxpayload=keep" >> "${iso['sourcedir']}/boot/grub/grub.cfg"
-          echo "  linux   /casper/vmlinuz ${iso['kernelargs']} quiet autoinstall fsck.mode=skip ds=nocloud\;s=${iso['installmount']}/${iso['autoinstalldir']}/configs/${iso_volmgr}/${iso['disk']}/  ---" >> "${iso['sourcedir']}/boot/grub/grub.cfg"
+          grub_string="linux   /casper/vmlinuz ${iso['kernelargs']} quiet autoinstall fsck.mode=skip ds=nocloud\;s=${iso['installmount']}/${iso['autoinstalldir']}/configs/${iso_volmgr}/${iso['disk']}/"
+          if [ "${options['grubparse']}" = "true" ] || [ "${options['grubparseall']}" = "true" ]; then
+            for param in ${iso['grubparams']}; do
+              grub_param="grub${param}"
+              if [ ! "${iso[${grub_param}]}" = "" ]; then
+                grub_string="${grub_string} ${param}=${iso[${grub_param}]}" 
+              fi
+            done
+          fi
         fi
+        echo "  ${grub_string} ---" >> "${iso['sourcedir']}/boot/grub/grub.cfg"
         echo "  initrd  /casper/initrd" >> "${iso['sourcedir']}/boot/grub/grub.cfg"
         echo "}" >> "${iso['sourcedir']}/boot/grub/grub.cfg"
       done
@@ -325,10 +334,26 @@ prepare_autoinstall_iso () {
         echo "autoinstall:" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
         echo "  version: 1" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
         echo "  identity:" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
-        echo "    hostname: ${iso['hostname']}" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
-        echo "    password: \"${iso['passwordcrypt']}\"" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
-        echo "    realname: ${iso['realname']}" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
-        echo "    username: ${iso['username']}" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+        if [ "${iso['grubhostname']}" = "" ]; then
+          echo "    hostname: ${iso['hostname']}" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+        else
+          echo "    hostname: grubhostname" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+        fi
+        if [ "${iso['grubrealname']}" = "" ]; then
+          echo "    realname: ${iso['realname']}" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+        else
+          echo "    realname: grubrealname" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+        fi
+        if [ "${iso['grubusername']}" = "" ]; then
+          echo "    username: ${iso['username']}" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+        else
+          echo "    username: grubusername" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+        fi
+        if [ "${iso['grubpassword']}" = "" ]; then
+          echo "    password: \"${iso['passwordcrypt']}\"" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+        else
+          echo "    password: \"grubpassword\"" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+        fi
         if [ ! "${iso['build']}" = "desktop" ]; then
           echo "  apt:" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
           echo "    preserve_sources_list: ${options['preservesources']}" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
@@ -392,7 +417,7 @@ prepare_autoinstall_iso () {
 #          echo "    search_drivers: ${options['searchdrivers']}" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
           echo "  ssh:" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
           echo "    allow-pw: ${iso['allowpassword']}" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
-          if [ ! "${iso['sshkey']}" = "" ]; then
+          if [ ! "${iso['sshkey']}" = "" ] && [ "${options['grubparse']}" = "false" ]; then
             echo "    authorized-keys: [ \"${iso['sshkey']}\" ]" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
           fi
           echo "    install-server: true" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
@@ -779,6 +804,18 @@ prepare_autoinstall_iso () {
           echo "      reorder_uefi: ${options['reorderuefi']}" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
         fi
         echo "  early-commands:" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+        if [ "${options['grubparse']}" = "true" ] || [ "${options['grubparseall']}" = "true" ]; then
+          for param in ${iso['grubparams']}; do
+            grub_param="grub${param}"
+            if [ ! "${iso[${grub_param}]}" = "" ]; then
+              if [ "${param}" = "password" ]; then
+                echo "    - \"sed -i \\\"s/${grub_param}/\$(cat /proc/cmdline |awk -F'${param}=' '{print \$2}' |awk '{print \$1}' |openssl passwd -1 -stdin)/g\\\" /autoinstall.yaml\"" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+              else
+                echo "    - \"sed -i \\\"s/${grub_param}/\$(cat /proc/cmdline |awk -F'${param}=' '{print \$2}' |awk '{print \$1}')/g\\\" /autoinstall.yaml\"" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+              fi
+            fi
+          done
+        fi
         if [ "${iso['majorrelease']}" -gt 23 ] && [ "${options['nvme']}" = "true" ]; then
           echo "    - \"sed -i \\\"s/first-wwn/\$(lsblk -x TYPE -o NAME,WWN,TYPE |grep disk |sort |head -1 |awk '{print \$2}')/g\\\" /autoinstall.yaml\"" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
           echo "    - \"sed -i \\\"s/first-serial/\$(udevadm info --query=all --name=\`lsblk -x TYPE |grep disk |sort |head -1 |awk '{print \$1}'\` |grep ID_SERIAL= |cut -f2 -d=)/g\\\" /autoinstall.yaml\"" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
@@ -880,6 +917,8 @@ prepare_autoinstall_iso () {
             echo "    - \"curtin in-target --target=${iso['targetmount']} -- systemctl enable serial-getty@ttyS4.service\"" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
             echo "    - \"curtin in-target --target=${iso['targetmount']} -- systemctl start serial-getty@ttyS4.service\"" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
           fi
+          echo "    - \"curtin in-target --target=${iso['targetmount']} -- systemctl enable ssh\"" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+          echo "    - \"curtin in-target --target=${iso['targetmount']} -- systemctl start ssh\"" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
           echo "    - \"curtin in-target --target=${iso['targetmount']} -- update-grub\"" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
           if [ "${options['networkupdates']}" = "true" ]; then
             if [ "${options['packageupdates']}" = "true" ] || [ "${options['distupgrade']}" = "true" ]; then

@@ -745,3 +745,17 @@
 # Added docker_exit function to help with testing
 # 3.7.3: Thu 17 Apr 2025 14:48:39 AEST
 # Fixed issue with additional arguments not being added to docker script
+# 3.7.4: Sat 19 Apr 2025 15:36:05 AEST
+# Added inital support for passing parametes to install via grub boot command
+# 3.7.5: Sat 19 Apr 2025 16:07:37 AEST
+# Fixes for grub parsing
+# 3.7.6: Sat 19 Apr 2025 16:44:06 AEST
+# Added switches for passing value to grub boot command
+# 3.7.7: Sat 19 Apr 2025 17:04:58 AEST
+# Added switch to parse all applicable values from grub boot command
+# 3.7.8: Sat 19 Apr 2025 19:41:44 AEST
+# Added realname to grub parser
+# 3.7.9: Sat 19 Apr 2025 21:54:50 AEST
+# Fixed grubparser
+# 3.8.0: Sun 20 Apr 2025 11:15:17 AEST
+# Updated documentation

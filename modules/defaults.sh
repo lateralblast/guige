@@ -44,6 +44,9 @@ set_option_defaults () {
   options['interactivemode']="false"
   options['biosdevname']="false"
   options['dotrelease']=""
+  options['grubparse']="false"
+  options['grubparseall']="false"
+  options['lockpassword']="false"
 }
 
 # Function: set_default_defaults
@@ -88,7 +91,8 @@ set_default_defaults () {
   defaults['firstoption']="zfs"
   defaults['gateway']="192.168.1.254"
   defaults['gecos']="Administrator"
-  defaults['groups']="dialout,kvm,libvirt,qemu,wheel"
+  defaults['groups']="adm,cdrom,dip,plugdev,lxd,sudo"
+#  defaults['groups']="dialout,kvm,libvirt,qemu,wheel"
   defaults['grubmenu']="0"
   defaults['grubtimeout']="10"
   defaults['hostname']="ubuntu"
@@ -129,9 +133,11 @@ set_default_defaults () {
   defaults['serialportb']="ttyS1"
   defaults['serialportaddressb']="0x02f8"
   defaults['serialportspeedb']="115200"
+  defaults['shell']="/bin/bash"
   defaults['sourceid']="ubuntu-server"
   defaults['sshkey']=""
   defaults['sshkeyfile']="$HOME/.ssh/id_rsa.pub"
+  defaults['sudoers']="ALL=(ALL) NOPASSWD: ALL"
   defaults['swap']=""
   defaults['swapsize']="2G"
   defaults['timezone']="Australia/Melbourne"
