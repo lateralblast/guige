@@ -771,3 +771,5 @@
 # Add a function to get and list switches
 # 3.8.6: Sun 20 Apr 2025 18:57:00 AEST
 # Added code to docker function to pass switches to docker
+# 3.8.7: Sun 20 Apr 2025 22:10:43 AEST
+# Cleanup of switches and options and how they are passed to docker

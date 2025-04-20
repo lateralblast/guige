@@ -202,10 +202,10 @@ process_switches () {
   if [ "${iso['volid']}" = "" ]; then
     case ${iso['build']} in
       "daily-desktop"|"desktop")
-        iso['volid']="${iso['realname']} ${iso['release']} Desktop"
+        iso['volid']="${iso['releasename']} ${iso['release']} Desktop"
         ;;
       *)
-        iso['volid']="${iso['realname']} ${iso['release']} Server"
+        iso['volid']="${iso['releasename']} ${iso['release']} Server"
         ;;
     esac
   fi
@@ -253,8 +253,8 @@ process_switches () {
       else
         case ${iso['build']} in
           *)
-            iso['inputfile']="${iso['workdir']}/files/${iso['realname']}-${iso['release']}-${iso['arch']}-${iso['build']}.iso"
-            iso['outputfile']="${iso['workdir']}/files/${iso['realname']}-${iso['release']}-${iso['arch']}-${iso['boottype']}-${iso['build']}-kickstart.iso"
+            iso['inputfile']="${iso['workdir']}/files/${iso['releasename']}-${iso['release']}-${iso['arch']}-${iso['build']}.iso"
+            iso['outputfile']="${iso['workdir']}/files/${iso['releasename']}-${iso['release']}-${iso['arch']}-${iso['boottype']}-${iso['build']}-kickstart.iso"
             iso['inputci']="${iso['workdir']}/files/ubuntu-${iso['release']}-server-cloudimg-${iso['arch']}.img"
             iso['outputci']="${iso['workdir']}/files/ubuntu-${iso['release']}-server-cloudimg-${iso['arch']}.img"
             iso['bootserverfile']="${iso['outputfile']}"

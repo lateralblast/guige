@@ -237,115 +237,60 @@ create_export () {
   fi
 }
 
+# Function: add_to_output_file_name
+#
+# Add value to output file name
+
+add_to_output_file_name () {
+  param="$1"
+  if [ "${iso[${param}]}" != "${defaults[${param}]}" ]; then
+    if [[ ! ${iso['outputfile']} =~ ${iso[${param}]} ]]; then
+      verbose_message "# Adding ${param} ${iso[${param}]} to output file name"
+      temp_dir_name=$( dirname "${iso['outputfile']}" )
+      temp_file_name=$( basename "${iso['outputfile']}" .iso )
+      iso['outputfile']="${temp_dir_name}/${temp_file_name}-${iso[${param}]}.iso"
+    fi
+  fi
+}
+
 # Function: update_output_file_name
 #
 # Update output file name based on switched and options
 
 update_output_file_name () {
-  if [ "${iso['hostname']}" != "${defaults['hostname']}" ] && [[ ! "${iso['outputfile']}" =~ ${iso['suffix']} ]]; then
-    temp_dir_name=$( dirname "${iso['outputfile']}" )
-    temp_file_name=$( basename "${iso['outputfile']}" .iso )
-    iso['outputfile']="${temp_dir_name}/${temp_file_name}-${iso['hostname']}.iso"
-  fi
-  if [ "${iso['nic']}" != "${defaults['nic']}" ]; && [[ ! "${iso['outputfile']}" =~ ${iso['nic']} ]]; then
-    temp_dir_name=$( dirname "${iso['outputfile']}" )
-    temp_file_name=$( basename "${iso['outputfile']}" .iso )
-    iso['outputfile']="${temp_dir_name}/${temp_file_name}-${iso['nic']}.iso"
-  fi
-  if [ "${options['dhcp']}" = "false" ]; then
-    if [ "${iso['ip']}" != "${defaults['ip']}" ] && [[ ! "${iso['outputfile']}" =~ ${iso['ip']} ]]; then
-      temp_dir_name=$( dirname "${iso['outputfile']}" )
-      temp_file_name=$( basename "${iso['outputfile']}" .iso )
-      iso['outputfile']="${temp_dir_name}/${temp_file_name}-${iso['ip']}.iso"
+  for param in hostname nic ip gateway dns username disk prefix suffix; do 
+    case "${param}" in 
+      ip|gateway|dns)
+        if [ "${options['dhcp']}" = "false" ]; then
+          add_to_output_file_name "${param}"
+        fi
+        ;;
+      *)
+        add_to_output_file_name "${param}"
+        ;;
+    esac
+  done
+  for option in cluster kvm biosdevname sshkey nvme dhcp grubparse; do
+    if [ "${options[${option}]}" = "true" ]; then
+      if [[ ! "${iso['outputfile']}" =~ ${option} ]]; then
+        verbose_message "# Adding ${option} to output file name"
+        temp_dir_name=$( dirname "${iso['outputfile']}" )
+        temp_file_name=$( basename "${iso['outputfile']}" .iso )
+        iso['outputfile']="${temp_dir_name}/${temp_file_name}-${option}.iso"
+      fi
     fi
-    if [ "${iso['gateway']}" != "${defaults['gateway']}" ] && [[ ! "${iso['outputfile']}" =~ ${iso['gateway']} ]]; then
-      temp_dir_name=$( dirname "${iso['outputfile']}" )
-      temp_file_name=$( basename "${iso['outputfile']}" .iso )
-      iso['outputfile']="${temp_dir_name}/${temp_file_name}-${iso['gateway']}.iso"
-    fi
-    if [ "${iso['dns']}" != "${defaults['dns']}" ] && [[ ! "${iso['outputfile']}" =~ ${iso['dns']} ]]; then
-      temp_dir_name=$( dirname "${iso['outputfile']}" )
-      temp_file_name=$( basename "${iso['outputfile']}" .iso )
-      iso['outputfile']="${temp_dir_name}/${temp_file_name}-${iso['dns']}.iso"
-    fi
-  fi
-  if [ "${iso['username']}" != "${defaults['username']}" ] && [[ ! "${iso['outputfile']}" =~ ${iso['username']} ]]; then
-    temp_dir_name=$( dirname "${iso['outputfile']}" )
-    temp_file_name=$( basename "${iso['outputfile']}" .iso )
-    iso['outputfile']="${temp_dir_name}/${temp_file_name}-${iso['username']}.iso"
-  fi
-  if [ "${iso['disk']}" != "${defaults['disk']}" ] && [[ ! "${iso['outputfile']}" =~ ${iso['disk']} ]]; then
-    temp_dir_name=$( dirname "${iso['outputfile']}" )
-    temp_file_name=$( basename "${iso['outputfile']}" .iso )
-    iso['outputfile']="${temp_dir_name}/${temp_file_name}-${iso['disk']}.iso"
-  fi
-  if [ "${iso['prefix']}" != "" ] && [[ ! "${iso['outputfile']}" =~ ${iso['nic']} ]]; then
-    temp_dir_name=$( dirname "${iso['outputfile']}" )
-    temp_file_name=$( basename "${iso['outputfile']}" .iso )
-    iso['outputfile']="${temp_dir_name}/${iso['prefix']}-${temp_file_name}.iso"
-  fi
-  if [ "${iso['suffix']}" != "" ] && [[ ! "${iso['outputfile']}" =~ "${iso['suffix']}" ]]; then
-    temp_dir_name=$( dirname "${iso['outputfile']}" )
-    temp_file_name=$( basename "${iso['outputfile']}" .iso )
-    iso['outputfile']="${temp_dir_name}/${temp_file_name}-${iso['suffix']}.iso"
-  fi
-  if [[ "${iso['options']}" =~ cluster ]] && [[ ! "${iso['outputfile']}" =~ cluster ]]; then
-    temp_dir_name=$( dirname "${iso['outputfile']}" )
-    temp_file_name=$( basename "${iso['outputfile']}" .iso )
-    iso['outputfile']="${temp_dir_name}/${temp_file_name}-cluster.iso"
-  fi
-  if [[ "${iso['options']}" =~ kvm ]] && [[ ! "${iso['outputfile']}" =~ kvm ]]; then
-    temp_dir_name=$( dirname "${iso['outputfile']}" )
-    temp_file_name=$( basename "${iso['outputfile']}" .iso )
-    iso['outputfile']="${temp_dir_name}/${temp_file_name}-kvm.iso"
-  fi
-  if [[ "${iso['options']}" =~ biosdevname ]] && [[ ! "${iso['outputfile']}" =~ biosdevname ]]; then
-    temp_dir_name=$( dirname "${iso['outputfile']}" )
-    temp_file_name=$( basename "${iso['outputfile']}" .iso )
-    iso['outputfile']="${temp_dir_name}/${temp_file_name}-biosdevname.iso"
-  fi
-  if [ "${options['sshkey']}" = "true" ] && [[ ! "${iso['outputfile']}" =~ sshkey ]]; then
-    temp_dir_name=$( dirname "${iso['outputfile']}" )
-    temp_file_name=$( basename "${iso['outputfile']}" .iso )
-    iso['outputfile']="${temp_dir_name}/${temp_file_name}-sshkey.iso"
-  fi
-  if [ "${options['nvme']}" = "true" ] && [[ ! "${iso['outputfile']}" =~ nvme ]]; then
-    temp_dir_name=$( dirname "${iso['outputfile']}" )
-    temp_file_name=$( basename "${iso['outputfile']}" .iso )
-    iso['outputfile']="${temp_dir_name}/${temp_file_name}-nvme.iso"
-  fi
-  if [ "${options['dhcp']}" = "true" ] && [[ ! "${iso['outputfile']}" =~ dhcp ]]; then
-    temp_dir_name=$( dirname "${iso['outputfile']}" )
-    temp_file_name=$( basename "${iso['outputfile']}" .iso )
-    iso['outputfile']="${temp_dir_name}/${temp_file_name}-dhcp.iso"
-  fi
-  if [ "${options['autoinstall']}" = "true" ] && [[ ! "${iso['outputfile']}" =~ custom-user-data ]]; then
-    temp_dir_name=$( dirname "${iso['outputfile']}" )
-    temp_file_name=$( basename "${iso['outputfile']}" .iso )
-    iso['outputfile']="${temp_dir_name}/${temp_file_name}-custom-user-data.iso"
-  fi
-  if [ "${options['grubfile']}" = "true" ] && [[ ! "${iso['outputfile']}" =~ custom-grub ]]; then
-    temp_dir_name=$( dirname "${iso['outputfile']}" )
-    temp_file_name=$( basename "${iso['outputfile']}" .iso )
-    iso['outputfile']="${temp_dir_name}/${temp_file_name}-custom-grub.iso"
-  fi
+  done
   iso_volmgrs=$( echo "${iso['volumemanager']}" |sed "s/,/ /g" )
   for iso_volmgr in ${iso_volmgrs}; do
     if [ "${iso_volmgrs}" != "custom" ]; then
       if [[ ! "${iso[outputfile]}" =~ $iso_volmgr ]] && [[ ! "${iso['outputfile']}" =~ ${iso_volmgr} ]]; then
+        verbose_message "# Adding volume manager ${iso_volmgr} to output file name"
         temp_dir_name=$( dirname "${iso['outputfile']}" )
         temp_file_name=$( basename "${iso['outputfile']}" .iso )
         iso['outputfile']="${temp_dir_name}/${temp_file_name}-${iso_volmgr}.iso"
       fi
     fi
   done
-  if [ "${options['grubparse']}" = "true" ] || [ "${options['grubparser']}" = "true" ]; then
-    if [[ ! "${iso['outputfile']}" =~ grubparser ]]; then
-      temp_dir_name=$( dirname "${iso['outputfile']}" )
-      temp_file_name=$( basename "${iso['outputfile']}" .iso )
-      iso['outputfile']="${temp_dir_name}/${temp_file_name}-grubparser.iso"
-    fi
-  fi
   if [ "${options['createisovm']}" = "true" ] || [ "${options['createcivm']}" = "true" ]; then
     if [ "${iso['type']}" = "kvm" ]; then
       if [ "${os['name']}" = "Darwin" ]; then

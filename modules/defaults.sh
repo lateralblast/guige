@@ -118,7 +118,7 @@ set_default_defaults () {
   defaults['passwordalgorithm']="sha512"
   defaults['pesize']="32768"
   defaults['ram']="2048000"
-  defaults['realname']="Ubuntu"
+  defaults['releasename']="Ubuntu"
   defaults['release']="${current['release']}"
   defaults['majorrelease']=$( echo "${defaults['release']}" |cut -f1 -d. )
   defaults['minorrelease']=$( echo "${defaults['release']}" |cut -f2 -d. )
@@ -217,14 +217,14 @@ reset_defaults () {
     current['release']="9.3"
     defaults['osname']="rocky"
     defaults['hostname']="rocky"
-    defaults['realname']="Rocky"
+    defaults['releasename']="Rocky"
     defaults['username']="rocky"
     defaults['password']="rocky"
     defaults['build']="dvd"
     defaults['swapsize']="2048"
     defaults['workdir']="$HOME/${script['name']}/${defaults['osname']}/${defaults['build']}/${defaults['release']}"
     defaults['oldmountdir']="${defaults['workdir']}/isomount"
-    defaults['inputfile']="${defaults['workdir']}/${defaults['realname']}-${defaults['release']}-${defaults['arch']}-dvd.iso"
+    defaults['inputfile']="${defaults['workdir']}/${defaults['releasename']}-${defaults['release']}-${defaults['arch']}-dvd.iso"
     defaults['inputfilebase']=$( basename "${defaults['inputfile']}" )
     defaults['outputfilebase']=$( basename "${defaults['outputfile']}" )
     defaults['url']="https://download.rockylinux.org/pub/rocky/${defaults['majorrelease']}/isos/${defaults['arch']}/${defaults['inputfilebase']}"
@@ -494,7 +494,7 @@ set_default_files () {
   defaults['squashfsfile']="${defaults['oldmountdir']}/casper/ubuntu-server-minimal.squashfs"
   defaults['oldinstallsquashfsfile']="${defaults['oldmountdir']}/casper/ubuntu-server-minimal.ubuntu-server.installer.squashfs"
   defaults['grubfile']="${defaults['workdir']}/grub.cfg"
-  defaults['volid']="${defaults['realname']} ${defaults['release']} Server"
+  defaults['volid']="${defaults['releasename']} ${defaults['release']} Server"
   defaults['inputfilebase']=$( basename "${defaults['inputfile']}" )
   defaults['inputcibase']=$( basename "${defaults['inputci']}" )
   defaults['outputfilebase']=$( basename "${defaults['outputfile']}" )
@@ -509,7 +509,9 @@ set_default_files () {
 # Update default files
 
 reset_default_files () {
-  iso['volid']="${iso['volid']} ${iso['arch']}"
+  if [[ ! "${iso['volid']}" =~ ${iso['arch']} ]]; then
+    iso['volid']="${iso['volid']} ${iso['arch']}"
+  fi
   iso['grubfile']="${iso['workdir']}/grub.cfg"
   if [[ "${iso['build']}" =~ desktop ]]; then
     iso['squashfsfile']="${iso['mountdir']}/casper/minimal.squashfs"

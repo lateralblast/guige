@@ -135,17 +135,20 @@ create_docker_iso () {
       fi
       verbose_message "# Checking command line arguements to pass to docker container"
       get_switches
+      ignore_switches="outputfile inputfile"
       for arg_name in ${switches[@]}; do
-        verbose_message "# Checking ${arg_name}"
-        if [[ ! "${script_args}" =~ ${arg_name} ]]; then
-          arg_value="${iso[${arg_name}]}"
-          def_value="${defaults[${arg_name}]}"
-          if [ "${arg_value}" != "${def_value}" ] && [ "${arg_value}" != "" ]; then
-            script_args="${script_args} --${arg_name} \"${arg_value}\""
-            verbose_message "# Adding --${arg_name} \"${arg_value}\""
+        if [[ ! "${ignore_switches}" =~ ${arg_name} ]]; then
+          verbose_message "# Checking ${arg_name}"
+          if [[ ! "${script_args}" =~ ${arg_name} ]]; then
+            arg_value="${iso[${arg_name}]}"
+            def_value="${defaults[${arg_name}]}"
+            if [ "${arg_value}" != "${def_value}" ] && [ "${arg_value}" != "" ]; then
+              script_args="${script_args} --${arg_name} \"${arg_value}\""
+              verbose_message "# Adding --${arg_name} \"${arg_value}\""
+            fi
+          else
+            verbose_message "# command line contains --${arg_name} ${arg_value}"
           fi
-        else
-          verbose_message "# command line contains --${arg_name} ${arg_value}"
         fi
       done
       echo "${docker['workdir']}/files/${script['bin']} ${script_args} --workdir ${docker['workdir']} --preworkdir ${iso['workdir']}" >> "${local_script}"
