@@ -769,5 +769,5 @@
 # Fixed issue with username not being passed to docker ISO build
 # 3.8.5: Sun 20 Apr 2025 17:49:19 AEST
 # Add a function to get and list switches
-# 2.8.6: Sun 20 Apr 2025 18:57:00 AEST
+# 3.8.6: Sun 20 Apr 2025 18:57:00 AEST
 # Added code to docker function to pass switches to docker
