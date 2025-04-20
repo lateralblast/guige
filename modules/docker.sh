@@ -134,13 +134,16 @@ create_docker_iso () {
         fi
       fi
       verbose_message "# Checking command line arguements to pass to docker container"
-      for arg_name in release volumemanager build username; do
+      get_switches
+      for arg_name in ${switches[@]}; do
         verbose_message "# Checking ${arg_name}"
-        arg_value="${iso[${arg_name}]}"
-        arg_value=$( echo "${arg_value}" |sed "s/^ //g" |sed "s/ $//g" |sed "s/ /,/g" )
         if [[ ! "${script_args}" =~ ${arg_name} ]]; then
-          script_args="${script_args} --${arg_name} ${arg_value}"
-          verbose_message "# Adding --${arg_name} ${arg_value}"
+          arg_value="${iso[${arg_name}]}"
+          def_value="${defaults[${arg_name}]}"
+          if [ "${arg_value}" != "${def_value}" ] && [ "${arg_value}" != "" ]; then
+            script_args="${script_args} --${arg_name} \"${arg_value}\""
+            verbose_message "# Adding --${arg_name} \"${arg_value}\""
+          fi
         else
           verbose_message "# command line contains --${arg_name} ${arg_value}"
         fi
