@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Name:         guige (Generic Ubuntu/Unix ISO Generation Engine)
-# Version:      3.8.0
+# Version:      3.8.1
 # Release:      1
 # License:      CC-BA (Creative Commons By Attribution)
 #               http://creativecommons.org/licenses/by/4.0/legalcode
@@ -368,35 +368,11 @@ do
       options['grubparseall']="true"
       shift
       ;;
-    --grubusername)
-      # Pass username to config from grub boot command
-      check_value "$1" "$2"
-      iso['grubusername']="$2"
-      iso['username']="$2"
-      options['grubparse']="true"
-      shift 2
-      ;;
-    --grubpassword)
-      # Pass password to config from grub boot command
-      check_value "$1" "$2"
-      iso['grubpassword']="$2"
-      iso['password']="$2"
-      options['grubparse']="true"
-      shift 2
-      ;;
     --grubdisk)
       # Pass disk to config from grub boot command
       check_value "$1" "$2"
       iso['grubdisk']="$2"
       iso['disk']="$2"
-      options['grubparse']="true"
-      shift 2
-      ;;
-    --grubnic)
-      # Pass NIC to config from grub boot command
-      check_value "$1" "$2"
-      iso['grubnic']="$2"
-      iso['nic']="$2"
       options['grubparse']="true"
       shift 2
       ;;
@@ -408,11 +384,59 @@ do
       options['grubparse']="true"
       shift 2
       ;;
+    --grubkernel)
+      # Pass kernel package to config from grub boot command
+      check_value "$1" "$2"
+      iso['grubkernel']="$2"
+      iso['kernel']="$2"
+      options['grubparse']="true"
+      shift 2
+      ;;
+    --grublocale)
+      # Pass locale to config from grub boot command
+      check_value "$1" "$2"
+      iso['grublocale']="$2"
+      iso['locale']="$2"
+      options['grubparse']="true"
+      shift 2
+      ;;
+    --grublayout)
+      # Pass keyboard layout to config from grub boot command
+      check_value "$1" "$2"
+      iso['grublayout']="$2"
+      iso['layout']="$2"
+      options['grubparse']="true"
+      shift 2
+      ;;
+    --grubnic)
+      # Pass NIC to config from grub boot command
+      check_value "$1" "$2"
+      iso['grubnic']="$2"
+      iso['nic']="$2"
+      options['grubparse']="true"
+      shift 2
+      ;;
+    --grubpassword)
+      # Pass password to config from grub boot command
+      check_value "$1" "$2"
+      iso['grubpassword']="$2"
+      iso['password']="$2"
+      options['grubparse']="true"
+      shift 2
+      ;;
     --grubrealname)
       # Pass realname to config from grub boot command
       check_value "$1" "$2"
       iso['grubrealname']="$2"
       iso['realname']="$2"
+      options['grubparse']="true"
+      shift 2
+      ;;
+    --grubusername)
+      # Pass username to config from grub boot command
+      check_value "$1" "$2"
+      iso['grubusername']="$2"
+      iso['username']="$2"
       options['grubparse']="true"
       shift 2
       ;;

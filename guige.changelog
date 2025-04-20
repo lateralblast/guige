@@ -759,3 +759,5 @@
 # Fixed grubparser
 # 3.8.0: Sun 20 Apr 2025 11:15:17 AEST
 # Updated documentation
+# 3.8.1: Sun 20 Apr 2025 12:03:27 AEST
+# Added kernel, layout and locale to grubparser

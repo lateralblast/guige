@@ -11,7 +11,7 @@ used to hang a shield on the shoulder or neck when not in use.
 Version
 -------
 
-Current version: 3.8.0
+Current version: 3.8.1
 
 Introduction
 ------------
@@ -161,6 +161,9 @@ Currently, the following parameters are supported:
 - Password
 - Disk
 - NIC
+- Kernel
+- Layout
+- Locale
 
 These options then become part of the grub boot command line on the ISO, and can thus be edited:
 
@@ -222,12 +225,15 @@ Usage: guige --action [action] --options [options]
 --grubmenu               Import grub menu (default: 0)
 --grubtimeout            Grub timeout (default: 10)
 --grubparseall           Parse grub for all parameters
---grubusername           Pass username to config from grub boot command
+--grubdisk               Pass disk to config from grub boot command
+--grubhostname           Pass hostname to config from grub boot command
+--grubkernel             Pass kernel package to config from grub boot command
+--grublocale             Pass locale to config from grub boot command
+--grublayout             Pass keyboard layout to config from grub boot command
+--grubnic                Pass NIC to config from grub boot command
 --grubpassword           Pass password to config from grub boot command
---grubdisk               Pass password to config from grub boot command
---grubnic                Pass password to config from grub boot command
---grubhostname           Pass password to config from grub boot command
 --grubrealname           Pass realname to config from grub boot command
+--grubusername           Pass username to config from grub boot command
 --help                   Print help
 --hostname               Hostname (default: ubuntu)
 --inputci                Import Cloud Image (default: /Users/user/guige/ubuntu/server/24.04.2/files/ubuntu-24.04.2-server-cloudimg-arm64.img)

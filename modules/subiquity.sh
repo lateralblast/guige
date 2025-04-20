@@ -386,12 +386,22 @@ prepare_autoinstall_iso () {
           echo "  drivers:" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
           echo "    install: ${options['installdrivers']}" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
           echo "  kernel:" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
-          echo "    package: ${iso['kernel']}" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+          if [ "${iso['grubkernel']}" = "" ]; then
+            echo "    package: ${iso['kernel']}" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+          else
+            echo "    package: grubkernel" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+          fi
           echo "  keyboard:" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
-          echo "    layout: ${iso['layout']}" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
-          echo "  locale: ${iso['locale']}" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
-#          echo "  user-data:" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
-#          echo "    timezone: ${iso['timezone']}" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+          if [ "${iso['grublayout']}" = "" ]; then
+            echo "    layout: ${iso['layout']}" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+          else
+            echo "    package: grublayout" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+          fi
+          if [ "${iso['grublocale']}" = "" ]; then
+            echo "  locale: ${iso['locale']}" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+          else
+            echo "  locale: grublocale" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+          fi
           echo "  network:" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
           echo "    ethernets:" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
           echo "      ${iso['nic']}:" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
