@@ -4,6 +4,44 @@
 # shellcheck disable=SC2129
 # shellcheck disable=SC2154
 
+# Function: get_switches
+#
+# Get list of switches
+
+get_switches () {
+  switchstart="false"
+  while read line; do
+    if [[ "${line}" =~ switchstart ]]; then
+      switchstart="true"
+    fi
+    if [[ "${line}" =~ switchend ]] || [[ "${line}" =~ \* ]]; then
+      switchstart="false"
+    fi
+    if [ "${switchstart}" = "true" ]; then
+      if [[ "${line}" =~ -- ]] && [[ "${line}" =~ [a-z] ]]; then
+        if [[ "${line}" =~ \| ]]; then
+          switch_name=$( echo "${line}" |cut -f1 -d "|" )
+        else
+          switch_name=$( echo "${line}" |cut -f1 -d ")" )
+        fi
+        switch_name=$( echo "${switch_name}" |sed "s/\-\-//g" )
+        switch_name=$( echo "${switch_name}" |sed "s/ //g" )
+        switches+=(${switch_name})
+      fi
+    fi
+  done < "${script['file']}"
+}
+
+# Function: list_switches
+#
+# Print a list of switches
+
+list_switches () {
+  for switch_name in "${switches[@]}"; do
+    echo "${switch_name}"
+  done
+}
+
 # Function: process_switches
 #
 # Process switches

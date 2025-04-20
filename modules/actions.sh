@@ -114,6 +114,10 @@ process_actions () {
       listalliso|listallisos|listiso|listisos)
         options['listisos']="true"
         ;;
+      listswitches)
+        get_switches
+        list_switches
+        ;;
       listvm)
         options['listvms']="true"
         ;;
