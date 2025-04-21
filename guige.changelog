@@ -785,3 +785,5 @@
 # Fixed kernel args determination and application in subiquity
 # 3.9.1: Mon 21 Apr 2025 19:38:30 AEST
 # Fixed realname
+# 3.9.2: Tue 22 Apr 2025 08:28:58 AEST
+# Added support for non beta Ubuntu 25.04
