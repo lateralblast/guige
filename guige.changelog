@@ -783,3 +783,5 @@
 # Fixed serial port information determination
 # 3.9.0: Mon 21 Apr 2025 16:30:38 AEST
 # Fixed kernel args determination and application in subiquity
+# 3.9.1: Mon 21 Apr 2025 19:38:30 AEST
+# Fixed realname
