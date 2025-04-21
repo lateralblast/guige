@@ -5,6 +5,30 @@
 # shellcheck disable=SC2153
 # shellcheck disable=SC2154
 
+# Function: update_iso_build
+#
+# Update ISO build
+
+update_iso_build () {
+  if [[ "${iso['build']}" =~ server ]]; then
+    if [[ "${iso['build']}" =~ daily ]]; then
+      iso['build']="daily/server"
+    else
+      iso['build']="live/server"
+    fi
+  else
+    if [[ "${iso['build']}" =~ desktop ]]; then
+      if [[ "${iso['build']}" =~ daily ]]; then
+        iso['build']="daily/desktop"
+      else
+        iso['build']="live/desktop"
+      fi
+    else
+      iso['build']="live/server"
+    fi
+  fi
+}
+
 # Funtion update_iso_url
 #
 # Update ISO URL
@@ -13,21 +37,21 @@ update_iso_url () {
   iso['inputfilebase']=$( basename "${iso['inputfile']}" )
   if [ "${iso['osname']}" = "ubuntu" ]; then
     case "${iso['build']}" in
-      daily-live|daily-live-server)
+      daily-live|daily-live-server|daily-server|daily/server)
         if [ "${iso['release']}" = "${current['devrelease']}" ] || [ "${iso['osname']}" = "${current['codename']}" ]; then
           iso['url']="https://cdimage.ubuntu.com/ubuntu-server/daily-live/current/${iso['osname']}-live-server-${iso['arch']}.iso"
         else
           iso['url']="https://cdimage.ubuntu.com/ubuntu-server/${iso['codename']}/daily-live/current/${iso['inputfilebase']}"
         fi
         ;;
-      daily-desktop)
+      daily-desktop|daily/desktop)
         if [ "${iso['release']}" = "${current['devrelease']}" ] || [ "${iso['codename']}" = "${current['codename']}" ]; then
           iso['url']="https://cdimage.ubuntu.com/daily-live/current/${iso['inputfilebase']}"
         else
           iso['url']="https://cdimage.ubuntu.com/${iso['codename']}/daily-live/current/${iso['inputfilebase']}"
         fi
         ;;
-      desktop|server|live-server)
+      desktop|server|live-server|live/server)
         if [ "${iso['release']}" = "${current['betarelease']}" ]; then
           iso['url']="https://releases.ubuntu.com/${iso['codename']}/${iso['inputfilebase']}"
         else
@@ -220,10 +244,13 @@ list_isos () {
 check_base_iso_file () {
   if [ -f "${iso['inputfile']}" ]; then
     iso['inputfilebase']=$( basename "${iso['inputfile']}" )
-    file_type=$( file "${iso['workdir']}/files/${iso['inputfilebase']}" |cut -f2 -d: |grep -cE "MBR|ISO" )
-    if [ "${file_type}" = "0" ]; then
-      warning_message "${iso['workdir']}/files/${iso['inputfilebase']} is not a valid ISO file"
-      exit
+    check_file="${iso['workdir']}/files/${iso['inputfilebase']}"
+    if [ -f "${check_file}" ]; then
+      file_type=$( file "${check_file}" |cut -f2 -d: |grep -cE "MBR|ISO" )
+      if [ "${file_type}" = "0" ]; then
+        warning_message "${check_file} is not a valid ISO file"
+        exit
+      fi
     fi
   fi
 }

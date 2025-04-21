@@ -194,19 +194,19 @@ reset_defaults () {
       else
         iso_arch="${iso['arch']}"
       fi
-      if [[ "${iso['build']}" =~ server ]]; then
-        iso_build="server"
-      else
-        if [[ "${iso['build']}" =~ desktop ]]; then
-          iso_build="desktop"
-        else
-          if [[ "${defaults['build']}" =~ server ]]; then
-            iso_build="server"
-          else
-            iso_build="desktop"
-          fi
-        fi
-      fi
+#      if [[ "${iso['build']}" =~ server ]]; then
+#        iso_build="server"
+#      else
+#        if [[ "${iso['build']}" =~ desktop ]]; then
+#          iso_build="desktop"
+#        else
+#          if [[ "${defaults['build']}" =~ server ]]; then
+#            iso_build="server"
+#          else
+#            iso_build="desktop"
+#          fi
+#        fi
+#      fi
       defaults['inputfilebase']="ubuntu-${iso['release']}-beta-${iso_build}-${iso_arch}.iso"
       defaults['inputfile']="${defaults['workdir']}/${defaults['inputfilebase']}"
     fi
@@ -253,6 +253,7 @@ reset_defaults () {
 # Set default flags
 
 set_default_flags () {
+  options['clean']="false"
   options['zfs']="false"
   options['ipv4']="true"
   options['ipv6']="true"

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Name:         guige (Generic Ubuntu/Unix ISO Generation Engine)
-# Version:      3.8.7
+# Version:      3.8.8
 # Release:      1
 # License:      CC-BA (Creative Commons By Attribution)
 #               http://creativecommons.org/licenses/by/4.0/legalcode
@@ -212,6 +212,12 @@ do
       # Boot partition size
       check_value "$1" "$2"
       iso['bootsize']="$2"
+      shift 2
+      ;;
+    --boottype)
+      # Boot type
+      check_value "$1" "$2"
+      iso['boottype']="$2"
       shift 2
       ;;
     --build|--buildtype)

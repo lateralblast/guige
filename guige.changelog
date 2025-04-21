@@ -773,3 +773,9 @@
 # Added code to docker function to pass switches to docker
 # 3.8.7: Sun 20 Apr 2025 22:10:43 AEST
 # Cleanup of switches and options and how they are passed to docker
+# 3.8.8: Mon 21 Apr 2025 11:53:56 AEST
+# Updated switch processing
+# 3.8.9: Mon 21 Apr 2025 11:55:24 AEST
+# Fixed --boottype switch
+# 3.8.8: Mon 21 Apr 2025 14:04:05 AEST
+# Improved bootserverfile processing so it did not impact docker

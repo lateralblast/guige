@@ -258,7 +258,7 @@ add_to_output_file_name () {
 # Update output file name based on switched and options
 
 update_output_file_name () {
-  for param in hostname nic ip gateway dns username disk prefix suffix; do 
+  for param in hostname username disk nic ip gateway dns prefix suffix; do 
     case "${param}" in 
       ip|gateway|dns)
         if [ "${options['dhcp']}" = "false" ]; then
@@ -365,5 +365,10 @@ update_output_file_name () {
   fi
   if [ "${iso['inputfile']}" = "" ]; then
    iso['inputfile']="${iso['outputfile']}"
+  fi
+  if [ "${options['clean']}" = "true" ]; then
+    if [ -f "${iso['outputfile']}" ]; then
+      execute_command "rm ${iso['outputfile']}"
+    fi
   fi
 }

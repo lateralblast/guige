@@ -9,6 +9,11 @@
 # Get list of switches
 
 get_switches () {
+  if [ -f "/.dockerenv" ]; then
+    input_file="${iso['workdir']}/files/${script['bin']}"
+  else
+    input_file="${script['file']}"
+  fi
   switchstart="false"
   while read line; do
     if [[ "${line}" =~ switchstart ]]; then
@@ -29,7 +34,7 @@ get_switches () {
         switches+=(${switch_name})
       fi
     fi
-  done < "${script['file']}"
+  done < "${input_file}"
 }
 
 # Function: list_switches
@@ -47,7 +52,8 @@ list_switches () {
 # Process switches
 
 process_switches () {
-  for switch_name in "${!defaults[@]}"; do
+  get_switches
+  for switch_name in "${switches[@]}"; do
     if [ "${iso[${switch_name}]}" = "" ]; then
       case "${switch_name}" in
         arch)
@@ -71,6 +77,9 @@ process_switches () {
             get_netmask_from_cidr "${iso['cidr']}"
           fi
           ;;
+        build)
+          update_iso_build
+          ;;
         *)
           iso[${switch_name}]="${defaults[${switch_name}]}"
           ;;
@@ -88,6 +97,9 @@ process_switches () {
               defaults['volumemanager']="lvm"
             fi
           fi
+          ;;
+        build)
+          update_iso_build
           ;;
         cidr)
           if [ "${iso['netmask']}" = "" ]; then
@@ -215,38 +227,32 @@ process_switches () {
     if [ "${options['bootserverfile']}" = "false" ]; then
       if [ "${iso['osname']}" = "ubuntu" ]; then
         case ${iso['build']} in
-          "daily-live"|"daily-live-server")
+          "daily-live"|"daily-live-server"|"daily/server")
             iso['inputfile']="${iso['workdir']}/files/${iso['codename']}-live-server-${iso['arch']}.iso"
             iso['outputfile']="${iso['workdir']}/files/${iso['codename']}-live-server-${iso['arch']}-${iso['boottype']}-autoinstall.iso"
             iso['inputci']="${iso['workdir']}/files/${iso['codename']}-server-cloudimg-${iso['arch']}.img"
             iso['outputci']="${iso['workdir']}/files/${iso['codename']}-server-cloudimg-${iso['arch']}.img"
-            iso['bootserverfile']="${iso['outputfile']}"
             ;;
-          "daily-desktop")
+          "daily-desktop"|"daily/desktop")
             iso['inputfile']="${iso['workdir']}/files/${iso['codename']}-desktop-${iso['arch']}.iso"
             iso['outputfile']="${iso['workdir']}/files/${iso['codename']}-desktop-${iso['arch']}-${iso['boottype']}-autoinstall.iso"
-            iso['bootserverfile']="${iso['outputfile']}"
             ;;
-         "desktop")
+         "desktop"|"live/desktop")
             if [ "${iso['release']}" = "${current['betarelease']}" ]; then
               iso['inputfile']="${iso['workdir']}/files/${iso['osname']}-${iso['release']}-beta-desktop-${iso['arch']}.iso"
               iso['outputfile']="${iso['workdir']}/files/${iso['osname']}-${iso['release']}-beta-desktop-${iso['arch']}-${iso['boottype']}-autoinstall.iso"
-              iso['bootserverfile']="${iso['outputfile']}"
             else
               iso['inputfile']="${iso['workdir']}/files/${iso['osname']}-${iso['release']}-desktop-${iso['arch']}.iso"
               iso['outputfile']="${iso['workdir']}/files/${iso['osname']}-${iso['release']}-desktop-${iso['arch']}-${iso['boottype']}-autoinstall.iso"
-              iso['bootserverfile']="${iso['outputfile']}"
             fi
             ;;
           *)
             if [ "${iso['release']}" = "${current['betarelease']}" ]; then
               iso['inputfile']="${iso['workdir']}/files/${iso['osname']}-${iso['release']}-beta-live-server-${iso['arch']}.iso"
               iso['outputfile']="${iso['workdir']}/files/${iso['osname']}-${iso['release']}-beta-live-server-${iso['arch']}-${iso['boottype']}-autoinstall.iso"
-              iso['bootserverfile']="${iso['outputfile']}"
             else
               iso['inputfile']="${iso['workdir']}/files/${iso['osname']}-${iso['release']}-live-server-${iso['arch']}.iso"
               iso['outputfile']="${iso['workdir']}/files/${iso['osname']}-${iso['release']}-live-server-${iso['arch']}-${iso['boottype']}-autoinstall.iso"
-              iso['bootserverfile']="${iso['outputfile']}"
             fi
             ;;
         esac

@@ -135,7 +135,7 @@ create_docker_iso () {
       fi
       verbose_message "# Checking command line arguements to pass to docker container"
       get_switches
-      ignore_switches="outputfile inputfile"
+      ignore_switches="outputfile inputfile workdir preworkdir"
       for arg_name in ${switches[@]}; do
         if [[ ! "${ignore_switches}" =~ ${arg_name} ]]; then
           verbose_message "# Checking ${arg_name}"
