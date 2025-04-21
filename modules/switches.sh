@@ -60,6 +60,9 @@ process_switches () {
           iso['arch']="${defaults['arch']}"
           iso['dockerarch']="${defaults['dockerarch']}"
           ;;
+        build)
+          update_iso_build
+          ;;
         cidr)
           if [ ! "${iso['netmask']}" = "" ]; then
             get_cidr_from_netmask "${iso['netmask']}"
@@ -77,8 +80,20 @@ process_switches () {
             get_netmask_from_cidr "${iso['cidr']}"
           fi
           ;;
-        build)
-          update_iso_build
+        serialport)
+          iso['serialport']="${defaults['serialport']}"
+          iso['serialporta']="${defaults['serialporta']}"
+          iso['serialportb']="${defaults['serialportb']}"
+          ;;
+        serialportaddress)
+          iso['serialportaddress']="${defaults['serialportaddress']}"
+          iso['serialportaddressa']="${defaults['serialportaddressa']}"
+          iso['serialportaddressb']="${defaults['serialportaddressb']}"
+          ;;
+        serialportspeed)
+          iso['serialportspeed']="${defaults['serialportspeed']}"
+          iso['serialportspeeda']="${defaults['serialportspeeda']}"
+          iso['serialportspeedb']="${defaults['serialportspeedb']}"
           ;;
         *)
           iso[${switch_name}]="${defaults[${switch_name}]}"
@@ -276,5 +291,10 @@ process_switches () {
     for param_name in "${!iso[@]}"; do
       handle_output "Parameter ${param_name} is set to ${iso[${param_name}]}" "TEXT"
     done
+  fi
+  if [ "${options['serial']}" = "true" ]; then
+    if [[ ! "${options['kernel']}" =~ ${options['kernelserialargs']} ]]; then
+      options['kernelargs']="${options['kernelargs']} ${options['kernelserialargs']}"
+    fi
   fi
 }

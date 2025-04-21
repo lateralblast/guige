@@ -351,12 +351,6 @@ update_output_file_name () {
       fi
     fi
   fi
-  if [ "${options['serial']}" = "true" ]; then
-    iso['kernelargs']="${iso['kernelargs']} console=${iso['serialporta']},${iso['serialportspeeda']}"
-    if ! [ "${iso['serialportb']}" = "" ]; then
-      iso['kernelargs']="${iso['kernelargs']} console=${iso['serialportb']},${iso['serialportspeedb']}"
-    fi
-  fi
   if [ "${old['installsquashfile']}" = "" ]; then
     old['installsquashfile']="${defaults['oldinstallsquashfsfile']}"
   fi

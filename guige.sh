@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Name:         guige (Generic Ubuntu/Unix ISO Generation Engine)
-# Version:      3.8.8
+# Version:      3.9.0
 # Release:      1
 # License:      CC-BA (Creative Commons By Attribution)
 #               http://creativecommons.org/licenses/by/4.0/legalcode
@@ -552,10 +552,16 @@ do
       iso['kernel']="$2"
       shift 2
       ;;
-    --isokernelargs|--kernelargs)
+    --kernelargs)
       # Kernel arguments
       check_value "$1" "$2"
       iso['kernelargs']="$2"
+      shift 2
+      ;;
+    --kernelserialargs)
+      # Kernel serial arguments
+      check_value "$1" "$2"
+      iso['kernelserialargs']="$2"
       shift 2
       ;;
     --isolinuxfile|--isolinux)

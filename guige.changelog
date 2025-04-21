@@ -779,3 +779,7 @@
 # Fixed --boottype switch
 # 3.8.8: Mon 21 Apr 2025 14:04:05 AEST
 # Improved bootserverfile processing so it did not impact docker
+# 3.8.9: Mon 21 Apr 2025 16:05:31 AEST
+# Fixed serial port information determination
+# 3.9.0: Mon 21 Apr 2025 16:30:38 AEST
+# Fixed kernel args determination and application in subiquity

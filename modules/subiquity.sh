@@ -242,18 +242,19 @@ prepare_autoinstall_iso () {
       sudo_chown "${iso['sourcedir']}/isolinux" "${os['user']}" "${os['group']}"
       echo "default ${iso['grubmenu']}" > "${iso['sourcedir']}/isolinux/txt.cfg"
       counter=0
-      iso['kernelserialargs']="console=${iso['serialporta']},${iso['serialportspeeda']} console=${iso['serialportb']},${iso['serialportspeedb']}"
+      kernel_args="${iso['kernelargs']}" 
+#      iso['kernelserialargs']="console=${iso['serialporta']},${iso['serialportspeeda']} console=${iso['serialportb']},${iso['serialportspeedb']}"
       iso_volmgrs=$( echo "${iso['volumemanager']}" |sed "s/,/ /g" )
       for iso_volmgr in ${iso_volmgrs}; do
         echo "label ${counter}" >> "${iso['sourcedir']}/isolinux/txt.cfg"
         if [ "${iso_volmgr}" = "custom" ]; then
           echo "  menu label ^${iso['volid']}:${iso_volmgr}: (${iso['kernelserialargs']})" >> "${iso['sourcedir']}/isolinux/txt.cfg"
           echo "  kernel /casper/vmlinuz" >> "${iso['sourcedir']}/isolinux/txt.cfg"
-          echo "  append  initrd=/casper/initrd ${iso['kernelserialargs']} quiet autoinstall fsck.mode=skip ds=nocloud;s=${iso['installmount']}/${iso['autoinstalldir']}/configs/${iso_volmgr}/${iso['disk']}/  ---" >> "${iso['sourcedir']}/isolinux/txt.cfg"
+          echo "  append  initrd=/casper/initrd ${kernel_args} quiet autoinstall fsck.mode=skip ds=nocloud;s=${iso['installmount']}/${iso['autoinstalldir']}/configs/${iso_volmgr}/${iso['disk']}/  ---" >> "${iso['sourcedir']}/isolinux/txt.cfg"
         else
           echo "  menu label ^${iso['volid']}:${iso_volmgr}:${iso['disk']}:${iso['nic']} (${iso['kernelargs']}" >> "${iso['sourcedir']}/isolinux/txt.cfg"
           echo "  kernel /casper/vmlinuz" >> "${iso['sourcedir']}/isolinux/txt.cfg"
-          echo "  append  initrd=/casper/initrd ${iso['kernelargs']} quiet autoinstall fsck.mode=skip ds=nocloud;s=${iso['installmount']}/${iso['autoinstalldir']}/configs/${iso_volmgr}/${iso['disk']}/  ---" >> "${iso['sourcedir']}/isolinux/txt.cfg"
+          echo "  append  initrd=/casper/initrd ${kernel_args} quiet autoinstall fsck.mode=skip ds=nocloud;s=${iso['installmount']}/${iso['autoinstalldir']}/configs/${iso_volmgr}/${iso['disk']}/  ---" >> "${iso['sourcedir']}/isolinux/txt.cfg"
         fi
         counter=$(( counter+1 ))
       done
@@ -270,13 +271,13 @@ prepare_autoinstall_iso () {
       iso_volmgrs=$( echo "${iso['volumemanager']}" |sed "s/,/ /g" )
       for iso_volmgr in ${iso_volmgrs}; do
         if [ "${iso_volmgr}" = "custom" ]; then
-          echo "menuentry '${iso['volid']}:${iso_volmgr}:defaults (${iso['kernelserialargs']})' {" >> "${iso['sourcedir']}/boot/grub/grub.cfg"
+          echo "menuentry '${iso['volid']}:${iso_volmgr}:defaults (${kernel_args})' {" >> "${iso['sourcedir']}/boot/grub/grub.cfg"
           echo "  set gfxpayload=keep" >> "${iso['sourcedir']}/boot/grub/grub.cfg"
-          echo "  linux   /casper/vmlinuz autoinstall fsck.mode=skip ds=nocloud\;s=${iso['installmount']}/${iso['autoinstalldir']}/configs/${iso_volmgr}/${iso['disk']}/  ---" >> "${iso['sourcedir']}/boot/grub/grub.cfg"
+          echo "  linux   /casper/vmlinuz ${kernel_args} autoinstall fsck.mode=skip ds=nocloud\;s=${iso['installmount']}/${iso['autoinstalldir']}/configs/${iso_volmgr}/${iso['disk']}/  ---" >> "${iso['sourcedir']}/boot/grub/grub.cfg"
         else
-          echo "menuentry '${iso['volid']}:${iso_volmgr}:${iso['disk']}:${iso['nic']} (${iso['kernelserialargs']})' {" >> "${iso['sourcedir']}/boot/grub/grub.cfg"
+          echo "menuentry '${iso['volid']}:${iso_volmgr}:${iso['disk']}:${iso['nic']} (${kernel_args})' {" >> "${iso['sourcedir']}/boot/grub/grub.cfg"
           echo "  set gfxpayload=keep" >> "${iso['sourcedir']}/boot/grub/grub.cfg"
-          grub_string="linux   /casper/vmlinuz ${iso['kernelargs']} quiet autoinstall fsck.mode=skip ds=nocloud\;s=${iso['installmount']}/${iso['autoinstalldir']}/configs/${iso_volmgr}/${iso['disk']}/"
+          grub_string="linux   /casper/vmlinuz ${kernel_args} quiet autoinstall fsck.mode=skip ds=nocloud\;s=${iso['installmount']}/${iso['autoinstalldir']}/configs/${iso_volmgr}/${iso['disk']}/"
           if [ "${options['grubparse']}" = "true" ] || [ "${options['grubparseall']}" = "true" ]; then
             for param in ${iso['grubparams']}; do
               grub_param="grub${param}"
@@ -290,9 +291,9 @@ prepare_autoinstall_iso () {
         echo "  initrd  /casper/initrd" >> "${iso['sourcedir']}/boot/grub/grub.cfg"
         echo "}" >> "${iso['sourcedir']}/boot/grub/grub.cfg"
       done
-      echo "menuentry 'Try or Install ${iso['volid']} (${iso['kernelserialargs']})' {" >> "${iso['sourcedir']}/boot/grub/grub.cfg"
+      echo "menuentry 'Try or Install ${iso['volid']} (${kernel_args})' {" >> "${iso['sourcedir']}/boot/grub/grub.cfg"
       echo "  set gfxpayload=keep" >> "${iso['sourcedir']}/boot/grub/grub.cfg"
-      echo "  linux /casper/vmlinuz ${iso['kernelserialargs']} fsck.mode=skip quiet ---" >> "${iso['sourcedir']}/boot/grub/grub.cfg"
+      echo "  linux /casper/vmlinuz ${kernel_args} fsck.mode=skip quiet ---" >> "${iso['sourcedir']}/boot/grub/grub.cfg"
       echo "  initrd  /casper/initrd" >> "${iso['sourcedir']}/boot/grub/grub.cfg"
       echo "}" >> "${iso['sourcedir']}/boot/grub/grub.cfg"
       echo "menuentry 'Boot from next volume' {" >> "${iso['sourcedir']}/boot/grub/grub.cfg"
