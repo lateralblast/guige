@@ -103,7 +103,7 @@ create_docker_iso () {
     fi
     execute_command "cp ${script['modules']}/* ${docker['moduledir']}"
     local_script="${iso['workdir']}/files/guige_docker_script.sh"
-    docker['script']="${docker['workdir']}/files/guige_docker_script.sh"
+    docker['script']="${iso['dockerworkdir']}/files/guige_docker_script.sh"
     execute_command "cp ${script['file']} ${docker['bin']}"
     execute_command "chmod +x ${docker['bin']}"
     if [ "${options['oldinstaller']}" = "true" ]; then
@@ -121,7 +121,7 @@ create_docker_iso () {
       if [ "${options['autoinstall']}" = "true" ]; then
         if [ -f "${iso['autoinstallfile']}" ]; then
           execute_command "cp ${iso['autoinstallfile']} ${iso['workdir']}/files/user-data"
-          iso['autoinstallfile']="${docker['workdir']}/files/user-data"
+          iso['autoinstallfile']="${iso['dockerworkdir']}/files/user-data"
           script_args="${script_args} --autoinstallfile ${iso['autoinstallfile']}"
         fi
       fi
@@ -129,13 +129,13 @@ create_docker_iso () {
         get_ssh_key
         if [ -f "${iso['sshkeyfile']}" ]; then
           execute_command "cp ${iso['sshkeyfile']} ${iso['workdir']}/files/sshkeyfile"
-          iso['sshkeyfile']="${docker['workdir']}/files/sshkeyfile"
+          iso['sshkeyfile']="${iso['dockerworkdir']}/files/sshkeyfile"
           script_args="${script_args} --sshkeyfile ${iso['sshkeyfile']}"
         fi
       fi
       verbose_message "# Checking command line arguements to pass to docker container"
       get_switches
-      ignore_switches="outputfile inputfile workdir preworkdir"
+      ignore_switches="outputfile inputfile workdir preworkdir dockerworkdir"
       for arg_name in ${switches[@]}; do
         arg_value="${iso[${arg_name}]}"
         def_value="${defaults[${arg_name}]}"
@@ -151,7 +151,7 @@ create_docker_iso () {
           fi
         fi
       done
-      echo "${docker['workdir']}/files/${script['bin']} ${script_args} --workdir ${docker['workdir']} --preworkdir ${iso['workdir']}" >> "${local_script}"
+      echo "${iso['dockerworkdir']}/files/${script['bin']} ${script_args} --workdir ${iso['dockerworkdir']} --preworkdir ${iso['workdir']}" >> "${local_script}"
       print_file "${local_script}"
       execute_command "chmod +x ${local_script}"
       if [ "${options['docker']}" = "true" ]; then

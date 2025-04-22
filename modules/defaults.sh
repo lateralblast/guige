@@ -227,7 +227,7 @@ reset_defaults () {
     defaults['password']="rocky"
     defaults['build']="dvd"
     defaults['swapsize']="2048"
-    defaults['workdir']="$HOME/${script['name']}/${defaults['osname']}/${defaults['build']}/${defaults['release']}"
+    defaults['workdir']="$HOME/Documents/${script['name']}/${defaults['osname']}/${defaults['build']}/${defaults['release']}"
     defaults['oldmountdir']="${defaults['workdir']}/isomount"
     defaults['inputfile']="${defaults['workdir']}/${defaults['releasename']}-${defaults['release']}-${defaults['arch']}-dvd.iso"
     defaults['inputfilebase']=$( basename "${defaults['inputfile']}" )
@@ -238,7 +238,7 @@ reset_defaults () {
   fi
   if [[ "${iso['action']}" =~ "ci" ]]; then
     defaults['release']=$( echo "${defaults['release']}" |awk -F"." '{ print $1"."$2 }' )
-    defaults['workdir']="$HOME/${script['name']}/${defaults['osname']}/${defaults['release']}"
+    defaults['workdir']="$HOME/Documents/${script['name']}/${defaults['osname']}/${defaults['release']}"
     defaults['inputci']="${defaults['workdir']}/files/ubuntu-${defaults['release']}-server-cloudimg-${defaults['arch']}.img"
     defaults['inputcibase']=$( basename "${defaults['inputci']}" )
     defaults['outputci']="${defaults['workdir']}/files/ubuntu-${defaults['release']}-server-cloudimg-${defaults['arch']}-${defaults['boottype']}-autoinstall.img"
@@ -465,9 +465,10 @@ set_default_docker_arch () {
 # Set default work directories
 
 set_default_dirs () {
-  defaults['workdir']="$HOME/${script['name']}/${defaults['osname']}/${defaults['build']}/${defaults['release']}"
-  defaults['oldworkdir']="$HOME/${script['name']}/${defaults['osname']}/${defaults['build']}/${defaults['oldrelease']}"
-  defaults['maskedworkdir']="$HOME/${script['name']}/${defaults['osname']}/${defaults['build']}/${defaults['release']}"
+  defaults['workdir']="$HOME/Documents/${script['name']}/${defaults['osname']}/${defaults['build']}/${defaults['release']}"
+  defaults['dockerworkdir']="/root/${script['name']}/${defaults['osname']}/${defaults['build']}/${defaults['release']}"
+  defaults['oldworkdir']="$HOME/Documents/${script['name']}/${defaults['osname']}/${defaults['build']}/${defaults['oldrelease']}"
+  defaults['maskedworkdir']="$HOME/Documents/${script['name']}/${defaults['osname']}/${defaults['build']}/${defaults['release']}"
   defaults['oldmountdir']="${defaults['workdir']}/isomount"
   defaults['oldmountdir']="${defaults['oldworkdir']}/isomount"
   defaults['autoinstalldir']="autoinstall"

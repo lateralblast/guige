@@ -789,3 +789,5 @@
 # Added support for non beta Ubuntu 25.04
 # 3.9.3: Tue 22 Apr 2025 11:33:56 AEST
 # Fixed passing of command line parameters to docker
+# 3.9.4: Tue 22 Apr 2025 14:15:24 AEST
+# Fixed SSH key and docker work directory

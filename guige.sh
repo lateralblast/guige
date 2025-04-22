@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Name:         guige (Generic Ubuntu/Unix ISO Generation Engine)
-# Version:      3.9.3
+# Version:      3.9.4
 # Release:      1
 # License:      CC-BA (Creative Commons By Attribution)
 #               http://creativecommons.org/licenses/by/4.0/legalcode
@@ -306,6 +306,12 @@ do
       # DNS server IP
       check_value "$1" "$2"
       iso['dns']="$2"
+      shift 2
+      ;;
+    --dockerworkdir)
+      # Disk WWN
+      check_value "$1" "$2"
+      iso['dockerworkdir']="$2"
       shift 2
       ;;
     --enableservice|--enableservices|--enable)

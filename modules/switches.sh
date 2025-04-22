@@ -196,8 +196,12 @@ process_switches () {
       get_code_name
     fi
   fi
-  iso['workdir']="$HOME/${script['name']}/${iso['osname']}/${iso['build']}/${iso['release']}"
-  docker['workdir']="/root/${script['name']}/${iso['osname']}/${iso['build']}/${iso['release']}"
+  if [ "${iso['workdir']}" = "${defaults['workdir']}" ]; then
+    iso['workdir']="$HOME/Documents/${script['name']}/${iso['osname']}/${iso['build']}/${iso['release']}"
+  fi
+  if [ "${iso['dockerworkdir']}" = "${defaults['dockerworkdir']}" ]; then
+    iso['dockerworkdir']="/root/${script['name']}/${iso['osname']}/${iso['build']}/${iso['release']}"
+  fi
   if [ "${iso['volid']}" = "" ]; then
     case ${iso['build']} in
       "daily-desktop"|"desktop")

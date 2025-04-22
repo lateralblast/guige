@@ -447,7 +447,7 @@ prepare_autoinstall_iso () {
 #          echo "    search_drivers: ${options['searchdrivers']}" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
           echo "  ssh:" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
           echo "    allow-pw: ${iso['allowpassword']}" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
-          if [ ! "${iso['sshkey']}" = "" ] && [ "${options['grubparse']}" = "false" ]; then
+          if [ ! "${iso['sshkey']}" = "" ]; then
             echo "    authorized-keys: [ \"${iso['sshkey']}\" ]" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
           fi
           echo "    install-server: true" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"

@@ -174,4 +174,5 @@ set_iso_defaults () {
   old['installsquashfile']=""
   old['url']=""
   old['workdir']=""
+  docker['switches']=""
 }
