@@ -141,7 +141,7 @@ create_docker_iso () {
         def_value="${defaults[${arg_name}]}"
         if [[ ! "${ignore_switches}" =~ ${arg_name} ]]; then
           verbose_message "# Checking ${arg_name}"
-          if [[ ! "${script_args}" =~ "--${arg_name} {arg_value}" ]]; then
+          if [[ ! "${script_args}" =~ "--${arg_name} " ]]; then
             if [ "${arg_value}" != "${def_value}" ] && [ "${arg_value}" != "" ]; then
               script_args="${script_args} --${arg_name} \"${arg_value}\""
               verbose_message "# Adding --${arg_name} \"${arg_value}\""
@@ -151,6 +151,8 @@ create_docker_iso () {
           fi
         fi
       done
+      echo "${script_args}"
+      exit
       echo "${iso['dockerworkdir']}/files/${script['bin']} ${script_args} --workdir ${iso['dockerworkdir']} --preworkdir ${iso['workdir']}" >> "${local_script}"
       print_file "${local_script}"
       execute_command "chmod +x ${local_script}"
