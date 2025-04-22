@@ -3,6 +3,7 @@
 # shellcheck disable=SC2034
 # shellcheck disable=SC2129
 # shellcheck disable=SC2154
+# shellcheck disable=SC2317
 
 # Function: print_cli_help
 #
@@ -13,7 +14,7 @@ print_cli_help () {
   echo "Usage: ${script['name']} --action [action] --options [options]"
   echo ""
   switchstart="false"
-  while read line; do
+  while read -r line; do
     if [[ "${line}" =~ switchstart ]]; then
       switchstart="true"
     fi
@@ -27,9 +28,9 @@ print_cli_help () {
         else
           switch_name=$( echo "${line}" |cut -f1 -d ")" )
         fi
-        switch_name=$( echo "${switch_name}" |sed "s/\-\-//g" )
-        switch_name=$( echo "${switch_name}" |sed "s/ //g" )
-        switch_default=$( echo ${defaults[$switch_name]} )
+        switch_name="${switch_name//--/}"
+        switch_name="${switch_name// /}"
+        switch_default="${defaults[$switch_name]}"
       fi
       if [[ "${line}" =~ \# ]] && [[ ! "${line}" =~ switchstart ]]; then
         if [[ "${switch_name}" =~ [a-z] ]]; then

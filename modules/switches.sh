@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 
+# shellcheck disable=SC2004
 # shellcheck disable=SC2034
 # shellcheck disable=SC2129
 # shellcheck disable=SC2154
@@ -15,7 +16,7 @@ get_switches () {
     input_file="${script['file']}"
   fi
   switchstart="false"
-  while read line; do
+  while read -r line; do
     if [[ "${line}" =~ switchstart ]]; then
       switchstart="true"
     fi
@@ -29,9 +30,11 @@ get_switches () {
         else
           switch_name=$( echo "${line}" |cut -f1 -d ")" )
         fi
-        switch_name=$( echo "${switch_name}" |sed "s/\-\-//g" )
-        switch_name=$( echo "${switch_name}" |sed "s/ //g" )
-        switches+=(${switch_name})
+        switch_name="${switch_name//--/}"
+        switch_name="${switch_name// /}"
+        if [[ ! "${switches[*]}" =~ ${switch_name} ]]; then
+          switches+=("${switch_name}")
+        fi
       fi
     fi
   done < "${input_file}"

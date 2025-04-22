@@ -245,7 +245,7 @@ add_to_output_file_name () {
   param="$1"
   if [ "${iso[${param}]}" != "${defaults[${param}]}" ]; then
     if [[ ! ${iso['outputfile']} =~ ${iso[${param}]} ]]; then
-      verbose_message "# Adding ${param} ${iso[${param}]} to output file name"
+      information_message "# Adding ${param} ${iso[${param}]} to output file name"
       temp_dir_name=$( dirname "${iso['outputfile']}" )
       temp_file_name=$( basename "${iso['outputfile']}" .iso )
       iso['outputfile']="${temp_dir_name}/${temp_file_name}-${iso[${param}]}.iso"
@@ -273,7 +273,7 @@ update_output_file_name () {
   for option in cluster kvm biosdevname sshkey nvme dhcp grubparse; do
     if [ "${options[${option}]}" = "true" ]; then
       if [[ ! "${iso['outputfile']}" =~ ${option} ]]; then
-        verbose_message "# Adding ${option} to output file name"
+        information_message "# Adding ${option} to output file name"
         temp_dir_name=$( dirname "${iso['outputfile']}" )
         temp_file_name=$( basename "${iso['outputfile']}" .iso )
         iso['outputfile']="${temp_dir_name}/${temp_file_name}-${option}.iso"
@@ -284,7 +284,7 @@ update_output_file_name () {
   for iso_volmgr in ${iso_volmgrs}; do
     if [ "${iso_volmgrs}" != "custom" ]; then
       if [[ ! "${iso[outputfile]}" =~ $iso_volmgr ]] && [[ ! "${iso['outputfile']}" =~ ${iso_volmgr} ]]; then
-        verbose_message "# Adding volume manager ${iso_volmgr} to output file name"
+        information_message "# Adding volume manager ${iso_volmgr} to output file name"
         temp_dir_name=$( dirname "${iso['outputfile']}" )
         temp_file_name=$( basename "${iso['outputfile']}" .iso )
         iso['outputfile']="${temp_dir_name}/${temp_file_name}-${iso_volmgr}.iso"

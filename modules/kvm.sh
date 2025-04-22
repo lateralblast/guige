@@ -171,7 +171,7 @@ create_kvm_iso_vm () {
   fi
   information_message "Generating VM config ${iso['xmlfile']}"
   iso['xmlfile']="/tmp/${iso['name']}.xml"
-  echo "<domain type='$iso['domaintype']='>" > "${iso['xmlfile']}"
+  echo "<domain type='${iso['domaintype']}='>" > "${iso['xmlfile']}"
   echo "  <name>${iso['name']}</name>" >> "${iso['xmlfile']}"
   echo "  <metadata>" >> "${iso['xmlfile']}"
   echo "    <libosinfo:libosinfo xmlns:libosinfo=\"http://libosinfo.org/xmlns/libvirt/domain/1.0\">" >> "${iso['xmlfile']}"
@@ -211,10 +211,10 @@ create_kvm_iso_vm () {
   if [ "${os['name']}" = "Darwin" ]; then
     echo "    <acpi/>" >> "${iso['xmlfile']}"
     if [ "${iso['arch']}" = "amd64" ] || [ "${iso['arch']}" = "x86_64" ]; then
-      iso['cpufallback']=="qemu64"
+      iso['cpufallback']="qemu64"
     else
       echo "    <gic version='2'/>" >> "${iso['xmlfile']}"
-      iso['cpufallback']=="cortex-a57"
+      iso['cpufallback']="cortex-a57"
     fi
     echo "  </features>" >> "${iso['xmlfile']}"
     echo "  <cpu mode='custom' match='exact' check='partial'>" >> "${iso['xmlfile']}"
@@ -257,7 +257,7 @@ create_kvm_iso_vm () {
     echo "      <driver name='qemu' type='raw'/>" >> "${iso['xmlfile']}"
     echo "      <source file='${vm['inputfile']}'/>" >> "${iso['xmlfile']}"
     echo "      <backingStore/>" >> "${iso['xmlfile']}"
-    echo "      <target dev='sda' bus='$iso['cdbus']'/>" >> "${iso['xmlfile']}"
+    echo "      <target dev='sda' bus='${iso['cdbus']}'/>" >> "${iso['xmlfile']}"
     echo "      <readonly/>" >> "${iso['xmlfile']}"
 #    echo "      <boot order='1'/>" >> "${iso['xmlfile']}"
     echo "      <alias name='scsi0-0-0-0'/>" >> "${iso['xmlfile']}"
@@ -274,7 +274,7 @@ create_kvm_iso_vm () {
     echo "    <disk type='file' device='cdrom'>" >> "${iso['xmlfile']}"
     echo "      <driver name='qemu' type='raw'/>" >> "${iso['xmlfile']}"
     echo "      <source file='${vm['inputfile']}'/>" >> "${iso['xmlfile']}"
-    echo "      <target dev='sda' bus='$iso['cdbus']'/>" >> "${iso['xmlfile']}"
+    echo "      <target dev='sda' bus='${iso['cdbus']}'/>" >> "${iso['xmlfile']}"
     echo "      <readonly/>" >> "${iso['xmlfile']}"
     echo "      <boot order='1'/>" >> "${iso['xmlfile']}"
     echo "      <address type='drive' controller='0' bus='0' target='0' unit='0'/>" >> "${iso['xmlfile']}"
@@ -360,8 +360,8 @@ create_kvm_iso_vm () {
   echo "    <controller type='sata' index='0'>" >> "${iso['xmlfile']}"
   echo "      <address type='pci' domain='0x0000' bus='0x00' slot='0x1f' function='0x2'/>" >> "${iso['xmlfile']}"
   echo "    </controller>" >> "${iso['xmlfile']}"
-  echo "    <interface type='$iso['iftype']'>" >> "${iso['xmlfile']}"
-  echo "      <mac address='$iso['macaddress']'/>" >> "${iso['xmlfile']}"
+  echo "    <interface type='${iso['iftype']}'>" >> "${iso['xmlfile']}"
+  echo "      <mac address='${iso['macaddress']}'/>" >> "${iso['xmlfile']}"
   if [ ! "${os['name']}" = "Darwin" ]; then
     echo "      <source network='default'/>" >> "${iso['xmlfile']}"
   fi
@@ -383,8 +383,8 @@ create_kvm_iso_vm () {
   echo "    <input type='tablet' bus='usb'>" >> "${iso['xmlfile']}"
   echo "      <address type='usb' bus='0' port='1'/>" >> "${iso['xmlfile']}"
   echo "    </input>" >> "${iso['xmlfile']}"
-  echo "    <input type='mouse' bus='$iso['inputbus']'/>" >> "${iso['xmlfile']}"
-  echo "    <input type='keyboard' bus='$iso['inputbus']'/>" >> "${iso['xmlfile']}"
+  echo "    <input type='mouse' bus='${iso['inputbus']}'/>" >> "${iso['xmlfile']}"
+  echo "    <input type='keyboard' bus='${iso['inputbus']}'/>" >> "${iso['xmlfile']}"
   echo "    <sound model='ich9'>" >> "${iso['xmlfile']}"
   echo "      <address type='pci' domain='0x0000' bus='0x00' slot='0x1b' function='0x0'/>" >> "${iso['xmlfile']}"
   echo "    </sound>" >> "${iso['xmlfile']}"

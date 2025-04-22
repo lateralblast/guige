@@ -14,7 +14,7 @@ process_actions () {
     exit
   fi
   if [[ "${iso['action']}" =~ , ]]; then
-    actions=$( echo "${iso['action']}" | sed "s/,/ /g" )
+    actions="${iso['action']//,/ }"
   else
     actions="${iso['action']}"
   fi

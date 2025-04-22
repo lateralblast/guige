@@ -793,3 +793,5 @@
 # Fixed SSH key and docker work directory
 # 3.9.5: Tue 22 Apr 2025 20:44:29 AEST
 # Improved passing of command line parameters to docker
+# 3.9.6: Tue 22 Apr 2025 22:56:32 AEST
+# Fixes based on shellcheck recommendations

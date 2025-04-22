@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 
+# shellcheck disable=SC2004
 # shellcheck disable=SC2034
 # shellcheck disable=SC2046
 # shellcheck disable=SC2129
@@ -13,7 +14,7 @@ process_options () {
   iso['dpkgconf']="${defaults['dpkgconf']}"
   iso['dpkgdepends']="${defaults['dpkgdepends']}"
   if [[ "${iso['options']}" =~ , ]]; then
-    option_names=$( echo "${iso['options']}" | sed "s/,/ /g" )
+    option_names="${iso['options']//,/ }"
   else
     option_names="${iso['options']}"
   fi

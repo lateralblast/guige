@@ -1,8 +1,10 @@
 #!/usr/bin/env bash
 
 # shellcheck disable=SC2034
+# shellcheck disable=SC2076
 # shellcheck disable=SC2129
 # shellcheck disable=SC2154
+# shellcheck disable=SC2317
 
 # Function: docker_exit
 #
@@ -136,7 +138,7 @@ create_docker_iso () {
       verbose_message "# Checking command line arguements to pass to docker container"
       get_switches
       ignore_switches="outputfile inputfile workdir preworkdir dockerworkdir"
-      for arg_name in ${switches[@]}; do
+      for arg_name in "${switches[@]}"; do
         arg_value="${iso[${arg_name}]}"
         def_value="${defaults[${arg_name}]}"
         if [[ ! "${ignore_switches}" =~ ${arg_name} ]]; then

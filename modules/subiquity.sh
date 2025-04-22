@@ -193,7 +193,7 @@ prepare_autoinstall_iso () {
     create_dir "${iso['packagedir']}"
     create_dir "${iso['postscriptdir']}"
     create_dir "${iso['installfilesdir']}"
-    iso_volmgrs=$( echo "${iso['volumemanager']}" |sed "s/,/ /g" )
+    iso_volmgrs="${iso['volumemanager']//,/ }"
     for iso_volmgr in ${iso_volmgrs}; do
       handle_output "# Creating directory ${iso['configdir']}/${iso_volmgr}/${iso['disk']}" "TEXT"
       create_dir "${iso['configdir']}/${iso_volmgr}/${iso['disk']}"
@@ -244,7 +244,7 @@ prepare_autoinstall_iso () {
       counter=0
       kernel_args="${iso['kernelargs']}" 
 #      iso['kernelserialargs']="console=${iso['serialporta']},${iso['serialportspeeda']} console=${iso['serialportb']},${iso['serialportspeedb']}"
-      iso_volmgrs=$( echo "${iso['volumemanager']}" |sed "s/,/ /g" )
+      iso_volmgrs="${iso['volumemanager']//,/ }"
       for iso_volmgr in ${iso_volmgrs}; do
         echo "label ${counter}" >> "${iso['sourcedir']}/isolinux/txt.cfg"
         if [ "${iso_volmgr}" = "custom" ]; then
@@ -268,7 +268,7 @@ prepare_autoinstall_iso () {
       echo "set timeout=${iso['grubtimeout']}" > "${iso['sourcedir']}/boot/grub/grub.cfg"
       echo "default=${iso['grubmenu']}" >> "${iso['sourcedir']}/boot/grub/grub.cfg"
       echo "loadfont unicode" >> "${iso['sourcedir']}/boot/grub/grub.cfg"
-      iso_volmgrs=$( echo "${iso['volumemanager']}" |sed "s/,/ /g" )
+      iso_volmgrs="${iso['volumemanager']//,/ }"
       for iso_volmgr in ${iso_volmgrs}; do
         if [ "${iso_volmgr}" = "custom" ]; then
           echo "menuentry '${iso['volid']}:${iso_volmgr}:defaults (${kernel_args})' {" >> "${iso['sourcedir']}/boot/grub/grub.cfg"
@@ -307,7 +307,7 @@ prepare_autoinstall_iso () {
       print_file "${iso['sourcedir']}/boot/grub/grub.cfg"
     fi
   fi
-  iso_volmgrs=$( echo "${iso['volumemanager']}" |sed "s/,/ /g" )
+  iso_volmgrs="${iso['volumemanager']//,/ }"
   for iso_volmgr in ${iso_volmgrs}; do
     if [ -e "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data" ]; then
       rm "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
@@ -608,7 +608,6 @@ prepare_autoinstall_iso () {
               echo "      id: zfs-${zfs_num}" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
               echo "      type: zfs" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
 
-              zfs_filesystems=$( echo "${iso['zfsfilesystems']}" |sed "s/,/ /g" )
               for zfs_filesystem in ${iso['zfsfilesystems']}; do
                 hash_num="${zfs_filesystem//[^\/]}"
                 if [ "${#hash_num}" = "1" ]; then
