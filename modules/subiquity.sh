@@ -413,8 +413,11 @@ prepare_autoinstall_iso () {
           if [ "${options['dhcp']}" = "true" ]; then
             echo "        critical: true" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
             echo "        dhcp-identifier: mac" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
-            echo "        dhcp4: ${options['dhcp']}" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+            echo "        dhcp4: true" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+            echo "        dhcp6: true" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
           else
+            echo "        dhcp4: false" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+            echo "        dhcp4: false" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
             echo "        addresses:" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
             if [ "${iso['grubip']}" = "" ]; then
               echo "        - ${iso['ip']}/${iso['cidr']}" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"

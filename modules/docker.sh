@@ -137,11 +137,11 @@ create_docker_iso () {
       get_switches
       ignore_switches="outputfile inputfile workdir preworkdir"
       for arg_name in ${switches[@]}; do
+        arg_value="${iso[${arg_name}]}"
+        def_value="${defaults[${arg_name}]}"
         if [[ ! "${ignore_switches}" =~ ${arg_name} ]]; then
           verbose_message "# Checking ${arg_name}"
-          if [[ ! "${script_args}" =~ ${arg_name} ]]; then
-            arg_value="${iso[${arg_name}]}"
-            def_value="${defaults[${arg_name}]}"
+          if [[ ! "${script_args}" =~ "--${arg_name} {arg_value}" ]]; then
             if [ "${arg_value}" != "${def_value}" ] && [ "${arg_value}" != "" ]; then
               script_args="${script_args} --${arg_name} \"${arg_value}\""
               verbose_message "# Adding --${arg_name} \"${arg_value}\""

@@ -63,22 +63,8 @@ process_switches () {
         build)
           update_iso_build
           ;;
-        cidr)
-          if [ ! "${iso['netmask']}" = "" ]; then
-            get_cidr_from_netmask "${iso['netmask']}"
-          fi
-          ;;
         codename)
           get_code_name
-          ;;
-        ip)
-          iso['bootproto']="dhcp"
-          options['dhcp']="true"
-          ;;
-        netmask)
-          if [ ! "${iso['cidr']}" = "" ]; then
-            get_netmask_from_cidr "${iso['cidr']}"
-          fi
           ;;
         serialport)
           iso['serialport']="${defaults['serialport']}"
@@ -115,20 +101,6 @@ process_switches () {
           ;;
         build)
           update_iso_build
-          ;;
-        cidr)
-          if [ "${iso['netmask']}" = "" ]; then
-            get_netmask_from_cidr "${iso['cidr']}"
-          fi
-          ;;
-        ip)
-          options['dhcp']="false"
-          iso['bootproto']="static"
-          ;;
-        netmask)
-          if [ "${iso['cidr']}" = "" ]; then
-            get_cidr_from_netmask "${iso['netmask']}"
-          fi
           ;;
         vgname)
           if [ "${iso['pvname']}" = "" ]; then
@@ -296,5 +268,8 @@ process_switches () {
     if [[ ! "${options['kernel']}" =~ ${options['kernelserialargs']} ]]; then
       options['kernelargs']="${options['kernelargs']} ${options['kernelserialargs']}"
     fi
+  fi
+  if [ ! "${iso['ip']}" = "" ] || [ ! "${iso['grubip']}" = "" ]; then 
+    options['dhcp']="false"
   fi
 }

@@ -787,3 +787,5 @@
 # Fixed realname
 # 3.9.2: Tue 22 Apr 2025 08:28:58 AEST
 # Added support for non beta Ubuntu 25.04
+# 3.9.3: Tue 22 Apr 2025 11:33:56 AEST
+# Fixed passing of command line parameters to docker
