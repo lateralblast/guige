@@ -20,35 +20,35 @@ process_actions () {
   fi
   for action in ${actions}; do
     case "${action}" in
-      checkdocker)
+      checkdocker)                  # action - Check Docker
         options['docker']="false"
         options['checkdocker']="true"
         options['checkworkdir']="true"
         ;;
-      checkracadm)
+      checkracadm)                  # action - Check racadm
         options['checkracadm']="true"
         ;;
-      checkshellcheck|shellcheck)
+      checkshellcheck|shellcheck)   # action - Shellcheck script
         check_shellcheck
         exit
         ;;
-      checkworkdir|checkdirs)
+      checkworkdir|checkdirs)       # action - Check work directories
         options['checkworkdir']="true"
         ;;
-      createansible)
+      createansible)                # action - Create ansible
         options['checkworkdir']="true"
         options['installrequiredpackages']="true"
         options['createansible']="true"
         ;;
-      createautoinstall)
+      createautoinstall)            # action - Create autoinstall
         options['createautoinstall']="true"
         ;;
-      createcivm)
+      createcivm)                   # action - Create cloud-init based VM
        iso['type']="kvm"
         options['installrequiredpackages']="true"
         options['createcivm']="true"
         ;;
-      createdockeriso)
+      createdockeriso)              # action - Create ISO using docker
         options['docker']="true"
         options['checkdocker']="true"
         options['checkworkdir']="true"
@@ -56,7 +56,7 @@ process_actions () {
         options['runchrootscript']="true"
         options['fulliso']="true"
        ;;
-      createdockerisoandsquashfs)
+      createdockerisoandsquashfs)   # action - Create ISO and update squashfs using docker
         options['updatesquashfs']="true"
         options['docker']="true"
         options['checkdocker']="true"
@@ -65,93 +65,90 @@ process_actions () {
         options['runchrootscript']="true"
         options['fulliso']="true"
         ;;
-      createexport)
+      createexport)                 # action - Ceate export
         options['checkworkdir']="true"
         options['installrequiredpackages']="true"
         options['createexport']="true"
         ;;
-      createiso|fulliso)
+      createiso|fulliso)            # action - Create ISO
         options['checkworkdir']="true"
         options['installrequiredpackages']="true"
         options['runchrootscript']="true"
         options['fulliso']="true"
         ;;
-      createisoandsquashfs)
+      createisoandsquashfs)         # action - Create ISO and update squashfs
         options['updatesquashfs']="true"
         options['checkworkdir']="true"
         options['installrequiredpackages']="true"
         options['runchrootscript']="true"
         options['fulliso']="true"
        ;;
-      createisovm)
+      createisovm)                  # action - Create ISO based VM
         iso['type']="kvm"
         options['installrequiredpackages']="true"
         options['createisovm']="true"
         ;;
-      deletecivm)
+      deletecivm)                   # action - Delete cloud-init based VM
         iso['type']="kvm"
         options['installrequiredpackages']="true"
         options['deletecivm']="true"
         ;;
-      deleteisovm)
+      deleteisovm)                  # action - Delete ISO based VM
         iso['type']="kvm"
         options['installrequiredpackages']="true"
         options['deleteisovm']="true"
         ;;
-      getiso)
+      getiso)                       # action - Get ISO
         options['checkworkdir']="true"
         options['getiso']="true"
         ;;
-      help|printhelp)
+      help|printhelp)               # action - Print help
         print_help
         ;;
-      installrequired*|checkrequired*)
+      installreq*|checkreq*)        # action - Install/Check required packages
         options['installrequiredpackages']="true"
         ;;
       justiso)
         options['justiso']="true"
         ;;
-      listalliso|listallisos|listiso|listisos)
+      listalliso*|listiso*)         # action - List ISOs
         options['listisos']="true"
         ;;
-      listswitches)
+      listswitches)                 # action - List switches
         get_switches
         list_switches
         ;;
-      listvm)
+      listvm)                       # action - List VMs
         options['listvms']="true"
         ;;
-      oldinstaller)
+      oldinstaller)                 # Action - Use old installer
         options['oldinstaller']="true"
         ;;
-      printenv)
+      printenv)                     # action - Print environment
         options['printenv']="true"
         ;;
-      queryiso)
+      queryiso)                     # action - Query ISO
         options['query']="true"
         ;;
-      runansible)
+      runansible)                   # action - Run ansible
         options['checkworkdir']="true"
         options['installrequiredpackages']="true"
         options['createexport']="true"
         options['createansible']="true"
         options['installserver']="true"
         ;;
-      runchrootscript|execchrootscript|executechrootscript)
+      runchrootscript)              # action - Run chroot script
         options['runchrootscript']="true"
         ;;
-      runracadm|execracadm|exectureracadm)
+      runracadm)                    # action - Run racadm
         options['checkracadm']="true"
         options['executeracadm']="true"
         ;;
-      unmount)
+      unmount)                      # action - Unmount ISOs etc
         options['unmount']="true"
         ;;
-      usage|printusage)
+      usage|printusage)             # action - Print usage information
         print_usage
-        ;;
-      test)
-        options['testmode']="true"
         ;;
       *)
         warning_message "Action \"${iso['action']}\" is not a valid action"

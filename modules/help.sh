@@ -15,10 +15,10 @@ print_cli_help () {
   echo ""
   switchstart="false"
   while read -r line; do
-    if [[ "${line}" =~ switchstart ]]; then
+    if [[ "${line}" =~ -- ]]; then
       switchstart="true"
     fi
-    if [[ "${line}" =~ switchend ]] || [[ "${line}" =~ \* ]]; then
+    if [[ "${line}" =~ esac ]] || [[ "${line}" =~ \* ]]; then
       switchstart="false"
     fi
     if [ "${switchstart}" = "true" ]; then
@@ -32,7 +32,7 @@ print_cli_help () {
         switch_name="${switch_name// /}"
         switch_default="${defaults[$switch_name]}"
       fi
-      if [[ "${line}" =~ \# ]] && [[ ! "${line}" =~ switchstart ]]; then
+      if [[ "${line}" =~ \# ]]; then
         if [[ "${switch_name}" =~ [a-z] ]]; then
           switch_length="${#switch_name}"
           if [ "${switch_length}" -lt 6 ]; then
@@ -63,22 +63,22 @@ print_cli_help () {
 
 print_help () {
   case "$1" in
-    "cli")
+    cli)
       print_cli_help
       ;;
-    "actions")
-      print_actions
+    action*)
+      print_info "action"
       exit
       ;;
-    "options")
-      print_options
+    option*)
+      print_info "option"
       exit
       ;;
-    "postinstall")
+    postinstall)
       print_postinstall
       exit
       ;;
-    "examples")
+    examples)
       print_examples
       exit
       ;;

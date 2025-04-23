@@ -19,10 +19,10 @@ get_switches () {
     switchstart="false"
     while read -r line; do
       switch_name=""
-      if [[ "${line}" =~ switchstart ]]; then
+      if [[ "${line}" =~ -- ]]; then
         switchstart="true"
       fi
-      if [[ "${line}" =~ switchend ]] || [[ "${line}" =~ \* ]]; then
+      if [[ "${line}" =~ esac ]] || [[ "${line}" =~ \* ]]; then
         switchstart="false"
       fi
       if [ "${switchstart}" = "true" ]; then

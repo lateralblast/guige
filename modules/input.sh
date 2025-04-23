@@ -20,10 +20,10 @@ check_value () {
     if [ "${value}" = "" ]; then
       verbose_message "No value given for parameter ${param}" "verbose"
       echo ""
-      if [[ "${param}" =~ "option" ]]; then
+      if [[ "${param}" =~ option ]]; then
         print_options
       else
-        if [[ "${param}" =~ "action" ]]; then
+        if [[ "${param}" =~ action ]]; then
           print_actions
         else
           print_help

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Name:         guige (Generic Ubuntu/Unix ISO Generation Engine)
-# Version:      3.9.9
+# Version:      4.0.0
 # Release:      1
 # License:      CC-BA (Creative Commons By Attribution)
 #               http://creativecommons.org/licenses/by/4.0/legalcode
@@ -40,6 +40,7 @@ script['file']=$( realpath "${script['file']}" )
 script['name']="guige"
 script['path']=$( pwd )
 script['bin']=$( basename "$0" |sed "s/^\.\///g")
+script['dir']=$( dirname "$0" )
 script['file']="${script['path']}/${script['bin']}"
 script['version']=$( grep '^# Version' < "$0" | awk '{print $3}' )
 os['name']=$( uname )
@@ -116,8 +117,6 @@ set_default_files
 if [ "${script['args']}" = "" ]; then
   print_help
 fi
-
-# switchstart
 
 while test $# -gt 0
 do
@@ -868,7 +867,7 @@ do
     --usage)
       # Usage information
       check_value "$1" "$2"
-      print_usage "$2"
+      print_info "$2"
       exit
       ;;
     --version|-V)
@@ -937,8 +936,6 @@ do
       ;;
   esac
 done
-
-# switchend
 
 # Setup functions
 set_default_osname

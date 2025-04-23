@@ -6,6 +6,105 @@
 # shellcheck disable=SC2129
 # shellcheck disable=SC2154
 
+# Function: set_options_defaults
+#
+# Set options defaults
+
+set_options_defaults () {
+  options['activate']="true"                  # option - Active network
+  options['aptnews']="false"                  # option - Enable apt news
+  options['autoinstall']="false"              # option - Enable autoinstall
+  options['autoupgrade']="false"              # option - Enable auto upgrade
+  options['biosdevname']="false"              # option - Use biosdevname
+  options['bootserverfile']="false"           # option - Enable bootserver file
+  options['checkci']="false"                  # option - Check cloud-init
+  options['checkdocker']="false"              # option - Check docker
+  options['checkworkdir']="false"             # option - Check work directory
+  options['chroot']="true"                    # option - Do chroot
+  options['clean']="false"                    # option - Clean up old files
+  options['clusterpackages']="false"          # option - Enable cluster packages
+  options['compression']="true"               # option - Enable compression
+  options['createautoinstall']="false"        # option - Create autoinstall files
+  options['createansible']="false"            # option - Create ansible
+  options['createexport']="false"             # option - Create export
+  options['createisovm']="false"              # option - Create ISO based VM
+  options['checkracadm']="false"              # option - Create racadm config
+  options['createcivm']="false"               # option - Create cloud-init base VM
+  options['createiso']="true"                 # option - Create ISO
+  options['createvm']="false"                 # option - Create VM
+  options['daily']="false"                    # option - Build daily ISO
+  options['debug']="false"                    # option - Enable debug flag
+  options['defaultroute']="true"              # option - Enable default route
+  options['deletecivm']="false"               # option - Delete cloud-init based VM
+  options['deleteisovm']="false"              # option - Delete ISO base VM
+  options['deletevm']="false"                 # option - Delete VM
+  options['dhcp']="true"                      # option - Enable DHCP
+  options['distupgrade']="false"              # option - Enable dist-upgrade
+  options['docker']="false"                   # option - Use docker
+  options['earlypackages']="false"            # option - Enable early packages
+  options['executeracadm']="false"            # option - Execute racadm cofngi
+  options['firstboot']="disabled"             # option - Enable first boot
+  options['force']="false"                    # option - Force actions
+  options['forceall']="false"                 # option - Force all actions
+  options['fulliso']="false"                  # option - Perfom all ISO functions
+  options['geoip']="true"                     # option - Enable GeoIP
+  options['getiso']="false"                   # option - Get ISO
+  options['grubfile']="false"                 # option - Create GRUB file
+  options['grubparse']="false"                # option - Enable GRUB parser
+  options['grubparseall']="false"             # option - Enable all GRUB parsers
+  options['help']="true"                      # option - Enable help
+  options['hwekernel']="true"                 # option - Enable HWE kernel
+  options['installcodecs']="false"            # option - Install codecs
+  options['installdrivers']="false"           # option - Install drivers
+  options['installpackages']="false"          # option - Install packages
+  options['installrequiredpackages']="false"  # option - Install required packages
+  options['installserver']="false"            # option - Install server
+  options['installuser']="false"              # option - Enable install user
+  options['interactivemode']="false"          # option - Run in interactive mode
+  options['ipv4']="true"                      # option - Emable IPv4
+  options['ipv6']="true"                      # option - Enable IPv6
+  options['isolinuxfile']="false"             # option - Create isolinux file
+  options['justiso']="false"                  # option - Create ISO only
+  options['ksquiet']="false"                  # option - Enable Kickstart quiet mode
+  options['kstest']="false"                   # option - Perform Kickstart validation
+  options['kstext']="false"                   # option - Enable kickstart text mode
+  options['kvmpackages']="false"              # option - Enable KVM packages
+  options['latepackages']="false"             # option - Enable late packages
+  options['latest']="false"                   # option - Enable latest
+  options['listisos']="false"                 # option - List ISOS
+  options['listvms']="false"                  # option - List VMs
+  options['lockpassword']="false"             # option - Lock password
+  options['lockroot']="true"                  # option - Lock root
+  options['mediacheck']="false"               # option - Enable media check
+  options['multipath']="false"                # option - Enable multipath
+  options['networkupdates']="false"           # option - Enable network based updates
+  options['nomultipath']="false"              # option - Enable no multipath
+  options['nounmount']="false"                # option - Do not unmount ISOs etc after creating ISO
+  options['nvme']="false"                     # option - Enable NVMe
+  options['oldinstaller']="false"             # option - Enable old installer
+  options['packageupdates']="false"           # option - Enable package updates
+  options['packageupgrades']="false"          # option - Enable package upgrades
+  options['plaintextpassword']="false"        # option - Enable plain text passwords
+  options['preservesources']="false"          # option - Preserve sources  
+  options['printenv']="false"                 # option - Print environment
+  options['query']="false"                    # option - Enable query
+  options['refreshinstaller']="false"         # option - Refresh installer
+  options['reorderuefi']="false"              # option - Re-order UEFI
+  options['runchrootscript']="false"          # option - Run chroot script
+  options['scpheader']="false"                # option - Enable SCP header
+  options['searchdrivers']="false"            # option - Enable search drivers
+  options['secureboot']="true"                # option - Enable secure boot
+  options['serial']="true"                    # option - Enable serial
+  options['sshkey']="true"                    # option - Enable SSH key
+  options['strict']="false"                   # option - Enable strict mode
+  options['testmode']="false"                 # option - Enable test mode
+  options['unmount']="true"                   # option - Unmount ISO etc after creating ISO
+  options['updatesquashfs']="false"           # option - Update squashfs
+  options['verbose']="false"                  # option - Enable verbose mode
+  options['zfs']="false"                      # option - Enable ZFS
+  options['zfsfilesystems']="false"           # option - Enable XFS datasets
+}
+
 # Function: process_options
 #
 # Process option switch
