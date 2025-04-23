@@ -141,11 +141,11 @@ set_default_defaults () {
   defaults['zfsroot']="zfsroot"
 }
 
-# Function: set_default_flags
+# Function: set_options_defaults
 #
-# Set default flags
+# Set options defaults
 
-set_options_flags () {
+set_options_defaults () {
   options['activate']="true"
   options['aptnews']="false"
   options['autoinstall']="false"
