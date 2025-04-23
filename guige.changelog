@@ -795,3 +795,7 @@
 # Improved passing of command line parameters to docker
 # 3.9.6: Tue 22 Apr 2025 22:56:32 AEST
 # Fixes based on shellcheck recommendations
+# 3.9.7: Wed 23 Apr 2025 14:55:03 AEST
+# Fixed volid determination
+# 3.9.8: Wed 23 Apr 2025 15:33:24 AEST
+# Fixed switch processing

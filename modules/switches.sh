@@ -10,34 +10,37 @@
 # Get list of switches
 
 get_switches () {
-  if [ -f "/.dockerenv" ]; then
-    input_file="${iso['workdir']}/files/${script['bin']}"
-  else
-    input_file="${script['file']}"
-  fi
-  switchstart="false"
-  while read -r line; do
-    if [[ "${line}" =~ switchstart ]]; then
-      switchstart="true"
+  if [ "${#switches[@]}" -lt 2 ]; then 
+    if [ -f "/.dockerenv" ]; then
+      input_file="${iso['workdir']}/files/${script['bin']}"
+    else
+      input_file="${script['file']}"
     fi
-    if [[ "${line}" =~ switchend ]] || [[ "${line}" =~ \* ]]; then
-      switchstart="false"
-    fi
-    if [ "${switchstart}" = "true" ]; then
-      if [[ "${line}" =~ -- ]] && [[ "${line}" =~ [a-z] ]]; then
-        if [[ "${line}" =~ \| ]]; then
-          switch_name=$( echo "${line}" |cut -f1 -d "|" )
-        else
-          switch_name=$( echo "${line}" |cut -f1 -d ")" )
-        fi
-        switch_name="${switch_name//--/}"
-        switch_name="${switch_name// /}"
-        if [[ ! "${switches[*]}" =~ ${switch_name} ]]; then
-          switches+=("${switch_name}")
+    switchstart="false"
+    while read -r line; do
+      switch_name=""
+      if [[ "${line}" =~ switchstart ]]; then
+        switchstart="true"
+      fi
+      if [[ "${line}" =~ switchend ]] || [[ "${line}" =~ \* ]]; then
+        switchstart="false"
+      fi
+      if [ "${switchstart}" = "true" ]; then
+        if [[ "${line}" =~ -- ]] && [[ "${line}" =~ [a-z] ]]; then
+          if [[ "${line}" =~ \| ]]; then
+            switch_name=$( echo "${line}" |cut -f1 -d "|" )
+          else
+            switch_name=$( echo "${line}" |cut -f1 -d ")" )
+          fi
+          switch_name="${switch_name//--/}"
+          switch_name="${switch_name// /}"
+          if [ ! "${switch_name}" = "" ]; then
+            switches+=("${switch_name}")
+          fi
         fi
       fi
-    fi
-  done < "${input_file}"
+    done < "${input_file}"
+  fi
 }
 
 # Function: list_switches
@@ -199,22 +202,24 @@ process_switches () {
       get_code_name
     fi
   fi
-  if [ "${iso['workdir']}" = "${defaults['workdir']}" ]; then
+  if [ "${iso['workdir']}" = "${defaults['workdir']}" ] || [ "${iso['workdir']}" = "" ]; then
     iso['workdir']="$HOME/Documents/${script['name']}/${iso['osname']}/${iso['build']}/${iso['release']}"
   fi
-  if [ "${iso['dockerworkdir']}" = "${defaults['dockerworkdir']}" ]; then
+  if [ "${iso['dockerworkdir']}" = "${defaults['dockerworkdir']}" ] || [ "${iso['dockerworkdir']}" = "" ]; then
     iso['dockerworkdir']="/root/${script['name']}/${iso['osname']}/${iso['build']}/${iso['release']}"
   fi
-  if [ "${iso['volid']}" = "" ]; then
+  if [ "${iso['volid']}" = "" ] || [[ ! "${iso['volid']}" =~ ${iso['release']} ]]; then
     case ${iso['build']} in
-      "daily-desktop"|"desktop")
-        iso['volid']="${iso['releasename']} ${iso['release']} Desktop"
+      desktop)
+        iso['volid']="${iso['releasename']} ${iso['release']} ${iso['arch']} Desktop"
         ;;
       *)
-        iso['volid']="${iso['releasename']} ${iso['release']} Server"
+        iso['volid']="${iso['releasename']} ${iso['release']} ${iso['arch']} Server"
         ;;
     esac
   fi
+  echo "${iso['inputfile']}"
+  echo "${iso['release']}"
   if [ "${options['query']}" = "true" ]; then
     get_info_from_iso
   else

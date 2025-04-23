@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Name:         guige (Generic Ubuntu/Unix ISO Generation Engine)
-# Version:      3.9.6
+# Version:      3.9.8
 # Release:      1
 # License:      CC-BA (Creative Commons By Attribution)
 #               http://creativecommons.org/licenses/by/4.0/legalcode
@@ -742,6 +742,12 @@ do
       get_code_name
       get_build_type
       ;;
+    --releasename)
+      # OS releasename
+      check_value "$1" "$2"
+      iso['releasename']="$2"
+      shift 2
+      ;; 
     --rootsize)
       # Root volume size
       check_value "$1" "$2"
