@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Name:         guige (Generic Ubuntu/Unix ISO Generation Engine)
-# Version:      3.9.8
+# Version:      3.9.9
 # Release:      1
 # License:      CC-BA (Creative Commons By Attribution)
 #               http://creativecommons.org/licenses/by/4.0/legalcode
@@ -110,7 +110,6 @@ set_default_osname
 set_default_release
 set_default_dirs
 set_default_files
-set_default_flags
 
 # Function: Handle command line arguments
 

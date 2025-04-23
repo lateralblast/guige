@@ -31,24 +31,6 @@ set_current_defaults () {
   current['release2504']="25.04"
 }
 
-# Function: set_option_defaults
-#
-# Set option defaults
-
-set_option_defaults () {
-  options['testmode']="false"
-  options['force']="false"
-  options['forceall']="false"
-  options['verbose']="false"
-  options['bmcport']="443"
-  options['interactivemode']="false"
-  options['biosdevname']="false"
-  options['dotrelease']=""
-  options['grubparse']="false"
-  options['grubparseall']="false"
-  options['lockpassword']="false"
-}
-
 # Function: set_default_defaults
 #
 # Set default defaults
@@ -60,6 +42,7 @@ set_default_defaults () {
   defaults['arch']=$( uname -m |sed "s/aarch64/arm64/g" |sed "s/x86_64/amd64/g" |sed "s/x86/amd64/g" )
   defaults['bmcip']=""
   defaults['bmcpassword']="calvin"
+  defaults['bmcport']="443"
   defaults['bmcusername']="root"
   defaults['blocklist']=""
   defaults['bootloader']="mbr"
@@ -158,15 +141,114 @@ set_default_defaults () {
   defaults['zfsroot']="zfsroot"
 }
 
+# Function: set_default_flags
+#
+# Set default flags
+
+set_options_flags () {
+  options['activate']="true"
+  options['aptnews']="false"
+  options['autoinstall']="false"
+  options['autoupgrade']="false"
+  options['biosdevname']="false"
+  options['bootserverfile']="false"
+  options['checkci']="false"
+  options['checkdocker']="false"
+  options['checkworkdir']="false"
+  options['chroot']="true"
+  options['clean']="false"
+  options['clusterpackages']="false"
+  options['compression']="true"
+  options['createautoinstall']="false"
+  options['createansible']="false"
+  options['createexport']="false"
+  options['createisovm']="false"
+  options['checkracadm']="false"
+  options['createcivm']="false"
+  options['createiso']="true"
+  options['daily']="false"
+  options['debug']="false"
+  options['defaultroute']="true"
+  options['deletecivm']="false"
+  options['deleteisovm']="false"
+  options['deletevm']="false"
+  options['dhcp']="true"
+  options['distupgrade']="false"
+  options['docker']="false"
+  options['dotrelease']=""
+  options['earlypackages']="false"
+  options['executeracadm']="false"
+  options['firstboot']="disabled"
+  options['force']="false"
+  options['forceall']="false"
+  options['fulliso']="false"
+  options['geoip']="true"
+  options['getiso']="false"
+  options['grubfile']="false"
+  options['grubparse']="false"
+  options['grubparseall']="false"
+  options['help']="true"
+  options['hwekernel']="true"
+  options['installcodecs']="false"
+  options['installdrivers']="false"
+  options['installpackages']="false"
+  options['installrequiredpackages']="false"
+  options['installserver']="false"
+  options['installuser']="false"
+  options['interactivemode']="false"
+  options['ipv4']="true"
+  options['ipv6']="true"
+  options['isolinuxfile']="false"
+  options['justiso']="false"
+  options['ksquiet']="false"
+  options['kstest']="false"
+  options['kstext']="false"
+  options['kvmpackages']="false"
+  options['latepackages']="false"
+  options['latest']="false"
+  options['listisos']="false"
+  options['listvms']="false"
+  options['lockpassword']="false"
+  options['lockroot']="true"
+  options['mediacheck']="false"
+  options['multipath']="false"
+  options['networkupdates']="false"
+  options['nomultipath']="false"
+  options['nounmount']="false"
+  options['nvme']="false"
+  options['oldinstaller']="false"
+  options['packageupdates']="false"
+  options['packageupgrades']="false"
+  options['plaintextpassword']="false"
+  options['preservesources']="false"
+  options['printenv']="false"
+  options['query']="false"
+  options['refreshinstaller']="false"
+  options['reorderuefi']="false"
+  options['runchrootscript']="false"
+  options['scpheader']="false"
+  options['searchdrivers']="false"
+  options['secureboot']="true"
+  options['serial']="true"
+  options['sshkey']="true"
+  options['strict']="false"
+  options['testmode']="false"
+  options['unmount']="true"
+  options['updatesquashfs']="false"
+  options['verbose']="false"
+  options['zfs']="false"
+  options['zfsfilesystems']="false"
+}
+
 # Function: set_defaults
 #
 # Set defaults
 
 set_defaults () {
   temp['verbose']="false"
+  set_options_defaults
   set_current_defaults
   set_default_defaults
-  set_option_defaults
   set_iso_defaults
   iso['name']=""
   iso['exists']="false"
@@ -199,19 +281,6 @@ reset_defaults () {
       else
         iso_arch="${iso['arch']}"
       fi
-#      if [[ "${iso['build']}" =~ server ]]; then
-#        iso_build="server"
-#      else
-#        if [[ "${iso['build']}" =~ desktop ]]; then
-#          iso_build="desktop"
-#        else
-#          if [[ "${defaults['build']}" =~ server ]]; then
-#            iso_build="server"
-#          else
-#            iso_build="desktop"
-#          fi
-#        fi
-#      fi
       defaults['inputfilebase']="ubuntu-${iso['release']}-beta-${iso_build}-${iso_arch}.iso"
       defaults['inputfile']="${defaults['workdir']}/${defaults['inputfilebase']}"
     fi
@@ -251,95 +320,6 @@ reset_defaults () {
       options['latepackages']="true"
     fi
   fi
-}
-
-# Function: set_default_flags
-#
-# Set default flags
-
-set_default_flags () {
-  options['activate']="true"
-  options['aptnews']="false"
-  options['autoinstall']="false"
-  options['autoupgrade']="false"
-  options['bootserverfile']="false"
-  options['checkci']="false"
-  options['checkdocker']="false"
-  options['checkworkdir']="false"
-  options['chroot']="true"
-  options['clean']="false"
-  options['clusterpackages']="false"
-  options['compression']="true"
-  options['createautoinstall']="false"
-  options['createansible']="false"
-  options['createexport']="false"
-  options['createisovm']="false"
-  options['checkracadm']="false"
-  options['createcivm']="false"
-  options['createiso']="true"
-  options['daily']="false"
-  options['debug']="false"
-  options['defaultroute']="true"
-  options['deletecivm']="false"
-  options['deleteisovm']="false"
-  options['deletevm']="false"
-  options['dhcp']="true"
-  options['distupgrade']="false"
-  options['docker']="false"
-  options['earlypackages']="false"
-  options['executeracadm']="false"
-  options['firstboot']="disabled"
-  options['fulliso']="false"
-  options['geoip']="true"
-  options['getiso']="false"
-  options['grubfile']="false"
-  options['help']="true"
-  options['hwekernel']="true"
-  options['installcodecs']="false"
-  options['installdrivers']="false"
-  options['installpackages']="false"
-  options['installrequiredpackages']="false"
-  options['installserver']="false"
-  options['installuser']="false"
-  options['ipv4']="true"
-  options['ipv6']="true"
-  options['isolinuxfile']="false"
-  options['justiso']="false"
-  options['ksquiet']="false"
-  options['kstest']="false"
-  options['kstext']="false"
-  options['kvmpackages']="false"
-  options['latepackages']="false"
-  options['latest']="false"
-  options['listisos']="false"
-  options['listvms']="false"
-  options['lockroot']="true"
-  options['mediacheck']="false"
-  options['multipath']="false"
-  options['networkupdates']="false"
-  options['nomultipath']="false"
-  options['nounmount']="false"
-  options['nvme']="false"
-  options['oldinstaller']="false"
-  options['packageupdates']="false"
-  options['packageupgrades']="false"
-  options['plaintextpassword']="false"
-  options['preservesources']="false"
-  options['printenv']="false"
-  options['query']="false"
-  options['refreshinstaller']="false"
-  options['reorderuefi']="false"
-  options['runchrootscript']="false"
-  options['scpheader']="false"
-  options['searchdrivers']="false"
-  options['secureboot']="true"
-  options['serial']="true"
-  options['sshkey']="true"
-  options['strict']="false"
-  options['unmount']="true"
-  options['updatesquashfs']="false"
-  options['zfs']="false"
-  options['zfsfilesystems']="false"
 }
 
 # Function: set_default_os['name']}
