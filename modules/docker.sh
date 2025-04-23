@@ -153,8 +153,6 @@ create_docker_iso () {
           fi
         fi
       done
-      echo "${script_args}"
-      exit
       echo "${iso['dockerworkdir']}/files/${script['bin']} ${script_args} --workdir ${iso['dockerworkdir']} --preworkdir ${iso['workdir']}" >> "${local_script}"
       print_file "${local_script}"
       execute_command "chmod +x ${local_script}"
