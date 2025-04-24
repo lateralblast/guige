@@ -66,11 +66,11 @@ https://github.com/lateralblast/modest/wiki
 
 Links to documentation/resources:
 
-- [Command Line Examples](https://github.com/lateralblast/modest/wiki/Examples)
-- [Usage Information](https://github.com/lateralblast/modest/wiki/Usage)
-- [Grub Command Line Processing](https://github.com/lateralblast/modest/wiki/Grub)
-- [Prerequisites](https://github.com/lateralblast/modest/wiki/Prerequisites)
-- [Manual Process Behind Creating An ISO](https://github.com/lateralblast/modest/wiki/Process)
+- [Command Line Examples](https://github.com/lateralblast/guige/wiki/Examples)
+- [Usage Information](https://github.com/lateralblast/guige/wiki/Usage)
+- [Grub Command Line Processing](https://github.com/lateralblast/guige/wiki/Grub)
+- [Prerequisites](https://github.com/lateralblast/guige/wiki/Prerequisites)
+- [Manual Process Behind Creating An ISO](https://github.com/lateralblast/guige/wiki/Process)
 
 
 Todo
