@@ -838,7 +838,7 @@ prepare_autoinstall_iso () {
             grub_param="grub${param}"
             if [ ! "${iso[${grub_param}]}" = "" ]; then
               if [ "${param}" = "password" ]; then
-                echo "    - \"sed -i \\\"s/${grub_param}/\$(cat /proc/cmdline |awk -F'${param}=' '{print \$2}' |awk '{print \$1}' |openssl passwd -1 -stdin)/g\\\" /autoinstall.yaml\"" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+                echo "    - \"sed -i \\\"s/${grub_param}/\$(cat /proc/cmdline |awk -F'${param}=' '{print \$2}' |awk '{print \$1}' |/usr/bin/openssl passwd -1 -stdin)/g\\\" /autoinstall.yaml\"" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
               else
                 echo "    - \"sed -i \\\"s/${grub_param}/\$(cat /proc/cmdline |awk -F'${param}=' '{print \$2}' |awk '{print \$1}')/g\\\" /autoinstall.yaml\"" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
               fi
