@@ -55,15 +55,23 @@ update_iso_url () {
         if [ "${iso['release']}" = "${current['betarelease']}" ]; then
           iso['url']="https://releases.ubuntu.com/${iso['codename']}/${iso['inputfilebase']}"
         else
-          if [[ "${iso['arch']}" =~ arm ]]; then
-            iso['url']="https://cdimage.ubuntu.com/releases/${iso['majorrelease']}.${iso['minorrelease']}/release/${iso['inputfilebase']}"
+          if [ "${iso['release']}" = "${current['devrelease']}" ]; then
+            iso['url']="https://cdimage.ubuntu.com/daily-live/current/${iso['codename']}-desktop-${iso['arch']}.iso"
           else
-            iso['url']="https://releases.ubuntu.com/${iso['release']}/${iso['inputfilebase']}"
+            if [[ "${iso['arch']}" =~ arm ]]; then
+              iso['url']="https://cdimage.ubuntu.com/daily-live/current/${iso['majorrelease']}.${iso['minorrelease']}/release/${iso['inputfilebase']}"
+            else
+              iso['url']="https://releases.ubuntu.com/${iso['release']}/${iso['inputfilebase']}"
+            fi
           fi
         fi
         ;;
       *)
-        iso['url']="https://cdimage.ubuntu.com/releases/${iso['release']}/release/${iso['inputfilebase']}"
+        if [ "${iso['release']}" = "${current['devrelease']}" ]; then
+          iso['url']="https://cdimage.ubuntu.com/daily-live/current/${iso['codename']}-desktop-${iso['arch']}.iso"
+        else
+          iso['url']="https://cdimage.ubuntu.com/releases/${iso['release']}/release/${iso['inputfilebase']}"
+        fi
         ;;
     esac
     if [ "${old['url']}" = "" ]; then
@@ -403,6 +411,9 @@ get_info_from_iso () {
         ;;
       "plucky")
         iso['release']="${current['release2504']}"
+        ;;
+      "questing")
+        iso['release']="${current['release2510']}"
         ;;
       "ubuntu")
         iso['release']=$(echo "${test_file}" |cut -f2 -d- )

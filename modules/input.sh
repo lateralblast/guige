@@ -176,6 +176,10 @@ get_code_name () {
       defaults['codename']="plucky"
       iso['codename']="plucky"
       ;;
+    "25.10")
+      defaults['codename']="questing"
+      iso['codename']="questing"
+      ;;
   esac
 }
 

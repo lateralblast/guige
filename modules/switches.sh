@@ -218,8 +218,6 @@ process_switches () {
         ;;
     esac
   fi
-  echo "${iso['inputfile']}"
-  echo "${iso['release']}"
   if [ "${options['query']}" = "true" ]; then
     get_info_from_iso
   else
@@ -241,8 +239,13 @@ process_switches () {
               iso['inputfile']="${iso['workdir']}/files/${iso['osname']}-${iso['release']}-beta-desktop-${iso['arch']}.iso"
               iso['outputfile']="${iso['workdir']}/files/${iso['osname']}-${iso['release']}-beta-desktop-${iso['arch']}-${iso['boottype']}-autoinstall.iso"
             else
-              iso['inputfile']="${iso['workdir']}/files/${iso['osname']}-${iso['release']}-desktop-${iso['arch']}.iso"
-              iso['outputfile']="${iso['workdir']}/files/${iso['osname']}-${iso['release']}-desktop-${iso['arch']}-${iso['boottype']}-autoinstall.iso"
+              if [ "${iso['release']}" = "${current['devrelease']}" ]; then
+                iso['inputfile']="${iso['workdir']}/files/${iso['codename']}-desktop-${iso['arch']}.iso"
+                iso['outputfile']="${iso['workdir']}/files/${iso['codename']}-desktop-${iso['arch']}-${iso['boottype']}-autoinstall.iso"
+              else
+                iso['inputfile']="${iso['workdir']}/files/${iso['osname']}-${iso['release']}-desktop-${iso['arch']}.iso"
+                iso['outputfile']="${iso['workdir']}/files/${iso['osname']}-${iso['release']}-desktop-${iso['arch']}-${iso['boottype']}-autoinstall.iso"
+              fi
             fi
             ;;
           *)
@@ -250,8 +253,13 @@ process_switches () {
               iso['inputfile']="${iso['workdir']}/files/${iso['osname']}-${iso['release']}-beta-live-server-${iso['arch']}.iso"
               iso['outputfile']="${iso['workdir']}/files/${iso['osname']}-${iso['release']}-beta-live-server-${iso['arch']}-${iso['boottype']}-autoinstall.iso"
             else
-              iso['inputfile']="${iso['workdir']}/files/${iso['osname']}-${iso['release']}-live-server-${iso['arch']}.iso"
-              iso['outputfile']="${iso['workdir']}/files/${iso['osname']}-${iso['release']}-live-server-${iso['arch']}-${iso['boottype']}-autoinstall.iso"
+              if [ "${iso['release']}" = "${current['devrelease']}" ]; then
+                iso['inputfile']="${iso['workdir']}/files/${iso['codename']}-desktop-${iso['arch']}.iso"
+                iso['outputfile']="${iso['workdir']}/files/${iso['codename']}-desktop-${iso['arch']}-${iso['boottype']}-autoinstall.iso"
+              else
+                iso['inputfile']="${iso['workdir']}/files/${iso['osname']}-${iso['release']}-live-server-${iso['arch']}.iso"
+                iso['outputfile']="${iso['workdir']}/files/${iso['osname']}-${iso['release']}-live-server-${iso['arch']}-${iso['boottype']}-autoinstall.iso"
+              fi
             fi
             ;;
         esac

@@ -805,3 +805,5 @@
 # Updated usage information
 # 4.0.1: Mon  5 May 2025 12:23:05 AEST
 # Added path to openssl command
+# 4.0.2: Fri  9 May 2025 10:40:46 AEST
+# Added Ubuntu 25.10 desktop support

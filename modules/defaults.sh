@@ -12,7 +12,7 @@
 set_current_defaults () {
   current['arch']="amd64"
   current['codename']="jammy"
-  current['devrelease']="25.04"
+  current['devrelease']="25.10"
   current['betarelease']=""
   current['dockerubunturelease']="24.04"
   current['oldrelease']="23.04"
@@ -29,6 +29,7 @@ set_current_defaults () {
   current['release2404']="24.04.2"
   current['release2410']="24.10"
   current['release2504']="25.04"
+  current['release2510']="25.10"
 }
 
 # Function: set_default_defaults
