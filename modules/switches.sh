@@ -210,7 +210,7 @@ process_switches () {
   fi
   if [ "${iso['volid']}" = "" ] || [[ ! "${iso['volid']}" =~ ${iso['release']} ]]; then
     case ${iso['build']} in
-      desktop)
+      *desktop*)
         iso['volid']="${iso['releasename']} ${iso['release']} ${iso['arch']} Desktop"
         ;;
       *)
