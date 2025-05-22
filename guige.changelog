@@ -809,3 +809,7 @@
 # Added Ubuntu 25.10 desktop support
 # 4.0.3: Fri  9 May 2025 14:17:52 AEST
 # Improved Volume ID determination
+# 4.0.4: Thu 22 May 2025 17:50:11 AEST
+# Added support for Ubuntu 25.10 server
+# 4.0.5: Fri 23 May 2025 07:15:45 AEST
+# Improved determination of output file name

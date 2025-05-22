@@ -180,6 +180,9 @@ process_switches () {
       esac
     fi
   done
+  if [ "${iso['outputfile']}" = "${defaults['outputfile']}" ]; then
+    iso['outputfile']="${iso['workdir']}/files/ubuntu-${iso['release']}-live-server-${iso['arch']}-${iso['boottype']}-autoinstall.iso"
+  fi
   if [ "${options['autoinstall']}" = "true" ]; then
     if [ ! -f "${iso['autoinstallfile']}" ]; then
       echo "File ${iso['autoinstallfile']} does not exist"
@@ -222,58 +225,7 @@ process_switches () {
     get_info_from_iso
   else
     if [ "${options['bootserverfile']}" = "false" ]; then
-      if [ "${iso['osname']}" = "ubuntu" ]; then
-        case ${iso['build']} in
-          "daily-live"|"daily-live-server"|"daily/server")
-            iso['inputfile']="${iso['workdir']}/files/${iso['codename']}-live-server-${iso['arch']}.iso"
-            iso['outputfile']="${iso['workdir']}/files/${iso['codename']}-live-server-${iso['arch']}-${iso['boottype']}-autoinstall.iso"
-            iso['inputci']="${iso['workdir']}/files/${iso['codename']}-server-cloudimg-${iso['arch']}.img"
-            iso['outputci']="${iso['workdir']}/files/${iso['codename']}-server-cloudimg-${iso['arch']}.img"
-            ;;
-          "daily-desktop"|"daily/desktop")
-            iso['inputfile']="${iso['workdir']}/files/${iso['codename']}-desktop-${iso['arch']}.iso"
-            iso['outputfile']="${iso['workdir']}/files/${iso['codename']}-desktop-${iso['arch']}-${iso['boottype']}-autoinstall.iso"
-            ;;
-         "desktop"|"live/desktop")
-            if [ "${iso['release']}" = "${current['betarelease']}" ]; then
-              iso['inputfile']="${iso['workdir']}/files/${iso['osname']}-${iso['release']}-beta-desktop-${iso['arch']}.iso"
-              iso['outputfile']="${iso['workdir']}/files/${iso['osname']}-${iso['release']}-beta-desktop-${iso['arch']}-${iso['boottype']}-autoinstall.iso"
-            else
-              if [ "${iso['release']}" = "${current['devrelease']}" ]; then
-                iso['inputfile']="${iso['workdir']}/files/${iso['codename']}-desktop-${iso['arch']}.iso"
-                iso['outputfile']="${iso['workdir']}/files/${iso['codename']}-desktop-${iso['arch']}-${iso['boottype']}-autoinstall.iso"
-              else
-                iso['inputfile']="${iso['workdir']}/files/${iso['osname']}-${iso['release']}-desktop-${iso['arch']}.iso"
-                iso['outputfile']="${iso['workdir']}/files/${iso['osname']}-${iso['release']}-desktop-${iso['arch']}-${iso['boottype']}-autoinstall.iso"
-              fi
-            fi
-            ;;
-          *)
-            if [ "${iso['release']}" = "${current['betarelease']}" ]; then
-              iso['inputfile']="${iso['workdir']}/files/${iso['osname']}-${iso['release']}-beta-live-server-${iso['arch']}.iso"
-              iso['outputfile']="${iso['workdir']}/files/${iso['osname']}-${iso['release']}-beta-live-server-${iso['arch']}-${iso['boottype']}-autoinstall.iso"
-            else
-              if [ "${iso['release']}" = "${current['devrelease']}" ]; then
-                iso['inputfile']="${iso['workdir']}/files/${iso['codename']}-desktop-${iso['arch']}.iso"
-                iso['outputfile']="${iso['workdir']}/files/${iso['codename']}-desktop-${iso['arch']}-${iso['boottype']}-autoinstall.iso"
-              else
-                iso['inputfile']="${iso['workdir']}/files/${iso['osname']}-${iso['release']}-live-server-${iso['arch']}.iso"
-                iso['outputfile']="${iso['workdir']}/files/${iso['osname']}-${iso['release']}-live-server-${iso['arch']}-${iso['boottype']}-autoinstall.iso"
-              fi
-            fi
-            ;;
-        esac
-      else
-        case ${iso['build']} in
-          *)
-            iso['inputfile']="${iso['workdir']}/files/${iso['releasename']}-${iso['release']}-${iso['arch']}-${iso['build']}.iso"
-            iso['outputfile']="${iso['workdir']}/files/${iso['releasename']}-${iso['release']}-${iso['arch']}-${iso['boottype']}-${iso['build']}-kickstart.iso"
-            iso['inputci']="${iso['workdir']}/files/ubuntu-${iso['release']}-server-cloudimg-${iso['arch']}.img"
-            iso['outputci']="${iso['workdir']}/files/ubuntu-${iso['release']}-server-cloudimg-${iso['arch']}.img"
-            iso['bootserverfile']="${iso['outputfile']}"
-          ;;
-        esac
-      fi
+      update_iso_url
     fi
   fi
   if [ "${options['biosdevname']}" = "true" ]; then
@@ -292,4 +244,5 @@ process_switches () {
   if [ ! "${iso['ip']}" = "" ] || [ ! "${iso['grubip']}" = "" ]; then 
     options['dhcp']="false"
   fi
+  update_output_file_name
 }

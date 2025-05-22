@@ -43,6 +43,7 @@ update_iso_url () {
         else
           iso['url']="https://cdimage.ubuntu.com/ubuntu-server/${iso['codename']}/daily-live/current/${iso['inputfilebase']}"
         fi
+        iso['inputfile']="${iso['workdir']}/files/${iso['codename']}-live-server-${iso['arch']}.iso"
         ;;
       daily-desktop|daily/desktop)
         if [ "${iso['release']}" = "${current['devrelease']}" ] || [ "${iso['codename']}" = "${current['codename']}" ]; then
@@ -50,13 +51,21 @@ update_iso_url () {
         else
           iso['url']="https://cdimage.ubuntu.com/${iso['codename']}/daily-live/current/${iso['inputfilebase']}"
         fi
+        iso['inputfile']="${iso['workdir']}/files/${iso['codename']}-desktop-${iso['arch']}.iso"
         ;;
       desktop|server|live-server|live/server)
         if [ "${iso['release']}" = "${current['betarelease']}" ]; then
           iso['url']="https://releases.ubuntu.com/${iso['codename']}/${iso['inputfilebase']}"
+          iso['inputfile']="${iso['workdir']}/files/${iso['osname']}-${iso['release']}-beta-desktop-${iso['arch']}.iso"
         else
           if [ "${iso['release']}" = "${current['devrelease']}" ]; then
-            iso['url']="https://cdimage.ubuntu.com/daily-live/current/${iso['codename']}-desktop-${iso['arch']}.iso"
+            if [[ "${iso['build']}" =~ server ]]; then
+              iso['url']="https://cdimage.ubuntu.com/ubuntu-server/daily-live/current/${iso['codename']}-live-server-${iso['arch']}.iso"
+              iso['inputfile']="${iso['workdir']}/files/${iso['codename']}-live-server-${iso['arch']}.iso"
+            else
+              iso['url']="https://cdimage.ubuntu.com/daily-live/current/${iso['codename']}-desktop-${iso['arch']}.iso"
+              iso['inputfile']="${iso['workdir']}/files/${iso['codename']}-desktop-${iso['arch']}.iso"
+            fi
           else
             if [[ "${iso['arch']}" =~ arm ]]; then
               iso['url']="https://cdimage.ubuntu.com/daily-live/current/${iso['majorrelease']}.${iso['minorrelease']}/release/${iso['inputfilebase']}"
@@ -68,7 +77,13 @@ update_iso_url () {
         ;;
       *)
         if [ "${iso['release']}" = "${current['devrelease']}" ]; then
-          iso['url']="https://cdimage.ubuntu.com/daily-live/current/${iso['codename']}-desktop-${iso['arch']}.iso"
+          if [[ "${iso['build']}" =~ server ]]; then
+            iso['url']="https://cdimage.ubuntu.com/ubuntu-server/daily-live/current/${iso['codename']}-live-server-${iso['arch']}.iso"
+            iso['inputfile']="${iso['workdir']}/files/${iso['codename']}-live-server-${iso['arch']}.iso"
+          else
+            iso['url']="https://cdimage.ubuntu.com/daily-live/current/${iso['codename']}-desktop-${iso['arch']}.iso"
+            iso['inputfile']="${iso['workdir']}/files/${iso['codename']}-desktop-${iso['arch']}.iso"
+          fi
         else
           iso['url']="https://cdimage.ubuntu.com/releases/${iso['release']}/release/${iso['inputfilebase']}"
         fi
