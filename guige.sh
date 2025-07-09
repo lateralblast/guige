@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Name:         guige (Generic Ubuntu/Unix ISO Generation Engine)
-# Version:      4.0.5
+# Version:      4.0.9
 # Release:      1
 # License:      CC-BA (Creative Commons By Attribution)
 #               http://creativecommons.org/licenses/by/4.0/legalcode
@@ -488,6 +488,7 @@ do
     --help|-h)
       # Print help
       print_help "cli"
+      shift
       ;;
     --hostname)
       # Hostname
@@ -868,11 +869,11 @@ do
       # Usage information
       check_value "$1" "$2"
       print_info "$2"
+      shift 2
       exit
       ;;
     --version|-V)
       # Display version
-      check_value "$1" "$2"
       echo "${script['version']}"
       shift
       exit

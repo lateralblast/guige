@@ -813,3 +813,11 @@
 # Added support for Ubuntu 25.10 server
 # 4.0.5: Fri 23 May 2025 07:15:45 AEST
 # Improved determination of output file name
+# 4.0.6: Wed  9 Jul 2025 18:41:37 AEST
+# Fixed version switch
+# 4.0.7: Wed  9 Jul 2025 19:02:06 AEST
+# Fixed output file determination
+# 4.0.8: Wed  9 Jul 2025 20:19:07 AEST
+# Improved code to determine inputci
+# 4.0.9: Wed  9 Jul 2025 21:44:58 AEST
+# Improved code to determine oututci

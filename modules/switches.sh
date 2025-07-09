@@ -180,6 +180,18 @@ process_switches () {
       esac
     fi
   done
+  if [ "${iso['workdir']}" = "${defaults['workdir']}" ] || [ "${iso['workdir']}" = "" ]; then
+    iso['workdir']="$HOME/Documents/${script['name']}/${iso['osname']}/${iso['build']}/${iso['release']}"
+  fi
+  if [ "${iso['inputci']}" = "${defaults['inputci']}" ]; then
+    get_input_ci
+  fi
+  if [ "${iso['outputci']}" = "${defaults['outputci']}" ]; then
+    get_output_ci
+  fi
+  if [ "${iso['dockerworkdir']}" = "${defaults['dockerworkdir']}" ] || [ "${iso['dockerworkdir']}" = "" ]; then
+    iso['dockerworkdir']="/root/${script['name']}/${iso['osname']}/${iso['build']}/${iso['release']}"
+  fi
   if [ "${iso['outputfile']}" = "${defaults['outputfile']}" ]; then
     iso['outputfile']="${iso['workdir']}/files/ubuntu-${iso['release']}-live-server-${iso['arch']}-${iso['boottype']}-autoinstall.iso"
   fi
@@ -204,12 +216,6 @@ process_switches () {
     if [ "${iso['codename']}" = "" ]; then
       get_code_name
     fi
-  fi
-  if [ "${iso['workdir']}" = "${defaults['workdir']}" ] || [ "${iso['workdir']}" = "" ]; then
-    iso['workdir']="$HOME/Documents/${script['name']}/${iso['osname']}/${iso['build']}/${iso['release']}"
-  fi
-  if [ "${iso['dockerworkdir']}" = "${defaults['dockerworkdir']}" ] || [ "${iso['dockerworkdir']}" = "" ]; then
-    iso['dockerworkdir']="/root/${script['name']}/${iso['osname']}/${iso['build']}/${iso['release']}"
   fi
   if [ "${iso['volid']}" = "" ] || [[ ! "${iso['volid']}" =~ ${iso['release']} ]]; then
     case ${iso['build']} in

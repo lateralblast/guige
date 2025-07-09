@@ -5,6 +5,34 @@
 # shellcheck disable=SC2153
 # shellcheck disable=SC2154
 
+# Function get_input_ci
+#
+# Get Input CI
+
+get_input_ci () {
+  if [ "${iso['release']}" = "${current['devrelease']}" ]; then
+    iso['inputci']="${iso['workdir']}/files/${iso['codename']}-server-cloudimg-${iso['arch']}.img"
+  else
+    case ${iso['build']} in
+      "daily-live"|"daily-live-server")
+        iso['inputci']="${iso['workdir']}/files/${iso['codename']}-server-cloudimg-${iso['arch']}.img"
+        ;;
+      *)
+        iso['inputci']="${iso['workdir']}/files/ubuntu-${iso['release']}-server-cloudimg-${iso['arch']}.img"
+        ;;
+    esac
+  fi
+}
+
+# Function get_output_ci
+#
+# Get Output CI
+
+get_output_ci () {
+  iso['outputcibase']=$( basename "${iso['inputci']}" )
+  iso['outputci']="${iso['workdir']}/file/${iso['outputcibase']}"
+}
+
 # Funtion update_ci_url
 #
 # Update CI URL
@@ -12,14 +40,18 @@
 update_ci_url () {
   iso['inputcibase']=$( basename "${iso['inputci']}" )
   if [ "${iso['osname']}" = "ubuntu" ]; then
-    case ${iso['build']} in
-      "daily-live"|"daily-live-server")
-        iso['ciurl']="https://cloud-images.ubuntu.com/daily/server/${iso['codename']}/current/${iso['inputcibase']}"
-        ;;
-      *)
-        iso['ciurl']="https://cloud-images.ubuntu.com/releases/${iso['release']}/release/${iso['inputcibase']}"
-        ;;
-    esac
+    if [ "${iso['release']}" = "${current['devrelease']}" ]; then
+      iso['ciurl']="https://cloud-images.ubuntu.com/daily/server/${iso['codename']}/current/${iso['inputcibase']}"
+    else
+      case ${iso['build']} in
+        "daily-live"|"daily-live-server")
+          iso['ciurl']="https://cloud-images.ubuntu.com/daily/server/${iso['codename']}/current/${iso['inputcibase']}"
+          ;;
+        *)
+          iso['ciurl']="https://cloud-images.ubuntu.com/releases/${iso['release']}/release/${iso['inputcibase']}"
+          ;;
+      esac
+    fi
   fi
 }
 
