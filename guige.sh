@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Name:         guige (Generic Ubuntu/Unix ISO Generation Engine)
-# Version:      4.1.1
+# Version:      4.1.2
 # Release:      1
 # License:      CC-BA (Creative Commons By Attribution)
 #               http://creativecommons.org/licenses/by/4.0/legalcode
@@ -124,24 +124,24 @@ fi
 while test $# -gt 0
 do
   case "$1" in
-    --action|--actions)
+    --action*)
       # Action to perform
       check_value "$1" "$2"
       iso['action']="$2"
       shift 2
       ;;
-    --allowlist|--allow)
+    --allowlist)
       # Allow/load additional kernel modules(s)
       check_value "$1" "$2"
       iso['allowlist']="$2"
       shift 2
       ;;
-    --allowpassword|--allow-password)
+    --allowpassword)
       # Allow password access via SSH
       iso['allowpassword']="true"
       shift
       ;;
-    --allowservice|--allowservices|--service|--services)
+    --allowservice)
       # Allow Services
       check_value "$1" "$2"
       iso['allowservice']="$2"
@@ -154,13 +154,13 @@ do
       shift 2
       iso['arch']=$( echo "${iso['arch']}" |sed "s/aarch64/arm64/g" |sed "s/x86_64/amd64/g" |sed "s/x86/amd64/g" )
       ;;
-    --autoinstalldir|--aidir)
+    --autoinstalldir)
       # Directory where autoinstall config files are stored on ISO
       check_value "$1" "$2"
       iso['autoinstalldir']="$2"
       shift 2
       ;;
-    --blocklist|--block)
+    --blocklist)
       # Block kernel module(s)
       check_value "$1" "$2"
       iso['blocklist']="$2"
@@ -172,19 +172,25 @@ do
       iso['bmcip']="$2"
       shift 2
       ;;
-    --bmcpassword|--bmcpass)
+    --bmcpassword)
       # BMC/iDRAC password
       check_value "$1" "$2"
       iso['bmcpassword']="$2"
       shift 2
       ;;
-    --bmcusername|--bmcuser)
+    --bmcusername)
       # BMC/iDRAC User
       check_value "$1" "$2"
       iso['bmcusername']="$2"
       shift 2
       ;;
-    --disk|--bootdisk|--installdisk|--firstdisk)
+    --cpus)
+      # Number of CPUs
+      check_value "$1" "$2"
+      iso['cpus']="$2"
+      shift 2
+      ;;
+    --disk)
       # Boot Disk devices
       check_value "$1" "$2"
       iso['disk']="$2"
@@ -221,7 +227,7 @@ do
       iso['boottype']="$2"
       shift 2
       ;;
-    --build|--buildtype)
+    --build)
       # Type of ISO to build
       check_value "$1" "$2"
       iso['build']="$2"
@@ -244,7 +250,7 @@ do
       iso['cidr']="$2"
       shift 2
       ;;
-    --codename|--distro)
+    --codename)
       # Linux release codename or distribution
       iso['codename']="$2"
       shift 2
@@ -273,7 +279,7 @@ do
       iso['delete']="$2"
       shift 2
       ;;
-    --disableservice|--disableservices|--disable)
+    --disableservice)
       # Disable service(s)
       check_value "$1" "$2"
       iso['disableservice']="$2"
@@ -303,10 +309,16 @@ do
       iso['diskwwn']="$2"
       shift 2
       ;;
-    --dns|--nameserver)
+    --dns)
       # DNS server IP
       check_value "$1" "$2"
       iso['dns']="$2"
+      shift 2
+      ;;
+    --dnsoptions)
+      # DNS Options
+      check_value "$1" "$2"
+      iso['dnsoptions']="$2"
       shift 2
       ;;
     --dockerworkdir)
@@ -315,7 +327,7 @@ do
       iso['dockerworkdir']="$2"
       shift 2
       ;;
-    --enableservice|--enableservices|--enable)
+    --enableservice)
       # Enable service(s)
       check_value "$1" "$2"
       iso['enableservice']="$2"
@@ -371,7 +383,7 @@ do
       iso['grubmenu']="$2"
       shift 2
       ;;
-    --grubtimeout|--grub-timeout)
+    --grubtimeout)
       # Grub timeout
       check_value "$1" "$2"
       iso['grubtimeout']="$2"
@@ -572,26 +584,26 @@ do
       iso['kernelserialargs']="$2"
       shift 2
       ;;
-    --isolinuxfile|--isolinux)
+    --isolinuxfile)
       # Import isolinux file
       check_value "$1" "$2"
       options['isolinuxfile']="true"
       iso['isolinuxfile']="$2"
       shift 2
       ;;
-    --packages|--isopackages)
+    --packages)
       # Additional packages to install
       check_value "$1" "$2"
       iso['packages']="$2"
       shift 2
       ;;
-    --url|--isourl)
+    --url)
       # ISO URL
       check_value "$1" "$2"
       iso['url']="$2"
       shift 2
       ;;
-    --volid|--isovolid)
+    --volid)
       # ISO Volume ID
       check_value "$1" "$2"
       iso['volid']="$2"
@@ -621,13 +633,19 @@ do
       iso['lvname']="$2"
       shift 2
       ;;
+    --name)
+      # VM name
+      check_value "$1" "$2"
+      iso['name']="$2"
+      shift 2
+      ;;
     --netmask)
       # Netmask
       check_value "$1" "$2"
       iso['netmask']="$2"
       shift 2
       ;;
-    --nic|--vmnic|--installnic|--bootnic|--firstnic)
+    --nic)
       # NIC to use for installation
       check_value "$1" "$2"
       iso['nic']="$2"
@@ -675,7 +693,7 @@ do
       iso['outputci']="$2"
       shift 2
       ;;
-    --outputfile|--outputiso)
+    --outputfile)
       # Output ISO file
       check_value "$1" "$2"
       iso['outputfile']="$2"
@@ -687,7 +705,7 @@ do
       iso['password']="$2"
       shift 2
       ;;
-    --passwordalgorithm|--password-algorithm|--passalgo|--algoritm)
+    --passwordalgorithm)
       # Password Algorithm
       check_value "$1" "$2"
       iso['passwordalgorithm']="$2"
@@ -723,7 +741,7 @@ do
       iso['pvname']="$2"
       shift 2
       ;;
-    --ram|--vmram)
+    --ram)
       # RAM size
       check_value "$1" "$2"
       iso['ram']="$2"
@@ -767,6 +785,12 @@ do
       # Search output for value
       check_value "$1" "$2"
       iso['search']="$2"
+      shift 2
+      ;;
+    --searchdomain)
+      # Search domain
+      check_value "$1" "$2"
+      iso['searchdomain']="$2"
       shift 2
       ;;
     --selinux)
@@ -837,13 +861,13 @@ do
       iso['suffix']="$2"
       shift 2
       ;;
-    --swap|--vmswap)
+    --swap)
       # Swap device 
       check_value "$1" "$2"
       iso['swap']="$2"
       shift 2
       ;;
-    --swapsize|--vmswapsize)
+    --swapsize)
       # Swap size
       check_value "$1" "$2"
       iso['swapsize']="$2"
@@ -861,7 +885,7 @@ do
       iso['updates']="$2"
       shift 2
       ;;
-    --autoinstallfile|--userdata|--autoinstall|--kickstart)
+    --autoinstallfile)
       # Import autoinstall config file
       check_value "$1" "$2"
       options['autoinstall']="true"
@@ -869,7 +893,7 @@ do
       iso['autoinstallfile']="$2"
       shift 2
       ;;
-    --username|--user)
+    --username)
       # Username
       check_value "$1" "$2"
       iso['username']="$2"
@@ -894,25 +918,13 @@ do
       iso['vgname']="$2"
       shift 2
       ;;
-    --vmcpus|--cpus)
-      # Number of CPUs
-      check_value "$1" "$2"
-      iso['cpus']="$2"
-      shift 2
-      ;;
-    --vmname|--name)
-      # VM name
-      check_value "$1" "$2"
-      iso['name']="$2"
-      shift 2
-      ;;
-    --vmtype|--type)
+    --type)
       # VM type
       check_value "$1" "$2"
       iso['type']="$2"
       shift 2
       ;;
-    --volumemanager|--volumemanagers|--volmgr|--volmgrs)
+    --volumemanager)
       # Volumemanager(s)
       check_value "$1" "$2"
       iso['volumemanager']="$2"
@@ -924,7 +936,7 @@ do
       iso['workdir']="$2"
       shift 2
       ;;
-    --zfsfilesystems|--zfs)
+    --zfsfilesystems)
       # Additional ZFS filesystems
       check_value "$1" "$2"
       options['zfsfilesystems']="true"

@@ -889,6 +889,11 @@ prepare_autoinstall_iso () {
           fi
         fi
         echo "  late-commands:" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+        echo "    - \"echo \\\"DNS=${iso['dns']}\\\" >> ${iso['targetmount']}/etc/systemd/resolved.conf\"" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+        echo "    - \"rm ${iso['targetmount']}/etc/resolv.conf\"" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+        echo "    - \"echo \\\"nameserver ${iso['dns']}\\\" > ${iso['targetmount']}/etc/resolv.conf\"" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+        echo "    - \"echo \\\"options ${iso['dnsoptions']}\\\" >> ${iso['targetmount']}/etc/resolv.conf\"" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+        echo "    - \"echo \\\"search ${iso['searchdomain']}\\\" >> ${iso['targetmount']}/etc/resolv.conf\"" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
         if [ ! "${num_debs}" = "0" ]; then
           if [ "${options['latepackages']}" = "true" ]; then
             echo "    - \"mkdir -p ${iso['targetmount']}/var/postinstall/packages\"" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
