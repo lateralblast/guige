@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Name:         guige (Generic Ubuntu/Unix ISO Generation Engine)
-# Version:      4.0.9
+# Version:      4.1.0
 # Release:      1
 # License:      CC-BA (Creative Commons By Attribution)
 #               http://creativecommons.org/licenses/by/4.0/legalcode
@@ -106,11 +106,14 @@ if [ -d "${script['modules']}" ]; then
   done
 fi
 
-set_defaults
-set_default_osname
-set_default_release
-set_default_dirs
-set_default_files
+regex='[--version,--help,-V,-h]$'
+if [[ ! "${script['args']}" =~ $regex ]]; then
+  set_defaults
+  set_default_osname
+  set_default_release
+  set_default_dirs
+  set_default_files
+fi
 
 # Function: Handle command line arguments
 

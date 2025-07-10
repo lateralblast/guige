@@ -821,3 +821,5 @@
 # Improved code to determine inputci
 # 4.0.9: Wed  9 Jul 2025 21:44:58 AEST
 # Improved code to determine oututci
+# 4.1.0: Thu 10 Jul 2025 09:59:32 AEST
+# Added code to ignore environment tests for version and help switches
