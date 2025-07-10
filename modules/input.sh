@@ -48,7 +48,7 @@ get_password_crypt () {
     fi
   else
     if [ ! -f "/usr/bin/mkpasswd" ]; then
-      install_required_packages "${iso['requiredpackages']}"
+      install_required_packages
     fi
     if [ "${options['testmode']}" = "false" ]; then
       iso['passwordcrypt']=$( echo "${iso['password']}" |mkpasswd --method=SHA-512 --stdin )

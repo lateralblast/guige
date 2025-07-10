@@ -153,7 +153,7 @@ create_iso () {
 copy_iso () {
   handle_output "# Copying ISO files from ${iso['mountdir']} to ${iso['newdir']}/cd" "TEXT"
   if [ ! -f "/usr/bin/rsync" ]; then
-    install_required_packages "${iso['requiredpackages']}"
+    install_required_packages
   fi
   uc_test_dir="${iso['mountdir']}/EFI"
   lc_test_dir="${iso['mountdir']}/efi"
@@ -509,7 +509,7 @@ get_info_from_iso () {
 
 create_autoinstall_iso () {
   if [ ! -f "/usr/bin/xorriso" ]; then
-    install_required_packages "${iso['requiredpackages']}"
+    install_required_packages
   fi
   check_file_perms "${iso['outputfile']}"
   handle_output "# Creating ISO" "TEXT"

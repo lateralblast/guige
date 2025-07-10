@@ -11,7 +11,7 @@
 
 create_kickstart_iso () {
   if [ ! -f "/usr/bin/xorriso" ]; then
-    install_required_packages "${iso['requiredpackages']}"
+    install_required_packages
   fi
   if [ "${options['testmode']}" = "false" ]; then
     handle_output "# Creating ISO" "TEXT"

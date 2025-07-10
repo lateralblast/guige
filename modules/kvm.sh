@@ -43,7 +43,7 @@ check_kvm_user () {
 
 check_kvm_config () {
   if [ -z "$( command -v virsh )" ]; then
-    install_required_packages "${iso['requiredkvmpackages']}"
+    install_required_kvm_packages
   fi
   if [ "${os['name']}" = "Darwin" ]; then
     iso['brewdir']="/opt/homebrew/Cellar"
@@ -449,7 +449,7 @@ create_kvm_iso_vm () {
 
 delete_kvm_vm () {
   if [ -z "$( command -v virsh )" ]; then
-    install_required_packages "${iso['requiredkvmpackages']}"
+    install_required_kvm_packages
   fi
   if [ "${options['testmode']}" = "false" ]; then
     iso['status']=$( virsh list --all |grep -c "shut off" )
@@ -477,7 +477,7 @@ delete_kvm_vm () {
 
 list_kvm_vm () {
   if [ -z "$( command -v virsh )" ]; then
-    install_required_packages "${iso['requiredkvmpackages']}"
+    install_required_kvm_packages
   fi
   if [ "${os['name']}" = "Darwin" ]; then
     virsh list --all

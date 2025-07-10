@@ -56,7 +56,7 @@ copy_squashfs () {
 
 copy_ubuntu_squashfs () {
   if [ ! -f "/usr/bin/rsync" ]; then
-    install_required_packages "${iso['requiredpackages']}"
+    install_required_packages
   fi
   if [ "${options['updatesquashfs']}" = "true" ] || [ "${options['unpacksquashfs']}" = "true" ]; then
     handle_output "# Copying squashfs files" "TEXT"

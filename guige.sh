@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Name:         guige (Generic Ubuntu/Unix ISO Generation Engine)
-# Version:      4.1.0
+# Version:      4.1.1
 # Release:      1
 # License:      CC-BA (Creative Commons By Attribution)
 #               http://creativecommons.org/licenses/by/4.0/legalcode
@@ -750,6 +750,13 @@ do
       iso['releasename']="$2"
       shift 2
       ;; 
+    --requiredpackages)
+      # Required Packages
+      check_value "$1" "$2"
+      options['installrequiredpackages']="true"
+      iso['requiredpackages']="$2"
+      shift 2
+      ;; 
     --rootsize)
       # Root volume size
       check_value "$1" "$2"
@@ -942,6 +949,7 @@ do
 done
 
 # Setup functions
+
 set_default_osname
 set_default_arch
 set_default_release
@@ -958,6 +966,7 @@ process_options
 process_actions
 process_post_install
 update_required_packages
+install_required_packages
 update_iso_packages
 update_output_file_name
 update_iso_url
@@ -998,6 +1007,8 @@ if [ "${iso['action']}" = "test" ]; then
   fi
 fi
 
+
+
 # Handle specific functions
 
 if [ "${options['listvms']}" = "true" ]; then
@@ -1036,10 +1047,6 @@ if [ "${options['checkworkdir']}" = "true" ]; then
   if [ "${options['oldinstaller']}" = "true" ]; then
     check_old_workdir
   fi
-fi
-if [ "${options['installrequiredpackages']}" = "true" ]; then
-  options['help']="false"
-  install_required_packages "${iso['requiredpackages']}"
 fi
 if [ "${options['createexport']}" = "true" ]; then
   create_export

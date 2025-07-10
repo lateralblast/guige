@@ -40,6 +40,17 @@ install_package () {
   fi
 }
 
+# Function install_packages
+#
+# Install a list of packages
+
+install_packages () {
+  package_list="$1"
+  for package in ${package_list}; do
+    install_package "${package}"    
+  done
+}
+
 # Function: install_required_packages
 #
 # Install required packages
@@ -48,11 +59,19 @@ install_package () {
 # sudo apt install -y p7zip-full lftp wget xorriso
 
 install_required_packages () {
-  package_list="$1"
-  handle_output "# Checking required packages are installed" "TEXT"
-  for package in ${package_list}; do
-    install_package "${package}"    
-  done
+  if [ "${options['installrequiredpackages']}" = "true" ]; then
+    handle_output "# Checking required packages are installed" "TEXT"
+    install_packages "${iso['requiredpackages']}"
+  fi
+}
+
+# Function install_required_kvm_packages
+#
+# Install required KVM packages
+
+install_required_kvm_packages () {
+  handle_output "# Checking required KVM packages are installed" "TEXT"
+  install_packages "${iso['requiredkvmpackages']}"
 }
 
 # Function: handle_bios

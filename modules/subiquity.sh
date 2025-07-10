@@ -179,7 +179,7 @@
 
 prepare_autoinstall_iso () {
   if [ -z "$(command -v 7z)" ]; then
-    install_required_packages "${iso['requiredpackages']}"
+    install_required_packages
   fi
   handle_output "# Preparing autoinstall server ISO" "TEXT"
   iso['packagedir']="${iso['sourcedir']}/${iso['autoinstalldir']}/packages"
