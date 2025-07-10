@@ -106,7 +106,7 @@ if [ -d "${script['modules']}" ]; then
   done
 fi
 
-regex='[--version,--help,-V,-h]$'
+regex='[--version|--help|-V|-h]$'
 if [[ ! "${script['args']}" =~ $regex ]]; then
   set_defaults
   set_default_osname
