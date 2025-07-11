@@ -827,3 +827,5 @@
 # Improved check for required packages
 # 4.1.2: Thu 10 Jul 2025 15:10:06 AEST
 # Added resolver config update to install script
+# 4.1.3: Thu 10 Jul 2025 15:57:54 AEST
+# Fixed required packages list for non Linux platforms

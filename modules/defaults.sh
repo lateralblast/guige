@@ -111,7 +111,6 @@ set_default_defaults () {
   defaults['majorrelease']=$( echo "${defaults['release']}" |cut -f1 -d. )
   defaults['minorrelease']=$( echo "${defaults['release']}" |cut -f2 -d. )
   defaults['dotrelease']=$( echo "${defaults['release']}" |cut -f3 -d. )
-  defaults['requiredpackages']="binwalk casper genisoimage live-boot live-boot-initramfs-tools p7zip-full lftp wget xorriso whois squashfs-tools sudo file rsync net-tools nfs-kernel-server ansible dialog apt-utils jq ipcalc"
   defaults['rootsize']="-1"
   defaults['search']=""
   defaults['searchdomain']="."
@@ -143,6 +142,11 @@ set_default_defaults () {
   defaults['volumemanager']="zfs auto ext4 xfs btrfs"
   defaults['zfsfilesystems']="/var /var/lib /var/lib/AccountsService /var/lib/apt /var/lib/dpkg /var/lib/NetworkManager /srv /usr /usr/local /var/games /var/log /var/mail /var/snap /var/spool /var/www"
   defaults['zfsroot']="zfsroot"
+  if [ "${os['name']}" = "Linux" ]; then
+    defaults['requiredpackages']="binwalk casper genisoimage live-boot live-boot-initramfs-tools p7zip-full lftp wget xorriso whois squashfs-tools sudo file rsync net-tools nfs-kernel-server ansible dialog apt-utils jq ipcalc"
+  else
+    defaults['requiredpackages']="binwalk p7zip lftp wget xorriso whois file rsync net-tools ansible dialog jq ipcalc"
+  fi
 }
 
 # Function: set_defaults

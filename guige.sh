@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Name:         guige (Generic Ubuntu/Unix ISO Generation Engine)
-# Version:      4.1.2
+# Version:      4.1.3
 # Release:      1
 # License:      CC-BA (Creative Commons By Attribution)
 #               http://creativecommons.org/licenses/by/4.0/legalcode
@@ -106,7 +106,7 @@ if [ -d "${script['modules']}" ]; then
   done
 fi
 
-regex='[--version|--help|-V|-h]$'
+regex='--version$|--help|-V$|-h$|--usage'
 if [[ ! "${script['args']}" =~ $regex ]]; then
   set_defaults
   set_default_osname
