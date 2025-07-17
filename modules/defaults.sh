@@ -50,6 +50,7 @@ set_default_defaults () {
   defaults['bootproto']="dhcp"
   defaults['bootsize']="2048"
   defaults['boottype']="efi"
+  defaults['bridge']="br0"
   defaults['build']="server"
   defaults['chrootpackages']="zfsutils-linux zfs-initramfs xfsprogs btrfs-progs net-tools curl lftp wget sudo file rsync dialog setserial ansible apt-utils whois squashfs-tools duperemove jq btrfs-compsize iproute2"
   defaults['cidr']=""
@@ -475,7 +476,6 @@ set_default_cidr () {
       fi
     fi
   fi
-  defaults['bridge']="${defaults['interface']}"
 }
 
 # Function: get_cidr_from_netmask

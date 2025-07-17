@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Name:         guige (Generic Ubuntu/Unix ISO Generation Engine)
-# Version:      4.1.3
+# Version:      4.1.8
 # Release:      1
 # License:      CC-BA (Creative Commons By Attribution)
 #               http://creativecommons.org/licenses/by/4.0/legalcode
@@ -236,6 +236,13 @@ do
           options['daily']="true"
           ;;
       esac
+      shift 2
+      ;;
+    --bridge)
+      # Bridge name
+      check_value "$1" "$2"
+      iso['bridge']="$2"
+      options['bridge']="true"
       shift 2
       ;;
     --chrootpackages)

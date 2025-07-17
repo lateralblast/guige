@@ -17,6 +17,7 @@ set_options_defaults () {
   options['autoupgrade']="false"              # option - Enable auto upgrade
   options['biosdevname']="false"              # option - Use biosdevname
   options['bootserverfile']="false"           # option - Enable bootserver file
+  options['bridge']="false"                   # option - Enable bridge
   options['checkci']="false"                  # option - Check cloud-init
   options['checkdocker']="false"              # option - Check docker
   options['checkworkdir']="false"             # option - Check work directory
@@ -201,6 +202,7 @@ process_options () {
       fi
     done
   fi
+  update_output_file_name
 }
 
 # Function: get_release_info

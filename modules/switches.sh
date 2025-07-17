@@ -243,8 +243,8 @@ process_switches () {
     done
   fi
   if [ "${options['serial']}" = "true" ]; then
-    if [[ ! "${options['kernel']}" =~ ${options['kernelserialargs']} ]]; then
-      options['kernelargs']="${options['kernelargs']} ${options['kernelserialargs']}"
+    if [[ ! "${iso['kernelargs']}" =~ ${iso['kernelserialargs']} ]]; then
+      iso['kernelargs']="${iso['kernelargs']} ${iso['kernelserialargs']}"
     fi
   fi
   if [ ! "${iso['ip']}" = "" ] || [ ! "${iso['grubip']}" = "" ]; then 

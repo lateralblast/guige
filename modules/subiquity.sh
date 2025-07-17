@@ -418,23 +418,50 @@ prepare_autoinstall_iso () {
           else
             echo "        dhcp4: false" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
             echo "        dhcp4: false" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
-            echo "        addresses:" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
-            if [ "${iso['grubip']}" = "" ]; then
-              echo "        - ${iso['ip']}/${iso['cidr']}" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+            if [ "${options['bridge']}" = "true" ]; then
+              echo "    bridges:" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+              echo "      ${iso['bridge']}:" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+              echo "        interfaces:" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+              if [ "${iso['grubnic']}" = "" ]; then
+                echo "          - ${iso['nic']}" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+              else
+                echo "          - grubnic" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+              fi
+              echo "        addresses:" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+              if [ "${iso['grubip']}" = "" ]; then
+                echo "        - ${iso['ip']}/${iso['cidr']}" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+              else
+                echo "        - grubip/grubcidr" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+              fi
             else
-              echo "        - grubip/grubcidr" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+              echo "        addresses:" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+              if [ "${iso['grubip']}" = "" ]; then
+                echo "          - ${iso['ip']}/${iso['cidr']}" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+              else
+                echo "          - grubip/grubcidr" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+              fi
             fi
-            if [ "${iso['grubgateway']}" = "" ]; then
-              echo "        gateway4: ${iso['gateway']}" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+            if [ "${iso['release']}" -lt 22 ]; then
+              if [ "${iso['grubgateway']}" = "" ]; then
+                echo "        gateway4: ${iso['gateway']}" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+              else
+                echo "        gateway4: grubgateway" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+              fi
             else
-              echo "        gateway4: grubgateway" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+              echo "        routes:" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+              echo "          - to: default" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+              if [ "${iso['grubgateway']}" = "" ]; then
+                echo "            via: ${iso['gateway']}" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+              else
+                echo "            via: grubgateway" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+              fi
             fi
             echo "        nameservers:" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
             echo "          addresses:" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
             if [ "${iso['grubdns']}" = "" ]; then
-              echo "          - ${iso['dns']}" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+              echo "            - ${iso['dns']}" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
             else
-              echo "          - grubdns" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+              echo "            - grubdns" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
             fi
           fi
           echo "    version: 2" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"

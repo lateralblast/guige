@@ -15,7 +15,7 @@ print_cli_help () {
   echo ""
   switchstart="false"
   while read -r line; do
-    if [[ "${line}" =~ -- ]]; then
+    if [[ "${line}" =~ -- ]] && [[ ! "${line}" =~ regex ]]; then
       switchstart="true"
     fi
     if [[ "${line}" =~ esac ]] || [[ "${line}" =~ \* ]]; then

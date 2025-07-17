@@ -243,9 +243,9 @@ create_export () {
 
 add_to_output_file_name () {
   param="$1"
-  if [ "${iso[${param}]}" != "${defaults[${param}]}" ]; then
+  if [ "${iso[${param}]}" != "${defaults[${param}]}" ] || [ "${param}" = "bridge" ]; then
     if [[ ! ${iso['outputfile']} =~ ${iso[${param}]} ]]; then
-      information_message "# Adding ${param} ${iso[${param}]} to output file name"
+      information_message "Adding ${param} ${iso[${param}]} to output file name"
       temp_dir_name=$( dirname "${iso['outputfile']}" )
       temp_file_name=$( basename "${iso['outputfile']}" .iso )
       iso['outputfile']="${temp_dir_name}/${temp_file_name}-${iso[${param}]}.iso"
@@ -258,10 +258,15 @@ add_to_output_file_name () {
 # Update output file name based on switched and options
 
 update_output_file_name () {
-  for param in hostname username disk nic ip gateway dns prefix suffix; do 
+  for param in hostname username disk nic bridge ip gateway dns prefix suffix; do 
     case "${param}" in 
       ip|gateway|dns)
         if [ "${options['dhcp']}" = "false" ]; then
+          add_to_output_file_name "${param}"
+        fi
+        ;;
+      bridge)
+        if [ "${options['bridge']}" = "true" ]; then
           add_to_output_file_name "${param}"
         fi
         ;;
