@@ -839,3 +839,11 @@
 # Fixed bug cloud init bridge config
 # 4.1.8: Thu 17 Jul 2025 19:32:22 AEST
 # Fixed help routine
+# 4.1.9: Fri 18 Jul 2025 14:37:40 AEST
+# Added more support for bridges and multiple NICs
+# 4.2.0: Fri 18 Jul 2025 16:52:48 AEST
+# Bug fixes for muiltiple NIC support
+# 4.2.1: Fri 18 Jul 2025 19:32:48 AEST
+# Updated file namne output for multiple NIC support
+# 4.2.2: Sat 19 Jul 2025 20:32:10 AEST
+# Added code to update filename when multiple interfaces are specified

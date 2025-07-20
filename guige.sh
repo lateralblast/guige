@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Name:         guige (Generic Ubuntu/Unix ISO Generation Engine)
-# Version:      4.1.8
+# Version:      4.2.2
 # Release:      1
 # License:      CC-BA (Creative Commons By Attribution)
 #               http://creativecommons.org/licenses/by/4.0/legalcode
@@ -245,6 +245,13 @@ do
       options['bridge']="true"
       shift 2
       ;;
+    --bridges)
+      # Bridge names
+      check_value "$1" "$2"
+      iso['bridges']="$2"
+      options['bridge']="true"
+      shift 2
+      ;;
     --chrootpackages)
       # List of packages to add to ISO
       check_value "$1" "$2"
@@ -255,6 +262,12 @@ do
       # CIDR
       check_value "$1" "$2"
       iso['cidr']="$2"
+      shift 2
+      ;;
+    --cidrs)
+      # CIDRs
+      check_value "$1" "$2"
+      iso['cidrs']="$2"
       shift 2
       ;;
     --codename)
@@ -352,7 +365,7 @@ do
       iso['firewall']="$2"
       shift 2
       ;;
-    --firstoption|--first-option)
+    --firstoption)
       # First menu option (e.g. grub menu)
       check_value "$1" "$2"
       iso['firstoption']="$2"
@@ -377,7 +390,7 @@ do
       iso['groups']="$2"
       shift 2
       ;;
-    --grubfile|--grub)
+    --grubfile)
       # Import grub file
       check_value "$1" "$2"
       options['grubfile']="true"
@@ -524,13 +537,13 @@ do
       iso['inputci']="$2"
       shift 2
       ;;
-    --inputfile|--inputiso|--vmiso)
-      # Import ISO
+    --inputfile)
+      # Import ISO/file
       check_value "$1" "$2"
       iso['inputfile']="$2"
       shift 2
       ;;
-    --installmode|--install-mode)
+    --installmode)
       # Install mode
       check_value "$1" "$2"
       iso['installmode']="$2"
@@ -542,38 +555,45 @@ do
       iso['installmount']="$2"
       shift 2
       ;;
-    --installpassword|--install-password|--installpass|--install-pass)
+    --installpassword)
       check_value "$1" "$2"
       iso['installpassword']="$2"
       # Temporary install password for remote access during install
       shift 2
       ;;
-    --installsource|--install-source)
+    --installsource)
       # Install source
       check_value "$1" "$2"
       iso['installsource']="$2"
       shift 2
       ;;
-    --targetmount|--installtarget)
+    --targetmount)
       # Install target
       check_value "$1" "$2"
       iso['targetmount']="$2"
       shift 2
       ;;
-    --installusername|--installuser|--install-user)
+    --installusername)
       # Install user
       check_value "$1" "$2"
       iso['installusername']="$2"
       shift 2
       ;;
     --ip)
-      # IP address
+      # IP addresses
       check_value "$1" "$2"
       iso['ip']="$2"
       shift 2
       options['dhcp']="false"
       ;;
-    --kernel|--isokernel)
+    --ips)
+      # IP address
+      check_value "$1" "$2"
+      iso['ips']="$2"
+      shift 2
+      options['dhcp']="false"
+      ;;
+    --kernel)
       # Kernel to install
       check_value "$1" "$2"
       iso['kernel']="$2"
@@ -656,6 +676,12 @@ do
       # NIC to use for installation
       check_value "$1" "$2"
       iso['nic']="$2"
+      shift 2
+      ;;
+    --nics)
+      # NICs to use for installation
+      check_value "$1" "$2"
+      iso['nics']="$2"
       shift 2
       ;;
     --oeminstall)

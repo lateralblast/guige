@@ -245,10 +245,14 @@ add_to_output_file_name () {
   param="$1"
   if [ "${iso[${param}]}" != "${defaults[${param}]}" ] || [ "${param}" = "bridge" ]; then
     if [[ ! ${iso['outputfile']} =~ ${iso[${param}]} ]]; then
-      information_message "Adding ${param} ${iso[${param}]} to output file name"
-      temp_dir_name=$( dirname "${iso['outputfile']}" )
-      temp_file_name=$( basename "${iso['outputfile']}" .iso )
-      iso['outputfile']="${temp_dir_name}/${temp_file_name}-${iso[${param}]}.iso"
+      value="${iso[${param}]}"
+      value="${value//,/-}"
+      if [[ ! ${iso['outputfile']} =~ $value ]]; then
+        temp_dir_name=$( dirname "${iso['outputfile']}" )
+        temp_file_name=$( basename "${iso['outputfile']}" .iso )
+        information_message "Adding ${param} ${value} to output file name"
+        iso['outputfile']="${temp_dir_name}/${temp_file_name}-${value}.iso"
+      fi
     fi
   fi
 }
@@ -258,6 +262,14 @@ add_to_output_file_name () {
 # Update output file name based on switched and options
 
 update_output_file_name () {
+  for param in nics bridges ips; do
+    if [ ! "${iso[${param}]}" = "" ]; then
+      IFS=',' read -r -a values <<< "${iso[${param}]}"
+      for index in "${!values[@]}"; do
+        add_to_output_file_name "${param}"
+      done
+    fi
+  done
   for param in hostname username disk nic bridge ip gateway dns prefix suffix; do 
     case "${param}" in 
       ip|gateway|dns)
@@ -265,7 +277,7 @@ update_output_file_name () {
           add_to_output_file_name "${param}"
         fi
         ;;
-      bridge)
+      "bridge")
         if [ "${options['bridge']}" = "true" ]; then
           add_to_output_file_name "${param}"
         fi

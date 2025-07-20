@@ -55,14 +55,33 @@ print_env () {
   if [ -n "${iso['sshkeyfile']}" ]; then
     handle_output "# SSH Key file:              [iso['sshkeyfile']}]                 ${iso['sshkeyfile']}"     "TEXT"
   fi
-  handle_output "# NIC:                       [iso['nic']}]                        ${iso['nic']}"              "TEXT"
+  if [ "${iso['nics']}" = "" ]; then
+    handle_output "# NIC:                       [iso['nic']}]                        ${iso['nic']}"            "TEXT"
+  else
+    handle_output "# NICs:                      [iso['nics']}]                       ${iso['nics']}"           "TEXT"
+  fi
   handle_output "# DHCP:                      [options['dhcp']}]                   ${options['dhcp']}"         "TEXT"
   if [ "${options['dhcp']}" = "false" ]; then
-    handle_output "# IP:                        [iso['ip']}]                         ${iso['ip']}"             "TEXT"
-    handle_output "# CIDR:                      [iso['cidr']}]                       ${iso['cidr']}"           "TEXT"
+    if [ "${iso['ips']}" = "" ]; then
+      handle_output "# IP:                        [iso['ip']}]                         ${iso['ip']}"           "TEXT"
+    else
+      handle_output "# IPs:                       [iso['ips']}]                        ${iso['ips']}"          "TEXT"
+    fi
+    if [ "${iso['cidrs']}" = "" ]; then
+      handle_output "# CIDR:                      [iso['cidr']}]                       ${iso['cidr']}"         "TEXT"
+    else
+      handle_output "# CIDRs:                     [iso['cidrs']}]                      ${iso['cidrs']}"        "TEXT"
+    fi
     handle_output "# Netmask:                   [iso['netmask']}]                    ${iso['netmask']}"        "TEXT"
     handle_output "# Gateway:                   [iso['gateway']}]                    ${iso['gateway']}"        "TEXT"
     handle_output "# Nameservers:               [iso['dns']}]                        ${iso['dns']}"            "TEXT"
+    if [ "${options['bridge']}" = "true" ]; then
+      if [ "${iso['bridges']}" = "" ]; then
+        handle_output "# Bridge:                    [iso['bridge']}]                     ${iso['bridge']}"     "TEXT"
+      else
+        handle_output "# Bridges:                   [iso['bridge']}]                     ${iso['bridges']}"    "TEXT"
+      fi
+    fi
   fi
   handle_output "# Kernel:                    [iso['kernel']}]                     ${iso['kernel']}"                     "TEXT"
   handle_output "# Kernel arguments:          [iso['kernelargs']}]                 ${iso['kernelargs']}"                 "TEXT"
