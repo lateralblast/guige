@@ -853,3 +853,5 @@
 # Improved input file determination
 # 4.2.5: Tue Jul 22 22:22:48 AEST 2025
 # Fixed docker output file determination
+# 4.2.6: Tue Jul 22 22:48:18 AEST 2025
+# Updated docker OS version to fix issues with squashfs

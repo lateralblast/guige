@@ -14,7 +14,7 @@ set_current_defaults () {
   current['codename']="jammy"
   current['devrelease']="25.10"
   current['betarelease']=""
-  current['dockerubunturelease']="24.04"
+  current['dockerubunturelease']="25.04"
   current['oldrelease']="23.04"
   current['osname']="ubuntu"
   current['release']="24.04.2"
