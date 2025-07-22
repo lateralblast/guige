@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Name:         guige (Generic Ubuntu/Unix ISO Generation Engine)
-# Version:      4.2.2
+# Version:      4.2.5
 # Release:      1
 # License:      CC-BA (Creative Commons By Attribution)
 #               http://creativecommons.org/licenses/by/4.0/legalcode
@@ -994,7 +994,6 @@ do
 done
 
 # Setup functions
-
 set_default_osname
 set_default_arch
 set_default_release
@@ -1007,6 +1006,7 @@ process_switches
 reset_default_dirs
 set_default_files
 reset_default_files
+update_iso_url
 process_options
 process_actions
 process_post_install
@@ -1014,7 +1014,6 @@ update_required_packages
 install_required_packages
 update_iso_packages
 update_output_file_name
-update_iso_url
 update_ci_url
 handle_bios
 handle_ubuntu_pro

@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 
+# shellcheck disable=SC2004
 # shellcheck disable=SC2028
 # shellcheck disable=SC2129
 # shellcheck disable=SC2153
@@ -442,7 +443,7 @@ prepare_autoinstall_iso () {
                   echo "          - grubip/grubcidr" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
                 fi
               fi
-              if [ "${iso['release']}" -lt 22 ]; then
+              if [ "${iso['majorrelease']}" -lt 22 ]; then
                 if [ "${iso['grubgateway']}" = "" ]; then
                   echo "        gateway4: ${iso['gateway']}" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
                 else

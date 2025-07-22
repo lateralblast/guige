@@ -100,6 +100,7 @@ set_options_defaults () {
   options['strict']="false"                   # option - Enable strict mode
   options['testmode']="false"                 # option - Enable test mode
   options['unmount']="true"                   # option - Unmount ISO etc after creating ISO
+  options['unpacksquashfs']="true"            # option - Unpack squashfs
   options['updatesquashfs']="false"           # option - Update squashfs
   options['verbose']="false"                  # option - Enable verbose mode
   options['zfs']="false"                      # option - Enable ZFS

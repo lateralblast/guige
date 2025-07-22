@@ -153,11 +153,14 @@ create_docker_iso () {
           fi
         fi
       done
-      echo "${iso['dockerworkdir']}/files/${script['bin']} ${script_args} --workdir ${iso['dockerworkdir']} --preworkdir ${iso['workdir']}" >> "${local_script}"
+      docker['inputfilebase']=$( basename "${iso['inputfile']}" )
+      iso['inputfile']="${iso['dockerworkdir']}/files/${docker['inputfilebase']}"
+      docker['outputfilebase']=$( basename "${iso['outputfile']}" )
+      iso['outputfile']=$"${iso['dockerworkdir']}/files/${docker['outputfilebase']}"
+      echo "${iso['dockerworkdir']}/files/${script['bin']} ${script_args} --workdir ${iso['dockerworkdir']} --preworkdir ${iso['workdir']} --inputfile ${iso['inputfile']} --outputfile ${iso['outputfile']}" >> "${local_script}"
       print_file "${local_script}"
       execute_command "chmod +x ${local_script}"
       if [ "${options['docker']}" = "true" ]; then
-        docker['outputfilebase']=$( basename "${iso['outputfile']}" )
         echo "# Output file will be at \"${iso['workdir']}/files/${docker['outputfilebase']}\""
       fi
       verbose_message "# Executing: exec docker run --privileged=true --cap-add=CAP_MKNOD --device-cgroup-rule=\"b 7:* rmw\" --platform \"linux/${iso['arch']}\" --mount source=\"${script['name']}-${current['dockerubunturelease']}-${iso['arch']},target=/root/${script['name']}\" --mount type=bind,source=\"${iso['workdir']}/files,target=/root/${script['name']}/${iso['osname']}/${iso['build']}/${iso['release']}/files\"  \"${script['name']}-${current['dockerubunturelease']}-${iso['arch']}\" /bin/bash \"${docker['script']}\""

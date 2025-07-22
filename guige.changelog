@@ -847,3 +847,9 @@
 # Updated file namne output for multiple NIC support
 # 4.2.2: Sat 19 Jul 2025 20:32:10 AEST
 # Added code to update filename when multiple interfaces are specified
+# 4.2.3: Mon Jul 21 06:09:48 PM AEST 2025
+# Fixed unpacksquashfs check
+# 4.2.4: Tue Jul 22 21:37:17 AEST 2025
+# Improved input file determination
+# 4.2.5: Tue Jul 22 22:22:48 AEST 2025
+# Fixed docker output file determination

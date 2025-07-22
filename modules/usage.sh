@@ -20,14 +20,14 @@ print_info () {
   echo "---------"
   module_file="${script['dir']}/modules/${info}s.sh"
   if [ -f "${module_file}" ]; then
-    while read line; do
+    while read -r line; do
       if [[ "${line}" =~ .*"# ${info}".* ]]; then
         if [[ "${info}" =~ option ]]; then
           IFS='-' read -r param desc <<< "${line}"
-          IFS=']' read -r param default <<< ${param}
-          IFS='[' read -r _ param <<< ${param}
+          IFS=']' read -r param default <<< "${param}"
+          IFS='[' read -r _ param <<< "${param}"
           param="${param//\'/}"
-          IFS='=' read -r _ default <<< ${default}
+          IFS='=' read -r _ default <<< "${default}"
           default="${default//\'/}"
           default="${default//\"/}"
           default="${default// /}"

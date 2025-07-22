@@ -59,6 +59,10 @@ copy_ubuntu_squashfs () {
     install_required_packages
   fi
   if [ "${options['updatesquashfs']}" = "true" ] || [ "${options['unpacksquashfs']}" = "true" ]; then
+    if [ ! -f "${iso['squashfsfile']}" ]; then
+      warning_message "Squash file system file \"${iso['squashfsfile']}\" does not exist"
+      exit
+    fi
     handle_output "# Copying squashfs files" "TEXT"
     current['kernel']=$( uname -r )
     if [ -f "${current['kernel']}" ]; then

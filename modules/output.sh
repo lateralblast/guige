@@ -264,10 +264,7 @@ add_to_output_file_name () {
 update_output_file_name () {
   for param in nics bridges ips; do
     if [ ! "${iso[${param}]}" = "" ]; then
-      IFS=',' read -r -a values <<< "${iso[${param}]}"
-      for index in "${!values[@]}"; do
-        add_to_output_file_name "${param}"
-      done
+      add_to_output_file_name "${param}"
     fi
   done
   for param in hostname username disk nic bridge ip gateway dns prefix suffix; do 
