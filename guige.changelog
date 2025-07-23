@@ -861,3 +861,5 @@
 # Added action to print and build docker config
 # 4.2.9: Wed 23 Jul 2025 17:56:08 AEST
 # Fixed docker required package list
+# 4.3.0: Wed 23 Jul 2025 18:27:38 AEST
+# Removed package check from running every time to speed up script

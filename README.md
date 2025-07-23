@@ -11,7 +11,7 @@ used to hang a shield on the shoulder or neck when not in use.
 Version
 -------
 
-Current version: 4.2.9
+Current version: 4.3.0
 
 License
 -------
@@ -26,6 +26,13 @@ Introduction
 This script provides a wrapper for the Ubuntu ISO creation process.
 I wrote this as I didn't want to have to install and use Cubic or a similar GUI point and click tool to create an ISO.
 I wanted to be able to automate the process.
+
+To speed up the running of the script, I've disabled the package check running each time,
+so the first time you get the script, you should run the package check, e.g.
+
+```
+./guige.sh --action installrequiredpackages
+```
 
 Features
 --------

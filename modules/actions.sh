@@ -41,7 +41,6 @@ process_actions () {
         ;;
       createansible)                # action - Create ansible
         options['checkworkdir']="true"
-        options['installrequiredpackages']="true"
         options['createansible']="true"
         ;;
       createautoinstall)            # action - Create autoinstall
@@ -49,14 +48,12 @@ process_actions () {
         ;;
       createcivm)                   # action - Create cloud-init based VM
        iso['type']="kvm"
-        options['installrequiredpackages']="true"
         options['createcivm']="true"
         ;;
       createdockeriso)              # action - Create ISO using docker
         options['docker']="true"
         options['checkdocker']="true"
         options['checkworkdir']="true"
-        options['installrequiredpackages']="true"
         options['runchrootscript']="true"
         options['fulliso']="true"
        ;;
@@ -65,41 +62,34 @@ process_actions () {
         options['docker']="true"
         options['checkdocker']="true"
         options['checkworkdir']="true"
-        options['installrequiredpackages']="true"
         options['runchrootscript']="true"
         options['fulliso']="true"
         ;;
       createexport)                 # action - Ceate export
         options['checkworkdir']="true"
-        options['installrequiredpackages']="true"
         options['createexport']="true"
         ;;
       createiso|fulliso)            # action - Create ISO
         options['checkworkdir']="true"
-        options['installrequiredpackages']="true"
         options['runchrootscript']="true"
         options['fulliso']="true"
         ;;
       createisoandsquashfs)         # action - Create ISO and update squashfs
         options['updatesquashfs']="true"
         options['checkworkdir']="true"
-        options['installrequiredpackages']="true"
         options['runchrootscript']="true"
         options['fulliso']="true"
        ;;
       createisovm)                  # action - Create ISO based VM
         iso['type']="kvm"
-        options['installrequiredpackages']="true"
         options['createisovm']="true"
         ;;
       deletecivm)                   # action - Delete cloud-init based VM
         iso['type']="kvm"
-        options['installrequiredpackages']="true"
         options['deletecivm']="true"
         ;;
       deleteisovm)                  # action - Delete ISO based VM
         iso['type']="kvm"
-        options['installrequiredpackages']="true"
         options['deleteisovm']="true"
         ;;
       getiso)                       # action - Get ISO
@@ -111,6 +101,8 @@ process_actions () {
         ;;
       installreq*|checkreq*)        # action - Install/Check required packages
         options['installrequiredpackages']="true"
+        install_required_packages
+        do_exit
         ;;
       justiso)
         options['justiso']="true"
