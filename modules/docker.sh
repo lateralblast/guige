@@ -121,6 +121,9 @@ create_docker_iso () {
     if [ ! "${options['testmode']}" = "true" ]; then
       verbose_message "Creating ${local_script}"
       echo "#!/bin/bash" > "${local_script}"
+      if [ "${iso['action']}" = "printdockerenv" ]; then
+        iso['action']="printenv"
+      fi
       script_args="--action ${iso['action']} --options ${iso['options']}"
       if [ "${options['autoinstall']}" = "true" ]; then
         if [ -f "${iso['autoinstallfile']}" ]; then

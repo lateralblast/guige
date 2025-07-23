@@ -47,7 +47,7 @@ process_actions () {
         options['createautoinstall']="true"
         ;;
       createcivm)                   # action - Create cloud-init based VM
-       iso['type']="kvm"
+        iso['type']="kvm"
         options['createcivm']="true"
         ;;
       createdockeriso)              # action - Create ISO using docker
@@ -56,7 +56,7 @@ process_actions () {
         options['checkworkdir']="true"
         options['runchrootscript']="true"
         options['fulliso']="true"
-       ;;
+        ;;
       createdockerisoandsquashfs)   # action - Create ISO and update squashfs using docker
         options['updatesquashfs']="true"
         options['docker']="true"
@@ -79,7 +79,7 @@ process_actions () {
         options['checkworkdir']="true"
         options['runchrootscript']="true"
         options['fulliso']="true"
-       ;;
+        ;;
       createisovm)                  # action - Create ISO based VM
         iso['type']="kvm"
         options['createisovm']="true"
@@ -124,6 +124,12 @@ process_actions () {
         options['printdockerconfig']="true"
         check_docker_config
         do_exit
+        ;;
+      printdockerenv)               # action - Create ISO using docker
+        options['docker']="true"
+        options['checkdocker']="true"
+        options['checkworkdir']="true"
+        options['printdockerenv']="true"
         ;;
       printenv)                     # action - Print environment
         options['printenv']="true"

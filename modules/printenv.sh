@@ -163,6 +163,9 @@ print_env () {
     temp['verbose']="false"
   fi
   if [ "${options['printenv']}" = "true" ]; then
-    exit
+    do_exit
+  fi
+  if [ "${options['printdockerenv']}" = "true" ]; then
+    docker_exit
   fi
 }

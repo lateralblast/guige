@@ -88,6 +88,7 @@ set_options_defaults () {
   options['plaintextpassword']="false"        # option - Enable plain text passwords
   options['preservesources']="false"          # option - Preserve sources  
   options['printdockerconfig']="false"        # option - Print Docker config
+  options['printdockerenv']="false"           # option - Print Docker environment 
   options['printenv']="false"                 # option - Print environment
   options['query']="false"                    # option - Enable query
   options['refreshinstaller']="false"         # option - Refresh installer
