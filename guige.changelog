@@ -867,3 +867,5 @@
 # Add function to printenv inside docker container and exit
 # 4.3.2: Wed 23 Jul 2025 20:21:07 AEST
 # Improved docker command line parsing
+# 4.3.3: Wed 23 Jul 2025 21:23:09 AEST
+# Fixed ISO URL determination

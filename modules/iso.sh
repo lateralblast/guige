@@ -93,13 +93,17 @@ update_iso_url () {
           else
             if [ "${iso['inputfile']}" = "${defaults['inputfile']}" ] || [ "${iso['inputfile']}" = "" ]; then
               if [ "${iso['release']}" = "${iso['devrelease']}" ]; then
-                iso['url']="https://cdimage.ubuntu.com/ubuntu-server/daily-live/current/${iso['codename']}-live-server-${iso['arch']}.iso"
+                if [[ "${iso['arch']}" =~ arm ]]; then
+                  iso['url']="https://cdimage.ubuntu.com/daily-live/current/${iso['majorrelease']}.${iso['minorrelease']}/release/${iso['inputfilebase']}"
+                else
+                  iso['url']="https://cdimage.ubuntu.com/ubuntu-server/daily-live/current/${iso['codename']}-live-server-${iso['arch']}.iso"
+                fi
               else
                 iso['url']="https://releases.ubuntu.com/${iso['release']}/ubuntu-${iso['majorrelease']}.${iso['minorrelease']}-live-server-${iso['arch']}.iso"
               fi
             else
               if [[ "${iso['arch']}" =~ arm ]]; then
-                iso['url']="https://cdimage.ubuntu.com/daily-live/current/${iso['majorrelease']}.${iso['minorrelease']}/release/${iso['inputfilebase']}"
+                iso['url']="https://cdimage.ubuntu.com/releases/${iso['release']}/release/${iso['inputfilebase']}"
               else
                 iso['url']="https://releases.ubuntu.com/${iso['release']}/${iso['inputfilebase']}"
               fi
