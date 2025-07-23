@@ -12,7 +12,7 @@
 
 docker_exit () {
   if [ -f "/.dockerenv" ]; then
-    exit
+    do_exit
   fi
 }
 
@@ -124,7 +124,11 @@ create_docker_iso () {
       if [ "${iso['action']}" = "printdockerenv" ]; then
         iso['action']="printenv"
       fi
-      script_args="--action ${iso['action']} --options ${iso['options']}"
+      if [ "${iso['options']}" = "" ]; then
+        script_args="--action ${iso['action']}"
+      else
+        script_args="--action ${iso['action']} --options ${iso['options']}"
+      fi
       if [ "${options['autoinstall']}" = "true" ]; then
         if [ -f "${iso['autoinstallfile']}" ]; then
           execute_command "cp ${iso['autoinstallfile']} ${iso['workdir']}/files/user-data"
@@ -143,15 +147,23 @@ create_docker_iso () {
       verbose_message "# Checking command line arguements to pass to docker container"
       get_switches
       ignore_switches="outputfile inputfile workdir preworkdir dockerworkdir"
+      include_switches="release"
       for arg_name in "${switches[@]}"; do
         arg_value="${iso[${arg_name}]}"
         def_value="${defaults[${arg_name}]}"
-        if [[ ! "${ignore_switches}" =~ ${arg_name} ]]; then
-          verbose_message "# Checking ${arg_name}"
-          if [[ ! "${script_args}" =~ "--${arg_name} " ]]; then
-            if [ "${arg_value}" != "${def_value}" ] && [ "${arg_value}" != "" ]; then
-              script_args="${script_args} --${arg_name} \"${arg_value}\""
-              verbose_message "# Adding --${arg_name} \"${arg_value}\""
+        if [ ! "$arg_value" = "" ]; then
+          if [[ ! "${ignore_switches}" =~ ${arg_name} ]]; then
+            verbose_message "# Checking ${arg_name}"
+            if [[ ! "${script_args}" =~ "--${arg_name} " ]]; then
+              if [[ "${include_switches}" =~ $arg_name ]]; then
+                script_args="${script_args} --${arg_name} \"${arg_value}\""
+                verbose_message "# Adding --${arg_name} \"${arg_value}\""
+              else
+                if [ "${arg_value}" != "${def_value}" ] && [ "${arg_value}" != "" ]; then
+                  script_args="${script_args} --${arg_name} \"${arg_value}\""
+                  verbose_message "# Adding --${arg_name} \"${arg_value}\""
+                fi
+              fi
             fi
           else
             verbose_message "# command line contains --${arg_name} ${arg_value}"

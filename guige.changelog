@@ -863,3 +863,7 @@
 # Fixed docker required package list
 # 4.3.0: Wed 23 Jul 2025 18:27:38 AEST
 # Removed package check from running every time to speed up script
+# 4.3.1: Wed 23 Jul 2025 19:04:16 AEST
+# Add function to printenv inside docker container and exit
+# 4.3.2: Wed 23 Jul 2025 20:21:07 AEST
+# Improved docker command line parsing
