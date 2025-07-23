@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Name:         guige (Generic Ubuntu/Unix ISO Generation Engine)
-# Version:      4.2.6
+# Version:      4.2.9
 # Release:      1
 # License:      CC-BA (Creative Commons By Attribution)
 #               http://creativecommons.org/licenses/by/4.0/legalcode
@@ -114,6 +114,16 @@ if [[ ! "${script['args']}" =~ $regex ]]; then
   set_default_dirs
   set_default_files
 fi
+
+# Function: do_exit
+#
+# Selective exit (don't exit when we're running in dryrun mode)
+
+do_exit () {
+  if [ "${options['dryrun']}" = "false" ]; then
+    exit
+  fi
+}
 
 # Function: Handle command line arguments
 
@@ -806,6 +816,12 @@ do
       check_value "$1" "$2"
       options['installrequiredpackages']="true"
       iso['requiredpackages']="$2"
+      shift 2
+      ;; 
+    --requireddockerpackages)
+      # Required Packages
+      check_value "$1" "$2"
+      iso['requireddockerpackages']="$2"
       shift 2
       ;; 
     --rootsize)

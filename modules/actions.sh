@@ -20,6 +20,10 @@ process_actions () {
   fi
   for action in ${actions}; do
     case "${action}" in
+      builddockerconfig)            # action - Build Docker config
+        check_docker_config
+        do_exit
+        ;;
       checkdocker)                  # action - Check Docker
         options['docker']="false"
         options['checkdocker']="true"
@@ -30,7 +34,7 @@ process_actions () {
         ;;
       checkshellcheck|shellcheck)   # action - Shellcheck script
         check_shellcheck
-        exit
+        do_exit
         ;;
       checkworkdir|checkdirs)       # action - Check work directories
         options['checkworkdir']="true"
@@ -121,8 +125,13 @@ process_actions () {
       listvm)                       # action - List VMs
         options['listvms']="true"
         ;;
-      oldinstaller)                 # Action - Use old installer
+      oldinstaller)                 # action - Use old installer
         options['oldinstaller']="true"
+        ;;
+      printdockerconfig)            # action - Print Docker config
+        options['printdockerconfig']="true"
+        check_docker_config
+        do_exit
         ;;
       printenv)                     # action - Print environment
         options['printenv']="true"

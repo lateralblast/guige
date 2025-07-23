@@ -52,7 +52,7 @@ set_default_defaults () {
   defaults['boottype']="efi"
   defaults['bridge']="br0"
   defaults['build']="server"
-  defaults['chrootpackages']="zfsutils-linux zfs-initramfs xfsprogs btrfs-progs net-tools curl lftp wget sudo file rsync dialog setserial ansible apt-utils whois squashfs-tools duperemove jq btrfs-compsize iproute2"
+  defaults['chrootpackages']="sudo zfsutils-linux zfs-initramfs xfsprogs btrfs-progs net-tools curl lftp wget sudo file rsync dialog setserial ansible apt-utils whois squashfs-tools duperemove jq btrfs-compsize iproute2"
   defaults['cidr']="24"
   defaults['cidrs']=""
   defaults['compression']="lzo"
@@ -104,7 +104,7 @@ set_default_defaults () {
   defaults['oeminstall']="auto"
   defaults['oldrelease']="23.04"
   defaults['onboot']="on"
-  defaults['packages']="zfsutils-linux zfs-initramfs xfsprogs btrfs-progs net-tools curl lftp wget sudo file rsync dialog setserial ansible apt-utils whois squashfs-tools duperemove jq btrfs-compsize iproute2 ipcalc"
+  defaults['packages']="sudo zfsutils-linux zfs-initramfs xfsprogs btrfs-progs net-tools curl lftp wget sudo file rsync dialog setserial ansible apt-utils whois squashfs-tools duperemove jq btrfs-compsize iproute2 ipcalc"
   defaults['password']="ubuntu"
   defaults['passwordalgorithm']="sha512"
   defaults['pesize']="32768"
@@ -151,6 +151,7 @@ set_default_defaults () {
   else
     defaults['requiredpackages']="binwalk p7zip lftp wget xorriso whois file rsync net-tools ansible dialog jq ipcalc"
   fi
+  defaults['requireddockerpackages']="binwalk casper genisoimage live-boot live-boot-initramfs-tools p7zip-full lftp wget xorriso whois squashfs-tools sudo file rsync net-tools nfs-kernel-server ansible dialog apt-utils jq ipcalc iproute2"
 }
 
 # Function: set_defaults

@@ -855,3 +855,9 @@
 # Fixed docker output file determination
 # 4.2.6: Tue Jul 22 22:48:18 AEST 2025
 # Updated docker OS version to fix issues with squashfs
+# 4.2.7: Wed 23 Jul 2025 16:42:03 AEST
+# Added sudo to docker package install list
+# 4.2.8: Wed 23 Jul 2025 17:50:02 AEST
+# Added action to print and build docker config
+# 4.2.9: Wed 23 Jul 2025 17:56:08 AEST
+# Fixed docker required package list
