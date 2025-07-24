@@ -208,6 +208,8 @@ prepare_autoinstall_iso () {
       fi
     fi
     if [ "${options['earlypackages']}" = "true" ] || [ "${options['latepackages']}" = "true" ]; then
+      handle_output "# Removing old packages from ${iso['packagedir']}" "TEXT"
+      rm "${iso['packagedir']}"/*.dev
       handle_output "# Copying packages to ${iso['packagedir']}" "TEXT"
       if [ "${options['verbose']}" = "true" ]; then
         sudo cp -v "${iso['newdir']}"/custom/var/cache/apt/archives/*.deb "${iso['packagedir']}"
@@ -831,10 +833,10 @@ prepare_autoinstall_iso () {
             echo "      type: mount" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
             echo "      id: mount-efi" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
 
-            # Boot Partition (2GB)
+            # Boot Partition (4GB)
 
             echo "    - device: disk-${iso['disk']}" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
-            echo "      size: 2147483648" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+            echo "      size: 4294967296" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
             echo "      wipe: superblock" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
             echo "      preserve: false" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
             echo "      grub_device: false" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"

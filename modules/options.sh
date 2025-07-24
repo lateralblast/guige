@@ -54,7 +54,7 @@ set_options_defaults () {
   options['grubparse']="false"                # option - Enable GRUB parser
   options['grubparseall']="false"             # option - Enable all GRUB parsers
   options['help']="true"                      # option - Enable help
-  options['hwekernel']="true"                 # option - Enable HWE kernel
+  options['hwekernel']="false"                # option - Enable HWE kernel
   options['installcodecs']="false"            # option - Install codecs
   options['installdrivers']="false"           # option - Install drivers
   options['installpackages']="false"          # option - Install packages
@@ -175,6 +175,10 @@ process_options () {
       strict)
         set -eu
         ;;
+      hwekernel|hwe)
+        options['hwekernel']="true"
+        ;;
+
       *)
         if [[ "${option_name}" =~ ^no ]]; then
           inverse_name="${option_name:2}"
@@ -204,6 +208,14 @@ process_options () {
         iso[${grub_param}]="${iso[${param}]}"
       fi
     done
+  fi
+  if [ "${options['hwekernel']}" = "true" ]; then
+    regex="18|22|24"
+    if [[ "${iso['majorrelease']}" =~ ${regex} ]]; then
+      if [ "${iso['minorrelease']}" = "04" ]; then
+        iso['kernel']="linux-generic-hwe-${iso['majorrelease']}.${iso['minorrelease']}"
+      fi
+    fi
   fi
   update_output_file_name
 }

@@ -869,3 +869,13 @@
 # Improved docker command line parsing
 # 4.3.3: Wed 23 Jul 2025 21:23:09 AEST
 # Fixed ISO URL determination
+# 4.3.4: Thu 24 Jul 2025 10:38:33 AEST
+# Improved HWE support
+# 4.3.5: Thu 24 Jul 2025 13:46:53 AEST
+# Removed ubuntu-advantage-tools from package list due to issues with install
+# 4.3.6: Thu 24 Jul 2025 16:59:53 AEST
+# Fixed issues with HWE support
+# 4.3.7: Thu 24 Jul 2025 17:01:29 AEST
+# Re-added ubuntu-advantage-tools to package list after fixing issues with install
+# 4.3.8: Thu 24 Jul 2025 17:58:19 AEST
+# Bug fixes and improvements

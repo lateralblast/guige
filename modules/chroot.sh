@@ -94,9 +94,11 @@ create_ubuntu_chroot_script () {
     echo "if [ -f \"/etc/update-motd.d/91-contract-ua-esm-status\" ]; then" >> "${orig_script}"
     echo "  rm /etc/update-motd.d/91-contract-ua-esm-status" >> "${orig_script}"
     echo "fi" >> "${orig_script}"
+    echo "rm /var/cache/apt/archives/*" >> "${orig_script}"
     echo "apt update" >> "${orig_script}"
     echo "export LC_ALL=C ; apt install -y --download-only ${iso['chrootpackages']}" >> "${orig_script}"
     echo "export LC_ALL=C ; apt install -y ${iso['chrootpackages']} --option=Dpkg::Options::=${iso['dpkgconf']}" >> "${orig_script}"
+    echo "dpkg --configure -a" >> "${orig_script}"
     echo "exit" >> "${orig_script}"
     if [ -f "/.dockerenv" ]; then
       if [ ! -d "${iso['newdir']}/custom/tmp" ]; then

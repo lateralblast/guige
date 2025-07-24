@@ -284,7 +284,7 @@ update_output_file_name () {
         ;;
     esac
   done
-  for option in cluster kvm biosdevname sshkey nvme dhcp grubparse; do
+  for option in cluster kvm biosdevname sshkey nvme dhcp grubparse hwe; do
     if [ "${options[${option}]}" = "true" ]; then
       if [[ ! "${iso['outputfile']}" =~ ${option} ]]; then
         information_message "# Adding ${option} to output file name"
