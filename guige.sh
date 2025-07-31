@@ -973,6 +973,13 @@ do
       iso['type']="$2"
       shift 2
       ;;
+    --vfio)
+      # VM type
+      check_value "$1" "$2"
+      iso['vfio']="$2"
+      options['vfio']="true"
+      shift 2
+      ;;
     --volumemanager)
       # Volumemanager(s)
       check_value "$1" "$2"
