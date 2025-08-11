@@ -11,7 +11,7 @@ used to hang a shield on the shoulder or neck when not in use.
 Version
 -------
 
-Current version: 4.3.8
+Current version: 4.4.0
 
 License
 -------
@@ -93,12 +93,12 @@ Help
 
 Usage: guige --action [action] --options [options]
 
---allowlist           Allow/load additional kernel modules(s)
+--whitelist           Allow/load additional kernel modules(s)
 --allowpassword       Allow password access via SSH
 --allowservice        Allow Services
 --arch                Architacture
 --autoinstalldir      Directory where autoinstall config files are stored on ISO
---blocklist           Block kernel module(s)
+--blacklist           Block kernel module(s)
 --bmcip               BMC/iDRAC IP
 --bmcpassword         BMC/iDRAC password
 --bmcusername         BMC/iDRAC User

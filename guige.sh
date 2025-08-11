@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Name:         guige (Generic Ubuntu/Unix ISO Generation Engine)
-# Version:      4.3.8
+# Version:      4.4.0
 # Release:      1
 # License:      CC-BA (Creative Commons By Attribution)
 #               http://creativecommons.org/licenses/by/4.0/legalcode
@@ -140,12 +140,6 @@ do
       iso['action']="$2"
       shift 2
       ;;
-    --allowlist)
-      # Allow/load additional kernel modules(s)
-      check_value "$1" "$2"
-      iso['allowlist']="$2"
-      shift 2
-      ;;
     --allowpassword)
       # Allow password access via SSH
       iso['allowpassword']="true"
@@ -170,10 +164,10 @@ do
       iso['autoinstalldir']="$2"
       shift 2
       ;;
-    --blocklist)
+    --blacklist)
       # Block kernel module(s)
       check_value "$1" "$2"
-      iso['blocklist']="$2"
+      iso['blacklist']="$2"
       shift 2
       ;;
     --bmcip)
@@ -984,6 +978,12 @@ do
       # Volumemanager(s)
       check_value "$1" "$2"
       iso['volumemanager']="$2"
+      shift 2
+      ;;
+    --whitelist)
+      # Allow/load additional kernel modules(s)
+      check_value "$1" "$2"
+      iso['whitelist']="$2"
       shift 2
       ;;
     --workdir)

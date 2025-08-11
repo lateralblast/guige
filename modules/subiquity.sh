@@ -943,16 +943,16 @@ prepare_autoinstall_iso () {
           echo "    - \"sed -i \\\"s/first-wwn/\$(lsblk -x TYPE -o NAME,WWN,TYPE |grep disk |sort |head -1 |awk '{print \$2}')/g\\\" /autoinstall.yaml\"" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
           echo "    - \"sed -i \\\"s/first-serial/\$(udevadm info --query=all --name=\`lsblk -x TYPE |grep disk |sort |head -1 |awk '{print \$1}'\` |grep ID_SERIAL= |cut -f2 -d=)/g\\\" /autoinstall.yaml\"" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
         fi
-        if ! [ "${iso['allowlist']}" = "" ]; then
-          if [[ "${iso['allowlist']}" =~ , ]]; then
-            module_list=$(eval echo "${iso['allowlist']//,/ }")
+        if ! [ "${iso['whitelist']}" = "" ]; then
+          if [[ "${iso['whitelist']}" =~ , ]]; then
+            module_list=$(eval echo "${iso['whitelist']//,/ }")
             for module in ${module_list}; do
               echo "    - \"echo '${module}' > /etc/modules-load.d/${module}.conf\"" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
               echo "    - \"modprobe ${module}\"" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
             done
           else
-            echo "    - \"echo '${iso['allowlist']}' > /etc/modules-load.d/${iso['blocklist']}.conf\"" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
-            echo "    - \"modprobe ${iso['allowlist']}\"" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+            echo "    - \"echo '${iso['whitelist']}' > /etc/modules-load.d/${iso['blacklist']}.conf\"" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+            echo "    - \"modprobe ${iso['whitelist']}\"" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
           fi
         fi
         if [ "${iso['disk']}" = "first-disk" ]; then
@@ -970,16 +970,16 @@ prepare_autoinstall_iso () {
         fi
         echo "    - \"rm /etc/resolv.conf\"" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
         echo "    - \"echo \\\"nameserver ${iso['dns']}\\\" >> /etc/resolv.conf\"" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
-        if ! [ "${iso['blocklist']}" = "" ]; then
-          if [[ "${iso['blocklist']}" =~ , ]]; then
-            module_list=$(eval echo "${iso['blocklist']//,/ }")
+        if ! [ "${iso['blacklist']}" = "" ]; then
+          if [[ "${iso['blacklist']}" =~ , ]]; then
+            module_list=$(eval echo "${iso['blacklist']//,/ }")
             for module in ${module_list}; do
-              echo "    - \"echo 'blacklist ${module}' > /etc/modprobe.d/${module}.conf\"" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+              echo "    - \"echo 'blacklist ${module}' >> /etc/modprobe.d/blacklist.conf\"" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
               echo "    - \"modprobe -r ${module} --remove-dependencies\"" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
             done
           else
-            echo "    - \"echo 'blacklist ${iso['blocklist']}' > /etc/modprobe.d/${iso['blocklist']}.conf\"" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
-            echo "    - \"modprobe -r ${iso['blocklist']} --remove-dependencies\"" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+            echo "    - \"echo 'blacklist ${iso['blacklist']}' >> /etc/modprobe.d/blacklist.conf\"" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+            echo "    - \"modprobe -r ${iso['blacklist']} --remove-dependencies\"" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
           fi
         fi
         echo "  late-commands:" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
@@ -988,6 +988,17 @@ prepare_autoinstall_iso () {
         echo "    - \"echo \\\"nameserver ${iso['dns']}\\\" > ${iso['targetmount']}/etc/resolv.conf\"" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
         echo "    - \"echo \\\"options ${iso['dnsoptions']}\\\" >> ${iso['targetmount']}/etc/resolv.conf\"" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
         echo "    - \"echo \\\"search ${iso['searchdomain']}\\\" >> ${iso['targetmount']}/etc/resolv.conf\"" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+        if [ "${options['vifo']}" = "true" ]; then
+          if [[ "${options['blacklist']}" =~ nvidia ]]; then
+            echo "    - \"echo \\\"options vfio-pci ids=${iso['vfio']} disable_vga=1\\\" >> ${iso['targetmount']}/etc/modprobe.d/vfio.conf\"" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+          else
+            echo "    - \"echo \\\"options vfio-pci ids=${iso['vfio']}\\\" >> ${iso['targetmount']}/etc/modprobe.d/vfio.conf\"" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+          fi
+          echo "    - \"echo \\\"options vfio_iommu_type1 allow_unsafe_interrupts=1\\\" >> ${iso['targetmount']}/etc/modprobe.d/iommu_unsafe_interrupts.conf\"" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+          for module in vfio vfio_iommu_type1 vfio_pci kvm kvm_intel; do
+            echo "    - \"echo \\\"${module]}\\\" >> ${iso['targetmount']}/etc/modules-load.d/vfio-pci.conf\"" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+          done
+        fi
         if [ ! "${num_debs}" = "0" ]; then
           if [ "${options['latepackages']}" = "true" ]; then
             echo "    - \"mkdir -p ${iso['targetmount']}/var/postinstall/packages\"" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"

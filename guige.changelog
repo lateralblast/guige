@@ -879,3 +879,7 @@
 # Re-added ubuntu-advantage-tools to package list after fixing issues with install
 # 4.3.8: Thu 24 Jul 2025 17:58:19 AEST
 # Bug fixes and improvements
+# 4.3.9: Thu Jul 31 03:36:29 PM AEST 2025
+# Added vfio switch and option
+# 4.4.0: Fri Aug  1 12:34:06 PM AEST 2025
+# Updated blacklist/whitelist code

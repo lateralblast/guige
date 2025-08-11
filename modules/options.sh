@@ -104,6 +104,7 @@ set_options_defaults () {
   options['unmount']="true"                   # option - Unmount ISO etc after creating ISO
   options['unpacksquashfs']="true"            # option - Unpack squashfs
   options['updatesquashfs']="false"           # option - Update squashfs
+  options['vfio']="false"                     # option - Enable vfio
   options['verbose']="false"                  # option - Enable verbose mode
   options['zfs']="false"                      # option - Enable ZFS
   options['zfsfilesystems']="false"           # option - Enable XFS datasets
@@ -216,6 +217,9 @@ process_options () {
         iso['kernel']="linux-generic-hwe-${iso['majorrelease']}.${iso['minorrelease']}"
       fi
     fi
+  fi
+  if [ "${options['vfio']}" = "true" ]; then
+    iso['kernelargs']="${iso['kernelargs']} intel_iommu=on iommu=pt intremap=no_x2apic_optout vfio-pci.ids=${iso[vfio]}"
   fi
   update_output_file_name
 }
