@@ -883,3 +883,5 @@
 # Added vfio switch and option
 # 4.4.0: Fri Aug  1 12:34:06 PM AEST 2025
 # Updated blacklist/whitelist code
+# 4.4.1: Wed 19 Nov 2025 16:42:00 AEDT
+# Set development release to 26.04
