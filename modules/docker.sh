@@ -48,17 +48,22 @@ check_docker_config () {
       exit
     fi
     for arch_dir in ${iso['dockerarch']}; do
+      image_name="${script['name']}-${current['dockerubunturelease']}-${arch_dir}"
       if ! [ -d "${iso['workdir']}/${arch_dir}" ]; then
         handle_output "Creating directory ${iso['workdir']}/${arch_dir}" "TEXT"
         create_dir "${iso['workdir']}/${arch_dir}"
       fi
       handle_output "# Checking docker images" "TEXT"
-      docker_image_check=$( docker images |grep "^${script['name']}-${current['dockerubunturelease']}-${arch_dir}" |awk '{print $1}' )
-      handle_output "# Checking volume images" "TEXT"
-      docker_volume_check=$( docker volume list |grep "^${script['name']}-${current['dockerubunturelease']}-${arch_dir}" |awk '{print $1}' )
-      if ! [ "$docker_volume_check" = "${script['name']}-${current['dockerubunturelease']}-${arch_dir}" ]; then
-        if [ "${options['testmode']}" = "false" ]; then
-          docker volume create "${script['name']}-${current['dockerubunturelease']}-${arch_dir}"
+      docker_image_check=$( docker images |grep "^${image_name}" |awk '{print $1}' )
+      if [ -n "${docker_image_check}" ]; then
+        return
+      else
+        handle_output "# Checking volume images" "TEXT"
+        docker_volume_check=$( docker volume list |grep "^${image_name}" |awk '{print $1}' )
+        if [ -z "${docker_volume_check}" ]; then
+          if [ "${options['testmode']}" = "false" ]; then
+            docker volume create "${image_name}"
+          fi
         fi
       fi
       if ! [ "${docker_image_check}" = "${script['name']}-${current['dockerubunturelease']}-${arch_dir}" ]; then

@@ -30,6 +30,7 @@ set_current_defaults () {
   current['release2410']="24.10"
   current['release2504']="25.04"
   current['release2510']="25.10"
+  current['release2604']="26.04"
 }
 
 # Function: set_default_defaults

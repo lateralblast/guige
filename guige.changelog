@@ -885,3 +885,7 @@
 # Updated blacklist/whitelist code
 # 4.4.1: Wed 19 Nov 2025 16:42:00 AEDT
 # Set development release to 26.04
+# 4.4.2: Wed 19 Nov 2025 18:55:28 AEDT
+# Added check for xorriso
+# 4.4.3: Thu 20 Nov 2025 08:20:47 AEDT
+# Added initial support for Ubuntu 26.04

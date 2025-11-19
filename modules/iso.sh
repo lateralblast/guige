@@ -165,6 +165,10 @@ update_iso_packages () {
 
 create_iso () {
   if [ "${options['createiso']}" = "true" ]; then
+    check_xorriso=$( command -v xorriso )
+    if [ "${check_xorriso}" = "" ]; then
+      install_package "xorriso"
+    fi
     case "${iso['osname']}" in
       "ubuntu")
         create_autoinstall_iso
