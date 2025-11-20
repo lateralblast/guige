@@ -42,6 +42,7 @@ set_options_defaults () {
   options['dhcp']="true"                      # option - Enable DHCP
   options['distupgrade']="false"              # option - Enable dist-upgrade
   options['docker']="false"                   # option - Use docker
+  options['dryrun']="false"                   # option - Enable dry run
   options['earlypackages']="false"            # option - Enable early packages
   options['executeracadm']="false"            # option - Execute racadm cofngi
   options['firstboot']="disabled"             # option - Enable first boot

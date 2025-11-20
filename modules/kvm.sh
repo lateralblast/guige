@@ -15,7 +15,7 @@ check_kvm_vm_exists () {
   else
     kvm_test=$(sudo virsh list --all |awk '{ print $2 }' |grep -c "^${iso['name']}" )
   fi
-  if [ ! "${kvm_testi}" = "0" ]; then
+  if [ ! "${kvm_test}" = "0" ]; then
     warning_message "KVM VM ${iso['name']} exists"
    iso['exists']="true"
   fi
@@ -78,6 +78,7 @@ check_kvm_config () {
     iso['diskfile']="${iso['workdir']}/${iso['name']}.qcow2"
   fi
   check_kvm_user
+  check_kvm_network
 }
 
 # Function: create_kvm_ci_vm
@@ -166,7 +167,7 @@ create_kvm_iso_vm () {
     if [ "${os['name']}" = "Darwin" ]; then
       qemu-img create -f qcow2 "${iso['diskfile']}" "${iso['disksize']}"
     else
-      sudo qemu-img create -f qcow2 "${iso['diskfile']}" "${disk['disksize']}"
+      sudo qemu-img create -f qcow2 "${iso['diskfile']}" "${iso['disksize']}"
     fi
   fi
   information_message "Generating VM config ${iso['xmlfile']}"
@@ -440,6 +441,22 @@ create_kvm_iso_vm () {
       verbose_message "" TEXT
       verbose_message "sudo virsh start ${iso['name']} ; sudo virsh console ${iso['name']}" TEXT
     fi
+  fi
+}
+
+# Function: check_kvm_network
+#
+# Check KVM network
+
+check_kvm_network () {
+  if [ "${os['name']}" = "Darwin" ]; then
+    bridge_test=$( virsh net-list --all |grep -c "${iso['bridge']}" )
+  else
+    bridge_test=$( sudo virsh net-list --all |grep -c "${iso['bridge']}" )
+  fi
+  if [ "${bridge_test}" = "0" ]; then
+    warning_message "KVM network ${iso['bridge']} does not exist"
+    do_exit
   fi
 }
 

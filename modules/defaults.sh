@@ -74,6 +74,7 @@ set_default_defaults () {
   defaults['dpkgconf']="--force-confnew"
   defaults['dpkgdepends']="--force-depends"
   defaults['dpkgoverwrite']="--force-overwrite"
+  defaults['dryrun']="false"
   defaults['enableservice']="sshd"
   defaults['fallback']="continue-anyway"
   defaults['firewall']="enabled"

@@ -889,3 +889,5 @@
 # Added check for xorriso
 # 4.4.3: Thu 20 Nov 2025 08:20:47 AEDT
 # Added initial support for Ubuntu 26.04
+# 4.4.4: Thu 20 Nov 2025 17:08:11 AEDT
+# Fixed dryrun option and added check for bridge
