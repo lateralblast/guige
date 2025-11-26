@@ -84,13 +84,13 @@ process_actions () {
         iso['type']="kvm"
         options['createisovm']="true"
         ;;
-      deletecivm)                   # action - Delete cloud-init based VM
+      deletecivm|deletevm)          # action - Delete cloud-init based VM
         iso['type']="kvm"
-        options['deletecivm']="true"
+        options['deletevm']="true"
         ;;
       deleteisovm)                  # action - Delete ISO based VM
         iso['type']="kvm"
-        options['deleteisovm']="true"
+        options['deletevm']="true"
         ;;
       getiso)                       # action - Get ISO
         options['checkworkdir']="true"
@@ -104,8 +104,8 @@ process_actions () {
         install_required_packages
         do_exit
         ;;
-      justiso)
-        options['justiso']="true"
+      justiso)                      # action - Just ISO
+        options['justiso']]="true"
         ;;
       listalliso*|listiso*)         # action - List ISOs
         options['listisos']="true"

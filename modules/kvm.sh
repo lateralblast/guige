@@ -74,7 +74,7 @@ check_kvm_config () {
       sudo_create_dir "${iso['imagedir']}"
     fi
   fi
-  if [ "${iso['diskfile']}" ]; then
+  if [ "${iso['diskfile']}" = "" ]; then
     iso['diskfile']="${iso['workdir']}/${iso['name']}.qcow2"
   fi
   check_kvm_user
@@ -88,6 +88,33 @@ check_kvm_config () {
 create_kvm_ci_vm () {
   check_kvm_config
   get_base_ci
+}
+
+# Function: set_cdrom_device
+#
+# Set cdrom device
+
+set_cdrom_device () {
+  cdrom_device="/tmp/${iso['name']}_cdrom.xml"
+  if [ -f "${cdrom_device}" ]; then
+    rm "${cdrom_device}"
+  fi
+  tee "${cdrom_device}" << CDROM_DEVICE
+  <disk type='file' device='cdrom'>
+    <driver name='qemu' type='raw'/>
+    <source file='${iso['inputfile']}'/>
+    <target dev='sda' bus='scsi'/>
+    <readonly/>
+    <address type='drive' controller='0' bus='0' target='0' unit='0'/>
+  </disk>
+CDROM_DEVICE
+  if [ -f "${cdrom_device}" ]; then
+    if [ "${os['name']}" = "Darwin" ]; then
+      execute_command "virsh update-device ${iso['name']} ${cdrom_device}"
+    else
+      execute_command "sudo virsh update-device ${iso['name']} ${cdrom_device}"
+    fi
+  fi
 }
 
 # Function: create_kvm_iso_vm
@@ -151,7 +178,7 @@ create_kvm_iso_vm () {
     sudo_create_dir "${iso['nvramdir']}"
     sudo_chown "${iso['nvramdir']}" "${os['user']}" "${os['group']}"
   fi
-  iso['nvramfile']="${iso['nvramdir']}=/${iso['name']}}_VARS.fd"
+  iso['nvramfile']="${iso['nvramdir']}/${iso['name']}_VARS.fd"
   if ! [ -f "${iso['biosfile']}" ]; then
     iso['biosfile']="/usr/share/edk2/x64/OVMF_CODE.fd"
     iso['varsfile']="/usr/share/edk2/x64/OVMF_VARS.fd"
@@ -172,7 +199,7 @@ create_kvm_iso_vm () {
   fi
   information_message "Generating VM config ${iso['xmlfile']}"
   iso['xmlfile']="/tmp/${iso['name']}.xml"
-  echo "<domain type='${iso['domaintype']}='>" > "${iso['xmlfile']}"
+  echo "<domain type='${iso['domaintype']}'>" > "${iso['xmlfile']}"
   echo "  <name>${iso['name']}</name>" >> "${iso['xmlfile']}"
   echo "  <metadata>" >> "${iso['xmlfile']}"
   echo "    <libosinfo:libosinfo xmlns:libosinfo=\"http://libosinfo.org/xmlns/libvirt/domain/1.0\">" >> "${iso['xmlfile']}"
@@ -181,7 +208,7 @@ create_kvm_iso_vm () {
   echo "  </metadata>" >> "${iso['xmlfile']}"
   echo "  <memory unit='KiB'>${iso['ram']}</memory>" >> "${iso['xmlfile']}"
   echo "  <currentMemory unit='KiB'>${iso['ram']}</currentMemory>" >> "${iso['xmlfile']}"
-  echo "  <vcpu placement='static'>${vm['cpus']}</vcpu>" >> "${iso['xmlfile']}"
+  echo "  <vcpu placement='static'>${iso['cpus']}</vcpu>" >> "${iso['xmlfile']}"
   echo "  <resource>" >> "${iso['xmlfile']}"
   echo "    <partition>/iso['machine']}</partition>" >> "${iso['xmlfile']}"
   echo "  </resource>" >> "${iso['xmlfile']}"
@@ -197,13 +224,13 @@ create_kvm_iso_vm () {
       echo "      <feature enabled='yes' name='secure-boot'/>" >> "${iso['xmlfile']}"
       echo "    </firmware>" >> "${iso['xmlfile']}"
       echo "    <loader readonly='yes' secure='yes' type='pflash'>${iso['biosfile']}</loader>" >> "${iso['xmlfile']}"
-      echo "    <nvram template='${iso['varsfile']}'>${iso['nvramfile']}=</nvram>" >> "${iso['xmlfile']}"
+      echo "    <nvram template='${iso['varsfile']}'>${iso['nvramfile']}</nvram>" >> "${iso['xmlfile']}"
     else
       echo "      <feature enabled='no' name='enrolled-keys'/>" >> "${iso['xmlfile']}"
       echo "      <feature enabled='no' name='secure-boot'/>" >> "${iso['xmlfile']}"
       echo "    </firmware>" >> "${iso['xmlfile']}"
       echo "    <loader readonly='yes' type='pflash'>${iso['biosfile']}</loader>" >> "${iso['xmlfile']}"
-      echo "    <nvram template='${iso['varsfile']}'>${iso['nvramfile']}=</nvram>" >> "${iso['xmlfile']}"
+      echo "    <nvram template='${iso['varsfile']}'>${iso['nvramfile']}</nvram>" >> "${iso['xmlfile']}"
     fi
     echo "    <bootmenu enable='yes'/>" >> "${iso['xmlfile']}"
   fi
@@ -256,7 +283,7 @@ create_kvm_iso_vm () {
   if [ "${os['name']}" = "Darwin" ]; then
     echo "    <disk type='file' device='cdrom'>" >> "${iso['xmlfile']}"
     echo "      <driver name='qemu' type='raw'/>" >> "${iso['xmlfile']}"
-    echo "      <source file='${vm['inputfile']}'/>" >> "${iso['xmlfile']}"
+    echo "      <source file='${iso['inputfile']}'/>" >> "${iso['xmlfile']}"
     echo "      <backingStore/>" >> "${iso['xmlfile']}"
     echo "      <target dev='sda' bus='${iso['cdbus']}'/>" >> "${iso['xmlfile']}"
     echo "      <readonly/>" >> "${iso['xmlfile']}"
@@ -442,6 +469,7 @@ create_kvm_iso_vm () {
       verbose_message "sudo virsh start ${iso['name']} ; sudo virsh console ${iso['name']}" TEXT
     fi
   fi
+  set_cdrom_device
 }
 
 # Function: check_kvm_network
@@ -473,14 +501,14 @@ delete_kvm_vm () {
     if [ "${os['name']}" = "Darwin" ]; then
       if [ "${iso['status']}" = "0" ]; then
         information_message "Stopping KVM VM ${iso['name']}"
-        execute_command "virsh -c \"qemu:///session\" shutdown ${iso['name']} 2> /dev/null"
+        execute_command "virsh -c \"qemu:///session\" destroy ${iso['name']} 2> /dev/null"
       fi
       information_message "Deleting VM ${iso['name']}"
       execute_command "virsh -c \"qemu:///session\" undefine ${iso['name']} --nvram 2> /dev/null"
     else
       if [ "${iso['status']}" = "0" ]; then
         information_message "Stopping KVM VM ${iso['name']}"
-        execute_command "sudo virsh shutdown ${iso['name']} 2> /dev/null"
+        execute_command "sudo virsh destroy ${iso['name']} 2> /dev/null"
       fi
       information_message "Deleting VM ${iso['name']}"
       execute_command "sudo virsh undefine ${iso['name']} --nvram 2> /dev/null"
