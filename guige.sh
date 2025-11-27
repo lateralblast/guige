@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Name:         guige (Generic Ubuntu/Unix ISO Generation Engine)
-# Version:      4.4.5
+# Version:      4.4.6
 # Release:      1
 # License:      CC-BA (Creative Commons By Attribution)
 #               http://creativecommons.org/licenses/by/4.0/legalcode
@@ -632,6 +632,12 @@ do
       # ISO URL
       check_value "$1" "$2"
       iso['url']="$2"
+      shift 2
+      ;;
+    --vmiso|--kvmiso)
+      # KVM/VM Import ISO/file
+      check_value "$1" "$2"
+      iso['vmiso']="$2"
       shift 2
       ;;
     --volid)

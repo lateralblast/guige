@@ -243,7 +243,7 @@ create_export () {
 
 add_to_output_file_name () {
   param="$1"
-  if [ "${iso[${param}]}" != "${defaults[${param}]}" ] || [ "${param}" = "bridge" ]; then
+  if [ "${iso[${param}]}" != "${defaults[${param}]}" ] || [[ "${param}" =~ bridge|boottype|autoinstall ]]; then
     if [[ ! ${iso['outputfile']} =~ ${iso[${param}]} ]]; then
       value="${iso[${param}]}"
       value="${value//,/-}"
@@ -267,14 +267,14 @@ update_output_file_name () {
       add_to_output_file_name "${param}"
     fi
   done
-  for param in hostname username disk nic bridge ip gateway dns prefix suffix; do 
+  for param in boottype autoinstall hostname username disk nic bridge ip gateway dns prefix suffix; do 
     case "${param}" in 
       ip|gateway|dns)
         if [ "${options['dhcp']}" = "false" ]; then
           add_to_output_file_name "${param}"
         fi
         ;;
-      "bridge")
+      bridge)
         if [ "${options['bridge']}" = "true" ]; then
           add_to_output_file_name "${param}"
         fi
@@ -284,7 +284,7 @@ update_output_file_name () {
         ;;
     esac
   done
-  for option in cluster kvm biosdevname sshkey nvme dhcp grubparse hwe; do
+  for option in autoinstall cluster kvm biosdevname sshkey nvme dhcp grubparse hwe; do
     if [ "${options[${option}]}" = "true" ]; then
       if [[ ! "${iso['outputfile']}" =~ ${option} ]]; then
         information_message "# Adding ${option} to output file name"
@@ -353,14 +353,6 @@ update_output_file_name () {
           iso['name']="${script['name']}-ci-${iso['osname']}-${iso['build']}-${iso['release']}-${iso['boottype']}-${iso['arch']}"
         else
           iso['name']="${script['name']}-iso-${iso['osname']}-${iso['build']}-${iso['release']}-${iso['boottype']}-${iso['arch']}"
-        fi
-      fi
-    fi
-    if [[ "${iso['action']}" =~ "create" ]]; then
-      if ! [ "${iso['inputfile']}" = "" ]; then
-        if ! [ -f "${iso['inputfile']}" ]; then
-          warning_message "ISO ${iso['inputfile']} does not exist"
-          exit
         fi
       fi
     fi

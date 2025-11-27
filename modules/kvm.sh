@@ -90,6 +90,32 @@ create_kvm_ci_vm () {
   get_base_ci
 }
 
+# Function: get_kvm_iso
+#
+# Get KVM ISO
+
+get_kvm_iso () {
+  options['autoinstall']="true"
+  if [ "${iso['vmiso']}" = "" ]; then
+    iso['build']=${iso['build']//\//-}
+    iso['vmiso']="${iso['workdir']}/files/${iso['osname']}-${iso['release']}-${iso['build']}-${iso['arch']}.iso"
+    if [ ! -f "${iso['vmiso']}" ]; then
+      iso['outputfile']="${iso['vmiso']}"
+      update_output_file_name
+      iso['vmiso']="${iso['outputfile']}"
+      if [ ! -f "${iso['vmiso']}" ]; then
+        iso_dir="${iso['workdir']}/files"
+        iso_file=$( ls -Art "${iso_dir}"/*.iso |head -1 )
+        iso['vmiso']="${iso_dir}/${iso_file}"
+      fi
+    fi
+  fi
+  if [ ! -f "${iso['vmiso']}" ]; then
+    warning_message "ISO ${iso['vmiso']} does not exist"
+    do_exit
+  fi
+}
+
 # Function: set_cdrom_device
 #
 # Set cdrom device
@@ -99,11 +125,12 @@ set_cdrom_device () {
   if [ -f "${cdrom_device}" ]; then
     rm "${cdrom_device}"
   fi
+  get_kvm_iso
   tee "${cdrom_device}" << CDROM_DEVICE
   <disk type='file' device='cdrom'>
     <driver name='qemu' type='raw'/>
-    <source file='${iso['inputfile']}'/>
-    <target dev='sda' bus='scsi'/>
+    <source file='${iso['vmiso']}'/>
+    <target dev='sda' bus='sata'/>
     <readonly/>
     <address type='drive' controller='0' bus='0' target='0' unit='0'/>
   </disk>
@@ -123,6 +150,7 @@ CDROM_DEVICE
 
 create_kvm_iso_vm () {
   check_kvm_config
+  get_kvm_iso
   if [ "${os['name']}" = "Darwin" ]; then
     iso['qemuver']=$( brew info qemu --json |jq -r ".[0].versions.stable" )
     iso['qemuvir']=$( echo "${iso['qemuver']}" |awk -F. '{print $1"."$2}' )
@@ -209,9 +237,6 @@ create_kvm_iso_vm () {
   echo "  <memory unit='KiB'>${iso['ram']}</memory>" >> "${iso['xmlfile']}"
   echo "  <currentMemory unit='KiB'>${iso['ram']}</currentMemory>" >> "${iso['xmlfile']}"
   echo "  <vcpu placement='static'>${iso['cpus']}</vcpu>" >> "${iso['xmlfile']}"
-  echo "  <resource>" >> "${iso['xmlfile']}"
-  echo "    <partition>/iso['machine']}</partition>" >> "${iso['xmlfile']}"
-  echo "  </resource>" >> "${iso['xmlfile']}"
   if [ "${iso['boottype']}" = "bios" ]; then
     echo "  <os>" >> "${iso['xmlfile']}"
     echo "    <type arch='${iso['qemuarch']}' machine='${iso['machine']}'>hvm</type>" >> "${iso['xmlfile']}"
@@ -224,16 +249,16 @@ create_kvm_iso_vm () {
       echo "      <feature enabled='yes' name='secure-boot'/>" >> "${iso['xmlfile']}"
       echo "    </firmware>" >> "${iso['xmlfile']}"
       echo "    <loader readonly='yes' secure='yes' type='pflash'>${iso['biosfile']}</loader>" >> "${iso['xmlfile']}"
-      echo "    <nvram template='${iso['varsfile']}'>${iso['nvramfile']}</nvram>" >> "${iso['xmlfile']}"
+#      echo "    <nvram template='${iso['varsfile']}'>${iso['nvramfile']}</nvram>" >> "${iso['xmlfile']}"
     else
       echo "      <feature enabled='no' name='enrolled-keys'/>" >> "${iso['xmlfile']}"
       echo "      <feature enabled='no' name='secure-boot'/>" >> "${iso['xmlfile']}"
       echo "    </firmware>" >> "${iso['xmlfile']}"
       echo "    <loader readonly='yes' type='pflash'>${iso['biosfile']}</loader>" >> "${iso['xmlfile']}"
-      echo "    <nvram template='${iso['varsfile']}'>${iso['nvramfile']}</nvram>" >> "${iso['xmlfile']}"
+#      echo "    <nvram template='${iso['varsfile']}'>${iso['nvramfile']}</nvram>" >> "${iso['xmlfile']}"
     fi
-    echo "    <bootmenu enable='yes'/>" >> "${iso['xmlfile']}"
   fi
+  echo "    <boot dev='hd'/>" >> "${iso['xmlfile']}"
   echo "  </os>" >> "${iso['xmlfile']}"
   echo "  <features>" >> "${iso['xmlfile']}"
   if [ "${os['name']}" = "Darwin" ]; then
@@ -287,7 +312,7 @@ create_kvm_iso_vm () {
     echo "      <backingStore/>" >> "${iso['xmlfile']}"
     echo "      <target dev='sda' bus='${iso['cdbus']}'/>" >> "${iso['xmlfile']}"
     echo "      <readonly/>" >> "${iso['xmlfile']}"
-#    echo "      <boot order='1'/>" >> "${iso['xmlfile']}"
+#    echo "      <boot order='2'/>" >> "${iso['xmlfile']}"
     echo "      <alias name='scsi0-0-0-0'/>" >> "${iso['xmlfile']}"
     echo "      <address type='drive' controller='0' bus='0' target='0' unit='0'/>" >> "${iso['xmlfile']}"
     echo "    </disk>" >> "${iso['xmlfile']}"
@@ -304,7 +329,7 @@ create_kvm_iso_vm () {
     echo "      <source file='${vm['inputfile']}'/>" >> "${iso['xmlfile']}"
     echo "      <target dev='sda' bus='${iso['cdbus']}'/>" >> "${iso['xmlfile']}"
     echo "      <readonly/>" >> "${iso['xmlfile']}"
-    echo "      <boot order='1'/>" >> "${iso['xmlfile']}"
+#    echo "      <boot order='1'/>" >> "${iso['xmlfile']}"
     echo "      <address type='drive' controller='0' bus='0' target='0' unit='0'/>" >> "${iso['xmlfile']}"
     echo "    </disk>" >> "${iso['xmlfile']}"
     echo "    <controller type='virtio-serial' index='0'>" >> "${iso['xmlfile']}"
@@ -417,11 +442,7 @@ create_kvm_iso_vm () {
   echo "      <address type='pci' domain='0x0000' bus='0x00' slot='0x1b' function='0x0'/>" >> "${iso['xmlfile']}"
   echo "    </sound>" >> "${iso['xmlfile']}"
   echo "    <video>" >> "${iso['xmlfile']}"
-  if [ "${os['name']}" = "Darwin" ]; then
-    echo "      <model type='${iso['video']}' vram='65536' heads='1' primary='yes'/>" >> "${iso['xmlfile']}"
-  else
-    echo "      <model type='${iso['video']}' ram='65536' vram='65536' vgamem='16384' heads='1' primary='yes'/>" >> "${iso['xmlfile']}"
-  fi
+  echo "      <model type='virtio' heads='1' primary='yes'/>" >> "${iso['xmlfile']}"
   echo "      <alias name='video0'/>" >> "${iso['xmlfile']}"
   echo "      <address type='pci' domain='0x0000' bus='0x00' slot='0x01' function='0x0'/>" >> "${iso['xmlfile']}"
   echo "    </video>" >> "${iso['xmlfile']}"
@@ -458,18 +479,19 @@ create_kvm_iso_vm () {
     if [ "${os['name']}" = "Darwin" ]; then
       execute_message "virsh define ${iso['xmlfile']}"
       virsh define "${iso['xmlfile']}"
+      set_cdrom_device
       verbose_message "To start the VM and connect to console run the following command:" TEXT
       verbose_message "" TEXT
       verbose_message "virsh start ${iso['name']} ; virsh console ${iso['name']}" TEXT
     else
       execute_message "sudo virsh define ${iso['xmlfile']}"
       sudo virsh define "${iso['xmlfile']}"
+      set_cdrom_device
       verbose_message "To start the VM and connect to console run the following command:" TEXT
       verbose_message "" TEXT
       verbose_message "sudo virsh start ${iso['name']} ; sudo virsh console ${iso['name']}" TEXT
     fi
   fi
-  set_cdrom_device
 }
 
 # Function: check_kvm_network

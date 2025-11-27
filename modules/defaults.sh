@@ -42,6 +42,7 @@ set_default_defaults () {
   defaults['allowpassword']="false"
   defaults['allowservice']="ssh"
   defaults['arch']=$( uname -m |sed "s/aarch64/arm64/g" |sed "s/x86_64/amd64/g" |sed "s/x86/amd64/g" )
+  defaults['autoinstall']="true"
   defaults['bmcip']=""
   defaults['bmcpassword']="calvin"
   defaults['bmcport']="443"
@@ -141,6 +142,7 @@ set_default_defaults () {
   defaults['type']="kvm"
   defaults['updates']="security"
   defaults['username']="ubuntu"
+  defaults['vmiso']=""
   defaults['vgbase']="ubuntu"
   defaults['vgname']="${defaults['vgbase']}-vg"
   defaults['lvname']="${defaults['vgbase']}-lv"

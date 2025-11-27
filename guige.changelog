@@ -893,3 +893,5 @@
 # Fixed dryrun option and added check for bridge
 # 4.4.5: Thu 27 Nov 2025 09:40:51 AEDT
 # Bug fixes and improvements
+# 4.4.6: Fri Nov 28 09:29:36 AEDT 2025
+# Fixed KVM libvirt XML file generation
