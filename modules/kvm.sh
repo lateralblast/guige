@@ -103,9 +103,11 @@ get_kvm_iso () {
       iso['outputfile']="${iso['vmiso']}"
       update_output_file_name
       iso['vmiso']="${iso['outputfile']}"
+      echo "ISO: ${iso['vmiso']}"
       if [ ! -f "${iso['vmiso']}" ]; then
         iso_dir="${iso['workdir']}/files"
         iso_file=$( ls -Art "${iso_dir}"/*.iso |head -1 )
+        iso_file=$( basename "${iso_file}" )
         iso['vmiso']="${iso_dir}/${iso_file}"
       fi
     fi
@@ -144,12 +146,24 @@ CDROM_DEVICE
   fi
 }
 
+# Function: get_kvm_vm_name
+#
+# Get KVM VM name
+
+get_kvm_vm_name () {
+  if [ "${iso['name']}" = "${script['name']}" ]; then
+    build_name=${iso['build']//\/-}
+    iso['name']="${script['name']}-${iso['osname']}-${iso['release']}-${build_name}-${iso['arch']}"
+  fi
+}
+
 # Function: create_kvm_iso_vm
 #
 # Create a KVM VM for testing an ISO
 
 create_kvm_iso_vm () {
   check_kvm_config
+  get_kvm_vm_name
   get_kvm_iso
   if [ "${os['name']}" = "Darwin" ]; then
     iso['qemuver']=$( brew info qemu --json |jq -r ".[0].versions.stable" )
@@ -226,6 +240,8 @@ create_kvm_iso_vm () {
     fi
   fi
   information_message "Generating VM config ${iso['xmlfile']}"
+  iso['name']=${iso['name']//\-live\/desktop\-/-live-desktop-}
+  iso['name']=${iso['name']//\-live\/server\-/-live-server-}
   iso['xmlfile']="/tmp/${iso['name']}.xml"
   echo "<domain type='${iso['domaintype']}'>" > "${iso['xmlfile']}"
   echo "  <name>${iso['name']}</name>" >> "${iso['xmlfile']}"
@@ -510,6 +526,7 @@ check_kvm_network () {
 # Delete a KVM VM
 
 delete_kvm_vm () {
+  get_kvm_vm_name
   if [ -z "$( command -v virsh )" ]; then
     install_required_kvm_packages
   fi

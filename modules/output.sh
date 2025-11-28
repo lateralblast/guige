@@ -262,6 +262,14 @@ add_to_output_file_name () {
 # Update output file name based on switched and options
 
 update_output_file_name () {
+  if [[ "${iso['outputfile']}" =~ server ]] && [[ "${iso['build']}" =~ desktop ]]; then
+    iso['outputfile']=${iso['outputfile']//server/desktop}
+  fi
+  if [[ "${iso['outputfile']}" =~ desktop ]] && [[ "${iso['build']}" =~ server ]]; then
+    iso['outputfile']=${iso['outputfile']//desktop/server}
+  fi
+  iso['outputfile']=${iso['outputfile']//\-live\/desktop\-/-live-desktop-}
+  iso['outputfile']=${iso['outputfile']//\-live\/server\-/-live-server-}
   for param in nics bridges ips; do
     if [ ! "${iso[${param}]}" = "" ]; then
       add_to_output_file_name "${param}"
@@ -349,10 +357,11 @@ update_output_file_name () {
           iso['name']="${script['name']}-iso-${iso['osname']}-${iso['release']}-${iso['boottype']}-${iso['arch']}"
         fi
       else
+        build_name=${iso['build']//\/-}
         if [[ "${iso['action']}" =~ "ci" ]]; then
-          iso['name']="${script['name']}-ci-${iso['osname']}-${iso['build']}-${iso['release']}-${iso['boottype']}-${iso['arch']}"
+          iso['name']="${script['name']}-ci-${iso['osname']}-${build_name}-${iso['release']}-${iso['boottype']}-${iso['arch']}"
         else
-          iso['name']="${script['name']}-iso-${iso['osname']}-${iso['build']}-${iso['release']}-${iso['boottype']}-${iso['arch']}"
+          iso['name']="${script['name']}-iso-${iso['osname']}-${build_name}-${iso['release']}-${iso['boottype']}-${iso['arch']}"
         fi
       fi
     fi

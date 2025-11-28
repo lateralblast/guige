@@ -193,7 +193,8 @@ process_switches () {
     iso['dockerworkdir']="/root/${script['name']}/${iso['osname']}/${iso['build']}/${iso['release']}"
   fi
   if [ "${iso['outputfile']}" = "${defaults['outputfile']}" ]; then
-    iso['outputfile']="${iso['workdir']}/files/ubuntu-${iso['release']}-live-server-${iso['arch']}-${iso['boottype']}-autoinstall.iso"
+    build_name=${iso['build']//\/-}
+    iso['outputfile']="${iso['workdir']}/files/${iso['osname']}-${iso['release']}-${build_name}-${iso['arch']}-${iso['boottype']}-autoinstall.iso"
   fi
   if [ "${options['autoinstall']}" = "true" ]; then
     if [ ! -f "${iso['autoinstallfile']}" ]; then

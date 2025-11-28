@@ -897,3 +897,5 @@
 # Fixed KVM libvirt XML file generation
 # 4.4.7: Fri Nov 28 11:09:30 AEDT 2025
 # Added shutdown to KVM destroy
+# 4.4.8: Fri Nov 28 15:01:06 AEDT 2025
+# Clean up file name generation

@@ -390,10 +390,17 @@ reset_default_dirs () {
 # Set default file names/locations
 
 set_default_files () {
-  defaults['inputfile']="${defaults['workdir']}/files/ubuntu-${defaults['release']}-live-server-${defaults['arch']}.iso"
+  build_name=${defaults['build']//\/-}
+  if [[ ${build_name} =~ live ]]; then
+    defaults['inputfile']="${defaults['workdir']}/files/ubuntu-${defaults['release']}-${defaults['build']}-${defaults['arch']}.iso"
+    defaults['oldinputfile']="${defaults['oldworkdir']}/files/ubuntu-${defaults['oldrelease']}-${build_name}-${defaults['arch']}.iso"
+    defaults['outputfile']="${defaults['workdir']}/files/ubuntu-${defaults['release']}-${build_name}-${defaults['arch']}-${defaults['boottype']}-autoinstall.iso"
+  else
+    defaults['inputfile']="${defaults['workdir']}/files/ubuntu-${defaults['release']}-live-${defaults['build']}-${defaults['arch']}.iso"
+    defaults['oldinputfile']="${defaults['oldworkdir']}/files/ubuntu-${defaults['oldrelease']}-live-${build_name}-${defaults['arch']}.iso"
+    defaults['outputfile']="${defaults['workdir']}/files/ubuntu-${defaults['release']}-live-${build_name}-${defaults['arch']}-${defaults['boottype']}-autoinstall.iso"
+  fi
   defaults['inputci']="${defaults['workdir']}/files/ubuntu-${defaults['release']}-server-cloudimg-${defaults['arch']}.img"
-  defaults['oldinputfile']="${defaults['oldworkdir']}/files/ubuntu-${defaults['oldrelease']}-live-server-${defaults['arch']}.iso"
-  defaults['outputfile']="${defaults['workdir']}/files/ubuntu-${defaults['release']}-live-server-${defaults['arch']}-${defaults['boottype']}-autoinstall.iso"
   defaults['outputci']="${defaults['workdir']}/files/ubuntu-${defaults['release']}-server-cloudimg-${defaults['arch']}-${defaults['boottype']}-autoinstall.img"
   defaults['bootserverfile']="${defaults['outputfile']}"
   defaults['squashfsfile']="${defaults['oldmountdir']}/casper/ubuntu-server-minimal.squashfs"
