@@ -895,3 +895,5 @@
 # Bug fixes and improvements
 # 4.4.6: Fri Nov 28 09:29:36 AEDT 2025
 # Fixed KVM libvirt XML file generation
+# 4.4.7: Fri Nov 28 11:09:30 AEDT 2025
+# Added shutdown to KVM destroy

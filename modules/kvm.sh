@@ -249,13 +249,11 @@ create_kvm_iso_vm () {
       echo "      <feature enabled='yes' name='secure-boot'/>" >> "${iso['xmlfile']}"
       echo "    </firmware>" >> "${iso['xmlfile']}"
       echo "    <loader readonly='yes' secure='yes' type='pflash'>${iso['biosfile']}</loader>" >> "${iso['xmlfile']}"
-#      echo "    <nvram template='${iso['varsfile']}'>${iso['nvramfile']}</nvram>" >> "${iso['xmlfile']}"
     else
       echo "      <feature enabled='no' name='enrolled-keys'/>" >> "${iso['xmlfile']}"
       echo "      <feature enabled='no' name='secure-boot'/>" >> "${iso['xmlfile']}"
       echo "    </firmware>" >> "${iso['xmlfile']}"
       echo "    <loader readonly='yes' type='pflash'>${iso['biosfile']}</loader>" >> "${iso['xmlfile']}"
-#      echo "    <nvram template='${iso['varsfile']}'>${iso['nvramfile']}</nvram>" >> "${iso['xmlfile']}"
     fi
   fi
   echo "    <boot dev='hd'/>" >> "${iso['xmlfile']}"
@@ -302,7 +300,6 @@ create_kvm_iso_vm () {
   echo "      <driver name='qemu' type='qcow2' discard='unmap'/>" >> "${iso['xmlfile']}"
   echo "      <source file='${iso['diskfile']}'/>" >> "${iso['xmlfile']}"
   echo "      <target dev='vda' bus='virtio'/>" >> "${iso['xmlfile']}"
-#  echo "      <boot order='2'/>" >> "${iso['xmlfile']}"
   echo "      <address type='pci' domain='0x0000' bus='0x04' slot='0x00' function='0x0'/>" >> "${iso['xmlfile']}"
   echo "    </disk>" >> "${iso['xmlfile']}"
   if [ "${os['name']}" = "Darwin" ]; then
@@ -312,7 +309,6 @@ create_kvm_iso_vm () {
     echo "      <backingStore/>" >> "${iso['xmlfile']}"
     echo "      <target dev='sda' bus='${iso['cdbus']}'/>" >> "${iso['xmlfile']}"
     echo "      <readonly/>" >> "${iso['xmlfile']}"
-#    echo "      <boot order='2'/>" >> "${iso['xmlfile']}"
     echo "      <alias name='scsi0-0-0-0'/>" >> "${iso['xmlfile']}"
     echo "      <address type='drive' controller='0' bus='0' target='0' unit='0'/>" >> "${iso['xmlfile']}"
     echo "    </disk>" >> "${iso['xmlfile']}"
@@ -329,7 +325,6 @@ create_kvm_iso_vm () {
     echo "      <source file='${vm['inputfile']}'/>" >> "${iso['xmlfile']}"
     echo "      <target dev='sda' bus='${iso['cdbus']}'/>" >> "${iso['xmlfile']}"
     echo "      <readonly/>" >> "${iso['xmlfile']}"
-#    echo "      <boot order='1'/>" >> "${iso['xmlfile']}"
     echo "      <address type='drive' controller='0' bus='0' target='0' unit='0'/>" >> "${iso['xmlfile']}"
     echo "    </disk>" >> "${iso['xmlfile']}"
     echo "    <controller type='virtio-serial' index='0'>" >> "${iso['xmlfile']}"
@@ -526,10 +521,12 @@ delete_kvm_vm () {
         execute_command "virsh -c \"qemu:///session\" destroy ${iso['name']} 2> /dev/null"
       fi
       information_message "Deleting VM ${iso['name']}"
+      execute_command "virsh -c \"qemu:///session\" shutdown ${iso['name']} 2> /dev/null"
       execute_command "virsh -c \"qemu:///session\" undefine ${iso['name']} --nvram 2> /dev/null"
     else
       if [ "${iso['status']}" = "0" ]; then
         information_message "Stopping KVM VM ${iso['name']}"
+        execute_command "sudo virsh shutdown ${iso['name']} 2> /dev/null"
         execute_command "sudo virsh destroy ${iso['name']} 2> /dev/null"
       fi
       information_message "Deleting VM ${iso['name']}"
