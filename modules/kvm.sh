@@ -155,6 +155,8 @@ get_kvm_vm_name () {
     build_name=${iso['build']//\/-}
     iso['name']="${script['name']}-${iso['osname']}-${iso['release']}-${build_name}-${iso['arch']}"
   fi
+  iso['name']=${iso['name']//\-live\/desktop\-/-live-desktop-}
+  iso['name']=${iso['name']//\-live\/server\-/-live-server-}
 }
 
 # Function: create_kvm_iso_vm
