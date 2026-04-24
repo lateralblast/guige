@@ -209,7 +209,7 @@ prepare_autoinstall_iso () {
     fi
     if [ "${options['earlypackages']}" = "true" ] || [ "${options['latepackages']}" = "true" ]; then
       handle_output "# Removing old packages from ${iso['packagedir']}" "TEXT"
-      rm "${iso['packagedir']}"/*.dev
+      rm "${iso['packagedir']}"/*.deb
       handle_output "# Copying packages to ${iso['packagedir']}" "TEXT"
       if [ "${options['verbose']}" = "true" ]; then
         sudo cp -v "${iso['newdir']}"/custom/var/cache/apt/archives/*.deb "${iso['packagedir']}"

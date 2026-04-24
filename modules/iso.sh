@@ -468,6 +468,12 @@ get_info_from_iso () {
       "questing")
         iso['release']="${current['release2510']}"
         ;;
+      "resolute")
+        iso['release']="${current['release2604']}"
+        ;;
+      "stonking")
+        iso['release']="${current['release2610']}"
+        ;;
       "ubuntu")
         iso['release']=$(echo "${test_file}" |cut -f2 -d- )
         ;;

@@ -244,13 +244,18 @@ create_export () {
 add_to_output_file_name () {
   param="$1"
   if [ "${iso[${param}]}" != "${defaults[${param}]}" ] || [[ "${param}" =~ bridge|boottype|autoinstall ]]; then
-    if [[ ! ${iso['outputfile']} =~ ${iso[${param}]} ]]; then
-      value="${iso[${param}]}"
+    if [ "${iso[${param}]}" = "true" ]; then
+      test_value="${param}"
+    else
+      test_value="${iso[${param}]}"
+    fi
+    if [[ ! ${iso['outputfile']} =~ ${test_value} ]]; then
+      value="${test_value}"
       value="${value//,/-}"
-      if [[ ! ${iso['outputfile']} =~ $value ]]; then
+      if [[ ! ${iso['outputfile']} =~ ${value} ]]; then
         temp_dir_name=$( dirname "${iso['outputfile']}" )
         temp_file_name=$( basename "${iso['outputfile']}" .iso )
-        information_message "Adding ${param} ${value} to output file name"
+        information_message "Adding parameter ${param} value ${value} to output file name"
         iso['outputfile']="${temp_dir_name}/${temp_file_name}-${value}.iso"
       fi
     fi

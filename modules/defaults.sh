@@ -12,12 +12,12 @@
 set_current_defaults () {
   current['arch']="amd64"
   current['codename']="jammy"
-  current['devrelease']="26.04"
+  current['devrelease']="26.10"
   current['betarelease']=""
   current['dockerubunturelease']="25.04"
   current['oldrelease']="23.04"
   current['osname']="ubuntu"
-  current['release']="24.04.2"
+  current['release']="26.04"
   current['release1404']="14.04.6"
   current['release1604']="16.04.7"
   current['release1804']="18.04.6"
@@ -31,6 +31,7 @@ set_current_defaults () {
   current['release2504']="25.04"
   current['release2510']="25.10"
   current['release2604']="26.04"
+  current['release2610']="26.10"
 }
 
 # Function: set_default_defaults
@@ -191,6 +192,10 @@ reset_defaults () {
   if [ "${iso['osname']}" = "" ]; then
     iso['osname']="${defaults['osname']}"
   fi
+  if [ "${iso['majorrelease']}" -gt 25 ]; then
+    defaults['chrootpackages']="sudo zfsutils-linux xfsprogs btrfs-progs net-tools curl lftp wget sudo file rsync dialog setserial ansible apt-utils whois squashfs-tools duperemove jq btrfs-compsize iproute2"
+    defaults['packages']="sudo zfsutils-linux xfsprogs btrfs-progs net-tools curl lftp wget sudo file rsync dialog setserial ansible apt-utils whois squashfs-tools duperemove jq btrfs-compsize iproute2 ipcalc"
+  fi
   if [[ "${iso['osname']}" =~ "ubuntu" ]]; then
     defaults['requiredpackages']="iproute2 ${defaults['requiredpackages']}"
     if [ "${iso['release']}" = "${current['betarelease']}" ]; then
@@ -237,6 +242,9 @@ reset_defaults () {
       options['earlypackages']="true"
       options['latepackages']="true"
     fi
+  fi
+  if [ "${iso['autoinstall']}" = "" ]; then
+    iso['autoinstall']="${defaults['autoinstall']}"
   fi
 }
 
