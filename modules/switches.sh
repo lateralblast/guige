@@ -251,5 +251,6 @@ process_switches () {
   if [ ! "${iso['ip']}" = "" ] || [ ! "${iso['grubip']}" = "" ]; then 
     options['dhcp']="false"
   fi
+  check_release
   update_output_file_name
 }

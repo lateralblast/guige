@@ -83,6 +83,9 @@ get_os_ip () {
 
 get_current_release () {
   case "${iso['release']}" in
+    "26.10")
+      iso['release']="${current['release2610']}"
+      ;;
     "26.04")
       iso['release']="${current['release2604']}"
       ;;
@@ -186,6 +189,10 @@ get_code_name () {
     "26.04")
       defaults['codename']="resolute"
       iso['codename']="resolute"
+      ;;
+    "26.10")
+      defaults['codename']="stonking"
+      iso['codename']="stonking"
       ;;
   esac
 }

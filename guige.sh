@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Name:         guige (Generic Ubuntu/Unix ISO Generation Engine)
-# Version:      4.5.2
+# Version:      4.5.3
 # Release:      1
 # License:      CC-BA (Creative Commons By Attribution)
 #               http://creativecommons.org/licenses/by/4.0/legalcode
@@ -192,6 +192,12 @@ do
       # Number of CPUs
       check_value "$1" "$2"
       iso['cpus']="$2"
+      shift 2
+      ;;
+    --codename)
+      # Release codename
+      check_value "$1" "$2"
+      iso['codename']="$2"
       shift 2
       ;;
     --disk)

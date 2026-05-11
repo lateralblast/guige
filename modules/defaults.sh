@@ -5,6 +5,35 @@
 # shellcheck disable=SC2129
 # shellcheck disable=SC2154
 
+# Funtion: set_default_codename
+#
+# Set default codename
+
+set_default_codename () {
+  if [ -f "/usr/bin/lsb_release" ]; then
+    if [ "${os['name']}" = "Ubuntu" ]; then
+      defaults['codename']=$( lsb_release -cs 2> /dev/null)
+    else
+      defaults['codename']="${current['codename']}"
+    fi
+  else
+    defaults['codename']="${current['codename']}"
+  fi
+}
+
+# Function: check_release
+#
+# Check release
+
+check_release () {
+  if [ "${iso['osname']}" = "ubuntu" ]; then
+    if [ "${iso['majorrelease']}" -ge 26 ] && [ "${iso['minorrelease']}" -ge 10 ]; then
+      warning_message "Release ${iso['release']} has not been released yet"
+      exit
+    fi
+  fi
+}
+
 # Function: set_current_defaults
 #
 # Set current defaults 
@@ -165,10 +194,11 @@ set_default_defaults () {
 
 set_defaults () {
   temp['verbose']="false"
+  set_iso_defaults
   set_options_defaults
   set_current_defaults
   set_default_defaults
-  set_iso_defaults
+  set_default_codename
   iso['name']=""
   iso['exists']="false"
   if [ "${os['name']}" = "Linux" ]; then
@@ -324,22 +354,6 @@ set_default_release () {
     defaults['release']="${current['release']}"
   fi
   defaults['oldrelease']="${current['oldrelease']}"
-}
-
-# Funtion: set_default_codename
-#
-# Set default codename
-
-set_default_codename () {
-  if [ -f "/usr/bin/lsb_release" ]; then
-    if [ "${os['name']}" = "Ubuntu" ]; then
-      defaults['codename']=$( lsb_release -cs 2> /dev/null)
-    else
-      defaults['codename']="${current['codename']}"
-    fi
-  else
-    defaults['codename']="${current['codename']}"
-  fi
 }
 
 # Function: set_default_old_url

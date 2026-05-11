@@ -907,3 +907,5 @@
 # Fixed output file name generation when parameter values are true or false
 # 4.5.2: Fri Apr 24 15:17:41 AEST 2026
 # Fixed previous build package cleanup
+# 4.5.3: Mon May 11 12:20:04 AEST 2026
+# Bug fixes and improvements
