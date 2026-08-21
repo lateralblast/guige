@@ -209,7 +209,7 @@ prepare_autoinstall_iso () {
     fi
     if [ "${options['earlypackages']}" = "true" ] || [ "${options['latepackages']}" = "true" ]; then
       handle_output "# Removing old packages from ${iso['packagedir']}" "TEXT"
-      rm "${iso['packagedir']}"/*.deb
+      sudo rm -f "${iso['packagedir']}"/*.deb
       handle_output "# Copying packages to ${iso['packagedir']}" "TEXT"
       if [ "${options['verbose']}" = "true" ]; then
         sudo cp -v "${iso['newdir']}"/custom/var/cache/apt/archives/*.deb "${iso['packagedir']}"
@@ -231,7 +231,7 @@ prepare_autoinstall_iso () {
     fi
     if [ "${options['testmode']}" = "false" ]; then
       cp -r "${iso['sourcedir']}/[BOOT]"/* "${iso['workdir']}/BOOT/"
-      rm -rf "${iso['sourcedir']}/[BOOT]"
+      sudo rm -rf "${iso['sourcedir']}/[BOOT]"
     fi
   fi
   if [ -f "${iso['workdir']}/grub.cfg" ]; then
@@ -313,7 +313,7 @@ prepare_autoinstall_iso () {
   iso_volmgrs="${iso['volumemanager']//,/ }"
   for iso_volmgr in ${iso_volmgrs}; do
     if [ -e "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data" ]; then
-      rm "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+      sudo rm "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
     fi
     if [ ! -d "${iso['configdir']}/${iso_volmgr}/${iso['disk']}" ]; then
       sudo_create_dir "${iso['configdir']}/${iso_volmgr}/${iso['disk']}"

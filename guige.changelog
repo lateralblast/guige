@@ -909,3 +909,5 @@
 # Fixed previous build package cleanup
 # 4.5.3: Mon May 11 12:20:04 AEST 2026
 # Bug fixes and improvements
+# 4.5.4: Fri Aug 21 01:58:04 PM AEST 2026
+# Added code to cleanup disk and NIC device names
