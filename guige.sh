@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Name:         guige (Generic Ubuntu/Unix ISO Generation Engine)
-# Version:      4.5.4
+# Version:      4.5.5
 # Release:      1
 # License:      CC-BA (Creative Commons By Attribution)
 #               http://creativecommons.org/licenses/by/4.0/legalcode
@@ -188,24 +188,6 @@ do
       iso['bmcusername']="$2"
       shift 2
       ;;
-    --cpus)
-      # Number of CPUs
-      check_value "$1" "$2"
-      iso['cpus']="$2"
-      shift 2
-      ;;
-    --codename)
-      # Release codename
-      check_value "$1" "$2"
-      iso['codename']="$2"
-      shift 2
-      ;;
-    --disk)
-      # Boot Disk devices
-      check_value "$1" "$2"
-      iso['disk']="$2"
-      shift 2
-      ;;
     --bootloader)
       # Boot Loader Location
       check_value "$1" "$2"
@@ -281,7 +263,8 @@ do
       shift 2
       ;;
     --codename)
-      # Linux release codename or distribution
+      # Release codename
+      check_value "$1" "$2"
       iso['codename']="$2"
       shift 2
       ;;
@@ -296,6 +279,12 @@ do
       # Country
       check_value "$1" "$2"
       iso['country']="$2"
+      shift 2
+      ;;
+    --cpus)
+      # Number of CPUs
+      check_value "$1" "$2"
+      iso['cpus']="$2"
       shift 2
       ;;
     --debug)
@@ -313,6 +302,12 @@ do
       # Disable service(s)
       check_value "$1" "$2"
       iso['disableservice']="$2"
+      shift 2
+      ;;
+    --disk)
+      # Boot Disk devices
+      check_value "$1" "$2"
+      iso['disk']="$2"
       shift 2
       ;;
     --diskfile)

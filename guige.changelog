@@ -911,3 +911,5 @@
 # Bug fixes and improvements
 # 4.5.4: Fri Aug 21 01:58:04 PM AEST 2026
 # Added code to cleanup disk and NIC device names
+# 4.5.5: Fri Aug 21 02:10:13 PM AEST 2026
+# Cleaned up switch processing
