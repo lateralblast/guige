@@ -68,6 +68,7 @@ set_current_defaults () {
 # Set default defaults
 
 set_default_defaults () {
+  defaults['bootserverprotocol']="smb"
   defaults['allowlist']=""
   defaults['allowpassword']="false"
   defaults['allowservice']="ssh"

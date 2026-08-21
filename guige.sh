@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Name:         guige (Generic Ubuntu/Unix ISO Generation Engine)
-# Version:      4.5.5
+# Version:      4.5.6
 # Release:      1
 # License:      CC-BA (Creative Commons By Attribution)
 #               http://creativecommons.org/licenses/by/4.0/legalcode
@@ -202,9 +202,15 @@ do
       shift 2
       ;;
     --bootserverip)
-      # NFS/Bootserver IP
+      # Bootserver IP
       check_value "$1" "$2"
       iso['bootserverip']="$2"
+      shift 2
+      ;;
+    --bootserverproto*)
+      # Bootserver Protocol 
+      check_value "$1" "$2"
+      iso['bootserverprotocol']="$2"
       shift 2
       ;;
     --bootsize)

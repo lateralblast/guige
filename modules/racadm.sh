@@ -11,7 +11,11 @@ execute_racadm () {
   if [ "${options['testmode']}" = "false" ]; then
     handle_output "# Executing racadm" "TEXT"
     ${iso['racadm']} -H "${iso['bmcip']}" -u "${iso['bmcusername']}" -p "${iso['bmcpassword']}" -c "remoteimage -d"
-    ${iso['racadm']} -H "${iso['bmcip']}" -u "${iso['bmcusername']}" -p "${iso['bmcpassword']}" -c "remoteimage -c -l ${iso['bootserverip']}:iso['bootserverfile']}"
+    if [ "${options['bootserverprotocol']}" = "smb" ]; then
+      ${iso['racadm']} -H "${iso['bmcip']}" -u "${iso['bmcusername']}" -p "${iso['bmcpassword']}" -c "remoteimage -c -l //${iso['bootserverip']}/iso['bootserverfile']}"
+    else
+      ${iso['racadm']} -H "${iso['bmcip']}" -u "${iso['bmcusername']}" -p "${iso['bmcpassword']}" -c "remoteimage -c -l ${iso['bootserverip']}:iso['bootserverfile']}"
+    fi
     ${iso['racadm']} -H "${iso['bmcip']}" -u "${iso['bmcusername']}" -p "${iso['bmcpassword']}" -c "config -g cfgServerInfo -o cfgServerBootOnce 1"
     ${iso['racadm']} -H "${iso['bmcip']}" -u "${iso['bmcusername']}" -p "${iso['bmcpassword']}" -c "config -g cfgServerInfo -o cfgServerFirstBootDevice VCD-DVD"
     ${iso['racadm']} -H "${iso['bmcip']}" -u "${iso['bmcusername']}" -p "${iso['bmcpassword']}" -c "serveraction powercycle"
