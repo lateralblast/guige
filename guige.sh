@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Name:         guige (Generic Ubuntu/Unix ISO Generation Engine)
-# Version:      4.5.7
+# Version:      4.5.9
 # Release:      1
 # License:      CC-BA (Creative Commons By Attribution)
 #               http://creativecommons.org/licenses/by/4.0/legalcode
@@ -18,6 +18,10 @@
 # shellcheck disable=SC2045
 # shellcheck disable=SC2129
 
+# Check bash version
+
+[[ "${BASH_VERSINFO[0]}" -lt 4 ]] && echo "Requires bash version >=4" >&2 && exit 1
+
 # Create arrays for options and actions
 
 declare -A os
@@ -33,6 +37,8 @@ declare -A current
 declare -A defaults
 
 declare -a switches
+declare -a actions_list
+declare -a options_list
 
 script['args']="$*"
 script['file']="$0"
@@ -137,7 +143,7 @@ do
     --action*)
       # Action to perform
       check_value "$1" "$2"
-      iso['action']="$2"
+      actions_list+=("$2")
       shift 2
       ;;
     --allowpassword)
@@ -236,6 +242,11 @@ do
       esac
       shift 2
       ;;
+    --builddockerconfig)
+      # Build Docker config
+      action_list+=(builddockerconfig)
+      shift
+      ;;
     --bridge)
       # Bridge name
       check_value "$1" "$2"
@@ -249,6 +260,26 @@ do
       iso['bridges']="$2"
       options['bridge']="true"
       shift 2
+      ;;
+    --checkdocker)
+      # Check Docker
+      action_list+=(checkdocker)
+      shift
+      ;;
+    --checkracadm)
+      # Check RACadm
+      action_list+=(checkracadm)
+      shift
+      ;;
+    --checkshellcheck)
+      # Shellcheck script
+      action_list+=(checkshellcheck)
+      shift
+      ;;
+    --checkworkdir)
+      # Check work directories
+      action_list+=(checkworkdir)
+      shift
       ;;
     --chrootpackages)
       # List of packages to add to ISO
@@ -293,6 +324,51 @@ do
       iso['cpus']="$2"
       shift 2
       ;;
+    --createansible)
+      # Create ansible
+      action_list+=(createansible)
+      shift
+      ;;
+    --createautoinstall)
+      # Create autoinstall
+      action_list+=(createautoinstall)
+      shift
+      ;;
+    --createcivm)
+      # Create cloud-init based VM
+      action_list+=(createcivm)
+      shift
+      ;;
+    --createdockeriso)
+      # Create ISO using docker
+      action_list+=(createdockeriso)
+      shift
+      ;;
+    --createdockerisoandsquashfs)
+      # Create ISO and update squashfs using docker
+      action_list+=(createdockerisoandsquashfs)
+      shift
+      ;;
+    --createexport)
+      # Create export
+      action_list+=(createexport)
+      shift
+      ;;
+    --createiso|--fullsiso)
+      # Create ISO
+      action_list+=(createiso)
+      shift
+      ;;
+    --createisoandsquashfs)
+      # Create ISO and update squashfs
+      action_list+=(createisoandsquashfs)
+      shift
+      ;;
+    --createisovm)
+      # Create ISO based VM
+      action_list+=(createisovm)
+      shift
+      ;;
     --debug)
       # Set debug flag (set -x)
       set -x
@@ -303,6 +379,16 @@ do
       check_value "$1" "$2"
       iso['delete']="$2"
       shift 2
+      ;;
+    --deletecivm)
+      # Delete cloud-init based VM
+      action_list+=(deletecivm)
+      shift
+      ;;
+    --deleteisovm)
+      # Delete ISO based VM
+      action_list+=(deleteisovm)
+      shift
       ;;
     --disableservice)
       # Disable service(s)
@@ -394,6 +480,11 @@ do
       check_value "$1" "$2"
       iso['gecos']="$2"
       shift 2
+      ;;
+    --getiso)
+      # Get ISO
+      action_list+=(getiso)
+      shift
       ;;
     --groups)
       # Groups to add user to
@@ -531,7 +622,7 @@ do
       options['grubparse']="true"
       shift 2
       ;;
-    --help|-h)
+    --help|-h|--printhelp)
       # Print help
       print_help "cli"
       shift
@@ -571,6 +662,11 @@ do
       iso['installpassword']="$2"
       # Temporary install password for remote access during install
       shift 2
+      ;;
+    --installreq*|--checkreq*)
+      # Install/Check required packages
+      action_list+=(installrequiredpackages)
+      shift
       ;;
     --installsource)
       # Install source
@@ -627,12 +723,6 @@ do
       check_value "$1" "$2"
       options['isolinuxfile']="true"
       iso['isolinuxfile']="$2"
-      shift 2
-      ;;
-    --packages)
-      # Additional packages to install
-      check_value "$1" "$2"
-      iso['packages']="$2"
       shift 2
       ;;
     --url)
@@ -731,10 +821,10 @@ do
       iso['onboot']="$2"
       shift 2
       ;;
-    --options|--option)
+    --option*)
       # Options (e.g. verbose)
       check_value "$1" "$2"
-      iso['options']="$2";
+      options_list+=("$2")
       shift 2
       ;;
     --outputci)
@@ -747,6 +837,12 @@ do
       # Output ISO file
       check_value "$1" "$2"
       iso['outputfile']="$2"
+      shift 2
+      ;;
+    --packages)
+      # Additional packages to install
+      check_value "$1" "$2"
+      iso['packages']="$2"
       shift 2
       ;;
     --password)
@@ -905,6 +1001,11 @@ do
       options['sshkey']="true"
       shift 2
       ;;
+    --strict)
+      # Enable strict mode
+      set -eu
+      shift
+      ;;
     --sudoers)
       # Sudoers entry
       check_value "$1" "$2"
@@ -928,6 +1029,11 @@ do
       check_value "$1" "$2"
       iso['swapsize']="$2"
       shift 2
+      ;;
+    --test)
+      # Run in test mode
+      options_list+=(test)
+      shift
       ;;
     --timezone)
       # Timezone
@@ -961,6 +1067,11 @@ do
       print_info "$2"
       shift 2
       exit
+      ;;
+    --verbose)
+      # Verbose output
+      options_list+=(verbose)
+      shift
       ;;
     --version|-V)
       # Display version
@@ -1043,8 +1154,39 @@ reset_default_dirs
 set_default_files
 reset_default_files
 update_iso_url
-process_options
-process_actions
+
+# Process options
+
+if [ -n "${options_list[*]}" ]; then
+  for option_list in "${options_list[@]}"; do
+    if [[ "${option_list}" =~ , ]]; then
+      IFS="," read -r -a option_array <<< "${option_list[*]}"
+      for option_item in "${option_array[@]}"; do
+        process_options "${option_item}"
+      done
+    else
+      process_options "${option_list}"
+    fi
+  done
+fi
+
+reset_defaults
+
+# Process actions
+
+if [ -n "${actions_list[*]}" ]; then
+  for action_list in "${actions_list[@]}"; do
+    if [[ "${action_list}" =~ , ]]; then
+      IFS="," read -r -a action_array <<< "${action_list[*]}"
+      for action_item in "${action_array[@]}"; do
+        process_actions "${action_item}"
+      done
+    else
+      process_actions "${action_list}"
+    fi
+  done
+fi
+
 process_post_install
 update_required_packages
 install_required_packages
@@ -1079,15 +1221,13 @@ fi
 
 # Do test outputs
 
-if [ "${iso['action']}" = "test" ]; then
+if [ "${options['test']}" = "true" ]; then
   check_workdir
   if [ "${options['kstest']}" = "true" ]; then
     prepare_kickstart_files
     exit
   fi
 fi
-
-
 
 # Handle specific functions
 

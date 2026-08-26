@@ -9,17 +9,12 @@
 # Process action switch
 
 process_actions () {
-  if [ "${iso['action']}" = "" ]; then
-    warning_message "No action specified"
-    exit
+  action_names="${1}"
+  if [[ "${action_names}" =~ , ]]; then
+    action_names="${action_names//,/ }"
   fi
-  if [[ "${iso['action']}" =~ , ]]; then
-    actions="${iso['action']//,/ }"
-  else
-    actions="${iso['action']}"
-  fi
-  for action in ${actions}; do
-    case "${action}" in
+  for action_name in ${action_names}; do
+    case "${action_name}" in
       builddockerconfig)            # action - Build Docker config
         check_docker_config
         do_exit
@@ -105,7 +100,7 @@ process_actions () {
         do_exit
         ;;
       justiso)                      # action - Just ISO
-        options['justiso']]="true"
+        options['justiso']="true"
         ;;
       listalliso*|listiso*)         # action - List ISOs
         options['listisos']="true"
@@ -147,7 +142,7 @@ process_actions () {
       runchrootscript)              # action - Run chroot script
         options['runchrootscript']="true"
         ;;
-      runracadm)                    # action - Run racadm
+      runracadm|executeracadm)      # action - Run racadm
         options['checkracadm']="true"
         options['executeracadm']="true"
         ;;

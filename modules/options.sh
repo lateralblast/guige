@@ -116,12 +116,11 @@ set_options_defaults () {
 # Process option switch
 
 process_options () {
+  option_names="${1}"
   iso['dpkgconf']="${defaults['dpkgconf']}"
   iso['dpkgdepends']="${defaults['dpkgdepends']}"
-  if [[ "${iso['options']}" =~ , ]]; then
-    option_names="${iso['options']//,/ }"
-  else
-    option_names="${iso['options']}"
+  if [[ "${option_names}" =~ , ]]; then
+    option_names="${option_names//,/ }"
   fi
   for option_name in ${option_names}; do
     options[${option_name}]="true"
