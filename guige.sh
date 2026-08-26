@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Name:         guige (Generic Ubuntu/Unix ISO Generation Engine)
-# Version:      4.6.2
+# Version:      4.6.3
 # Release:      1
 # License:      CC-BA (Creative Commons By Attribution)
 #               http://creativecommons.org/licenses/by/4.0/legalcode
@@ -170,6 +170,11 @@ do
       iso['autoinstalldir']="$2"
       shift 2
       ;;
+    --bios)
+      # BIOS boot type
+      options_list+=(bios)
+      shift
+      ;;
     --blacklist)
       # Block kernel module(s)
       check_value "$1" "$2"
@@ -312,6 +317,16 @@ do
       options['compression']="true"
       shift 2
       ;;
+    --confdef)
+      # Force confdef
+      options_list+=(confdef)
+      shift
+      ;;
+    --confnew)
+      # Force confnew
+      options_list+=(confnew)
+      shift
+      ;;
     --country)
       # Country
       check_value "$1" "$2"
@@ -390,6 +405,16 @@ do
       actions_list+=(deleteisovm)
       shift
       ;;
+    --depends)
+      # Force depends
+      options_list+=(depends)
+      shift
+      ;;
+    --dhcp)
+      # DHCP network configuration
+      options_list+=(dhcp)
+      shift
+      ;;
     --disableservice)
       # Disable service(s)
       check_value "$1" "$2"
@@ -443,6 +468,11 @@ do
       check_value "$1" "$2"
       iso['dockerworkdir']="$2"
       shift 2
+      ;;
+    --efi)
+      # EFI boot type
+      options_list+=(efi)
+      shift
       ;;
     --enableservice)
       # Enable service(s)
@@ -679,12 +709,6 @@ do
       iso['installsource']="$2"
       shift 2
       ;;
-    --targetmount)
-      # Install target
-      check_value "$1" "$2"
-      iso['targetmount']="$2"
-      shift 2
-      ;;
     --installusername)
       # Install user
       check_value "$1" "$2"
@@ -705,6 +729,13 @@ do
       shift 2
       options['dhcp']="false"
       ;;
+    --isolinuxfile)
+      # Import isolinux file
+      check_value "$1" "$2"
+      options['isolinuxfile']="true"
+      iso['isolinuxfile']="$2"
+      shift 2
+      ;;
     --kernel)
       # Kernel to install
       check_value "$1" "$2"
@@ -723,18 +754,10 @@ do
       iso['kernelserialargs']="$2"
       shift 2
       ;;
-    --isolinuxfile)
-      # Import isolinux file
-      check_value "$1" "$2"
-      options['isolinuxfile']="true"
-      iso['isolinuxfile']="$2"
-      shift 2
-      ;;
-    --url)
-      # ISO URL
-      check_value "$1" "$2"
-      iso['url']="$2"
-      shift 2
+    --kvm)
+      # Install KVM packages
+      options_list+=(kvm)
+      shift
       ;;
     --vmiso|--kvmiso)
       # KVM/VM Import ISO/file
@@ -863,6 +886,11 @@ do
       check_value "$1" "$2"
       iso['outputfile']="$2"
       shift 2
+      ;;
+    --overwrite)
+      # Force overwrite
+      options_list+=(overwrite)
+      shift
       ;;
     --packages)
       # Additional packages to install
@@ -1038,8 +1066,7 @@ do
       ;;
     --static)
       # Static IP configuration
-      iso['bootproto']="static"
-      options['dhcp']="false"
+      options_list+=(static)
       shift
       ;;
     --strict)
@@ -1071,6 +1098,12 @@ do
       iso['swapsize']="$2"
       shift 2
       ;;
+    --targetmount)
+      # Install target
+      check_value "$1" "$2"
+      iso['targetmount']="$2"
+      shift 2
+      ;;
     --test)
       # Run in test mode
       options_list+=(test)
@@ -1080,6 +1113,12 @@ do
       # Timezone
       check_value "$1" "$2"
       iso['timezone']="$2"
+      shift 2
+      ;;
+    --type)
+      # VM type
+      check_value "$1" "$2"
+      iso['type']="$2"
       shift 2
       ;;
     --updates)
@@ -1109,6 +1148,12 @@ do
       shift 2
       exit
       ;;
+    --url)
+      # ISO URL
+      check_value "$1" "$2"
+      iso['url']="$2"
+      shift 2
+      ;;
     --verbose)
       # Verbose output
       options_list+=(verbose)
@@ -1120,23 +1165,17 @@ do
       shift
       exit
       ;;
-    --vgname)
-      # Volume Group Name
-      check_value "$1" "$2"
-      iso['vgname']="$2"
-      shift 2
-      ;;
-    --type)
-      # VM type
-      check_value "$1" "$2"
-      iso['type']="$2"
-      shift 2
-      ;;
     --vfio)
       # VM type
       check_value "$1" "$2"
       iso['vfio']="$2"
       options['vfio']="true"
+      shift 2
+      ;;
+    --vgname)
+      # Volume Group Name
+      check_value "$1" "$2"
+      iso['vgname']="$2"
       shift 2
       ;;
     --volumemanager)
