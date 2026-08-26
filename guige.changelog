@@ -921,3 +921,9 @@
 # Started adding action switches to command line argument processing
 # 4.5.9: Wed 26 Aug 2026 11:30:52 AEST
 # Added check for bash version
+# 5.6.0: Wed 26 Aug 2026 12:40:47 AEST
+# Cleaned up default CIDR and default Subnet mask processing
+# 5.6.1: Wed 26 Aug 2026 12:51:19 AEST
+# Added more action switches to command line argument processing
+# 5.6.2: Wed 26 Aug 2026 12:59:44 AEST
+# Started adding option switches to command line argument processing

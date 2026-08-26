@@ -501,7 +501,12 @@ set_default_cidr () {
       defaults['interface']=$( netstat -rn |grep "^0.0.0.0" |awk '{print $8}' )
       defaults['cidr']=""
     fi
-    if [[ "${defaults['cidr']}" =~ . ]] || [ "${defaults['cidr']}" = "" ]; then
+    if [[ "${defaults['cidr']}" =~ ^[0-9]+$ ]]; then
+      if [ -z "${defaults['netmask']}" ]; then
+        get_default_netmask_from_default_cidr "${defaults['cidr']}"
+      fi
+    fi
+    if [[ "${defaults['cidr']}" =~ \. ]] || [ "${defaults['cidr']}" = "" ]; then
       if [ ! "${bin_test}" = "0" ]; then
         if [ ! -f "/usr/sbin/route" ]; then
           install_package "iproute2"
@@ -516,6 +521,17 @@ set_default_cidr () {
   fi
 }
 
+# Function: get_default_cidr_from_default_netmask
+#
+# Get default CIDR from default netmask
+
+get_default_cidr_from_default_netmask () {
+  local x=${1##*255.}
+  set -- 0^^^128^192^224^240^248^252^254^ "$(( (${#1}" - "${#x})*2 ))" "${x%%.*}"
+  x="${1%%"$3"*}"
+  defaults['cidr']=$( eval echo "$(( $2 + (${#x}/4) ))")
+}
+
 # Function: get_cidr_from_netmask
 #
 # Get CIDR from netmask
@@ -527,6 +543,14 @@ get_cidr_from_netmask () {
   iso['cidr']=$( eval echo "$(( $2 + (${#x}/4) ))")
 }
 
+# Function:: get_default_netmask_from_default_cidr
+#
+# Get default netmask from default CIDR
+
+get_default_netmask_from_default_cidr () {
+  octets=$( eval echo '$(((1<<32)-1<<32-$1>>'{3..0}'*8&255))' )
+  defaults['netmask']=$( echo "${octets// /.}" )
+}
 
 # Function:: get_netmask_from_cidr
 #

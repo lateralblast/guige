@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Name:         guige (Generic Ubuntu/Unix ISO Generation Engine)
-# Version:      4.5.9
+# Version:      4.6.2
 # Release:      1
 # License:      CC-BA (Creative Commons By Attribution)
 #               http://creativecommons.org/licenses/by/4.0/legalcode
@@ -244,7 +244,7 @@ do
       ;;
     --builddockerconfig)
       # Build Docker config
-      action_list+=(builddockerconfig)
+      actions_list+=(builddockerconfig)
       shift
       ;;
     --bridge)
@@ -263,22 +263,22 @@ do
       ;;
     --checkdocker)
       # Check Docker
-      action_list+=(checkdocker)
+      actions_list+=(checkdocker)
       shift
       ;;
     --checkracadm)
       # Check RACadm
-      action_list+=(checkracadm)
+      actions_list+=(checkracadm)
       shift
       ;;
     --checkshellcheck)
       # Shellcheck script
-      action_list+=(checkshellcheck)
+      actions_list+=(checkshellcheck)
       shift
       ;;
     --checkworkdir)
       # Check work directories
-      action_list+=(checkworkdir)
+      actions_list+=(checkworkdir)
       shift
       ;;
     --chrootpackages)
@@ -326,47 +326,47 @@ do
       ;;
     --createansible)
       # Create ansible
-      action_list+=(createansible)
+      actions_list+=(createansible)
       shift
       ;;
     --createautoinstall)
       # Create autoinstall
-      action_list+=(createautoinstall)
+      actions_list+=(createautoinstall)
       shift
       ;;
     --createcivm)
       # Create cloud-init based VM
-      action_list+=(createcivm)
+      actions_list+=(createcivm)
       shift
       ;;
     --createdockeriso)
       # Create ISO using docker
-      action_list+=(createdockeriso)
+      actions_list+=(createdockeriso)
       shift
       ;;
     --createdockerisoandsquashfs)
       # Create ISO and update squashfs using docker
-      action_list+=(createdockerisoandsquashfs)
+      actions_list+=(createdockerisoandsquashfs)
       shift
       ;;
     --createexport)
       # Create export
-      action_list+=(createexport)
+      actions_list+=(createexport)
       shift
       ;;
     --createiso|--fullsiso)
       # Create ISO
-      action_list+=(createiso)
+      actions_list+=(createiso)
       shift
       ;;
     --createisoandsquashfs)
       # Create ISO and update squashfs
-      action_list+=(createisoandsquashfs)
+      actions_list+=(createisoandsquashfs)
       shift
       ;;
     --createisovm)
       # Create ISO based VM
-      action_list+=(createisovm)
+      actions_list+=(createisovm)
       shift
       ;;
     --debug)
@@ -382,12 +382,12 @@ do
       ;;
     --deletecivm)
       # Delete cloud-init based VM
-      action_list+=(deletecivm)
+      actions_list+=(deletecivm)
       shift
       ;;
     --deleteisovm)
       # Delete ISO based VM
-      action_list+=(deleteisovm)
+      actions_list+=(deleteisovm)
       shift
       ;;
     --disableservice)
@@ -462,6 +462,11 @@ do
       iso['firewall']="$2"
       shift 2
       ;;
+    --firstboot)
+      # Enable firstboot
+      options['firstboot']="enabled"
+      shift
+      ;;
     --firstoption)
       # First menu option (e.g. grub menu)
       check_value "$1" "$2"
@@ -483,7 +488,7 @@ do
       ;;
     --getiso)
       # Get ISO
-      action_list+=(getiso)
+      actions_list+=(getiso)
       shift
       ;;
     --groups)
@@ -665,7 +670,7 @@ do
       ;;
     --installreq*|--checkreq*)
       # Install/Check required packages
-      action_list+=(installrequiredpackages)
+      actions_list+=(installrequiredpackages)
       shift
       ;;
     --installsource)
@@ -755,6 +760,21 @@ do
       iso['lcall']="$2"
       shift 2
       ;;
+    --listalliso*|--listiso*)
+      # List ISOs
+      actions_list+=(listisos)
+      shift
+      ;;
+    --listswitches)
+      # List switches
+      actions_list+=(listswitches)
+      shift
+      ;;
+    --listvm)
+      # List VMs
+      actions_list+=(listvm)
+      shift
+      ;;
     --locale)
       # Local
       check_value "$1" "$2"
@@ -796,6 +816,11 @@ do
       check_value "$1" "$2"
       iso['oeminstall']="$2"
       shift 2
+      ;;
+    --oldinstaller)
+      # Use old installer
+      options['oldinstaller']="true"
+      shift
       ;;
     --oldinputfile)
       # Old release ISO
@@ -880,6 +905,16 @@ do
       check_value "$1" "$2"
       iso['preworkdir']="$2"
       shift 2
+      ;;
+    --printdockerconfig)
+      # Print Docker config
+      actions_list+=(printdockerconfig)
+      shift
+      ;;
+    --printenv)
+      # Print environment variables
+      actions_list+=(printenv)
+      shift
       ;;
     --pvname)
       # Physical Volume Name
@@ -1000,6 +1035,12 @@ do
       iso['sshkeyfile']="$2"
       options['sshkey']="true"
       shift 2
+      ;;
+    --static)
+      # Static IP configuration
+      iso['bootproto']="static"
+      options['dhcp']="false"
+      shift
       ;;
     --strict)
       # Enable strict mode
