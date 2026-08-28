@@ -603,5 +603,11 @@ create_autoinstall_iso () {
       echo "# Output file will be at \"${iso['preworkdir']}/files/${docker['outputfilebase']}\""
     fi
   fi
-  check_file_perms "${iso['outputfile']}"
+  if [ -f "${iso['outputfile']}" ]; then
+    check_file_perms "${iso['outputfile']}"
+    args_file="${iso['outputfile']}.args"
+    echo "${script['args']}" > "${args_file}"
+  else
+    warning_message "ISO image not found at ${iso['outputfile']}"
+  fi
 }
