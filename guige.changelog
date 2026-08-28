@@ -937,3 +937,5 @@
 # Use sshpass when racadm is not available
 # 4.6.7: Fri 28 Aug 2026 15:59:59 AEST
 # Added code to save arguments to an output file
+# 4.6.8: Fri 28 Aug 2026 17:03:50 AEST
+# Fixed dry run option

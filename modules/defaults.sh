@@ -472,6 +472,7 @@ reset_volmgrs () {
     temp_volmgrs=$(echo "${iso['volumemanager']}" |sed "s/${iso['firstoption']}//g" |sed "s/^ //g" |sed "s/ $//g" )
     iso['volumemanager']="${iso['firstoption']} ${temp_volmgrs}"
   fi
+  iso['volumemanager']=$( echo "${iso['volumemanager']}" | sed "s/  / /g" )
 }
 
 # Function: set_default_cidr
