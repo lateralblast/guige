@@ -169,6 +169,7 @@ set_default_defaults () {
   defaults['sudoers']="ALL=(ALL) NOPASSWD: ALL"
   defaults['swap']=""
   defaults['swapsize']="2G"
+  defaults['testmode']="false"
   defaults['timezone']="Australia/Melbourne"
   defaults['type']="kvm"
   defaults['updates']="security"

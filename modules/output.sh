@@ -12,7 +12,9 @@ execute_command () {
   command="$1"
   execute_message "${command}"
   if [ "${options['testmode']}" = "false" ]; then
-    eval "${command}"
+    if [ "${options['dryrun']}" = "false" ]; then
+      eval "${command}"
+    fi
   fi
 }
 

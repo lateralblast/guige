@@ -8,17 +8,27 @@
 # Execute racadm commands
 
 execute_racadm () {
-  if [ "${options['testmode']}" = "false" ]; then
-    handle_output "# Executing racadm" "TEXT"
-    ${iso['racadm']} -H "${iso['bmcip']}" -u "${iso['bmcusername']}" -p "${iso['bmcpassword']}" -c "remoteimage -d"
-    if [ "${options['bootserverprotocol']}" = "smb" ]; then
-      ${iso['racadm']} -H "${iso['bmcip']}" -u "${iso['bmcusername']}" -p "${iso['bmcpassword']}" -c "remoteimage -c -l //${iso['bootserverip']}/iso['bootserverfile']}"
+  handle_output "# Executing racadm" "TEXT"
+  if [ "${iso['sshpass']}" = "" ]; then
+    execute_command "${iso['racadm']} -r ${iso['bmcip']} -u ${iso['bmcusername']} -p ${iso['bmcpassword']} remoteimage -d"
+    if [ "${iso['bootserverprotocol']}" = "smb" ]; then
+      execute_command "${iso['racadm']} -r ${iso['bmcip']} -u ${iso['bmcusername']} -p ${iso['bmcpassword']} remoteimage -c -u \"${iso['bootserverusername']}\" -p \"${iso['bootserverpassword']}\" -l //${iso['bootserverip']}${iso['bootserverfile']}"
     else
-      ${iso['racadm']} -H "${iso['bmcip']}" -u "${iso['bmcusername']}" -p "${iso['bmcpassword']}" -c "remoteimage -c -l ${iso['bootserverip']}:iso['bootserverfile']}"
+      execute_command "${iso['racadm']} -r ${iso['bmcip']} -u ${iso['bmcusername']} -p ${iso['bmcpassword']} remoteimage -c -u \"${iso['bootserverusername']}\" -p \"${iso['bootserverpassword']}\" -l ${iso['bootserverip']}:${iso['bootserverfile']}"
     fi
-    ${iso['racadm']} -H "${iso['bmcip']}" -u "${iso['bmcusername']}" -p "${iso['bmcpassword']}" -c "config -g cfgServerInfo -o cfgServerBootOnce 1"
-    ${iso['racadm']} -H "${iso['bmcip']}" -u "${iso['bmcusername']}" -p "${iso['bmcpassword']}" -c "config -g cfgServerInfo -o cfgServerFirstBootDevice VCD-DVD"
-    ${iso['racadm']} -H "${iso['bmcip']}" -u "${iso['bmcusername']}" -p "${iso['bmcpassword']}" -c "serveraction powercycle"
+    execute_command "${iso['racadm']} -r ${iso['bmcip']} -u ${iso['bmcusername']} -p ${iso['bmcpassword']} config -g cfgServerInfo -o cfgServerBootOnce 1"
+    execute_command "${iso['racadm']} -r ${iso['bmcip']} -u ${iso['bmcusername']} -p ${iso['bmcpassword']} config -g cfgServerInfo -o cfgServerFirstBootDevice VCD-DVD"
+    execute_command "${iso['racadm']} -r ${iso['bmcip']} -u ${iso['bmcusername']} -p ${iso['bmcpassword']} serveraction powercycle"
+  else
+    execute_command "${iso['sshpass']} -p${iso['bmcpassword']} ssh -l ${iso['bmcusername']} ${iso['bmcip']} \"racadm remoteimage -d\""
+    if [ "${iso['bootserverprotocol']}" = "smb" ]; then
+      execute_command "${iso['sshpass']} -p${iso['bmcpassword']} ssh -l ${iso['bmcusername']} ${iso['bmcip']} \"racadm remoteimage -c -u \\\"${iso['bootserverusername']}\\\" -p \\\"${iso['bootserverpassword']}\\\" -l //${iso['bootserverip']}${iso['bootserverfile']}\""
+    else
+      execute_command "${iso['sshpass']} -p${iso['bmcpassword']} ssh -l ${iso['bmcusername']} ${iso['bmcip']} \"racadm remoteimage -c -u \\\"${iso['bootserverusername']}\\\" -p \\\"${iso['bootserverpassword']}\\\" -l ${iso['bootserverip']}:${iso['bootserverfile']}\""
+    fi
+    execute_command "${iso['sshpass']} -p${iso['bmcpassword']} ssh -l ${iso['bmcusername']} ${iso['bmcip']} \"racadm config -g cfgServerInfo -o cfgServerBootOnce 1\""
+    execute_command "${iso['sshpass']} -p${iso['bmcpassword']} ssh -l ${iso['bmcusername']} ${iso['bmcip']} \"racadm config -g cfgServerInfo -o cfgServerFirstBootDevice VCD-DVD\""
+    execute_command "${iso['sshpass']} -p${iso['bmcpassword']} ssh -l ${iso['bmcusername']} ${iso['bmcip']} \"racadm serveraction powercycle\""
   fi
 }
 
@@ -28,29 +38,15 @@ execute_racadm () {
 
 check_racadm () {
   handle_output "# Checking racadm" "TEXT"
-  racadm_test=$( which racadm |grep "^/" )
-  if [ -z "${racadm_test}" ]; then
-    if ! [ -f "$HOME/.local/bin/racadm" ]; then
-      pip_test=$( which pip |grep "^/" )
-      if [ -n "${pip_test}" ]; then
-        pip_test=$( pip list |grep rac |awk '{print $1}')
-        if [ -z "${pip_testi}" ]; then
-          handle_output "pip install --user rac" "TEXT"
-          if [ "${options['testmode']}" = "false" ]; then
-            pip install --user rac
-            iso['racadm']="$HOME/.local/bin/racadm"
-          else
-            handle_output "# No racadm found" "TEXT"
-            exit
-          fi
-        else
-          handle_output "# No racadm found" "TEXT"
-          handle_output "# No pip found to install Python racadm module" "TEXT"
-          exit
-        fi
-      fi
+  racadm_test=$( command -v racadm )
+  if [ -z "${racadm_test}" ] || [ "${options['usesshpass']}" = "true" ]; then
+    warning_message "Cannot find racadm"
+    sshpass_test=$( command -v sshpass )
+    if [ -z "${sshpass_test}" ]; then
+      warning_message "Cannot find sshpass"
+      do_exit
     else
-      iso['racadm']="$HOME/.local/bin/racadm"
+      iso['sshpass']="${sshpass_test}"
     fi
   else
     iso['racadm']="${racadm_test}"

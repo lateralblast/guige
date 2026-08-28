@@ -42,7 +42,6 @@ set_options_defaults () {
   options['dhcp']="true"                      # option - Enable DHCP
   options['distupgrade']="false"              # option - Enable dist-upgrade
   options['docker']="false"                   # option - Use docker
-  options['dryrun']="false"                   # option - Enable dry run
   options['earlypackages']="false"            # option - Enable early packages
   options['executeracadm']="false"            # option - Execute racadm cofngi
   options['firstboot']="disabled"             # option - Enable first boot
@@ -125,16 +124,12 @@ process_options () {
   for option_name in ${option_names}; do
     options[${option_name}]="true"
     case "${option_name}" in
-      firstboot)
-        options['firstboot']="enabled"
+      bios)
+        iso['boottype']="bios";
         ;;
-      static)
-        iso['bootproto']="static"
-        options['dhcp']="false"
-        ;;
-      dhcp)
-        iso['bootproto']="dhcp"
-        options['dhcp']="true"
+      cluster)
+        options['clusterpackages']="true"
+        defaults['packages']="${defaults['packages']} pcs pacemaker cockpit cockpit-iso['machine']}s resource-agents-extra resource-agents-common resource-agents-base glusterfs-server"
         ;;
       confdef)
         iso['dpkgconf']="--force-confdef"
@@ -142,11 +137,28 @@ process_options () {
       confnew)
         iso['dpkgconf']="--force-confnew"
         ;;
-      overwrite)
-        iso['dpkgoverwrite']="--force-overwrite"
+      debug)
+        set -x
         ;;
       depends)
         iso['dpkgdepends']="--force-depends"
+        ;;
+      dhcp)
+        iso['bootproto']="dhcp"
+        options['dhcp']="true"
+        ;;
+      dryrun)
+        options['dryrun']="true"
+        ;;
+      firstboot)
+        options['firstboot']="enabled"
+        ;;
+      hwekernel|hwe)
+        options['hwekernel']="true"
+        ;;
+      kvm)
+        options['clusterpackages']="true"
+        defaults['packages']="${defaults['packages']} cpu-checker qemu-kvm libvirt-daemon-system libvirt-clients bridge-utils virt-manager cloud-image-utils"
         ;;
       nomultipath)
         iso['blocklist']="md_multipath"
@@ -156,30 +168,25 @@ process_options () {
           iso['blocklist']="${iso['blocklist']},md_multipath"
         fi
         ;;
-      cluster)
-        options['clusterpackages']="true"
-        defaults['packages']="${defaults['packages']} pcs pacemaker cockpit cockpit-iso['machine']}s resource-agents-extra resource-agents-common resource-agents-base glusterfs-server"
+      overwrite)
+        iso['dpkgoverwrite']="--force-overwrite"
         ;;
-      kvm)
-        options['clusterpackages']="true"
-        defaults['packages']="${defaults['packages']} cpu-checker qemu-kvm libvirt-daemon-system libvirt-clients bridge-utils virt-manager cloud-image-utils"
+      usesshpass)
+        options['usesshpass']="true"
         ;;
-      efi)
-        iso['boottype']="efi";
-        ;;
-      bios)
-        iso['boottype']="bios";
-        ;;
-      debug)
-        set -x
+      static)
+        iso['bootproto']="static"
+        options['dhcp']="false"
         ;;
       strict)
         set -eu
         ;;
-      hwekernel|hwe)
-        options['hwekernel']="true"
+      test*)
+        options['testmode']="true"
         ;;
-
+      uefi|efi)
+        iso['boottype']="efi";
+        ;;
       *)
         if [[ "${option_name}" =~ ^no ]]; then
           inverse_name="${option_name:2}"
