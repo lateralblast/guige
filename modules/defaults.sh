@@ -46,7 +46,7 @@ set_current_defaults () {
   current['dockerubunturelease']="25.04"
   current['oldrelease']="23.04"
   current['osname']="ubuntu"
-  current['release']="26.04"
+  current['release']="26.04.1"
   current['release1404']="14.04.6"
   current['release1604']="16.04.7"
   current['release1804']="18.04.6"
@@ -130,7 +130,7 @@ set_default_defaults () {
   defaults['layout']="us"
   defaults['lcall']="en_US"
   defaults['locale']="en_US.UTF-8"
-  defaults['maskedsshkeyfile']="$HOME/.ssh/id_rsa.pub"
+  defaults['maskedsshkeyfile']="${HOME}/.ssh/id_rsa.pub"
   defaults['name']="${script['name']}"
   defaults['netmask']=""
   defaults['nic']="first-nic"
@@ -165,7 +165,7 @@ set_default_defaults () {
   defaults['shell']="/bin/bash"
   defaults['sourceid']="ubuntu-server"
   defaults['sshkey']=""
-  defaults['sshkeyfile']="$HOME/.ssh/id_rsa.pub"
+  defaults['sshkeyfile']="${HOME}/.ssh/id_rsa.pub"
   defaults['sudoers']="ALL=(ALL) NOPASSWD: ALL"
   defaults['swap']=""
   defaults['swapsize']="2G"
@@ -218,6 +218,7 @@ set_defaults () {
 reset_defaults () {
   get_ssh_key
   get_release_info
+  defaults['workdir']="${defaults['basedir']}/${defaults['osname']}/${defaults['build']}/${defaults['release']}"
   if [[ "${iso['build']}" =~ "desktop" ]]; then
     options['chroot']="false"
   fi
@@ -251,7 +252,6 @@ reset_defaults () {
     defaults['password']="rocky"
     defaults['build']="dvd"
     defaults['swapsize']="2048"
-    defaults['workdir']="$HOME/Documents/${script['name']}/${defaults['osname']}/${defaults['build']}/${defaults['release']}"
     defaults['oldmountdir']="${defaults['workdir']}/isomount"
     defaults['inputfile']="${defaults['workdir']}/${defaults['releasename']}-${defaults['release']}-${defaults['arch']}-dvd.iso"
     defaults['inputfilebase']=$( basename "${defaults['inputfile']}" )
@@ -262,7 +262,7 @@ reset_defaults () {
   fi
   if [[ "${iso['action']}" =~ "ci" ]]; then
     defaults['release']=$( echo "${defaults['release']}" |awk -F"." '{ print $1"."$2 }' )
-    defaults['workdir']="$HOME/Documents/${script['name']}/${defaults['osname']}/${defaults['release']}"
+    defaults['workdir']="${defaults['basedir']}/${defaults['osname']}/${defaults['release']}"
     defaults['inputci']="${defaults['workdir']}/files/ubuntu-${defaults['release']}-server-cloudimg-${defaults['arch']}.img"
     defaults['inputcibase']=$( basename "${defaults['inputci']}" )
     defaults['outputci']="${defaults['workdir']}/files/ubuntu-${defaults['release']}-server-cloudimg-${defaults['arch']}-${defaults['boottype']}-autoinstall.img"
@@ -387,10 +387,11 @@ set_default_docker_arch () {
 # Set default work directories
 
 set_default_dirs () {
-  defaults['workdir']="$HOME/Documents/${script['name']}/${defaults['osname']}/${defaults['build']}/${defaults['release']}"
+  defaults['basedir']="${HOME}/Documents/${script['name']}"
+  defaults['workdir']="${defaults['basedir']}/${defaults['osname']}/${defaults['build']}/${defaults['release']}"
   defaults['dockerworkdir']="/root/${script['name']}/${defaults['osname']}/${defaults['build']}/${defaults['release']}"
-  defaults['oldworkdir']="$HOME/Documents/${script['name']}/${defaults['osname']}/${defaults['build']}/${defaults['oldrelease']}"
-  defaults['maskedworkdir']="$HOME/Documents/${script['name']}/${defaults['osname']}/${defaults['build']}/${defaults['release']}"
+  defaults['oldworkdir']="${defaults['basedir']}/${defaults['osname']}/${defaults['build']}/${defaults['oldrelease']}"
+  defaults['maskedworkdir']="${defaults['basedir']}/${defaults['osname']}/${defaults['build']}/${defaults['release']}"
   defaults['oldmountdir']="${defaults['workdir']}/isomount"
   defaults['oldmountdir']="${defaults['oldworkdir']}/isomount"
   defaults['autoinstalldir']="autoinstall"

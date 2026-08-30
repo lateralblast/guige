@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Name:         guige (Generic Ubuntu/Unix ISO Generation Engine)
-# Version:      4.6.8
+# Version:      4.7.0
 # Release:      1
 # License:      CC-BA (Creative Commons By Attribution)
 #               http://creativecommons.org/licenses/by/4.0/legalcode
@@ -170,6 +170,12 @@ do
       # Directory where autoinstall config files are stored on ISO
       check_value "${1}" "${2}"
       iso['autoinstalldir']="${2}"
+      shift 2
+      ;;
+    --basedir|--topdir)
+      # Base directory for script to do work
+      check_value "${1}" "${2}"
+      iso['basedir']="${2}"
       shift 2
       ;;
     --bios)

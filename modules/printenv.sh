@@ -14,6 +14,7 @@ print_env () {
   handle_output "# Codename:                  [iso['codename']}]                   ${iso['codename']}"        "TEXT"
   handle_output "# Current Dev Release:       [current['devrelease']}]             ${current['devrelease']}"    "TEXT"
   handle_output "# Architecture:              [iso['arch']}]                       ${iso['arch']}"            "TEXT"
+  handle_output "# Base directory:            [iso['basedir']}]                    ${iso['basedir']}"         "TEXT"
   handle_output "# Work directory:            [iso['workdir']}]                    ${iso['workdir']}"         "TEXT"
   if [ "${options['docker']}" = "true" ]; then
     handle_output "# Previous Work directory:   [iso['workdir']}]                    ${iso['workdir']}"       "TEXT"

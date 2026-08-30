@@ -284,10 +284,11 @@ mount_old () {
 list_isos () {
   temp['verbose']="true"
   if [ "${iso['search']}" = "" ]; then
-    file_list=$(find "${iso['workdir']}" -name "*.iso" 2> /dev/null)
+    file_list=$(find "${iso['basedir']}" -name "*.iso" 2> /dev/null)
   else
-    file_list=$(find "${iso['workdir']}" -name "*.iso" 2> /dev/null |grep "${iso['search']}" )
+    file_list=$(find "${iso['basedir']}" -name "*.iso" 2> /dev/null |grep "${iso['search']}" )
   fi
+  echo "${iso['workdir']}"
   for file_name in ${file_list}; do
     if [ "${options['scpheader']}" = "true" ]; then
       handle_output "${iso['bmcusername']}@${os['ip']}:${file_name}" "TEXT"

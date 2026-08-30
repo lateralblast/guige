@@ -168,6 +168,7 @@ set_iso_defaults () {
   iso['virtdir']=""
   iso['volid']=""
   iso['volumemanager']=""
+  iso['basedir']=""
   iso['workdir']=""
   iso['xmlfile']=""
   iso['zfsfilesystems']=""

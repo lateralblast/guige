@@ -249,6 +249,9 @@ get_interactive_input () {
     # Get Architecture
     read -r -p "Architecture [${iso['arch']}]: "
     iso['arch']=${new['arch']}:-${iso['arch']}
+    # Get Base directory
+    read -r -p "Enter Base directory [${iso['basedir']}]: " new['basedir']
+    iso['basedir']=${new['basedir']}:-${iso['basedir']}
     # Get Work directory
     read -r -p "Enter Work directory [${iso['workdir']}]: " new['workdir']
     iso['workdir']=${new['workdir']}:-${iso['workdir']}
