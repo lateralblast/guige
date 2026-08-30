@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Name:         guige (Generic Ubuntu/Unix ISO Generation Engine)
-# Version:      4.7.0
+# Version:      4.7.1
 # Release:      1
 # License:      CC-BA (Creative Commons By Attribution)
 #               http://creativecommons.org/licenses/by/4.0/legalcode
@@ -29,6 +29,7 @@ declare -A vm
 declare -A new 
 declare -A old
 declare -A iso
+declare -A list
 declare -A temp
 declare -A script
 declare -A docker
@@ -165,6 +166,7 @@ do
       iso['arch']="${2}"
       shift 2
       iso['arch']=$( echo "${iso['arch']}" |sed "s/aarch64/arm64/g" |sed "s/x86_64/amd64/g" |sed "s/x86/amd64/g" )
+      list['arch']="true"
       ;;
     --autoinstalldir)
       # Directory where autoinstall config files are stored on ISO
@@ -182,6 +184,7 @@ do
       # BIOS boot type
       options_list+=(bios)
       shift
+      list['bios']="true"
       ;;
     --blacklist)
       # Block kernel module(s)
@@ -278,6 +281,7 @@ do
       iso['bridge']="${2}"
       options['bridge']="true"
       shift 2
+      list['bridge']="true"
       ;;
     --bridges)
       # Bridge names
@@ -285,6 +289,7 @@ do
       iso['bridges']="${2}"
       options['bridge']="true"
       shift 2
+      list['bridges']="true"
       ;;
     --checkdocker)
       # Check Docker
@@ -317,18 +322,21 @@ do
       check_value "${1}" "${2}"
       iso['cidr']="${2}"
       shift 2
+      list['cidr']="true"
       ;;
     --cidrs)
       # CIDRs
       check_value "${1}" "${2}"
       iso['cidrs']="${2}"
       shift 2
+      list['cidrs']="true"
       ;;
     --codename)
       # Release codename
       check_value "${1}" "${2}"
       iso['codename']="${2}"
       shift 2
+      list['codename']="true"
       ;;
     --compression)
       # Compression algorithm
@@ -434,6 +442,7 @@ do
       # DHCP network configuration
       options_list+=(dhcp)
       shift
+      list['dhcp']="true"
       ;;
     --disableservice)
       # Disable service(s)
@@ -446,6 +455,7 @@ do
       check_value "${1}" "${2}"
       iso['disk']="${2}"
       shift 2
+      list['disk']="true"
       ;;
     --diskfile)
       # Disk file
@@ -476,6 +486,7 @@ do
       check_value "${1}" "${2}"
       iso['dns']="${2}"
       shift 2
+      list['dns']="true"
       ;;
     --dnsoptions)
       # DNS Options
@@ -498,6 +509,7 @@ do
       # EFI boot type
       options_list+=(efi)
       shift
+      list['efi']="true"
       ;;
     --enableservice)
       # Enable service(s)
@@ -692,6 +704,7 @@ do
       check_value "${1}" "${2}"
       iso['hostname']="${2}"
       shift 2
+      list['hostname']="true"
       ;;
     --inputci|--vmci)
       # Import Cloud Image
@@ -746,6 +759,7 @@ do
       iso['ip']="${2}"
       shift 2
       options['dhcp']="false"
+      list['ip']="true"
       ;;
     --ips)
       # IP address
@@ -753,6 +767,7 @@ do
       iso['ips']="${2}"
       shift 2
       options['dhcp']="false"
+      list['ips']="true"
       ;;
     --isolinuxfile)
       # Import isolinux file
@@ -857,12 +872,14 @@ do
       check_value "${1}" "${2}"
       iso['nic']="${2}"
       shift 2
+      list['nic']="true"
       ;;
     --nics)
       # NICs to use for installation
       check_value "${1}" "${2}"
       iso['nics']="${2}"
       shift 2
+      list['nics']="true"
       ;;
     --oeminstall)
       # OEM Install
@@ -997,6 +1014,7 @@ do
       check_value "${1}" "${2}"
       iso['release']="${2}"
       shift 2
+      list['release']="true"
       get_release_info
       get_code_name
       get_build_type
@@ -1096,6 +1114,7 @@ do
       iso['sshkey']="${2}"
       options['sshkey']="true"
       shift 2
+      list['sshkey']="true"
       ;;
     --sshkeyfile)
       # SSH key file
@@ -1125,6 +1144,7 @@ do
       check_value "${1}" "${2}"
       iso['suffix']="${2}"
       shift 2
+      list['suffix']="true"
       ;;
     --swap)
       # Swap device
@@ -1175,6 +1195,7 @@ do
       check_value "${1}" "${2}"
       iso['username']="${2}"
       shift 2
+      list['username']="true"
       ;;
     --usage)
       # Usage information
