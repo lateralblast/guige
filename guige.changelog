@@ -945,3 +945,9 @@
 # Improvements to list ISO function
 # 4.7.1: Sun 30 Aug 2026 12:33:25 AEST
 # More improvements to list ISO function
+# 4.7.2: Mon 31 Aug 2026 09:30:06 AEST
+# Improvements to switch processing
+# 4.7.3: Tue 01 Sep 2026 17:09:02 AEST
+# Added inital code for ipmitool integration
+# 4.7.4: Tue 01 Sep 2026 17:37:32 AEST
+# Shellcheck compliance fixes

@@ -20,7 +20,9 @@ get_switches () {
     while read -r line; do
       switch_name=""
       if [[ "${line}" =~ -- ]]; then
-        switchstart="true"
+        if [[ ! "${line}" =~ ^regex ]]; then
+          switchstart="true"
+        fi
       fi
       if [[ "${line}" =~ esac ]] || [[ "${line}" =~ \* ]]; then
         switchstart="false"

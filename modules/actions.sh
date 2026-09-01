@@ -24,6 +24,9 @@ process_actions () {
         options['checkdocker']="true"
         options['checkworkdir']="true"
         ;;
+      checkipmi*)                   # action - Check ipmitool
+        options['checkipmitool']="true"
+        ;;
       checkracadm)                  # action - Check racadm
         options['checkracadm']="true"
         ;;
@@ -98,6 +101,10 @@ process_actions () {
         options['installrequiredpackages']="true"
         install_required_packages
         do_exit
+        ;;
+      ipmi*|executeipmi*)           # action - Connect to BMC/iDRAC via IPMI
+        options['checkipmitool']="true"
+        options['executeipmitool']="true"
         ;;
       justiso)                      # action - Just ISO
         options['justiso']="true"

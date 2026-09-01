@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 
+# shellcheck disable=SC2001
 # shellcheck disable=SC2034
 # shellcheck disable=SC2116
 # shellcheck disable=SC2129
@@ -124,6 +125,7 @@ set_default_defaults () {
   defaults['installusername']="install"
   defaults['ip']=""
   defaults['ips']=""
+  defaults['ipmicommand']="sol activate"
   defaults['kernel']="linux-generic"
   defaults['kernelargs']="console=tty0 console=vt0"
   defaults['kernelserialargs']="console=ttyS0,115200 console=ttyS1,115200"
@@ -149,6 +151,7 @@ set_default_defaults () {
   defaults['majorrelease']=$( echo "${defaults['release']}" |cut -f1 -d. )
   defaults['minorrelease']=$( echo "${defaults['release']}" |cut -f2 -d. )
   defaults['dotrelease']=$( echo "${defaults['release']}" |cut -f3 -d. )
+  defaults['racadmcommand']=""
   defaults['rootsize']="-1"
   defaults['search']=""
   defaults['searchdomain']="."

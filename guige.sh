@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Name:         guige (Generic Ubuntu/Unix ISO Generation Engine)
-# Version:      4.7.1
+# Version:      4.7.4
 # Release:      1
 # License:      CC-BA (Creative Commons By Attribution)
 #               http://creativecommons.org/licenses/by/4.0/legalcode
@@ -198,13 +198,13 @@ do
       iso['bmcip']="${2}"
       shift 2
       ;;
-    --bmcpassword|--idracpassword)
+    --bmcpassword|--bmcpass*|--idracpass*)
       # BMC/iDRAC password
       check_value "${1}" "${2}"
       iso['bmcpassword']="${2}"
       shift 2
       ;;
-    --bmcusername|--idracusername)
+    --bmcusername|--bmcuser*|--idracuser*)
       # BMC/iDRAC User
       check_value "${1}" "${2}"
       iso['bmcusername']="${2}"
@@ -216,32 +216,32 @@ do
       iso['bootloader']="${2}"
       shift 2
       ;;
-    --bootserverfile)
+    --bootserverfile|--bootfile)
       # Boot sever file
       check_value "${1}" "${2}"
       iso['bootserverfile']="${2}"
       options['bootserverfile']="true"
       shift 2
       ;;
-    --bootserverip)
+    --bootserverip|--bootip)
       # Bootserver IP
       check_value "${1}" "${2}"
       iso['bootserverip']="${2}"
       shift 2
       ;;
-    --bootserverproto*)
+    --bootserverprotocol|--bootserverprot*|--bootprot*)
       # Bootserver Protocol 
       check_value "${1}" "${2}"
       iso['bootserverprotocol']="${2}"
       shift 2
       ;;
-    --bootserveruser*)
+    --bootserverusername|--bootserveruser*|--bootuser*)
       # Bootserver Username
       check_value "${1}" "${2}"
       iso['bootserverusername']="${2}"
       shift 2
       ;;
-    --bootserverpass*)
+    --bootserverpassword|--bootserverpass*|--bootpass*)
       # Bootserver Password
       check_value "${1}" "${2}"
       iso['bootserverpassword']="${2}"
@@ -296,12 +296,17 @@ do
       actions_list+=(checkdocker)
       shift
       ;;
-    --checkracadm)
+    --checkipmitool|--checkipmi*)
+      # Check IPMI
+      actions_list+=(checkipmitool)
+      shift
+      ;;
+    --checkracadm|--checkrac*)
       # Check RACadm
       actions_list+=(checkracadm)
       shift
       ;;
-    --checkshellcheck)
+    --checkshellcheck|--shellcheck)
       # Shellcheck script
       actions_list+=(checkshellcheck)
       shift
@@ -337,6 +342,12 @@ do
       iso['codename']="${2}"
       shift 2
       list['codename']="true"
+      ;;
+    --ipmicommand)
+      # IPMI command
+      check_value "${1}" "${2}"
+      iso['ipmicommand']="${2}"
+      shift 2
       ;;
     --compression)
       # Compression algorithm
@@ -718,6 +729,11 @@ do
       iso['inputfile']="${2}"
       shift 2
       ;;
+    --ipmi|--ipmitool)
+      # Connect to BMC/iDRAC via IPMI
+      actions_list+=(executeipmi) 
+      shift 
+      ;;
     --installmode)
       # Install mode
       check_value "${1}" "${2}"
@@ -736,7 +752,7 @@ do
       # Temporary install password for remote access during install
       shift 2
       ;;
-    --installreq*|--checkreq*)
+    --installrequiredpackages|installreq*|--checkreq*)
       # Install/Check required packages
       actions_list+=(installrequiredpackages)
       shift
@@ -823,7 +839,7 @@ do
       iso['lcall']="${2}"
       shift 2
       ;;
-    --listalliso*|--listiso*)
+    --listisos|listalliso*|--listiso*)
       # List ISOs
       actions_list+=(listisos)
       shift
@@ -1048,6 +1064,12 @@ do
       # Run racadm
       actions_list+=(runracadm)
       shift
+      ;;
+    --racadmcommand)
+      # RACADM command
+      check_value "${1}" "${2}"
+      iso['racadmcommand']="${2}"
+      shift 2
       ;;
     --search)
       # Search output for value
@@ -1367,7 +1389,7 @@ if [ "${options['test']}" = "true" ]; then
   check_workdir
   if [ "${options['kstest']}" = "true" ]; then
     prepare_kickstart_files
-    exit
+    do_exit
   fi
 fi
 
@@ -1375,7 +1397,7 @@ fi
 
 if [ "${options['listvms']}" = "true" ]; then
   list_vm
-  exit
+  do_exit
 fi
 
 if [ "${options['docker']}" = "true" ] || [ "${options['checkdocker']}" = "true" ]; then
@@ -1383,25 +1405,25 @@ if [ "${options['docker']}" = "true" ] || [ "${options['checkdocker']}" = "true"
 fi
 if [ "${options['deletevm']}" = "true" ]; then
   delete_vm
-  exit
+  do_exit
 fi
 if [ "${options['createisovm']}" = "true" ]; then
   get_info_from_iso
   create_iso_vm
-  exit
+  do_exit
 fi
 if [ "${options['createcivm']}" = "true" ]; then
   create_ci_vm
-  exit
+  do_exit
 fi
 if [ "${options['executeracadm']}" = "true" ]; then
   check_racadm
   execute_racadm
-  exit
+  do_exit
 fi
 if [ "${options['checkracadm']}" = "true" ]; then
   check_racadm
-  exit
+  do_exit
 fi
 if [ "${options['checkworkdir']}" = "true" ]; then
   options['help']="false"
@@ -1424,7 +1446,7 @@ if [ "${options['getiso']}" = "true" ]; then
   options['help']="false"
   get_base_iso
   if [ "${iso['action']}" = "getiso" ]; then
-    exit
+    do_exit
   fi
 fi
 if [ "${options['fulliso']}" = "true" ]; then
@@ -1468,9 +1490,17 @@ else
 fi
 if [ "${options['listisos']}" = "true" ]; then
   list_isos
-  exit
+  do_exit
 fi
-
+if [ "${options['executeipmitool']}" = "true" ]; then
+  check_ipmitool
+  execute_ipmitool
+  do_exit
+fi
+if [ "${options['checkipmitool']}" = "true" ]; then
+  check_ipmitool
+  do_exit
+fi
 if [ "${options['help']}" = "true" ]; then
   print_help
 fi
