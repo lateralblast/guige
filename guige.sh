@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Name:         guige (Generic Ubuntu/Unix ISO Generation Engine)
-# Version:      4.7.4
+# Version:      4.7.6
 # Release:      1
 # License:      CC-BA (Creative Commons By Attribution)
 #               http://creativecommons.org/licenses/by/4.0/legalcode
@@ -1060,7 +1060,7 @@ do
       iso['rootsize']="${2}"
       shift 2
       ;;
-    --runracadm|--executeracadm)
+    --runracadm|--executeracadm|--racadm)
       # Run racadm
       actions_list+=(runracadm)
       shift

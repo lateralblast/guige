@@ -11,7 +11,7 @@ used to hang a shield on the shoulder or neck when not in use.
 Version
 -------
 
-Current version: 4.7.4
+Current version: 4.7.6
 
 License
 -------
@@ -93,136 +93,181 @@ Help
 
 Usage: guige --action [action] --options [options]
 
---whitelist           Allow/load additional kernel modules(s)
---allowpassword       Allow password access via SSH
---allowservice        Allow Services
---arch                Architacture
---autoinstalldir      Directory where autoinstall config files are stored on ISO
---blacklist           Block kernel module(s)
---bmcip               BMC/iDRAC IP
---bmcpassword         BMC/iDRAC password
---bmcusername         BMC/iDRAC User
---cpus                Number of CPUs
---disk                Boot Disk devices
---bootloader          Boot Loader Location
---bootserverfile      Boot sever file
---bootserverip        NFS/Bootserver IP
---bootsize            Boot partition size
---boottype            Boot type
---build               Type of ISO to build
---bridge              Bridge name
---chrootpackages      List of packages to add to ISO
---cidr                CIDR
---codename            Linux release codename or distribution
---compression         Compression algorithm
---country             Country
---debug               Set debug flag (set -x)
---delete              Remove previously created files
---disableservice      Disable service(s)
---diskfile            Disk file
---diskserial          Disk serial
---disksize            Disk size
---diskwwn             Disk WWN
---dns                 DNS server IP
---dnsoptions          DNS Options
---dockerworkdir       Disk WWN
---enableservice       Enable service(s)
---fallback            Installation fallback
---firewall            Firewall
---firstoption         First menu option (e.g. grub menu)
---gateway             Gateway IP
---gecos               User GECOS field
---groups              Groups to add user to
---grubfile            Import grub file
---grubmenu            Import grub menu
---grubtimeout         Grub timeout
---grubparseall        Parse grub for all parameters
---grubcidr            Pass CIDR to config from grub boot command
---grubdisk            Pass disk to config from grub boot command
---grubdns             Pass nameserver to config from grub boot command
---grubgateway         Pass gateway to config from grub boot command
---grubhostname        Pass hostname to config from grub boot command
---grubip              Pass IP to config from grub boot command
---grubkernel          Pass kernel package to config from grub boot command
---grublocale          Pass locale to config from grub boot command
---grublayout          Pass keyboard layout to config from grub boot command
---grubnic             Pass NIC to config from grub boot command
---grubpassword        Pass password to config from grub boot command
---grubrealname        Pass realname to config from grub boot command
---grubusername        Pass username to config from grub boot command
---help                Print help
---hostname            Hostname
---inputci             Import Cloud Image
---inputfile           Import ISO
---installmode         Install mode
---installmount        Where the install mounts the CD during install
---installpassword     Temporary install password for remote access during install
---installsource       Install source
---targetmount         Install target
---installusername     Install user
---ip                  IP address
---kernel              Kernel to install
---kernelargs          Kernel arguments
---kernelserialargs    Kernel serial arguments
---isolinuxfile        Import isolinux file
---packages            Additional packages to install
---url                 ISO URL
---volid               ISO Volume ID
---layout              Keyboard layout
---lcall               LC_ALL
---locale              Local
---lvname              Logical Volume Name
---name                VM name
---netmask             Netmask
---nic                 NIC to use for installation
---oeminstall          OEM Install
---oldinputfile        Old release ISO
---oldisourl           Old ISO URL
---oldrelease          Old release
---onboot              Enable network on boot
---options             Options (e.g. verbose)
---outputci            Output CI file
---outputfile          Output ISO file
---password            Password
---passwordalgorithm   Password Algorithm
---pesize              PE size
---postinstall         Import post install script
---prefix              Output file name prefix
---preworkdir          Docker work directory
---pvname              Physical Volume Name
---ram                 RAM size
---realname            User real name field
---release             OS release
---releasename         OS releasename
---requiredpackages    Required Packages
---rootsize            Root volume size
---search              Search output for value
---searchdomain        Search domain
---selinux             SELinux Mode
---serialport          Serial port
---serialportaddress   Serial port address
---serialportspeed     Serial port speed
---shell               User shell
---sourceid            Source ID
---squashfsfile        Squashfs file
---sshkey              SSH key
---sshkeyfile          SSH key file
---sudoers             Sudoers entry
---suffix              Output file name suffix
---swap                Swap device
---swapsize            Swap size
---timezone            Timezone
---updates             Updates to install
---autoinstallfile     Import autoinstall config file
---username            Username
---usage               Usage information
---version             Display version
---vgname              Volume Group Name
---type                VM type
---volumemanager       Volumemanager(s)
---workdir             Work directory
---zfsfilesystems      Additional ZFS filesystems
---zfsroot             ZFS root name
+--allowpassword			          Allow password access via SSH
+--allowservice			          Allow Services
+--arch				                Architacture
+--autoinstalldir		          Directory where autoinstall config files are stored on ISO
+--basedir			                Base directory for script to do work
+--bios				                BIOS boot type
+--blacklist			              Block kernel module(s)
+--bmcip				                BMC/iDRAC IP
+--bootloader			            Boot Loader Location
+--bootserverfile			        Boot sever file
+--bootserverip			          Bootserver IP
+--bootsize			              Boot partition size
+--boottype			              Boot type
+--build				                Type of ISO to build
+--builddockerconfig		        Build Docker config
+--bridge			                Bridge name
+--bridges			                Bridge names
+--checkdocker			            Check Docker
+--checkshellcheck		          Shellcheck script
+--checkworkdir			          Check work directories
+--chrootpackages		          List of packages to add to ISO
+--cidr				                CIDR
+--cidrs				                CIDRs
+--codename			              Release codename
+--ipmicommand			            IPMI command
+--compression			            Compression algorithm
+--confdef			                Force confdef
+--confnew			                Force confnew
+--country			                Country
+--cpus				                Number of CPUs
+--createansible			          Create ansible
+--createautoinstall		        Create autoinstall
+--createcivm			            Create cloud-init based VM
+--createdockeriso		          Create ISO using docker
+--createdockerisoandsquashfs  Create ISO and update squashfs using docker
+--createexport			          Create export
+--createiso			              Create ISO
+--createisoandsquashfs		    Create ISO and update squashfs
+--createisovm			            Create ISO based VM
+--debug				                Set debug flag (set -x)
+--delete			                Remove previously created files
+--deletecivm			            Delete cloud-init based VM
+--deleteisovm			            Delete ISO based VM
+--depends			                Force depends
+--dhcp				                DHCP network configuration
+--disableservice		          Disable service(s)
+--disk				                Boot Disk devices
+--diskfile			              Disk file
+--diskserial			            Disk serial
+--disksize			              Disk size
+--diskwwn			                Disk WWN
+--dns				                  DNS server IP
+--dnsoptions			            DNS Options
+--dockerworkdir			          Disk WWN
+--efi				                  EFI boot type
+--enableservice			          Enable service(s)
+--fallback			              Installation fallback
+--firewall			              Firewall
+--firstboot			              Enable firstboot
+--firstoption			            First menu option (e.g. grub menu)
+--gateway			                Gateway IP
+--gecos				                User GECOS field
+--getiso			                Get ISO
+--groups			                Groups to add user to
+--grubfile			              Import grub file
+--grubmenu			              Import grub menu
+--grubtimeout			            Grub timeout
+--grubparseall			          Parse grub for all parameters
+--grubcidr			              Pass CIDR to config from grub boot command
+--grubdisk			              Pass disk to config from grub boot command
+--grubdns			                Pass nameserver to config from grub boot command
+--grubgateway			            Pass gateway to config from grub boot command
+--grubhostname			          Pass hostname to config from grub boot command
+--grubip			                Pass IP to config from grub boot command
+--grubkernel			            Pass kernel package to config from grub boot command
+--grublocale			            Pass locale to config from grub boot command
+--grublayout			            Pass keyboard layout to config from grub boot command
+--grubnic			                Pass NIC to config from grub boot command
+--grubpassword			          Pass password to config from grub boot command
+--grubrealname			          Pass realname to config from grub boot command
+--grubusername			          Pass username to config from grub boot command
+--help				                Print help
+--hostname			              Hostname
+--inputci			                Import Cloud Image
+--inputfile			              Import ISO/file
+--ipmi				                Connect to BMC/iDRAC via IPMI
+--installmode			            Install mode
+--installmount			          Where the install mounts the CD during install
+--installpassword		          Temporary install password for remote access during install
+--installsource			          Install source
+--installusername		          Install user
+--ip				                  IP addresses
+--ips				                  IP address
+--isolinuxfile			          Import isolinux file
+--kernel			                Kernel to install
+--kernelargs			            Kernel arguments
+--kernelserialargs		        Kernel serial arguments
+--kvm				                  Install KVM packages
+--vmiso				                KVM/VM Import ISO/file
+--volid				                ISO Volume ID
+--layout			                Keyboard layout
+--lcall				                LC_ALL
+--listswitches			          List switches
+--listvm			                List VMs
+--locale			                Local
+--lvname			                Logical Volume Name
+--name				                VM name
+--netmask			                Netmask
+--nfs				                  Use NFS for boot server URL
+--nic				                  NIC to use for installation
+--nics				                NICs to use for installation
+--oeminstall			            OEM Install
+--oldinstaller			          Use old installer
+--oldinputfile			          Old release ISO
+--oldisourl			              Old ISO URL
+--oldrelease			            Old release
+--onboot			                Enable network on boot
+--outputci			              Output CI file
+--outputfile			            Output ISO file
+--overwrite			              Force overwrite
+--packages			              Additional packages to install
+--password			              Password
+--passwordalgorithm		        Password Algorithm
+--pesize			                PE size
+--postinstall			            Import post install script
+--prefix			                Output file name prefix
+--preworkdir			            Docker work directory
+--printdockerconfig		        Print Docker config
+--printenv			              Print environment variables
+--pvname			                Physical Volume Name
+--ram				                  RAM size
+--realname			              User real name field
+--release			                OS release
+--releasename			            OS releasename
+--requiredpackages		        Required Packages
+--requireddockerpackages	    Required Packages
+--rootsize			              Root volume size
+--runracadm			              Run racadm
+--racadmcommand			          RACADM command
+--search			                Search output for value
+--searchdomain			          Search domain
+--selinux			                SELinux Mode
+--serialport			            Serial port
+--serialportaddress		        Serial port address
+--serialportspeed		          Serial port speed
+--shell				                User shell
+--smb				                  Use SMB for boot server URL
+--sourceid			              Source ID
+--squashfsfile			          Squashfs file
+--sshkey			                SSH key
+--sshkeyfile			            SSH key file
+--static			                Static IP configuration
+--strict			                Enable strict mode
+--sudoers			                Sudoers entry
+--suffix			                Output file name suffix
+--swap				                Swap device
+--swapsize			              Swap size
+--targetmount			            Install target
+--timezone			              Timezone
+--type				                VM type
+--updates			                Updates to install
+--autoinstallfile		          Import autoinstall config file
+--username			              Username
+--usage				                Usage information
+--usesshpass			            Use SSH Pass
+--url				                  ISO URL
+--verbose			                Verbose output
+--version			                Display version
+--vfio				                VM type
+--vgname			                Volume Group Name
+--volumemanager			          Volumemanager(s)
+--whitelist			              Allow/load additional kernel modules(s)
+--workdir			                Work directory
+--zfsfilesystems		          Additional ZFS filesystems
+--zfsroot			                ZFS root name
 
 ```
 

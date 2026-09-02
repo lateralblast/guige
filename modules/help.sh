@@ -36,12 +36,16 @@ print_cli_help () {
         if [[ "${switch_name}" =~ [a-z] ]]; then
           switch_length="${#switch_name}"
           if [ "${switch_length}" -lt 6 ]; then
-            tab_space="\t\t\t"
+            tab_space="\t\t\t\t"
           else
             if [ "${switch_length}" -lt 14 ]; then
-              tab_space="\t\t"
+              tab_space="\t\t\t"
             else
-              tab_space="\t"
+              if [ "${switch_length}" -lt 22 ]; then
+                tab_space="\t\t"
+              else
+                tab_space="\t"
+              fi
             fi
           fi
           switch_comment=$( echo "${line}" |cut -f2 -d"#" )

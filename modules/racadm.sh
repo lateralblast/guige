@@ -20,15 +20,15 @@ execute_racadm () {
     execute_command "${iso['racadm']} -r ${iso['bmcip']} -u ${iso['bmcusername']} -p ${iso['bmcpassword']} config -g cfgServerInfo -o cfgServerFirstBootDevice VCD-DVD"
     execute_command "${iso['racadm']} -r ${iso['bmcip']} -u ${iso['bmcusername']} -p ${iso['bmcpassword']} serveraction powercycle"
   else
-    execute_command "${iso['sshpass']} -p${iso['bmcpassword']} ssh -l ${iso['bmcusername']} ${iso['bmcip']} \"racadm remoteimage -d\""
+    execute_command "${iso['sshpass']} -p${iso['bmcpassword']} ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -l ${iso['bmcusername']} ${iso['bmcip']} \"racadm remoteimage -d\""
     if [ "${iso['bootserverprotocol']}" = "smb" ]; then
-      execute_command "${iso['sshpass']} -p${iso['bmcpassword']} ssh -l ${iso['bmcusername']} ${iso['bmcip']} \"racadm remoteimage -c -u \\\"${iso['bootserverusername']}\\\" -p \\\"${iso['bootserverpassword']}\\\" -l //${iso['bootserverip']}${iso['bootserverfile']}\""
+      execute_command "${iso['sshpass']} -p${iso['bmcpassword']} ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -l ${iso['bmcusername']} ${iso['bmcip']} \"racadm remoteimage -c -u \\\"${iso['bootserverusername']}\\\" -p \\\"${iso['bootserverpassword']}\\\" -l //${iso['bootserverip']}${iso['bootserverfile']}\""
     else
-      execute_command "${iso['sshpass']} -p${iso['bmcpassword']} ssh -l ${iso['bmcusername']} ${iso['bmcip']} \"racadm remoteimage -c -u \\\"${iso['bootserverusername']}\\\" -p \\\"${iso['bootserverpassword']}\\\" -l ${iso['bootserverip']}:${iso['bootserverfile']}\""
+      execute_command "${iso['sshpass']} -p${iso['bmcpassword']} ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -l ${iso['bmcusername']} ${iso['bmcip']} \"racadm remoteimage -c -u \\\"${iso['bootserverusername']}\\\" -p \\\"${iso['bootserverpassword']}\\\" -l ${iso['bootserverip']}:${iso['bootserverfile']}\""
     fi
-    execute_command "${iso['sshpass']} -p${iso['bmcpassword']} ssh -l ${iso['bmcusername']} ${iso['bmcip']} \"racadm config -g cfgServerInfo -o cfgServerBootOnce 1\""
-    execute_command "${iso['sshpass']} -p${iso['bmcpassword']} ssh -l ${iso['bmcusername']} ${iso['bmcip']} \"racadm config -g cfgServerInfo -o cfgServerFirstBootDevice VCD-DVD\""
-    execute_command "${iso['sshpass']} -p${iso['bmcpassword']} ssh -l ${iso['bmcusername']} ${iso['bmcip']} \"racadm serveraction powercycle\""
+    execute_command "${iso['sshpass']} -p${iso['bmcpassword']} ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -l ${iso['bmcusername']} ${iso['bmcip']} \"racadm config -g cfgServerInfo -o cfgServerBootOnce 1\""
+    execute_command "${iso['sshpass']} -p${iso['bmcpassword']} ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -l ${iso['bmcusername']} ${iso['bmcip']} \"racadm config -g cfgServerInfo -o cfgServerFirstBootDevice VCD-DVD\""
+    execute_command "${iso['sshpass']} -p${iso['bmcpassword']} ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -l ${iso['bmcusername']} ${iso['bmcip']} \"racadm serveraction powercycle\""
   fi
 }
 

@@ -951,3 +951,7 @@
 # Added inital code for ipmitool integration
 # 4.7.4: Tue 01 Sep 2026 17:37:32 AEST
 # Shellcheck compliance fixes
+# 4.7.5: Wed 02 Sep 2026 05:03:48 AEST
+# Fixed ssh host key checking
+# 4.7.6: Wed 02 Sep 2026 05:37:53 AEST
+# Updated documentation
