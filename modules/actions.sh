@@ -90,6 +90,14 @@ process_actions () {
         iso['type']="kvm"
         options['deletevm']="true"
         ;;
+      deployiso)                    # action - Deploy ISO via racadm
+        options['checkracadm']="true"
+        options['deployiso']="true"
+        ;;
+      disconnectiso)                # action - Disconnect ISO via racadm
+        options['checkracadm']="true"
+        options['disconnectiso']="true"
+        ;;
       getiso)                       # action - Get ISO
         options['checkworkdir']="true"
         options['getiso']="true"
@@ -121,6 +129,10 @@ process_actions () {
         ;;
       oldinstaller)                 # action - Use old installer
         options['oldinstaller']="true"
+        ;;
+      powercycle)                   # action - Powercycle server
+        options['checkracadm']="true"
+        options['powercycle']="true"
         ;;
       printdockerconfig)            # action - Print Docker config
         options['printdockerconfig']="true"

@@ -955,3 +955,5 @@
 # Fixed ssh host key checking
 # 4.7.6: Wed 02 Sep 2026 05:37:53 AEST
 # Updated documentation
+# 4.7.7: Wed 02 Sep 2026 13:46:15 AEST
+# Added powercycle and other racadm actions

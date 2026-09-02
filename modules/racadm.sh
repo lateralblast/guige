@@ -3,12 +3,61 @@
 # shellcheck disable=SC2129
 # shellcheck disable=SC2154
 
-# Function: execute_racadm
+# Function: check_racadm
+#
+# Check racadm
+
+check_racadm () {
+  handle_output "# Checking racadm" "TEXT"
+  racadm_test=$( command -v racadm )
+  if [ -z "${racadm_test}" ] || [ "${options['usesshpass']}" = "true" ]; then
+    warning_message "Cannot find racadm"
+    sshpass_test=$( command -v sshpass )
+    if [ -z "${sshpass_test}" ]; then
+      warning_message "Cannot find sshpass"
+      do_exit
+    else
+      iso['sshpass']="${sshpass_test}"
+    fi
+  else
+    iso['racadm']="${racadm_test}"
+  fi
+}
+
+# Function: check_racadm_params
+#
+# Check racadm parameters
+
+check_racadm_params () {
+  for item in bmcip bmcusername bmcpassword; do
+    if [ "${iso[${item}]}" = "" ]; then
+      warning_message "${item} is not set"
+      do_exit
+    fi
+  done
+}
+
+# Function: execute_racadm_command
 #
 # Execute racadm commands
 
-execute_racadm () {
-  handle_output "# Executing racadm" "TEXT"
+execute_racadm_command () {
+  racadm_command="${1}"
+  check_racadm_params
+  if [ "${iso['sshpass']}" = "" ]; then
+    execute_command "${iso['racadm']} -r ${iso['bmcip']} -u ${iso['bmcusername']} -p ${iso['bmcpassword']} ${racadm_command}"
+  else
+    execute_command "${iso['sshpass']} -p${iso['bmcpassword']} ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -l ${iso['bmcusername']} ${iso['bmcip']} \"racadm ${racadm_command}\""
+  fi
+}
+
+# Function: racadm_deploy_iso
+#
+# Deploy ISO via racadm
+
+racadm_deploy_iso () {
+  check_racadm_params
+  handle_output "# Deploying ISO to ${iso['bmcip']} via racadm" "TEXT"
   if [ "${iso['sshpass']}" = "" ]; then
     execute_command "${iso['racadm']} -r ${iso['bmcip']} -u ${iso['bmcusername']} -p ${iso['bmcpassword']} remoteimage -d"
     if [ "${iso['bootserverprotocol']}" = "smb" ]; then
@@ -32,23 +81,16 @@ execute_racadm () {
   fi
 }
 
-# Function: check_racadm
+# Function: racadm_disconnect_iso
 #
-# Check racadm
+# Disconnect ISO via racadm
 
-check_racadm () {
-  handle_output "# Checking racadm" "TEXT"
-  racadm_test=$( command -v racadm )
-  if [ -z "${racadm_test}" ] || [ "${options['usesshpass']}" = "true" ]; then
-    warning_message "Cannot find racadm"
-    sshpass_test=$( command -v sshpass )
-    if [ -z "${sshpass_test}" ]; then
-      warning_message "Cannot find sshpass"
-      do_exit
-    else
-      iso['sshpass']="${sshpass_test}"
-    fi
+racadm_disconnect_iso () {
+  check_racadm_params
+  handle_output "# Disconnecting ISO from ${iso['bmcip']} via racadm" "TEXT"
+  if [ "${iso['sshpass']}" = "" ]; then
+    execute_command "${iso['racadm']} -r ${iso['bmcip']} -u ${iso['bmcusername']} -p ${iso['bmcpassword']} remoteimage -d"
   else
-    iso['racadm']="${racadm_test}"
+    execute_command "${iso['sshpass']} -p${iso['bmcpassword']} ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -l ${iso['bmcusername']} ${iso['bmcip']} \"racadm remoteimage -d\""
   fi
 }

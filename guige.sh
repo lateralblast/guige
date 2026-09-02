@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Name:         guige (Generic Ubuntu/Unix ISO Generation Engine)
-# Version:      4.7.6
+# Version:      4.7.7
 # Release:      1
 # License:      CC-BA (Creative Commons By Attribution)
 #               http://creativecommons.org/licenses/by/4.0/legalcode
@@ -447,6 +447,16 @@ do
     --depends)
       # Force depends
       options_list+=(depends)
+      shift
+      ;;
+    --deployiso)
+      # Deploy ISO
+      actions_list+=(deployiso)
+      shift
+      ;;
+    --disconnectiso)
+      # Deploy ISO
+      actions_list+=(disconnectiso)
       shift
       ;;
     --dhcp)
@@ -985,6 +995,11 @@ do
       iso['postinstall']="${2}"
       shift 2
       ;;
+    --powercycle)
+      # Powercycle server
+      actions_list+=(powercycle)
+      shift
+      ;;
     --prefix)
       # Output file name prefix
       check_value "${1}" "${2}"
@@ -1062,8 +1077,10 @@ do
       ;;
     --runracadm|--executeracadm|--racadm)
       # Run racadm
+      check_value "${1}" "${2}"
+      iso['racadmcommand']="${2}"
+      shift 2
       actions_list+=(runracadm)
-      shift
       ;;
     --racadmcommand)
       # RACADM command
@@ -1395,36 +1412,8 @@ fi
 
 # Handle specific functions
 
-if [ "${options['listvms']}" = "true" ]; then
-  list_vm
-  do_exit
-fi
+# Environment Functions
 
-if [ "${options['docker']}" = "true" ] || [ "${options['checkdocker']}" = "true" ]; then
-  create_docker_iso
-fi
-if [ "${options['deletevm']}" = "true" ]; then
-  delete_vm
-  do_exit
-fi
-if [ "${options['createisovm']}" = "true" ]; then
-  get_info_from_iso
-  create_iso_vm
-  do_exit
-fi
-if [ "${options['createcivm']}" = "true" ]; then
-  create_ci_vm
-  do_exit
-fi
-if [ "${options['executeracadm']}" = "true" ]; then
-  check_racadm
-  execute_racadm
-  do_exit
-fi
-if [ "${options['checkracadm']}" = "true" ]; then
-  check_racadm
-  do_exit
-fi
 if [ "${options['checkworkdir']}" = "true" ]; then
   options['help']="false"
   check_workdir
@@ -1442,6 +1431,59 @@ fi
 if [ "${options['installserver']}" = "true" ]; then
   install_server
 fi
+
+# VM Functions
+
+if [ "${options['listvms']}" = "true" ]; then
+  list_vm
+  do_exit
+fi
+if [ "${options['deletevm']}" = "true" ]; then
+  delete_vm
+  do_exit
+fi
+if [ "${options['createisovm']}" = "true" ]; then
+  get_info_from_iso
+  create_iso_vm
+  do_exit
+fi
+if [ "${options['createcivm']}" = "true" ]; then
+  create_ci_vm
+  do_exit
+fi
+
+# Docker Functions
+
+if [ "${options['docker']}" = "true" ] || [ "${options['checkdocker']}" = "true" ]; then
+  create_docker_iso
+fi
+
+# Racadm and ISO Functions
+
+if [ "${options['executeracadm']}" = "true" ]; then
+  check_racadm
+  execute_racadm_command "${iso['racadmcommand']}"
+  do_exit
+fi
+if [ "${options['deployiso']}" = "true" ]; then
+  check_racadm
+  racadm_deploy_iso
+  do_exit
+fi
+if [ "${options['disconnectiso']}" = "true" ]; then
+  check_racadm
+  racadm_disconnect_iso
+  do_exit
+fi
+if [ "${options['powercycle']}" = "true" ]; then
+  check_racadm
+  racadm_powercycle
+  do_exit
+fi
+if [ "${options['checkracadm']}" = "true" ]; then
+  check_racadm
+  do_exit
+fi
 if [ "${options['getiso']}" = "true" ]; then
   options['help']="false"
   get_base_iso
@@ -1449,6 +1491,25 @@ if [ "${options['getiso']}" = "true" ]; then
     do_exit
   fi
 fi
+if [ "${options['listisos']}" = "true" ]; then
+  list_isos
+  do_exit
+fi
+
+# IPMI Functions
+
+if [ "${options['executeipmitool']}" = "true" ]; then
+  check_ipmitool
+  execute_ipmitool
+  do_exit
+fi
+if [ "${options['checkipmitool']}" = "true" ]; then
+  check_ipmitool
+  do_exit
+fi
+
+# ISO Functions
+
 if [ "${options['fulliso']}" = "true" ]; then
   options['help']="false"
   unmount_iso
@@ -1488,19 +1549,9 @@ else
     unmount_squashfs
   fi
 fi
-if [ "${options['listisos']}" = "true" ]; then
-  list_isos
-  do_exit
-fi
-if [ "${options['executeipmitool']}" = "true" ]; then
-  check_ipmitool
-  execute_ipmitool
-  do_exit
-fi
-if [ "${options['checkipmitool']}" = "true" ]; then
-  check_ipmitool
-  do_exit
-fi
+
+# Help Functions
+
 if [ "${options['help']}" = "true" ]; then
   print_help
 fi
