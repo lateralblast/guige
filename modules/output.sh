@@ -245,8 +245,21 @@ create_export () {
 
 add_to_output_file_name () {
   param="$1"
-  if [ "${iso[${param}]}" != "${defaults[${param}]}" ] || [[ "${param}" =~ bridge|boottype|autoinstall ]]; then
-    if [ "${iso[${param}]}" = "true" ]; then
+  if [[ "${param}" =~ username|password ]]; then
+    test_string="include${param}"
+    if [ "${options[${test_string}]}" = "true" ]; then
+      test_value="${iso[${param}]}"
+      value="${test_value}"
+      value="${value//,/-}"
+      if [[ ! ${iso['outputfile']} =~ ${value} ]]; then
+        temp_dir_name=$( dirname "${iso['outputfile']}" )
+        temp_file_name=$( basename "${iso['outputfile']}" .iso )
+        information_message "Adding parameter ${param} value ${value} to output file name"
+        iso['outputfile']="${temp_dir_name}/${temp_file_name}-${value}.iso"
+      fi
+    fi
+  else
+    if [ "${iso[${param}]}" != "${defaults[${param}]}" ] || [[ "${param}" =~ bridge|boottype|autoinstall ]]; then
       test_value="${param}"
     else
       test_value="${iso[${param}]}"
@@ -266,7 +279,7 @@ add_to_output_file_name () {
 
 # Function: update_output_file_name
 #
-# Update output file name based on switched and options
+# Update output file name based on switches and options
 
 update_output_file_name () {
   if [[ "${iso['outputfile']}" =~ server ]] && [[ "${iso['build']}" =~ desktop ]]; then
@@ -387,4 +400,7 @@ update_output_file_name () {
       execute_command "rm ${iso['outputfile']}"
     fi
   fi
+  for item in username password; do
+    add_to_output_file_name "${item}"
+  done
 }

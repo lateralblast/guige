@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Name:         guige (Generic Ubuntu/Unix ISO Generation Engine)
-# Version:      4.7.7
+# Version:      4.7.8
 # Release:      1
 # License:      CC-BA (Creative Commons By Attribution)
 #               http://creativecommons.org/licenses/by/4.0/legalcode
@@ -726,6 +726,16 @@ do
       iso['hostname']="${2}"
       shift 2
       list['hostname']="true"
+      ;;
+    --includeusername|--includeuser*)
+      # Include username in output filename
+      iso['includeusername']="true"
+      shift
+      ;;
+    --includepassword|--includepass*)
+      # Include username in output filename
+      iso['includepassword']="true"
+      shift
       ;;
     --inputci|--vmci)
       # Import Cloud Image

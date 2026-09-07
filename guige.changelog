@@ -957,3 +957,5 @@
 # Updated documentation
 # 4.7.7: Wed 02 Sep 2026 13:46:15 AEST
 # Added powercycle and other racadm actions
+# 4.7.8: Fri 04 Sep 2026 17:11:56 AEST
+# Added output filename option switches for username and password

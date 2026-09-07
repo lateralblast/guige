@@ -56,6 +56,8 @@ set_options_defaults () {
   options['grubparseall']="false"             # option - Enable all GRUB parsers
   options['help']="true"                      # option - Enable help
   options['hwekernel']="false"                # option - Enable HWE kernel
+  options['includeusername']="false"          # option - Include username in output filename
+  options['includepassword']="false"          # option - Include password in output filename
   options['installcodecs']="false"            # option - Install codecs
   options['installdrivers']="false"           # option - Install drivers
   options['installpackages']="false"          # option - Install packages

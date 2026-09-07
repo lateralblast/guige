@@ -542,7 +542,7 @@ prepare_autoinstall_iso () {
           echo "  ssh:" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
           echo "    allow-pw: ${iso['allowpassword']}" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
           if [ ! "${iso['sshkey']}" = "" ]; then
-            echo "    authorized-keys: [ \"${iso['sshkey']}\" ]" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+            echo "    authorized-keys: [ '${iso['sshkey']}' ]" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
           fi
           echo "    install-server: true" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
         fi
