@@ -82,6 +82,8 @@ set_options_defaults () {
   options['mediacheck']="false"               # option - Enable media check
   options['multipath']="false"                # option - Enable multipath
   options['networkupdates']="false"           # option - Enable network based updates
+  options['nodhcpnic']="false"                # option - Disable DHCP for NIC
+  options['nodhcpnics']="false"               # option - Disable DHCP for NICs
   options['nomultipath']="false"              # option - Enable no multipath
   options['nounmount']="false"                # option - Do not unmount ISOs etc after creating ISO
   options['nvme']="false"                     # option - Enable NVMe

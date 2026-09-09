@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Name:         guige (Generic Ubuntu/Unix ISO Generation Engine)
-# Version:      4.7.8
+# Version:      4.8.1
 # Release:      1
 # License:      CC-BA (Creative Commons By Attribution)
 #               http://creativecommons.org/licenses/by/4.0/legalcode
@@ -223,7 +223,7 @@ do
       options['bootserverfile']="true"
       shift 2
       ;;
-    --bootserverip|--bootip)
+    --bootserverip|--bootserver|--bootip)
       # Bootserver IP
       check_value "${1}" "${2}"
       iso['bootserverip']="${2}"
@@ -257,6 +257,12 @@ do
       # Boot type
       check_value "${1}" "${2}"
       iso['boottype']="${2}"
+      shift 2
+      ;;
+    --booturl)
+      # Boot URL
+      check_value "${1}" "${2}"
+      iso['booturl']="${2}"
       shift 2
       ;;
     --build)
@@ -916,6 +922,20 @@ do
       iso['nics']="${2}"
       shift 2
       list['nics']="true"
+      ;;
+    --nodhcpnic)
+      # Disable DHCP for NICs
+      check_value "${1}" "${2}"
+      iso['nodhcpnic']="${2}"
+      shift 2
+      options['nodhcpnic']="true"
+      ;;
+    --nodhcpnics)
+      # Disable DHCP for NICs
+      check_value "${1}" "${2}"
+      iso['nodhcpnics']="${2}"
+      shift 2
+      options['nodhcpnics']="true"
       ;;
     --oeminstall)
       # OEM Install

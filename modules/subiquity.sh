@@ -489,8 +489,23 @@ prepare_autoinstall_iso () {
               IFS=',' read -r -a cidrs <<< "${iso['cidrs']}"            
             fi
             IFS=',' read -r -a ips <<< "${iso['ips']}"            
+            if [ "${iso['nodhcpnics']}" != "" ]; then
+              IFS=',' read -r -a nodhcpnics <<< "${iso['nodhcpnics']}"
+            fi
             if [ "${options['bridge']}" = "false" ]; then
               echo "    ethernets:" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+              if [ "${options['nodhcpnic']}" = "true" ]; then
+                echo "      ${iso['nodhcpnic']}:" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+                echo "        dhcp4: false" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+                echo "        dhcp6: false" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+              fi
+              if [ "${options['nodhcpnics']}" = "true" ]; then
+                for nodhcpnic in "${nodhcpnics[@]}"; do
+                  echo "      ${nodhcpnic}:" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+                  echo "        dhcp4: false" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+                  echo "        dhcp6: false" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+                done
+              fi
               for index in "${!nics[@]}"; do
                 echo "      ${nics[${index}]}:" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
                 echo "        dhcp4: false" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
@@ -508,6 +523,18 @@ prepare_autoinstall_iso () {
               done
             else
               echo "    ethernets:" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+              if [ "${options['nodhcpnic']}" = "true" ]; then
+                echo "      ${iso['nodhcpnic']}:" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+                echo "        dhcp4: false" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+                echo "        dhcp6: false" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+              fi
+              if [ "${options['nodhcpnics']}" = "true" ]; then
+                for nodhcpnic in "${nodhcpnics[@]}"; do
+                  echo "      ${nodhcpnic}:" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+                  echo "        dhcp4: false" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+                  echo "        dhcp6: false" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+                done
+              fi
               for index in "${!nics[@]}"; do
                 echo "      ${nics[${index}]}:" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
                 echo "        dhcp4: false" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"

@@ -84,6 +84,7 @@ set_default_defaults () {
   defaults['bootproto']="dhcp"
   defaults['bootsize']="2048"
   defaults['boottype']="efi"
+  defaults['booturl']=""
   defaults['bridge']="br0"
   defaults['build']="server"
   defaults['chrootpackages']="sudo zfsutils-linux zfs-initramfs xfsprogs btrfs-progs net-tools curl lftp wget sudo file rsync dialog setserial ansible apt-utils whois squashfs-tools duperemove jq btrfs-compsize iproute2"

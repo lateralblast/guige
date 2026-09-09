@@ -253,6 +253,13 @@ process_switches () {
   if [ ! "${iso['ip']}" = "" ] || [ ! "${iso['grubip']}" = "" ]; then 
     options['dhcp']="false"
   fi
+  if [ ! "${iso['booturl']}" = "" ]; then
+    if [[ ${iso['booturl']} =~ \: ]]; then
+      iso['bootserverip']=$( echo "${iso['booturl']}" | cut -f1 -d: )
+    else
+      iso['bootserverip']=$( echo "${iso['booturl']}" | cut -f3 -d/ )
+    fi
+  fi
   iso['disk']=$( basename "${iso['disk']}" )
   iso['nic']=$( basename "${iso['nic']}" )
   check_release

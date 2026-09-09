@@ -959,3 +959,9 @@
 # Added powercycle and other racadm actions
 # 4.7.8: Fri 04 Sep 2026 17:11:56 AEST
 # Added output filename option switches for username and password
+# 4.7.9: Mon  7 Sep 2026 15:54:25 AEST
+# Added nodhcpnic and nodhcpnics options
+# 4.8.0: Tue  8 Sep 2026 16:24:59 AEST
+# Added booturl switch
+# 4.8.1: Tue  8 Sep 2026 16:39:59 AEST
+# Added code to extract bootserverip from booturl if needed
