@@ -965,3 +965,11 @@
 # Added booturl switch
 # 4.8.1: Tue  8 Sep 2026 16:39:59 AEST
 # Added code to extract bootserverip from booturl if needed
+# 4.8.2: Thu Sep 10 02:27:45 PM AEST 2026
+# Fixed nodhcpnics processing
+# 4.8.3: Thu Sep 10 03:40:31 PM AEST 2026
+# Fixed ISO naming
+# 4.8.4: Thu Sep 10 04:22:05 PM AEST 2026
+# More fixes for ISO naming
+# 4.8.5: Fri Sep 11 02:44:30 PM AEST 2026
+# Cleaned up subiquity config

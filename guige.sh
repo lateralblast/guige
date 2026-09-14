@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Name:         guige (Generic Ubuntu/Unix ISO Generation Engine)
-# Version:      4.8.1
+# Version:      4.8.5
 # Release:      1
 # License:      CC-BA (Creative Commons By Attribution)
 #               http://creativecommons.org/licenses/by/4.0/legalcode
@@ -37,7 +37,12 @@ declare -A options
 declare -A current
 declare -A defaults
 
+declare -a ips
+declare -a nics
+declare -a cdirs
+declare -a bridges
 declare -a switches
+declare -a nodhcpnics
 declare -a actions_list
 declare -a options_list
 
@@ -755,11 +760,6 @@ do
       iso['inputfile']="${2}"
       shift 2
       ;;
-    --ipmi|--ipmitool)
-      # Connect to BMC/iDRAC via IPMI
-      actions_list+=(executeipmi) 
-      shift 
-      ;;
     --installmode)
       # Install mode
       check_value "${1}" "${2}"
@@ -802,6 +802,11 @@ do
       shift 2
       options['dhcp']="false"
       list['ip']="true"
+      ;;
+    --ipmi|--ipmitool)
+      # Connect to BMC/iDRAC via IPMI
+      actions_list+=(executeipmi) 
+      shift 
       ;;
     --ips)
       # IP address
@@ -870,6 +875,11 @@ do
       actions_list+=(listisos)
       shift
       ;;
+    --listargs|listallargs*|--listargs*)
+      # List args
+      actions_list+=(listargs)
+      shift
+      ;;
     --listswitches)
       # List switches
       actions_list+=(listswitches)
@@ -935,7 +945,7 @@ do
       check_value "${1}" "${2}"
       iso['nodhcpnics']="${2}"
       shift 2
-      options['nodhcpnics']="true"
+      options['nodhcpnic']="true"
       ;;
     --oeminstall)
       # OEM Install
@@ -1523,6 +1533,10 @@ if [ "${options['getiso']}" = "true" ]; then
 fi
 if [ "${options['listisos']}" = "true" ]; then
   list_isos
+  do_exit
+fi
+if [ "${options['listargs']}" = "true" ]; then
+  list_args
   do_exit
 fi
 

@@ -262,6 +262,56 @@ process_switches () {
   fi
   iso['disk']=$( basename "${iso['disk']}" )
   iso['nic']=$( basename "${iso['nic']}" )
+  if [ "${iso['nodhcpnic']}" != "" ]; then
+    nodhcpnics[0]="${iso['nodhcpnic']}" 
+  fi
+  if [ "${iso['nodhcpnics']}" != "" ]; then
+    if [ "${nodhcpnics[0]}" = "" ]; then
+      IFS=',' read -r -a nodhcpnics <<< "${iso['nodhcpnics']}"
+    else
+      IFS=',' read -r -a nodhcpnics <<< "${nodhcpnics[0]},${iso['nodhcpnics']}"
+    fi
+  fi
+  if [ "${iso['bridge']}" != "" ]; then
+    bridges[0]="${iso['bridge']}" 
+  fi
+  if [ "${iso['bridges']}" != "" ]; then
+    if [ "${bridges[0]}" = "" ]; then
+      IFS=',' read -r -a bridges <<< "${iso['bridges']}"
+    else
+      IFS=',' read -r -a bridges <<< "${bridges[0]},${iso['bridges']}"
+    fi
+  fi
+  if [ "${iso['nic']}" != "" ]; then
+    nics[0]="${iso['nic']}" 
+  fi
+  if [ "${iso['nics']}" != "" ]; then
+    if [ "${nics[0]}" = "" ]; then
+      IFS=',' read -r -a nics <<< "${iso['nics']}"
+    else
+      IFS=',' read -r -a nics <<< "${nics[0]},${iso['nics']}"
+    fi
+  fi
+  if [ "${iso['cdir']}" != "" ]; then
+    cdirs[0]="${iso['cdir']}" 
+  fi
+  if [ "${iso['cdirs']}" != "" ]; then
+    if [ "${cdirs[0]}" = "" ]; then
+      IFS=',' read -r -a cdirs <<< "${iso['cdirs']}"
+    else
+      IFS=',' read -r -a cdirs <<< "${cdirs[0]},${iso['cdirs']}"
+    fi
+  fi
+  if [ "${iso['ip']}" != "" ]; then
+    ips[0]="${iso['ip']}" 
+  fi
+  if [ "${iso['ips']}" != "" ]; then
+    if [ "${ips[0]}" = "" ]; then
+      IFS=',' read -r -a ips <<< "${iso['ips']}"
+    else
+      IFS=',' read -r -a ips <<< "${ips[0]},${iso['ips']}"
+    fi
+  fi
   check_release
   update_output_file_name
 }

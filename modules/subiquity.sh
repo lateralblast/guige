@@ -365,8 +365,6 @@ prepare_autoinstall_iso () {
           echo "      - package: \"*\"" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
           echo "        pin: \"release a=${iso['codename']}-security\"" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
           echo "        pin-priority: 200" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
-#          echo "    disable_components: []" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
-#          echo "    mirror-selection:" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
           echo "    primary:" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
           echo "    - arches:" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
           echo "      - ${iso['arch']}" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
@@ -409,6 +407,13 @@ prepare_autoinstall_iso () {
           echo "  network:" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
           if [ "${iso['nics']}" = "" ]; then
             echo "    ethernets:" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+            if [ "${options['nodhcpnic']}" = "true" ]; then
+              for index in "${!nodhcpnics[@]}"; do
+                echo "      ${nodhcpnics[${index}]}:" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+                echo "        dhcp4: false" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+                echo "        dhcp6: false" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+              done
+            fi
             if [ "${iso['grubnic']}" = "" ]; then
               echo "      ${iso['nic']}:" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
             else
@@ -427,15 +432,15 @@ prepare_autoinstall_iso () {
                 echo "      ${iso['bridge']}:" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
                 echo "        interfaces:" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
                 if [ "${iso['grubnic']}" = "" ]; then
-                   echo "          - ${iso['nic']}" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+                  echo "          - ${iso['nic']}" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
                 else
                   echo "          - grubnic" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
                 fi
                 echo "        addresses:" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
                 if [ "${iso['grubip']}" = "" ]; then
-                  echo "        - ${iso['ip']}/${iso['cidr']}" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+                  echo "          - ${iso['ip']}/${iso['cidr']}" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
                 else
-                  echo "        - grubip/grubcidr" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+                  echo "          - grubip/grubcidr" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
                 fi
               else
                 echo "        addresses:" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
@@ -469,39 +474,11 @@ prepare_autoinstall_iso () {
               fi
             fi
           else
-            IFS=',' read -r -a nics <<< "${iso['nics']}"            
-            if [ "${options['bridge']}" = "true" ]; then
-              if [ "${iso['bridges']}" = "" ]; then
-                declare -a bridges
-                for index in "${!nics[@]}"; do
-                  bridges[${index}]="br${index}"
-                done
-              else
-                IFS=',' read -r -a bridges <<< "${iso['bridges']}"            
-              fi
-            fi
-            if [ "${iso['cidrs']}" = "" ]; then
-              declare -a cidrs
-              for index in "${!nics[@]}"; do
-                cidrs[${index}]="${iso['cidr']}"
-              done
-            else
-              IFS=',' read -r -a cidrs <<< "${iso['cidrs']}"            
-            fi
-            IFS=',' read -r -a ips <<< "${iso['ips']}"            
-            if [ "${iso['nodhcpnics']}" != "" ]; then
-              IFS=',' read -r -a nodhcpnics <<< "${iso['nodhcpnics']}"
-            fi
             if [ "${options['bridge']}" = "false" ]; then
               echo "    ethernets:" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
               if [ "${options['nodhcpnic']}" = "true" ]; then
-                echo "      ${iso['nodhcpnic']}:" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
-                echo "        dhcp4: false" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
-                echo "        dhcp6: false" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
-              fi
-              if [ "${options['nodhcpnics']}" = "true" ]; then
-                for nodhcpnic in "${nodhcpnics[@]}"; do
-                  echo "      ${nodhcpnic}:" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+                for index in "${!nodhcpnics[@]}"; do
+                  echo "      ${nodhcpnics[${index}]}:" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
                   echo "        dhcp4: false" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
                   echo "        dhcp6: false" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
                 done
@@ -524,13 +501,8 @@ prepare_autoinstall_iso () {
             else
               echo "    ethernets:" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
               if [ "${options['nodhcpnic']}" = "true" ]; then
-                echo "      ${iso['nodhcpnic']}:" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
-                echo "        dhcp4: false" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
-                echo "        dhcp6: false" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
-              fi
-              if [ "${options['nodhcpnics']}" = "true" ]; then
-                for nodhcpnic in "${nodhcpnics[@]}"; do
-                  echo "      ${nodhcpnic}:" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+                for index in "${!nodhcpnics[@]}"; do
+                  echo "      ${nodhcpnics[${index}]}:" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
                   echo "        dhcp4: false" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
                   echo "        dhcp6: false" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
                 done
@@ -559,13 +531,6 @@ prepare_autoinstall_iso () {
             fi
           fi
           echo "    version: 2" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
-#          echo "  refresh-installer:" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
-#          echo "    update: ${options['refreshinstaller']}" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
-#          echo "  oem:" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
-#          echo "    install: ${iso['oeminstall']}" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
-#          echo "  source:" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
-#          echo "    id: ${iso['sourceid']}" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
-#          echo "    search_drivers: ${options['searchdrivers']}" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
           echo "  ssh:" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
           echo "    allow-pw: ${iso['allowpassword']}" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
           if [ ! "${iso['sshkey']}" = "" ]; then
@@ -1106,7 +1071,6 @@ prepare_autoinstall_iso () {
             fi
           fi
         fi
-#        echo "  updates: ${iso['updates']}" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
         print_file "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
       fi
     fi

@@ -85,6 +85,9 @@ print_env () {
       fi
     fi
   fi
+  if [ "${options['nodhcpnics']}" = "true" ]; then
+    handle_output "# No DHCP NICs:              [iso['nodhcpnics']}]             ${iso['nodhcpnics']}"         "TEXT"
+  fi
   handle_output "# Kernel:                    [iso['kernel']}]                     ${iso['kernel']}"                     "TEXT"
   handle_output "# Kernel arguments:          [iso['kernelargs']}]                 ${iso['kernelargs']}"                 "TEXT"
   handle_output "# Kernel serial arguments:   [iso['kernelserialargs']}]           ${iso['kernelserialargs']}"           "TEXT"

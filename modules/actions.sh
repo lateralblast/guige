@@ -120,6 +120,9 @@ process_actions () {
       listalliso*|listiso*)         # action - List ISOs
         options['listisos']="true"
         ;;
+      listallargs*|listargs*)       # action - List arguments used to produce ISO
+        options['listargs']="true"
+        ;;
       listswitches)                 # action - List switches
         get_switches
         list_switches

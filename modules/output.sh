@@ -259,8 +259,12 @@ add_to_output_file_name () {
       fi
     fi
   else
-    if [ "${iso[${param}]}" != "${defaults[${param}]}" ] || [[ "${param}" =~ bridge|boottype|autoinstall ]]; then
-      test_value="${param}"
+    if [ "${iso[${param}]}" != "${defaults[${param}]}" ] || [[ "${param}" =~ ip|bridge|nic|hostname|disk|boottype|gateway|autoinstall ]]; then
+      if [[ "${param}" =~ bridge|boottype|disk|ip|nic|hostname|gateway ]] then
+        test_value="${iso[${param}]}"
+      else
+        test_value="${param}"
+      fi
     else
       test_value="${iso[${param}]}"
     fi

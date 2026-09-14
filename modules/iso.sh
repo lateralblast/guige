@@ -277,6 +277,34 @@ mount_old () {
   fi
 }
 
+# Function: list_args
+#
+# List arguments used to produce ISO
+
+list_args () {
+  temp['verbose']="true"
+  if [ "${iso['search']}" = "" ]; then
+    file_list=$(find "${iso['basedir']}" -name "*.args" 2> /dev/null)
+  else
+    file_list=$(find "${iso['basedir']}" -name "*.args" 2> /dev/null |grep "${iso['search']}" )
+  fi
+  for list_item in release codename arch bridge bridges cidr cidrs disk dns hostname ip ips nic nics suffix username; do
+    if [ "${list[${list_item}]}" = "true" ]; then
+      search_term="${iso[${list_item}]}"
+      file_list=$( echo "${file_list}" |grep "${search_term}" )
+    fi
+  done
+  for list_item in dhcp bios efi sshkey; do
+    if [ "${list[${list_item}]}" = "true" ]; then
+      file_list=$( echo "${file_list}" |grep "${list_item}" )
+    fi
+  done
+  for file_name in ${file_list}; do
+    print_file "${file_name}"
+  done
+  temp['verbose']="false"
+}
+
 # Function: list_isos
 #
 # List ISOs
