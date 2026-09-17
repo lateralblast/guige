@@ -260,7 +260,7 @@ add_to_output_file_name () {
     fi
   else
     if [ "${iso[${param}]}" != "${defaults[${param}]}" ] || [[ "${param}" =~ ip|bridge|nic|hostname|disk|boottype|gateway|autoinstall ]]; then
-      if [[ "${param}" =~ bridge|boottype|disk|ip|nic|hostname|gateway ]] then
+      if [[ "${param}" =~ bridge|boottype|disk|ip|nic|hostname|gateway ]]; then
         test_value="${iso[${param}]}"
       else
         test_value="${param}"
@@ -268,14 +268,16 @@ add_to_output_file_name () {
     else
       test_value="${iso[${param}]}"
     fi
-    if [[ ! ${iso['outputfile']} =~ ${test_value} ]]; then
-      value="${test_value}"
-      value="${value//,/-}"
-      if [[ ! ${iso['outputfile']} =~ ${value} ]]; then
-        temp_dir_name=$( dirname "${iso['outputfile']}" )
-        temp_file_name=$( basename "${iso['outputfile']}" .iso )
-        information_message "Adding parameter ${param} value ${value} to output file name"
-        iso['outputfile']="${temp_dir_name}/${temp_file_name}-${value}.iso"
+    if [ ! "${test_value}" = "" ]; then
+      if [[ ! ${iso['outputfile']} =~ ${test_value} ]]; then
+        value="${test_value}"
+        value="${value//,/-}"
+        if [[ ! ${iso['outputfile']} =~ ${value} ]]; then
+          temp_dir_name=$( dirname "${iso['outputfile']}" )
+          temp_file_name=$( basename "${iso['outputfile']}" .iso )
+          information_message "Adding parameter ${param} value ${value} to output file name"
+          iso['outputfile']="${temp_dir_name}/${temp_file_name}-${value}.iso"
+        fi
       fi
     fi
   fi

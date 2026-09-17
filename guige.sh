@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Name:         guige (Generic Ubuntu/Unix ISO Generation Engine)
-# Version:      4.8.5
+# Version:      4.8.6
 # Release:      1
 # License:      CC-BA (Creative Commons By Attribution)
 #               http://creativecommons.org/licenses/by/4.0/legalcode
@@ -1146,19 +1146,19 @@ do
       iso['selinux']="${2}"
       shift 2
       ;;
-    --serialport)
+    --serialport|--serialdevice)
       # Serial port
       check_value "${1}" "${2}"
       iso['serialport']="${2}"
       shift 2
       ;;
-    --serialportaddress)
+    --serialportaddress|--serialaddress)
       # Serial port address
       check_value "${1}" "${2}"
       iso['serialportaddress']="${2}"
       shift 2
       ;;
-    --serialportspeed)
+    --serialportspeed|--serialspeed)
       # Serial port speed
       check_value "${1}" "${2}"
       iso['serialportspeed']="${2}"

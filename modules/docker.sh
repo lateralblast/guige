@@ -104,6 +104,9 @@ check_docker_config () {
 
 create_docker_iso () {
   if ! [ -f "/.dockerenv" ]; then
+    if [ "${iso['action']}" = "" ]; then
+      iso['action']="${actions_list[*]}"
+    fi
     check_workdir
     docker['bin']="${iso['workdir']}/files/${script['bin']}"
     docker['moduledir']="${iso['workdir']}/files/modules"
@@ -161,12 +164,22 @@ create_docker_iso () {
             verbose_message "# Checking ${arg_name}"
             if [[ ! "${script_args}" =~ "--${arg_name} " ]]; then
               if [[ "${include_switches}" =~ $arg_name ]]; then
-                script_args="${script_args} --${arg_name} \"${arg_value}\""
-                verbose_message "# Adding --${arg_name} \"${arg_value}\""
-              else
-                if [ "${arg_value}" != "${def_value}" ] && [ "${arg_value}" != "" ]; then
+                if [ "${arg_value}" = "true" ]; then
+                  script_args="${script_args} --${arg_name}"
+                  verbose_message "# Adding --${arg_name}"
+                else
                   script_args="${script_args} --${arg_name} \"${arg_value}\""
                   verbose_message "# Adding --${arg_name} \"${arg_value}\""
+                fi
+              else
+                if [ "${arg_value}" != "${def_value}" ] && [ "${arg_value}" != "" ]; then
+                  if [ "${arg_value}" = "true" ]; then
+                    script_args="${script_args} --${arg_name}"
+                    verbose_message "# Adding --${arg_name}"
+                  else
+                    script_args="${script_args} --${arg_name} \"${arg_value}\""
+                    verbose_message "# Adding --${arg_name} \"${arg_value}\""
+                  fi
                 fi
               fi
             fi
