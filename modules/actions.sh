@@ -117,7 +117,10 @@ process_actions () {
       justiso)                      # action - Just ISO
         options['justiso']="true"
         ;;
-      listalliso*|listiso*)         # action - List ISOs
+      listalliso*)                  # action - List all ISOs
+        options['listallisos']="true"
+        ;;
+      listiso*)                     # action - List ISOs
         options['listisos']="true"
         ;;
       listallargs*|listargs*)       # action - List arguments used to produce ISO

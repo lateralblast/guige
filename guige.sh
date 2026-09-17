@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Name:         guige (Generic Ubuntu/Unix ISO Generation Engine)
-# Version:      4.8.6
+# Version:      4.8.7
 # Release:      1
 # License:      CC-BA (Creative Commons By Attribution)
 #               http://creativecommons.org/licenses/by/4.0/legalcode
@@ -460,6 +460,11 @@ do
       options_list+=(depends)
       shift
       ;;
+    --deleteiso)
+      # Delete ISO
+      options_list+=(deleteiso)
+      shift
+      ;;
     --deployiso)
       # Deploy ISO
       actions_list+=(deployiso)
@@ -870,7 +875,12 @@ do
       iso['lcall']="${2}"
       shift 2
       ;;
-    --listisos|listalliso*|--listiso*)
+    --listallisos|--listalliso*)
+      # List all ISOs
+      actions_list+=(listallisos)
+      shift
+      ;;
+    --listisos|--listiso*)
       # List ISOs
       actions_list+=(listisos)
       shift
@@ -1531,7 +1541,7 @@ if [ "${options['getiso']}" = "true" ]; then
     do_exit
   fi
 fi
-if [ "${options['listisos']}" = "true" ]; then
+if [ "${options['listallisos']}" = "true" ] || [ "${options['listisos']}" = "true" ]; then
   list_isos
   do_exit
 fi

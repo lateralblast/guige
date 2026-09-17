@@ -38,6 +38,7 @@ set_options_defaults () {
   options['defaultroute']="true"              # option - Enable default route
   options['deletecivm']="false"               # option - Delete cloud-init based VM
   options['deleteisovm']="false"              # option - Delete ISO base VM
+  options['deleteiso']="false"                # option - Delete ISO
   options['deletevm']="false"                 # option - Delete VM
   options['dhcp']="true"                      # option - Enable DHCP
   options['distupgrade']="false"              # option - Enable dist-upgrade
@@ -75,6 +76,7 @@ set_options_defaults () {
   options['kvmpackages']="false"              # option - Enable KVM packages
   options['latepackages']="false"             # option - Enable late packages
   options['latest']="false"                   # option - Enable latest
+  options['listallisos']="false"              # option - List all ISOS
   options['listisos']="false"                 # option - List ISOS
   options['listvms']="false"                  # option - List VMs
   options['lockpassword']="false"             # option - Lock password

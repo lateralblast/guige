@@ -311,10 +311,14 @@ list_args () {
 
 list_isos () {
   temp['verbose']="true"
-  if [ "${iso['search']}" = "" ]; then
-    file_list=$(find "${iso['basedir']}" -name "*.iso" 2> /dev/null)
+  if [ "${iso['search']}" = "" ] || [ "${options['listallisos']}" = "true" ]; then
+    if [ "${options['listallisos']}" = "true" ]; then
+      file_list=$(find "${iso['basedir']}" -name "*.iso" 2> /dev/null)
+    else
+      file_list=$(find "${iso['basedir']}" -name "*.iso" 2> /dev/null | grep autoinstall )
+    fi
   else
-    file_list=$(find "${iso['basedir']}" -name "*.iso" 2> /dev/null |grep "${iso['search']}" )
+    file_list=$(find "${iso['basedir']}" -name "*.iso" 2> /dev/null |grep "${iso['search']}" | grep autoinstall )
   fi
   for list_item in release codename arch bridge bridges cidr cidrs disk dns hostname ip ips nic nics suffix username; do
     if [ "${list[${list_item}]}" = "true" ]; then
@@ -331,7 +335,16 @@ list_isos () {
     if [ "${options['scpheader']}" = "true" ]; then
       handle_output "${iso['bmcusername']}@${os['ip']}:${file_name}" "TEXT"
     else
-      handle_output "${file_name}" "TEXT"
+      if [ "${options['deleteiso']}" = "true" ]; then
+        handle_output "Deleting ${file_name}" "TEXT"
+        if [ "${options['force']}" = "true" ]; then
+          execute_command "rm -f ${file_name}"
+        else 
+          rm -i "${file_name}"
+        fi
+      else
+        handle_output "${file_name}" "TEXT"
+      fi
     fi
   done
   temp['verbose']="false"
