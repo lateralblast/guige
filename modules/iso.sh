@@ -86,7 +86,7 @@ update_iso_url () {
         else
           if [ "${iso['release']}" = "${current['devrelease']}" ]; then
             if [[ "${iso['build']}" =~ server ]]; then
-              iso['url']="https://cdimage.ubuntu.com/ubuntu-server/daily-live/current/${iso['codename']}-live-server-${iso['arch']}.iso"
+              iso['url']="https://cdimage.ubuntu.com/ubuntu-server/${iso['codename']}/daily-live/current/${iso['codename']}-live-server-${iso['arch']}.iso"
             else
               iso['url']="https://cdimage.ubuntu.com/daily-live/current/${iso['codename']}-desktop-${iso['arch']}.iso"
             fi
@@ -142,7 +142,11 @@ update_iso_url () {
 update_required_packages () {
   if [ "${os['name']}" = "Darwin" ]; then
     if ! [[ "${iso['action']}" =~ "docker" ]]; then
-      iso['requiredpackages']="p7zip lftp wget xorriso ansible squashfs"
+      if [ "${options['ansible']}" = "true" ]; then
+        iso['requiredpackages']="p7zip lftp wget xorriso ansible squashfs"
+      else
+        iso['requiredpackages']="p7zip lftp wget xorriso squashfs"
+      fi
     fi
   fi
 }

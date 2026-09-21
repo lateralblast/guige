@@ -977,3 +977,19 @@
 # Updated how arguments are passed to docker
 # 4.8.7: Fri Sep 18 08:27:00 AM AEST 2026
 # Added delete option for ISO files
+# 4.8.8: Fri Sep 18 11:20:38 AM AEST 2026
+# More fixes for delete ISO option
+# 4.8.9: Fri Sep 18 17:11:50 PM AEST 2026
+# Added CIDR to ISO file name
+# 4.9.0: Sat 19 Sep 2026 17:39:29 PM AEST
+# Added IP address checking
+# 4.9.1: Sat 19 Sep 2026 17:48:35 PM AEST
+# Fixed noansible switch
+# 4.9.2: Sun 21 Sep 2026 12:07:18 PM AEST
+# Fixed ISO filename generation
+# 4.9.3: Mon 22 Sep 2026 09:10:11 AM AEST
+# Updated Ubuntu 26.10 support
+# 4.9.4: Mon 22 Sep 2026 11:25:36 AM AEST
+# Cleaned up help information
+# 4.9.5: Mon 22 Sep 2026 11:54:03 AM AEST
+# Updated shellcheck message

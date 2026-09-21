@@ -4,8 +4,21 @@
 # shellcheck disable=SC2129
 # shellcheck disable=SC2154
 
+# Function check_ip
+#
+# Check IP address 
+
+check_ip () {
+  ip_regex="^([0-9]{1,3}\.){3}[0-9]{1,3}$"
+  if [[ ! "${1}" =~ $ip_regex ]]; then
+    warning_message "Invalid IP address: ${1}"
+    exit
+  fi
+}
+
 # Function: check_value
-## check value (make sure that command line arguments that take values have values)
+#
+# check value (make sure that command line arguments that take values have values)
 
 check_value () {
   param="$1"
@@ -30,6 +43,9 @@ check_value () {
         fi
       fi
       exit
+    fi
+    if [[ "${param}" =~ ip ]]; then
+      check_ip "${value}"
     fi
   fi
 }

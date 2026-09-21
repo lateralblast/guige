@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Name:         guige (Generic Ubuntu/Unix ISO Generation Engine)
-# Version:      4.8.7
+# Version:      4.9.5
 # Release:      1
 # License:      CC-BA (Creative Commons By Attribution)
 #               http://creativecommons.org/licenses/by/4.0/legalcode
@@ -75,7 +75,7 @@ check_shellcheck () {
   if [ -d "${script['modules']}" ]; then
     for module in $( ls "${script['modules']}"/*.sh ); do
       if [[ "${script['args']}" =~ "verbose" ]]; then
-        echo "Loading Module: ${module}"
+        echo "Running shellcheck on: ${module}"
       fi
       shellcheck "${module}"
     done
@@ -172,6 +172,14 @@ do
       shift 2
       iso['arch']=$( echo "${iso['arch']}" |sed "s/aarch64/arm64/g" |sed "s/x86_64/amd64/g" |sed "s/x86/amd64/g" )
       list['arch']="true"
+      ;;
+    --autoinstallfile)
+      # Import autoinstall config file
+      check_value "${1}" "${2}"
+      options['autoinstall']="true"
+      iso['volumemanager']="custom"
+      iso['autoinstallfile']="${2}"
+      shift 2
       ;;
     --autoinstalldir)
       # Directory where autoinstall config files are stored on ISO
@@ -270,22 +278,6 @@ do
       iso['booturl']="${2}"
       shift 2
       ;;
-    --build)
-      # Type of ISO to build
-      check_value "${1}" "${2}"
-      iso['build']="${2}"
-      case "${iso['build']}" in
-        "daily")
-          options['daily']="true"
-          ;;
-      esac
-      shift 2
-      ;;
-    --builddockerconfig)
-      # Build Docker config
-      actions_list+=(builddockerconfig)
-      shift
-      ;;
     --bridge)
       # Bridge name
       check_value "${1}" "${2}"
@@ -301,6 +293,22 @@ do
       options['bridge']="true"
       shift 2
       list['bridges']="true"
+      ;;
+    --build)
+      # Type of ISO to build
+      check_value "${1}" "${2}"
+      iso['build']="${2}"
+      case "${iso['build']}" in
+        "daily")
+          options['daily']="true"
+          ;;
+      esac
+      shift 2
+      ;;
+    --builddockerconfig)
+      # Build Docker config
+      actions_list+=(builddockerconfig)
+      shift
       ;;
     --checkdocker)
       # Check Docker
@@ -353,12 +361,6 @@ do
       iso['codename']="${2}"
       shift 2
       list['codename']="true"
-      ;;
-    --ipmicommand)
-      # IPMI command
-      check_value "${1}" "${2}"
-      iso['ipmicommand']="${2}"
-      shift 2
       ;;
     --compression)
       # Compression algorithm
@@ -460,7 +462,7 @@ do
       options_list+=(depends)
       shift
       ;;
-    --deleteiso)
+    --deleteiso*)
       # Delete ISO
       options_list+=(deleteiso)
       shift
@@ -468,11 +470,6 @@ do
     --deployiso)
       # Deploy ISO
       actions_list+=(deployiso)
-      shift
-      ;;
-    --disconnectiso)
-      # Deploy ISO
-      actions_list+=(disconnectiso)
       shift
       ;;
     --dhcp)
@@ -486,6 +483,11 @@ do
       check_value "${1}" "${2}"
       iso['disableservice']="${2}"
       shift 2
+      ;;
+    --disconnectiso)
+      # Deploy ISO
+      actions_list+=(disconnectiso)
+      shift
       ;;
     --disk)
       # Boot Disk devices
@@ -601,31 +603,6 @@ do
       iso['groups']="${2}"
       shift 2
       ;;
-    --grubfile)
-      # Import grub file
-      check_value "${1}" "${2}"
-      options['grubfile']="true"
-      iso['grubfile']="${2}"
-      shift 2
-      ;;
-    --grubmenu)
-      # Import grub menu
-      check_value "${1}" "${2}"
-      iso['grubmenu']="${2}"
-      shift 2
-      ;;
-    --grubtimeout)
-      # Grub timeout
-      check_value "${1}" "${2}"
-      iso['grubtimeout']="${2}"
-      shift 2
-      ;;
-    --grubparseall)
-      # Parse grub for all parameters
-      options['grubparse']="true"
-      options['grubparseall']="true"
-      shift
-      ;;
     --grubcidr)
       # Pass CIDR to config from grub boot command
       check_value "${1}" "${2}"
@@ -648,6 +625,13 @@ do
       iso['grubdns']="${2}"
       iso['dns']="${2}"
       options['grubparse']="true"
+      shift 2
+      ;;
+    --grubfile)
+      # Import grub file
+      check_value "${1}" "${2}"
+      options['grubfile']="true"
+      iso['grubfile']="${2}"
       shift 2
       ;;
     --grubgateway)
@@ -699,6 +683,12 @@ do
       options['grubparse']="true"
       shift 2
       ;;
+    --grubmenu)
+      # Import grub menu
+      check_value "${1}" "${2}"
+      iso['grubmenu']="${2}"
+      shift 2
+      ;;
     --grubnic)
       # Pass NIC to config from grub boot command
       check_value "${1}" "${2}"
@@ -706,6 +696,12 @@ do
       iso['nic']="${2}"
       options['grubparse']="true"
       shift 2
+      ;;
+    --grubparseall)
+      # Parse grub for all parameters
+      options['grubparse']="true"
+      options['grubparseall']="true"
+      shift
       ;;
     --grubpassword)
       # Pass password to config from grub boot command
@@ -721,6 +717,12 @@ do
       iso['grubrealname']="${2}"
       iso['realname']="${2}"
       options['grubparse']="true"
+      shift 2
+      ;;
+    --grubtimeout)
+      # Grub timeout
+      check_value "${1}" "${2}"
+      iso['grubtimeout']="${2}"
       shift 2
       ;;
     --grubusername)
@@ -813,6 +815,12 @@ do
       actions_list+=(executeipmi) 
       shift 
       ;;
+    --ipmicommand)
+      # IPMI command
+      check_value "${1}" "${2}"
+      iso['ipmicommand']="${2}"
+      shift 2
+      ;;
     --ips)
       # IP address
       check_value "${1}" "${2}"
@@ -850,18 +858,6 @@ do
       # Install KVM packages
       options_list+=(kvm)
       shift
-      ;;
-    --vmiso|--kvmiso)
-      # KVM/VM Import ISO/file
-      check_value "${1}" "${2}"
-      iso['vmiso']="${2}"
-      shift 2
-      ;;
-    --volid)
-      # ISO Volume ID
-      check_value "${1}" "${2}"
-      iso['volid']="${2}"
-      shift 2
       ;;
     --layout)
       # Keyboard layout
@@ -942,6 +938,12 @@ do
       iso['nics']="${2}"
       shift 2
       list['nics']="true"
+      ;;
+    --noansible)
+      # Don't install Ansible
+      options['ansible']="false"
+      options_list+=(noansible)
+      shift
       ;;
     --nodhcpnic)
       # Disable DHCP for NICs
@@ -1078,6 +1080,12 @@ do
       iso['pvname']="${2}"
       shift 2
       ;;
+    --racadmcommand)
+      # RACADM command
+      check_value "${1}" "${2}"
+      iso['racadmcommand']="${2}"
+      shift 2
+      ;;
     --ram)
       # RAM size
       check_value "${1}" "${2}"
@@ -1131,12 +1139,6 @@ do
       iso['racadmcommand']="${2}"
       shift 2
       actions_list+=(runracadm)
-      ;;
-    --racadmcommand)
-      # RACADM command
-      check_value "${1}" "${2}"
-      iso['racadmcommand']="${2}"
-      shift 2
       ;;
     --search)
       # Search output for value
@@ -1271,12 +1273,10 @@ do
       iso['updates']="${2}"
       shift 2
       ;;
-    --autoinstallfile)
-      # Import autoinstall config file
+    --url)
+      # ISO URL
       check_value "${1}" "${2}"
-      options['autoinstall']="true"
-      iso['volumemanager']="custom"
-      iso['autoinstallfile']="${2}"
+      iso['url']="${2}"
       shift 2
       ;;
     --username)
@@ -1297,12 +1297,6 @@ do
       # Use SSH Pass
       options_list+=(usesshpass)
       shift
-      ;;
-    --url)
-      # ISO URL
-      check_value "${1}" "${2}"
-      iso['url']="${2}"
-      shift 2
       ;;
     --verbose)
       # Verbose output
@@ -1326,6 +1320,18 @@ do
       # Volume Group Name
       check_value "${1}" "${2}"
       iso['vgname']="${2}"
+      shift 2
+      ;;
+    --vmiso|--kvmiso)
+      # KVM/VM Import ISO/file
+      check_value "${1}" "${2}"
+      iso['vmiso']="${2}"
+      shift 2
+      ;;
+    --volid)
+      # ISO Volume ID
+      check_value "${1}" "${2}"
+      iso['volid']="${2}"
       shift 2
       ;;
     --volumemanager)

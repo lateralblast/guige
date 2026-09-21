@@ -11,7 +11,7 @@ used to hang a shield on the shoulder or neck when not in use.
 Version
 -------
 
-Current version: 4.8.7
+Current version: 4.9.5
 
 License
 -------
@@ -97,6 +97,7 @@ Usage: guige --action [action] --options [options]
 --allowservice			          Allow Services
 --arch				                Architacture
 --autoinstalldir		          Directory where autoinstall config files are stored on ISO
+--autoinstallfile		          Import autoinstall config file
 --basedir			                Base directory for script to do work
 --bios				                BIOS boot type
 --blacklist			              Block kernel module(s)
@@ -106,10 +107,11 @@ Usage: guige --action [action] --options [options]
 --bootserverip			          Bootserver IP
 --bootsize			              Boot partition size
 --boottype			              Boot type
---build				                Type of ISO to build
---builddockerconfig		        Build Docker config
+--booturl			                Boot URL
 --bridge			                Bridge name
 --bridges			                Bridge names
+--build				                Type of ISO to build
+--builddockerconfig		        Build Docker config
 --checkdocker			            Check Docker
 --checkshellcheck		          Shellcheck script
 --checkworkdir			          Check work directories
@@ -139,6 +141,7 @@ Usage: guige --action [action] --options [options]
 --depends			                Force depends
 --dhcp				                DHCP network configuration
 --disableservice		          Disable service(s)
+--disconnectiso			          Disconnect ISO from server
 --disk				                Boot Disk devices
 --diskfile			              Disk file
 --diskserial			            Disk serial
@@ -157,42 +160,41 @@ Usage: guige --action [action] --options [options]
 --gecos				                User GECOS field
 --getiso			                Get ISO
 --groups			                Groups to add user to
---grubfile			              Import grub file
---grubmenu			              Import grub menu
---grubtimeout			            Grub timeout
---grubparseall			          Parse grub for all parameters
 --grubcidr			              Pass CIDR to config from grub boot command
 --grubdisk			              Pass disk to config from grub boot command
 --grubdns			                Pass nameserver to config from grub boot command
+--grubfile			              Import grub file
 --grubgateway			            Pass gateway to config from grub boot command
 --grubhostname			          Pass hostname to config from grub boot command
 --grubip			                Pass IP to config from grub boot command
 --grubkernel			            Pass kernel package to config from grub boot command
 --grublocale			            Pass locale to config from grub boot command
 --grublayout			            Pass keyboard layout to config from grub boot command
+--grubmenu			              Import grub menu
 --grubnic			                Pass NIC to config from grub boot command
+--grubparseall			          Parse grub for all parameters
 --grubpassword			          Pass password to config from grub boot command
 --grubrealname			          Pass realname to config from grub boot command
+--grubtimeout			            Grub timeout
 --grubusername			          Pass username to config from grub boot command
 --help				                Print help
 --hostname			              Hostname
 --inputci			                Import Cloud Image
 --inputfile			              Import ISO/file
---ipmi				                Connect to BMC/iDRAC via IPMI
 --installmode			            Install mode
 --installmount			          Where the install mounts the CD during install
 --installpassword		          Temporary install password for remote access during install
 --installsource			          Install source
 --installusername		          Install user
 --ip				                  IP addresses
+--ipmi				                Connect to BMC/iDRAC via IPMI
+--ipmicommand			            IPMI command
 --ips				                  IP address
 --isolinuxfile			          Import isolinux file
 --kernel			                Kernel to install
 --kernelargs			            Kernel arguments
 --kernelserialargs		        Kernel serial arguments
 --kvm				                  Install KVM packages
---vmiso				                KVM/VM Import ISO/file
---volid				                ISO Volume ID
 --layout			                Keyboard layout
 --lcall				                LC_ALL
 --listswitches			          List switches
@@ -254,15 +256,16 @@ Usage: guige --action [action] --options [options]
 --timezone			              Timezone
 --type				                VM type
 --updates			                Updates to install
---autoinstallfile		          Import autoinstall config file
---username			              Username
---usage				                Usage information
---usesshpass			            Use SSH Pass
 --url				                  ISO URL
+--usage				                Usage information
+--username			              Username
+--usesshpass			            Use SSH Pass
 --verbose			                Verbose output
 --version			                Display version
 --vfio				                VM type
 --vgname			                Volume Group Name
+--vmiso				                KVM/VM Import ISO/file
+--volid				                ISO Volume ID
 --volumemanager			          Volumemanager(s)
 --whitelist			              Allow/load additional kernel modules(s)
 --workdir			                Work directory

@@ -259,8 +259,8 @@ add_to_output_file_name () {
       fi
     fi
   else
-    if [ "${iso[${param}]}" != "${defaults[${param}]}" ] || [[ "${param}" =~ ip|bridge|nic|hostname|disk|boottype|gateway|autoinstall ]]; then
-      if [[ "${param}" =~ bridge|boottype|disk|ip|nic|hostname|gateway ]]; then
+    if [ "${iso[${param}]}" != "${defaults[${param}]}" ] || [[ "${param}" =~ ip|cidr|bridge|nic|hostname|disk|boottype|gateway|autoinstall ]]; then
+      if [[ "${param}" =~ cidr|bridge|boottype|disk|ip|nic|hostname|gateway ]]; then
         test_value="${iso[${param}]}"
       else
         test_value="${param}"
@@ -301,7 +301,7 @@ update_output_file_name () {
       add_to_output_file_name "${param}"
     fi
   done
-  for param in boottype autoinstall hostname username disk nic bridge ip gateway dns prefix suffix; do 
+  for param in boottype autoinstall hostname username disk nic bridge ip cidr gateway dns prefix suffix; do 
     case "${param}" in 
       ip|gateway|dns)
         if [ "${options['dhcp']}" = "false" ]; then

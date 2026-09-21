@@ -11,6 +11,7 @@
 # Set options defaults
 
 set_options_defaults () {
+  options['ansible']="true"                   # option - Include ansible in packages
   options['activate']="true"                  # option - Active network
   options['aptnews']="false"                  # option - Enable apt news
   options['autoinstall']="false"              # option - Enable autoinstall
@@ -166,6 +167,9 @@ process_options () {
       kvm)
         options['clusterpackages']="true"
         defaults['packages']="${defaults['packages']} cpu-checker qemu-kvm libvirt-daemon-system libvirt-clients bridge-utils virt-manager cloud-image-utils"
+        ;;
+      noansible)
+        options['ansible']="false"
         ;;
       nomultipath)
         iso['blocklist']="md_multipath"

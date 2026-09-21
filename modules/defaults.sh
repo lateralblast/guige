@@ -28,7 +28,7 @@ set_default_codename () {
 
 check_release () {
   if [ "${iso['osname']}" = "ubuntu" ]; then
-    if [ "${iso['majorrelease']}" -ge 26 ] && [ "${iso['minorrelease']}" -ge 10 ]; then
+    if [ "${iso['majorrelease']}" -ge 27 ]; then
       warning_message "Release ${iso['release']} has not been released yet"
       exit
     fi
@@ -44,8 +44,8 @@ set_current_defaults () {
   current['codename']="jammy"
   current['devrelease']="26.10"
   current['betarelease']=""
-  current['dockerubunturelease']="25.04"
-  current['oldrelease']="23.04"
+  current['dockerubunturelease']="26.04"
+  current['oldrelease']="24.04"
   current['osname']="ubuntu"
   current['release']="26.04.1"
   current['release1404']="14.04.6"
@@ -87,7 +87,7 @@ set_default_defaults () {
   defaults['booturl']=""
   defaults['bridge']="br0"
   defaults['build']="server"
-  defaults['chrootpackages']="sudo zfsutils-linux zfs-initramfs xfsprogs btrfs-progs net-tools curl lftp wget sudo file rsync dialog setserial ansible apt-utils whois squashfs-tools duperemove jq btrfs-compsize iproute2"
+  defaults['chrootpackages']="sudo zfsutils-linux zfs-initramfs xfsprogs btrfs-progs net-tools curl lftp wget sudo file rsync dialog setserial apt-utils whois squashfs-tools duperemove jq btrfs-compsize iproute2"
   defaults['cidr']="24"
   defaults['cidrs']=""
   defaults['compression']="lzo"
@@ -141,7 +141,7 @@ set_default_defaults () {
   defaults['oeminstall']="auto"
   defaults['oldrelease']="23.04"
   defaults['onboot']="on"
-  defaults['packages']="sudo zfsutils-linux zfs-initramfs xfsprogs btrfs-progs net-tools curl lftp wget sudo file rsync dialog setserial ansible apt-utils whois squashfs-tools duperemove jq btrfs-compsize iproute2 ipcalc"
+  defaults['packages']="sudo zfsutils-linux zfs-initramfs xfsprogs btrfs-progs net-tools curl lftp wget sudo file rsync dialog setserial apt-utils whois squashfs-tools duperemove jq btrfs-compsize iproute2 ipcalc"
   defaults['password']="ubuntu"
   defaults['passwordalgorithm']="sha512"
   defaults['pesize']="32768"
@@ -187,11 +187,11 @@ set_default_defaults () {
   defaults['zfsfilesystems']="/var /var/lib /var/lib/AccountsService /var/lib/apt /var/lib/dpkg /var/lib/NetworkManager /srv /usr /usr/local /var/games /var/log /var/mail /var/snap /var/spool /var/www"
   defaults['zfsroot']="zfsroot"
   if [ "${os['name']}" = "Linux" ]; then
-    defaults['requiredpackages']="binwalk casper genisoimage live-boot live-boot-initramfs-tools p7zip-full lftp wget xorriso whois squashfs-tools sudo file rsync net-tools nfs-kernel-server ansible dialog apt-utils jq ipcalc"
+    defaults['requiredpackages']="binwalk casper genisoimage live-boot live-boot-initramfs-tools p7zip-full lftp wget xorriso whois squashfs-tools sudo file rsync net-tools nfs-kernel-server dialog apt-utils jq ipcalc"
   else
-    defaults['requiredpackages']="binwalk p7zip lftp wget xorriso whois file rsync net-tools ansible dialog jq ipcalc"
+    defaults['requiredpackages']="binwalk p7zip lftp wget xorriso whois file rsync net-tools dialog jq ipcalc"
   fi
-  defaults['requireddockerpackages']="binwalk casper genisoimage live-boot live-boot-initramfs-tools p7zip-full lftp wget xorriso whois squashfs-tools sudo file rsync net-tools nfs-kernel-server ansible dialog apt-utils jq ipcalc iproute2"
+  defaults['requireddockerpackages']="binwalk casper genisoimage live-boot live-boot-initramfs-tools p7zip-full lftp wget xorriso whois squashfs-tools sudo file rsync net-tools nfs-kernel-server dialog apt-utils jq ipcalc iproute2"
 }
 
 # Function: set_defaults
@@ -230,8 +230,8 @@ reset_defaults () {
     iso['osname']="${defaults['osname']}"
   fi
   if [ "${iso['majorrelease']}" -gt 25 ]; then
-    defaults['chrootpackages']="sudo zfsutils-linux xfsprogs btrfs-progs net-tools curl lftp wget sudo file rsync dialog setserial ansible apt-utils whois squashfs-tools duperemove jq btrfs-compsize iproute2"
-    defaults['packages']="sudo zfsutils-linux xfsprogs btrfs-progs net-tools curl lftp wget sudo file rsync dialog setserial ansible apt-utils whois squashfs-tools duperemove jq btrfs-compsize iproute2 ipcalc"
+    defaults['chrootpackages']="sudo zfsutils-linux xfsprogs btrfs-progs net-tools curl lftp wget sudo file rsync dialog setserial apt-utils whois squashfs-tools duperemove jq btrfs-compsize iproute2"
+    defaults['packages']="sudo zfsutils-linux xfsprogs btrfs-progs net-tools curl lftp wget sudo file rsync dialog setserial apt-utils whois squashfs-tools duperemove jq btrfs-compsize iproute2 ipcalc"
   fi
   if [[ "${iso['osname']}" =~ "ubuntu" ]]; then
     defaults['requiredpackages']="iproute2 ${defaults['requiredpackages']}"
@@ -282,6 +282,15 @@ reset_defaults () {
   if [ "${iso['autoinstall']}" = "" ]; then
     iso['autoinstall']="${defaults['autoinstall']}"
   fi
+  if [ "${options['ansible']}" = "true" ]; then
+    defaults['chrootpackages']="${defaults['chrootpackages']} ansible"
+    defaults['packages']="${defaults['packages']} ansible"
+    defaults['requiredpackages']="${defaults['requiredpackages']} ansible"
+    defaults['requireddockerpackages']="${defaults['requireddockerpackages']} ansible"
+  fi
+#  if [ "${iso['osname']}" = "ubuntu" ] && [ "${iso['release']}" = "${current['release']}" ]; then
+#    defaults['build']="daily-live"
+#  fi
 }
 
 # Function: set_default_os['name']}
@@ -296,7 +305,7 @@ set_default_osname () {
     else
       defaults['osname']="${current['osname']}"
       if [[ "${lsb_release}" =~ "Arch" ]] || [[ "${lsb_release}" =~ "Endeavour" ]]; then
-        iso['requiredpackages']="p7zip lftp wget xorriso whois squashfs-tools sudo file rsync ansible dialog"
+        iso['requiredpackages']="p7zip lftp wget xorriso whois squashfs-tools sudo file rsync dialog"
       fi
     fi
   else
