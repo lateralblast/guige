@@ -111,7 +111,7 @@ update_ubuntu_iso_squashfs () {
     if [ "${options['testmode']}" = "false" ]; then
       sudo mksquashfs "${iso['newdir']}/custom" "${iso['newdir']}/mksquash/filesystem.squashfs" -noappend
       sudo cp "${iso['newdir']}/mksquash/filesystem.squashfs" "${iso['newsquashfsfile']}"
-      sudo chmod 0444 i"${iso['newsquashfsfile']}"
+      sudo chmod 0444 "${iso['newsquashfsfile']}"
       sudo echo -n $( sudo du -s --block-size=1 "${iso['newdir']}/custom" | tail -1 | awk '{print $1}') | sudo tee "${iso['newdir']}/mksquash/filesystem.size"
       sudo cp "${iso['newdir']}/mksquash/filesystem.size" "${iso['sourcedir']}/casper/filesystem.size"
       sudo chmod 0444 "${iso['sourcedir']}/casper/filesystem.size"

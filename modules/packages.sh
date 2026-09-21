@@ -47,7 +47,7 @@ install_package () {
 install_packages () {
   package_list="$1"
   for package in ${package_list}; do
-    install_package "${package}"    
+    install_package "${package}"
   done
 }
 

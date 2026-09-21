@@ -37,7 +37,7 @@ check_release () {
 
 # Function: set_current_defaults
 #
-# Set current defaults 
+# Set current defaults
 
 set_current_defaults () {
   current['arch']="amd64"

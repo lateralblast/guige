@@ -245,7 +245,7 @@ prepare_autoinstall_iso () {
       sudo_chown "${iso['sourcedir']}/isolinux" "${os['user']}" "${os['group']}"
       echo "default ${iso['grubmenu']}" > "${iso['sourcedir']}/isolinux/txt.cfg"
       counter=0
-      kernel_args="${iso['kernelargs']}" 
+      kernel_args="${iso['kernelargs']}"
 #      iso['kernelserialargs']="console=${iso['serialporta']},${iso['serialportspeeda']} console=${iso['serialportb']},${iso['serialportspeedb']}"
       iso_volmgrs="${iso['volumemanager']//,/ }"
       for iso_volmgr in ${iso_volmgrs}; do
@@ -285,7 +285,7 @@ prepare_autoinstall_iso () {
             for param in ${iso['grubparams']}; do
               grub_param="grub${param}"
               if [ ! "${iso[${grub_param}]}" = "" ]; then
-                grub_string="${grub_string} ${param}=${iso[${grub_param}]}" 
+                grub_string="${grub_string} ${param}=${iso[${grub_param}]}"
               fi
             done
           fi
@@ -676,7 +676,7 @@ prepare_autoinstall_iso () {
               echo "      id: zpool-1" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
               echo "      type: zpool" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
 
-              zfs_num=2 
+              zfs_num=2
               echo "    - pool: zpool-1" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
               echo "      volume: ROOT" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
               echo "      properties:" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"

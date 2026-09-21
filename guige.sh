@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Name:         guige (Generic Ubuntu/Unix ISO Generation Engine)
-# Version:      4.9.5
+# Version:      4.9.6
 # Release:      1
 # License:      CC-BA (Creative Commons By Attribution)
 #               http://creativecommons.org/licenses/by/4.0/legalcode
@@ -26,7 +26,7 @@
 
 declare -A os
 declare -A vm
-declare -A new 
+declare -A new
 declare -A old
 declare -A iso
 declare -A list
@@ -73,7 +73,7 @@ check_shellcheck () {
     shellcheck "${script['file']}"
   fi
   if [ -d "${script['modules']}" ]; then
-    for module in $( ls "${script['modules']}"/*.sh ); do
+    for module in "${script['modules']}"/*.sh; do
       if [[ "${script['args']}" =~ "verbose" ]]; then
         echo "Running shellcheck on: ${module}"
       fi
@@ -110,7 +110,7 @@ fi
 # Load modules
 
 if [ -d "${script['modules']}" ]; then
-  for module in $( ls "${script['modules']}"/*.sh ); do
+  for module in "${script['modules']}"/*.sh; do
     if [[ "${script['args']}" =~ "verbose" ]]; then
       echo "Loading Module: ${module}"
     fi
@@ -243,7 +243,7 @@ do
       shift 2
       ;;
     --bootserverprotocol|--bootserverprot*|--bootprot*)
-      # Bootserver Protocol 
+      # Bootserver Protocol
       check_value "${1}" "${2}"
       iso['bootserverprotocol']="${2}"
       shift 2
@@ -557,7 +557,7 @@ do
       shift 2
       ;;
     --fallback)
-      # Installation fallback 
+      # Installation fallback
       check_value "${1}" "${2}"
       iso['fallback']="${2}"
       shift 2
@@ -812,8 +812,8 @@ do
       ;;
     --ipmi|--ipmitool)
       # Connect to BMC/iDRAC via IPMI
-      actions_list+=(executeipmi) 
-      shift 
+      actions_list+=(executeipmi)
+      shift
       ;;
     --ipmicommand)
       # IPMI command

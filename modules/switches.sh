@@ -10,7 +10,7 @@
 # Get list of switches
 
 get_switches () {
-  if [ "${#switches[@]}" -lt 2 ]; then 
+  if [ "${#switches[@]}" -lt 2 ]; then
     if [ -f "/.dockerenv" ]; then
       input_file="${iso['workdir']}/files/${script['bin']}"
     else
@@ -97,7 +97,7 @@ process_switches () {
       case "${switch_name}" in
         arch)
           iso['dockerarch']="${iso['arch']}"
-          ;; 
+          ;;
         boottype)
           if [ "${iso['boottype']}" = "bios" ]; then
             if [[ "${iso['options']}" =~ "fs" ]]; then
@@ -250,7 +250,7 @@ process_switches () {
       iso['kernelargs']="${iso['kernelargs']} ${iso['kernelserialargs']}"
     fi
   fi
-  if [ ! "${iso['ip']}" = "" ] || [ ! "${iso['grubip']}" = "" ]; then 
+  if [ ! "${iso['ip']}" = "" ] || [ ! "${iso['grubip']}" = "" ]; then
     options['dhcp']="false"
   fi
   if [ ! "${iso['booturl']}" = "" ]; then
@@ -263,7 +263,7 @@ process_switches () {
   iso['disk']=$( basename "${iso['disk']}" )
   iso['nic']=$( basename "${iso['nic']}" )
   if [ "${iso['nodhcpnic']}" != "" ]; then
-    nodhcpnics[0]="${iso['nodhcpnic']}" 
+    nodhcpnics[0]="${iso['nodhcpnic']}"
   fi
   if [ "${iso['nodhcpnics']}" != "" ]; then
     if [ "${nodhcpnics[0]}" = "" ]; then
@@ -273,7 +273,7 @@ process_switches () {
     fi
   fi
   if [ "${iso['bridge']}" != "" ]; then
-    bridges[0]="${iso['bridge']}" 
+    bridges[0]="${iso['bridge']}"
   fi
   if [ "${iso['bridges']}" != "" ]; then
     if [ "${bridges[0]}" = "" ]; then
@@ -283,7 +283,7 @@ process_switches () {
     fi
   fi
   if [ "${iso['nic']}" != "" ]; then
-    nics[0]="${iso['nic']}" 
+    nics[0]="${iso['nic']}"
   fi
   if [ "${iso['nics']}" != "" ]; then
     if [ "${nics[0]}" = "" ]; then
@@ -293,7 +293,7 @@ process_switches () {
     fi
   fi
   if [ "${iso['cdir']}" != "" ]; then
-    cdirs[0]="${iso['cdir']}" 
+    cdirs[0]="${iso['cdir']}"
   fi
   if [ "${iso['cdirs']}" != "" ]; then
     if [ "${cdirs[0]}" = "" ]; then
@@ -303,7 +303,7 @@ process_switches () {
     fi
   fi
   if [ "${iso['ip']}" != "" ]; then
-    ips[0]="${iso['ip']}" 
+    ips[0]="${iso['ip']}"
   fi
   if [ "${iso['ips']}" != "" ]; then
     if [ "${ips[0]}" = "" ]; then

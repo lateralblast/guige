@@ -993,3 +993,5 @@
 # Cleaned up help information
 # 4.9.5: Mon 22 Sep 2026 11:54:03 AM AEST
 # Updated shellcheck message
+# 4.9.6: Mon 22 Sep 2026 13:46:04 PM AEST
+# Bug fixes

@@ -6,7 +6,7 @@
 
 # Function check_ip
 #
-# Check IP address 
+# Check IP address
 
 check_ip () {
   ip_regex="^([0-9]{1,3}\.){3}[0-9]{1,3}$"
@@ -487,9 +487,9 @@ get_interactive_input () {
     read -r -p "Install Drivers? [${options['installdrivers']}]: " new['installdrivers']
     options['installdrivers']=${new['installdrivers']}:-${options['installdrivers']}
     # Get whether to install codecs
-    read -r -p "Install Codecs? [${options['installcodecs']}]: " new['installcodecs'] 
+    read -r -p "Install Codecs? [${options['installcodecs']}]: " new['installcodecs']
     options['installcodecs']=${new['installcodecs']}:-${options['installcodecs']}
-    # Get Serial Port 0 
+    # Get Serial Port 0
     read -r -p "First Serial Port? [${iso['serialporta']}]: " new['serialporta']
     iso['serialporta']=${new['serialporta']}:-${iso['serialporta']}
     # Get Serial Port 1

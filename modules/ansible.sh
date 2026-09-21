@@ -17,7 +17,7 @@ check_ansible () {
   else
     command="sudo apt install -y ansible"
   fi
-  handle_output "${ommand}" ""
+  handle_output "${command}" ""
   if ! [ "${ansible_check}" = "ansible" ]; then
     if [ "${options['testmode']}" = "false" ]; then
       ${command}

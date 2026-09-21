@@ -343,7 +343,7 @@ list_isos () {
         handle_output "Deleting ${file_name}" "TEXT"
         if [ "${options['force']}" = "true" ]; then
           execute_command "rm -f ${file_name}"
-        else 
+        else
           rm -i "${file_name}"
         fi
       else
@@ -611,7 +611,7 @@ create_autoinstall_iso () {
   if [ ! -f "/usr/bin/xorriso" ]; then
     install_required_packages
   fi
-  update_output_file_name 
+  update_output_file_name
   check_file_perms "${iso['outputfile']}"
   handle_output "# Creating ISO" "TEXT"
   ISO_MBR_PART_TYPE=$( xorriso -indev "${iso['inputfile']}" -report_el_torito as_mkisofs |grep iso_mbr_part_type |tail -1 |awk '{print $2}' 2>&1 )
