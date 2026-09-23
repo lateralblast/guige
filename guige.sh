@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Name:         guige (Generic Ubuntu/Unix ISO Generation Engine)
-# Version:      4.9.6
+# Version:      4.9.7
 # Release:      1
 # License:      CC-BA (Creative Commons By Attribution)
 #               http://creativecommons.org/licenses/by/4.0/legalcode
@@ -50,10 +50,9 @@ script['args']="$*"
 script['file']="$0"
 script['file']=$( realpath "${script['file']}" )
 script['name']="guige"
-script['path']=$( pwd )
-script['bin']=$( basename "$0" |sed "s/^\.\///g")
-script['dir']=$( dirname "$0" )
-script['file']="${script['path']}/${script['bin']}"
+script['path']=$( dirname "${script['file']}" )
+script['bin']=$( basename "${script['file']}" )
+script['dir']="${script['path']}"
 script['version']=$( grep '^# Version' < "$0" | awk '{print $3}' )
 os['name']=$( uname )
 os['arch']=$( uname -m |sed "s/aarch64/arm64/g" |sed "s/x86_64/amd64/g")
@@ -98,14 +97,11 @@ if [[ "$*" =~ "debug" ]]; then
   fi
 fi
 
-# Check if we are running inside docker
+# Modules directory is always relative to the resolved script location,
+# regardless of the current working directory or whether we are running
+# inside docker
 
-if [ -f /.dockerenv ]; then
-  script['path']=$( dirname "$0" )
-  script['modules']="${script['path']}/modules"
-else
-  script['modules']="${script['path']}/modules"
-fi
+script['modules']="${script['path']}/modules"
 
 # Load modules
 

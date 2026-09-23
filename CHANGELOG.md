@@ -3,6 +3,9 @@
 All notable changes to the `guige` project are documented in this file.
 Dates are in `YYYY-MM-DD` format; entries are derived from the project's original `guige.changelog` file.
 
+## [4.9.7] - 2026-09-23
+- Fixed script only working when run from the repo directory (module/file paths now resolve from the script's real location instead of the current working directory)
+
 ## [4.9.6] - 2026-09-22
 - Bug fixes
 
