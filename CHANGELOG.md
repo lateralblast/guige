@@ -3,6 +3,11 @@
 All notable changes to the `guige` project are documented in this file.
 Dates are in `YYYY-MM-DD` format; entries are derived from the project's original `guige.changelog` file.
 
+## [5.0.1] - 2026-09-24
+- Fixed a mismatched bracket (`"${module]}"` instead of `"${module}"`) in the vfio autoinstall generator that caused a "bad substitution" crash
+- Fixed the guard that gated this code (`options['vifo']` typo for `options['vfio']`) so vfio kernel-module autoinstall entries are actually generated when `--vfio` is used, instead of the block being silently unreachable
+- Fixed the block's nvidia-blacklist check reading the nonexistent `options['blacklist']` instead of `iso['blacklist']`
+
 ## [5.0.0] - 2026-09-24
 - Fixed `process_options` being invoked once per `--option`/`--options` entry instead of once overall: each extra call reset `dpkgconf`/`dpkgdepends` back to their defaults (silently undoing an earlier `--option confdef`/`--option depends`) and re-appended the vfio kernel arguments, duplicating them once per call
 - Fixed `--vfio` never applying its kernel arguments at all when it was the only option-related switch given, since `process_options` was previously skipped entirely when `options_list` was empty

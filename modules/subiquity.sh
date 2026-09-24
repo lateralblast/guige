@@ -980,15 +980,15 @@ prepare_autoinstall_iso () {
         echo "    - \"echo \\\"nameserver ${iso['dns']}\\\" > ${iso['targetmount']}/etc/resolv.conf\"" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
         echo "    - \"echo \\\"options ${iso['dnsoptions']}\\\" >> ${iso['targetmount']}/etc/resolv.conf\"" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
         echo "    - \"echo \\\"search ${iso['searchdomain']}\\\" >> ${iso['targetmount']}/etc/resolv.conf\"" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
-        if [ "${options['vifo']}" = "true" ]; then
-          if [[ "${options['blacklist']}" =~ nvidia ]]; then
+        if [ "${options['vfio']}" = "true" ]; then
+          if [[ "${iso['blacklist']}" =~ nvidia ]]; then
             echo "    - \"echo \\\"options vfio-pci ids=${iso['vfio']} disable_vga=1\\\" >> ${iso['targetmount']}/etc/modprobe.d/vfio.conf\"" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
           else
             echo "    - \"echo \\\"options vfio-pci ids=${iso['vfio']}\\\" >> ${iso['targetmount']}/etc/modprobe.d/vfio.conf\"" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
           fi
           echo "    - \"echo \\\"options vfio_iommu_type1 allow_unsafe_interrupts=1\\\" >> ${iso['targetmount']}/etc/modprobe.d/iommu_unsafe_interrupts.conf\"" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
           for module in vfio vfio_iommu_type1 vfio_pci kvm kvm_intel; do
-            echo "    - \"echo \\\"${module]}\\\" >> ${iso['targetmount']}/etc/modules-load.d/vfio-pci.conf\"" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+            echo "    - \"echo \\\"${module}\\\" >> ${iso['targetmount']}/etc/modules-load.d/vfio-pci.conf\"" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
           done
         fi
         if [ ! "${num_debs}" = "0" ]; then
