@@ -14,7 +14,7 @@ install_package () {
   if [ "${os['name']}" = "Darwin" ]; then
     package_version=$( brew info "${package}" --json |jq -r ".[0].versions.stable" )
   else
-    if [[ "${iso['release']}" =~ "Arch" ]] || [[ "${iso['release']}" =~ "Endeavour" ]]; then
+    if [[ "${os['distro']}" =~ "Arch" ]] || [[ "${os['distro']}" =~ "Endeavour" ]]; then
       package_version=$( sudo pacman -Q "${package}" 2> /dev/null |awk '{print $2}' )
     else
       package_version=$( sudo dpkg -l "${package}" 2>&1 |grep "^ii" |awk '{print $3}' )
@@ -28,7 +28,7 @@ install_package () {
         brew update
         brew install "${package}"
       else
-        if [[ "${iso['release']}" =~ "Arch" ]] || [[ "${iso['release']}" =~ "Endeavour" ]]; then
+        if [[ "${os['distro']}" =~ "Arch" ]] || [[ "${os['distro']}" =~ "Endeavour" ]]; then
           sudo pacman -Sy
           echo Y |sudo pacman -Sy "${package}"
         else

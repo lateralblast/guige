@@ -85,7 +85,7 @@ get_os_ip () {
   if [ "${os['name']}" = "Darwin" ]; then
     os['ip']=$(ifconfig | grep "inet " | grep -v 127.0.0.1 |head -1 |awk '{print $2}')
   else
-    if [[ "${iso['release']}" =~ "Arch" ]] || [[ "${iso['release']}" =~ "Endeavour" ]]; then
+    if [[ "${os['distro']}" =~ "Arch" ]] || [[ "${os['distro']}" =~ "Endeavour" ]]; then
       os['ip']=$(ip addr |grep 'inet ' |grep -v 127 |head -1 |awk '{print $2}' |cut -f1 -d/)
     else
       os['ip']=$(hostname -I |awk '{print $1}')

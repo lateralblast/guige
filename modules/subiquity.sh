@@ -201,7 +201,7 @@ prepare_autoinstall_iso () {
       handle_output "# Creating ${iso['configdir']}/${iso_volmgr}/${iso['disk']}/meta-data" "TEXT"
       touch "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/meta-data"
     done
-    if [ -f "${iso['packagedir']}" ]; then
+    if [ -d "${iso['packagedir']}" ]; then
       if [ ! "${iso['packagedir']}" = "" ]; then
         sudo rm -rf "${iso['packagedir']}"
         sudo mkdir -p "${iso['packagedir']}"
@@ -255,7 +255,7 @@ prepare_autoinstall_iso () {
           echo "  kernel /casper/vmlinuz" >> "${iso['sourcedir']}/isolinux/txt.cfg"
           echo "  append  initrd=/casper/initrd ${kernel_args} quiet autoinstall fsck.mode=skip ds=nocloud;s=${iso['installmount']}/${iso['autoinstalldir']}/configs/${iso_volmgr}/${iso['disk']}/  ---" >> "${iso['sourcedir']}/isolinux/txt.cfg"
         else
-          echo "  menu label ^${iso['volid']}:${iso_volmgr}:${iso['disk']}:${iso['nic']} (${iso['kernelargs']}" >> "${iso['sourcedir']}/isolinux/txt.cfg"
+          echo "  menu label ^${iso['volid']}:${iso_volmgr}:${iso['disk']}:${iso['nic']} (${iso['kernelargs']})" >> "${iso['sourcedir']}/isolinux/txt.cfg"
           echo "  kernel /casper/vmlinuz" >> "${iso['sourcedir']}/isolinux/txt.cfg"
           echo "  append  initrd=/casper/initrd ${kernel_args} quiet autoinstall fsck.mode=skip ds=nocloud;s=${iso['installmount']}/${iso['autoinstalldir']}/configs/${iso_volmgr}/${iso['disk']}/  ---" >> "${iso['sourcedir']}/isolinux/txt.cfg"
         fi
@@ -383,8 +383,8 @@ prepare_autoinstall_iso () {
           echo "    - arches:" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
           echo "      - default" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
           echo "      uri: http://ports.ubuntu.com/ubuntu-ports" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
-          echo "    package_update: ${options['packageupdates']}" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
-          echo "    package_upgrade: ${options['packageupgrades']}" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+          echo "  package_update: ${options['packageupdates']}" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+          echo "  package_upgrade: ${options['packageupgrades']}" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
           echo "  codecs:" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
           echo "    install: ${options['installcodecs']}" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
           echo "  drivers:" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
@@ -941,7 +941,7 @@ prepare_autoinstall_iso () {
         fi
         if ! [ "${iso['whitelist']}" = "" ]; then
           if [[ "${iso['whitelist']}" =~ , ]]; then
-            module_list=$(eval echo "${iso['whitelist']//,/ }")
+            module_list="${iso['whitelist']//,/ }"
             for module in ${module_list}; do
               echo "    - \"echo '${module}' > /etc/modules-load.d/${module}.conf\"" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
               echo "    - \"modprobe ${module}\"" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
@@ -954,11 +954,11 @@ prepare_autoinstall_iso () {
         if [ "${iso['disk']}" = "first-disk" ]; then
           if [ ! "${iso_volmgr}" = "auto" ]; then
             echo "    - \"sed -i \\\"s/first-disk/\$(lsblk -x TYPE|grep disk |sort |head -1 |awk '{print \$1}')/g\\\" /autoinstall.yaml\"" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+            echo "    - \"sed -i \\\"s/nvme\\\([0-9]\\\)n\\\([0-9]\\\)\\\([0-9]\\\)/nvme\\\1n\\\2p\\\3/g\\\" /autoinstall.yaml\"" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
           fi
         fi
         if [ "${iso['nic']}" = "first-nic" ]; then
           echo "    - \"sed -i \\\"s/first-nic/\$(lshw -class network -short |awk '{print \$2}' |grep ^e |head -1)/g\\\" /autoinstall.yaml\"" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
-          echo "    - \"sed -i \\\"s/nvme\\\([0-9]\\\)n\\\([0-9]\\\)\\\([0-9]\\\)/nvme\\\1n\\\2p\\\3/g\\\" /autoinstall.yaml\"" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
         fi
         num_debs=$( find "${iso['packagedir']}" -name "*.deb" |wc -l)
         if [ ! "${num_debs}" = "0" ] && [ "${options['earlypackages']}" = "true" ]; then
@@ -968,7 +968,7 @@ prepare_autoinstall_iso () {
         echo "    - \"echo \\\"nameserver ${iso['dns']}\\\" >> /etc/resolv.conf\"" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
         if ! [ "${iso['blacklist']}" = "" ]; then
           if [[ "${iso['blacklist']}" =~ , ]]; then
-            module_list=$(eval echo "${iso['blacklist']//,/ }")
+            module_list="${iso['blacklist']//,/ }"
             for module in ${module_list}; do
               echo "    - \"echo 'blacklist ${module}' >> /etc/modprobe.d/blacklist.conf\"" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
               echo "    - \"modprobe -r ${module} --remove-dependencies\"" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"

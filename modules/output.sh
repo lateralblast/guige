@@ -205,7 +205,7 @@ check_file_perms () {
   if [ -f "${check_file}" ]; then
     my_user="${os['user']}"
     my_group=$(groups |awk '{print $1}')
-    file_user=$(find "${iso['outputfile']}" -ls |awk '{print $5}')
+    file_user=$(find "${check_file}" -ls |awk '{print $5}')
     if [ ! "${file_user}" = "${my_user}" ]; then
       sudo chown "${my_user}" "${check_file}"
       sudo chgrp "${my_group}" "${check_file}"

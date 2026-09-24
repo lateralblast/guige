@@ -80,7 +80,7 @@ update_iso_url () {
           iso['url']="https://cdimage.ubuntu.com/${iso['codename']}/daily-live/current/${iso['inputfilebase']}"
         fi
         ;;
-      desktop|server|live-server|live/server)
+      desktop|server|live-server|live/server|live/desktop)
         if [ "${iso['release']}" = "${current['betarelease']}" ]; then
           iso['url']="https://releases.ubuntu.com/${iso['codename']}/${iso['inputfilebase']}"
         else
@@ -92,7 +92,7 @@ update_iso_url () {
             fi
           else
             if [ "${iso['inputfile']}" = "${defaults['inputfile']}" ] || [ "${iso['inputfile']}" = "" ]; then
-              if [ "${iso['release']}" = "${iso['devrelease']}" ]; then
+              if [ "${iso['release']}" = "${current['devrelease']}" ]; then
                 if [[ "${iso['arch']}" =~ arm ]]; then
                   iso['url']="https://cdimage.ubuntu.com/daily-live/current/${iso['majorrelease']}.${iso['minorrelease']}/release/${iso['inputfilebase']}"
                 else
@@ -559,6 +559,7 @@ get_info_from_iso () {
       fi
     fi
     iso['outputfile']="${iso['workdir']}/files/${test_name}-${iso['release']}-${test_type}-${iso['arch']}.iso"
+    iso['distro']="${iso['osname']}"
     handle_output "# Input ISO:     ${iso['inputfile']}"  "TEXT"
     handle_output "# Distribution:  ${iso['distro']}"     "TEXT"
     handle_output "# Release:       ${iso['release']}"    "TEXT"

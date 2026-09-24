@@ -17,7 +17,7 @@ print_env () {
   handle_output "# Base directory:            [iso['basedir']}]                    ${iso['basedir']}"         "TEXT"
   handle_output "# Work directory:            [iso['workdir']}]                    ${iso['workdir']}"         "TEXT"
   if [ "${options['docker']}" = "true" ]; then
-    handle_output "# Previous Work directory:   [iso['workdir']}]                    ${iso['workdir']}"       "TEXT"
+    handle_output "# Previous Work directory:   [iso['preworkdir']}]                 ${iso['preworkdir']}"    "TEXT"
   fi
   if [ "${options['oldinstaller']}" = "true" ]; then
     handle_output "# Old Work directory:        [old['workdir']}]                ${old['workdir']}"           "TEXT"
@@ -31,7 +31,7 @@ print_env () {
   handle_output "# Required packages:         [iso['requiredpackages']}]           ${iso['requiredpackages']}"                              "TEXT"
   handle_output "# ISO output file:           [iso['outputfile']}]                 ${iso['outputfile']}"                                    "TEXT"
   handle_output "# Cloud Image output file:   [iso['outputci']}]                   ${iso['outputci']}"                                      "TEXT"
-  handle_output "# SCP command:               [iso['scpcommand']}]                 ${iso['bmcusername']}@${os['ip']}:${iso['outputfile']}"  "TEXT"
+  handle_output "# SCP command:               [iso['scpcommand']}]                 ${os['user']}@${os['ip']}:${iso['outputfile']}"  "TEXT"
   handle_output "# ISO Release:               [iso['release']}]                    ${iso['release']}"                                       "TEXT"
   handle_output "# ISO Release (Major):       [iso['majorrelease']}]               ${iso['majorrelease']}"                                  "TEXT"
   handle_output "# ISO Release (Minor):       [iso['minorrelease']}]               ${iso['minorrelease']}"                                  "TEXT"

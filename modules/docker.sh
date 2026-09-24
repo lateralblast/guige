@@ -56,7 +56,7 @@ check_docker_config () {
       handle_output "# Checking docker images" "TEXT"
       docker_image_check=$( docker images |grep "^${image_name}" |awk '{print $1}' )
       if [ -n "${docker_image_check}" ]; then
-        return
+        continue
       else
         handle_output "# Checking volume images" "TEXT"
         docker_volume_check=$( docker volume list |grep "^${image_name}" |awk '{print $1}' )
@@ -191,7 +191,7 @@ create_docker_iso () {
       docker['inputfilebase']=$( basename "${iso['inputfile']}" )
       iso['inputfile']="${iso['dockerworkdir']}/files/${docker['inputfilebase']}"
       docker['outputfilebase']=$( basename "${iso['outputfile']}" )
-      iso['outputfile']=$"${iso['dockerworkdir']}/files/${docker['outputfilebase']}"
+      iso['outputfile']="${iso['dockerworkdir']}/files/${docker['outputfilebase']}"
       echo "${iso['dockerworkdir']}/files/${script['bin']} ${script_args} --workdir ${iso['dockerworkdir']} --preworkdir ${iso['workdir']} --inputfile ${iso['inputfile']} --outputfile ${iso['outputfile']}" >> "${local_script}"
       print_file "${local_script}"
       execute_command "chmod +x ${local_script}"

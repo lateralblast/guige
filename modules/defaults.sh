@@ -12,7 +12,7 @@
 
 set_default_codename () {
   if [ -f "/usr/bin/lsb_release" ]; then
-    if [ "${os['name']}" = "Ubuntu" ]; then
+    if [ "${os['distro']}" = "Ubuntu" ]; then
       defaults['codename']=$( lsb_release -cs 2> /dev/null)
     else
       defaults['codename']="${current['codename']}"
@@ -240,6 +240,11 @@ reset_defaults () {
         iso_arch="${defaults['arch']}"
       else
         iso_arch="${iso['arch']}"
+      fi
+      if [ "${iso['build']}" = "" ]; then
+        iso_build="${defaults['build']}"
+      else
+        iso_build="${iso['build']}"
       fi
       defaults['inputfilebase']="ubuntu-${iso['release']}-beta-${iso_build}-${iso_arch}.iso"
       defaults['inputfile']="${defaults['workdir']}/${defaults['inputfilebase']}"
@@ -525,7 +530,7 @@ set_default_cidr () {
     if [[ "${defaults['cidr']}" =~ \. ]] || [ "${defaults['cidr']}" = "" ]; then
       if [ ! "${bin_test}" = "0" ]; then
         if [ ! -f "/usr/sbin/route" ]; then
-          install_package "iproute2"
+          install_package "net-tools"
         fi
         defaults['netmask']=$( route -n |awk '{print $3}' |grep "^255" )
         defaults['cidr']=$( ipcalc "1.1.1.1" "${defaults['netmask']}" | grep ^Netmask |awk '{print $4}' )

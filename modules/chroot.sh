@@ -75,7 +75,7 @@ create_chroot_script () {
 create_ubuntu_chroot_script () {
   orig_script="${iso['workdir']}/files/modify_chroot.sh"
   chroot_script="${iso['newdir']}/custom/tmp/modify_chroot.sh"
-  check_file_perms "${orig_chroot}"
+  check_file_perms "${orig_script}"
   handle_output "# Creating chroot script ${chroot_script}" "TEXT"
   if [ "${options['testmode']}" = "false" ]; then
     echo "#!/usr/bin/bash" > "${orig_script}"

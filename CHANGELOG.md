@@ -3,6 +3,32 @@
 All notable changes to the `guige` project are documented in this file.
 Dates are in `YYYY-MM-DD` format; entries are derived from the project's original `guige.changelog` file.
 
+## [5.3.0] - 2026-09-24
+- Fixed `check_kvm_vm_exists`'s VM-name check (`grep -c "^name"`) matching other VMs sharing the same name prefix; now an exact match
+- Modernized deprecated `$[..]` arithmetic to `$((..))` in the KVM MAC address generator
+- Fixed KVM ISO-VM creation always picking the oldest ISO in the work directory (`ls -Art`) instead of the newest (`ls -t`)
+- Fixed `set_cdrom_device` hardcoding the cdrom bus as `sata`, ignoring the per-platform `iso['cdbus']` (`scsi` on Darwin) already used everywhere else in the same VM's XML
+- Fixed the KVM qemu-version check invoking `qemu-system-amd64`, a Debian/Ubuntu-only alternatives symlink, instead of the real `qemu-system-x86_64` binary used everywhere else in the same function (portability for Arch/other distros)
+- Fixed the Ubuntu ISO-URL case statement missing a `live/desktop` pattern, so non-daily desktop builds fell through to the daily/dev-release URL scheme instead of `releases.ubuntu.com`; fixed a stray `iso['devrelease']` (never set) in the same function
+- Fixed `iso['distro']` never being set despite being displayed by `get_info_from_iso`
+- Fixed `-f` (regular file) instead of `-d` (directory) when checking whether the packages directory needs recreating, which made that cleanup step permanently dead
+- Fixed `package_update`/`package_upgrade` being emitted one indent level too deep (nested inside `apt:`) instead of as top-level `autoinstall:` keys, per the project's own reference template and the real autoinstall schema
+- Fixed the NVMe partition-naming fix (`nvme0n1` → `nvme0n1p1`) living inside the `first-nic` block instead of `first-disk`, so it was skipped whenever an explicit `--nic` was given even with `--disk first-disk`
+- Fixed a missing `)` in a generated isolinux boot menu label (cosmetic)
+- Removed unnecessary `eval echo` when splitting comma-separated `--whitelist`/`--blacklist` kernel module lists — confirmed via a live test that the old code would execute shell metacharacters embedded in the value (e.g. `$(...)`); it's now inert, literal text
+- Fixed Arch/EndeavourOS host detection testing `iso['release']` (the *target* ISO's version, e.g. `26.04.1`) instead of `os['distro']` (the *host* OS), which meant `pacman` was never used and `dpkg`/`apt`/`hostname -I` were always attempted even when guige itself was running on Arch/EndeavourOS
+- Fixed `set_default_codename` testing `os['name']` (always `Linux`/`Darwin` from `uname`) instead of `os['distro']` (`Ubuntu` from `lsb_release`), so the real host codename from `lsb_release -cs` was never used — confirmed live: this host's actual codename (`resolute`) was being silently replaced with a stale hardcoded default (`jammy`)
+- Fixed `check_file_perms` checking the ownership of `iso['outputfile']` regardless of which file it was actually asked to check; `chroot.sh`'s caller was passing an undefined `${orig_chroot}` (typo for `${orig_script}`) that this bug had been masking
+- Fixed a dead package-detection check installing `iproute2` when the `route` command was missing; `route` is provided by `net-tools`, confirmed via `dpkg -S` on this host
+- Fixed an undefined `${iso_build}` in the (currently dormant) beta-release input-filename builder
+- Fixed `check_docker_config` using `return` instead of `continue` inside its per-architecture loop, so as soon as one architecture's image already existed, every other requested architecture was silently skipped
+- Fixed the Rocky/kickstart ISO's El Torito boot flags using `-eltorito-boot` (an alias for `-b`, i.e. another BIOS entry) for the EFI boot image, instead of `-e` (the actual EFI El Torito flag), which likely broke UEFI boot of the resulting ISO
+- Fixed the Rocky/kickstart ISO volume label being built from `iso['realname']` (the installed user's personal display name) instead of `iso['releasename']` (e.g. "Rocky")
+- Fixed `printenv`'s "Previous Work directory" line displaying `iso['workdir']` (identical to the line above it) instead of `iso['preworkdir']`; fixed the sample SCP command using the unrelated BMC/iDRAC username instead of the current OS user
+- Removed a stray `$` before a quoted string (harmless locale-string syntax quirk, not a real bug) in `docker.sh`
+
+Also investigated and deliberately left unfixed (ambiguous original intent, not confident enough to guess a replacement without risking different-but-still-wrong behavior): a dead `[ -f "$(uname -r)" ]` branch in `squashfs.sh` that always skips the mount+rsync path in favor of the (fully functional) `unsquashfs` fallback.
+
 ## [5.2.0] - 2026-09-24
 - Fixed `iso['diskize']`/`--includeusername`/`--includepassword`/`--zfsroot` writing to the wrong array key (a typo, `options[]` instead of `iso[]` or vice versa), so `--disksize`, `--includeusername`, `--includepassword` and `--zfsroot` all silently did nothing; also added `password` to the output-filename tagging loop so `--includepassword` has an actual effect
 - Fixed `--fullsiso`, `--installreq*`/`--checkreq*` and `--listallargs*` switch aliases missing their leading `--`, so the intended shorthand (`--fulliso`, `--installreqs`, `--listallargs`) hit "Unknown option"

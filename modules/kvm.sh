@@ -12,9 +12,9 @@
 
 check_kvm_vm_exists () {
   if [ "${os['name']}" = "Darwin" ]; then
-    kvm_test=$(virsh list --all |awk '{ print $2 }' |grep -c "^${iso['name']}" )
+    kvm_test=$(virsh list --all |awk '{ print $2 }' |grep -cx "${iso['name']}" )
   else
-    kvm_test=$(sudo virsh list --all |awk '{ print $2 }' |grep -c "^${iso['name']}" )
+    kvm_test=$(sudo virsh list --all |awk '{ print $2 }' |grep -cx "${iso['name']}" )
   fi
   if [ ! "${kvm_test}" = "0" ]; then
     warning_message "KVM VM ${iso['name']} exists"
@@ -108,7 +108,7 @@ get_kvm_iso () {
       echo "ISO: ${iso['vmiso']}"
       if [ ! -f "${iso['vmiso']}" ]; then
         iso_dir="${iso['workdir']}/files"
-        iso_file=$( ls -Art "${iso_dir}"/*.iso |head -1 )
+        iso_file=$( ls -t "${iso_dir}"/*.iso |head -1 )
         iso_file=$( basename "${iso_file}" )
         iso['vmiso']="${iso_dir}/${iso_file}"
       fi
@@ -134,7 +134,7 @@ set_cdrom_device () {
   <disk type='file' device='cdrom'>
     <driver name='qemu' type='raw'/>
     <source file='${iso['vmiso']}'/>
-    <target dev='sda' bus='sata'/>
+    <target dev='sda' bus='${iso['cdbus']}'/>
     <readonly/>
     <address type='drive' controller='0' bus='0' target='0' unit='0'/>
   </disk>
@@ -194,7 +194,7 @@ create_kvm_iso_vm () {
     iso['cdbus']="scsi"
     options['secureboot']="false"
   else
-    iso['qemuver']=$( qemu-system-amd64 --version |head -1 |awk '{print $4}' |awk -F"." '{print $1"."$2}' )
+    iso['qemuver']=$( qemu-system-x86_64 --version |head -1 |awk '{print $4}' |awk -F"." '{print $1"."$2}' )
     if [ "${options['secureboot']}" = "true" ]; then
       iso['varsfile']="/usr/share/OVMF/OVMF_VARS_4M.ms.fd"
       iso['biosfile']="/usr/share/OVMF/OVMF_CODE_4M.ms.fd"
@@ -218,7 +218,7 @@ create_kvm_iso_vm () {
     iso['infosite']="rockylinux.org"
   fi
   iso['qemudir']="${iso['virtdir']}/qemu"
-  iso['macaddress']=$( printf '52:54:00:%02X:%02X:%02X\n' $[RANDOM%256] $[RANDOM%256] $[RANDOM%256] )
+  iso['macaddress']=$( printf '52:54:00:%02X:%02X:%02X\n' $((RANDOM%256)) $((RANDOM%256)) $((RANDOM%256)) )
   iso['nvramdir']="${iso['qemudir']}/nvram"
   if [ ! -d "${iso['nvramdir']}" ]; then
     sudo_create_dir "${iso['nvramdir']}"

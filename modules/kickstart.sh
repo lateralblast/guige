@@ -19,7 +19,7 @@ create_kickstart_iso () {
     cd "${iso['newdir']}/cd" || exit
     sudo mkisofs -o "${iso['outputfile']}" -b isolinux/isolinux.bin -c isolinux/boot.cat \
     -boot-load-size 4 -boot-info-table -no-emul-boot -eltorito-alt-boot \
-    -eltorito-boot images/efiboot.img -no-emul-boot -R -J -V "${iso['label']}" -T .
+    -e images/efiboot.img -no-emul-boot -R -J -V "${iso['label']}" -T .
     check_file_perms "${iso['outputfile']}"
   fi
 }
@@ -174,7 +174,7 @@ prepare_kickstart_grubmenu () {
   tmp_grub_cfg="${iso['workdir']}/files/grub.cfg"
   iso_linux_cfg="${iso['newdir']}/cd/isolinux/isolinux.cfg"
   iso_grub_cfg="${iso['newdir']}/cd/EFI/BOOT/grub.cfg"
-  iso['label']="${iso['realname']}-${iso['majorrelease']}-${iso['minorrelease']}-${iso['arch']}-${iso['type']}"
+  iso['label']="${iso['releasename']}-${iso['majorrelease']}-${iso['minorrelease']}-${iso['arch']}-${iso['type']}"
   iso_repo_dir="/run/install/repo"
   echo "default ${iso['grubmenu']}" > "${tmp_linux_cfg}"
   counter=0
