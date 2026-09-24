@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Name:         guige (Generic Ubuntu/Unix ISO Generation Engine)
-# Version:      4.9.9
+# Version:      5.0.0
 # Release:      1
 # License:      CC-BA (Creative Commons By Attribution)
 #               http://creativecommons.org/licenses/by/4.0/legalcode
@@ -1389,19 +1389,21 @@ reset_default_files
 update_iso_url
 
 # Process options
+#
+# process_options resets state that must only be reset once (dpkgconf,
+# dpkgdepends) and appends kernel arguments (vfio) that must only be
+# appended once, so it must always be called exactly once, with every
+# requested option name joined into a single comma-separated list, even
+# when no --option/--options switch was given at all.
 
-if [ -n "${options_list[*]}" ]; then
-  for option_list in "${options_list[@]}"; do
-    if [[ "${option_list}" =~ , ]]; then
-      IFS="," read -r -a option_array <<< "${option_list[*]}"
-      for option_item in "${option_array[@]}"; do
-        process_options "${option_item}"
-      done
-    else
-      process_options "${option_list}"
-    fi
-  done
+option_names=""
+if [ "${#options_list[@]}" -gt 0 ]; then
+  old_ifs="${IFS}"
+  IFS=","
+  option_names="${options_list[*]}"
+  IFS="${old_ifs}"
 fi
+process_options "${option_names}"
 
 reset_defaults
 

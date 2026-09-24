@@ -3,6 +3,10 @@
 All notable changes to the `guige` project are documented in this file.
 Dates are in `YYYY-MM-DD` format; entries are derived from the project's original `guige.changelog` file.
 
+## [5.0.0] - 2026-09-24
+- Fixed `process_options` being invoked once per `--option`/`--options` entry instead of once overall: each extra call reset `dpkgconf`/`dpkgdepends` back to their defaults (silently undoing an earlier `--option confdef`/`--option depends`) and re-appended the vfio kernel arguments, duplicating them once per call
+- Fixed `--vfio` never applying its kernel arguments at all when it was the only option-related switch given, since `process_options` was previously skipped entirely when `options_list` was empty
+
 ## [4.9.9] - 2026-09-24
 - Fixed `get_switches` treating any case-arm line containing a bare `*` glob (e.g. `--bmcpass*`) as the end of the switch list, which silently dropped `bmcusername`, `bmcpassword`, `bootserverprotocol`, `bootserverusername`, `bootserverpassword`, `includeusername`, `includepassword`, `checkipmitool`, `checkracadm`, `installrequiredpackages`, `dryrun`, `action`, `option`, `deleteiso`, `listisos`, `listallisos` and `listargs` from ever getting their defaults applied
 - Fixed switch names extracted from single-pattern wildcard case arms (e.g. `--action*)`) retaining a stray trailing `*`
