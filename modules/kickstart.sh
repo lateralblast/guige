@@ -49,7 +49,7 @@ prepare_kickstart_files () {
       echo "%pre" >> "${iso['ksfile']}"
       if [ "${iso['disk']}" = "first-disk" ]; then
         if [ ! "${iso_volmgr}" = "lvm" ]; then
-          echo "FIRST_DISK=\$( /bin/lsblk -x TYPE |grep disk |grep -v SWAP |sort |head -1 |awk '{print \$1}' )" > "${iso['ksfile']}"
+          echo "FIRST_DISK=\$( /bin/lsblk -x TYPE |grep disk |grep -v SWAP |sort |head -1 |awk '{print \$1}' )" >> "${iso['ksfile']}"
           echo "echo \"# First Disk\" > ${include_disk_file}" >> "${iso['ksfile']}"
           echo "echo \"bootloader --timeout=${iso['grubtimeout']} --location=${iso['bootloader']} --append=\\\"${iso['kernelargs']}\\\" --boot-drive=/dev/\\$FIRST_DISK\" >> ${include_disk_file}" >> "${iso['ksfile']}"
           echo "echo \"clearpart --all --drives=/dev/\\$FIRST_DISK\" >> ${include_disk_file}" >> "${iso['ksfile']}"

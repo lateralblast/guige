@@ -18,7 +18,7 @@ print_cli_help () {
     if [[ "${line}" =~ -- ]] && [[ ! "${line}" =~ regex ]]; then
       switchstart="true"
     fi
-    if [[ "${line}" =~ esac ]] || [[ "${line}" =~ \* ]]; then
+    if [[ "${line}" =~ esac ]] || [[ "${line}" =~ ^[[:space:]]*\*\)[[:space:]]*$ ]]; then
       switchstart="false"
     fi
     if [ "${switchstart}" = "true" ]; then
@@ -30,6 +30,7 @@ print_cli_help () {
         fi
         switch_name="${switch_name//--/}"
         switch_name="${switch_name// /}"
+        switch_name="${switch_name//\*/}"
         switch_default="${defaults[$switch_name]}"
       fi
       if [[ "${line}" =~ \# ]]; then

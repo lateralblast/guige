@@ -3,6 +3,11 @@
 All notable changes to the `guige` project are documented in this file.
 Dates are in `YYYY-MM-DD` format; entries are derived from the project's original `guige.changelog` file.
 
+## [5.0.3] - 2026-09-24
+- Fixed `prepare_kickstart_files` truncating the kickstart file (`>` instead of `>>`) when writing the `FIRST_DISK` detection line, which wiped out the header, `mediacheck`, install-source and `%pre` lines already written for any non-lvm volume manager
+- Fixed `print_cli_help` (used by `--help`) independently duplicating the `get_switches` wildcard-parsing bug fixed in `5.0.0`/`4.9.9`, so `--help` still failed to list `bmcusername`, `bmcpassword`, `bootserverprotocol`, `checkracadm`, `dryrun`, `action`, `deleteiso`, `option` and the other switches dropped by that bug, and still showed stray trailing `*` characters for single-pattern wildcard switches
+- Reworded a comment added in `5.0.0` that accidentally contained literal `--option`/`--options` text, which was being misread by `get_switches`/`print_cli_help` as a switch definition and corrupted the tail of `--help`/`--action listswitches` output with garbage entries
+
 ## [5.0.2] - 2026-09-24
 - Fixed the ZFS-with-`zfsfilesystems` storage layout formatting the swap partition onto the same partition (`partition-0`, the EFI System Partition) as the vfat/ESP format entry, instead of the actual dedicated swap partition (`partition-2`); the unused `part_num` variable that caused this (declared as `0`, never incremented) was removed
 

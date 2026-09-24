@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Name:         guige (Generic Ubuntu/Unix ISO Generation Engine)
-# Version:      5.0.2
+# Version:      5.0.3
 # Release:      1
 # License:      CC-BA (Creative Commons By Attribution)
 #               http://creativecommons.org/licenses/by/4.0/legalcode
@@ -1394,7 +1394,10 @@ update_iso_url
 # dpkgdepends) and appends kernel arguments (vfio) that must only be
 # appended once, so it must always be called exactly once, with every
 # requested option name joined into a single comma-separated list, even
-# when no --option/--options switch was given at all.
+# when no option or options switch was given at all. (Note: this comment
+# deliberately never types two dashes together, since get_switches and
+# print_cli_help scan this file and treat such a line as a switch
+# definition.)
 
 option_names=""
 if [ "${#options_list[@]}" -gt 0 ]; then
