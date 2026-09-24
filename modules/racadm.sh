@@ -89,6 +89,20 @@ racadm_deploy_iso () {
   fi
 }
 
+# Function: racadm_powercycle
+#
+# Powercycle server via racadm
+
+racadm_powercycle () {
+  check_racadm_params
+  handle_output "# Powercycling ${iso['bmcip']} via racadm" "TEXT"
+  if [ "${iso['sshpass']}" = "" ]; then
+    execute_command "${iso['racadm']} -r ${iso['bmcip']} -u ${iso['bmcusername']} -p ${iso['bmcpassword']} serveraction powercycle"
+  else
+    execute_command "${iso['sshpass']} -p${iso['bmcpassword']} ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -l ${iso['bmcusername']} ${iso['bmcip']} \"racadm serveraction powercycle\""
+  fi
+}
+
 # Function: racadm_disconnect_iso
 #
 # Disconnect ISO via racadm
