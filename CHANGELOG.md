@@ -3,6 +3,9 @@
 All notable changes to the `guige` project are documented in this file.
 Dates are in `YYYY-MM-DD` format; entries are derived from the project's original `guige.changelog` file.
 
+## [5.0.5] - 2026-09-24
+- Fixed a stray `}` in the generated iDRAC ansible playbook's `idrac_osd_service_url` Jinja expression (`...['@odata.id']} }}`) that made the template fail to parse; confirmed with Jinja2 directly (`unexpected '}'` before the fix, parses cleanly after)
+
 ## [5.0.4] - 2026-09-24
 - Fixed `prepare_kickstart_files` generating a broken `%pre` script for the "first disk"/"first NIC" auto-detection path: `\\$FIRST_DISK` was being expanded at ISO-generation time (evaluating to an empty variable plus a stray backslash) instead of surviving as literal `$FIRST_DISK` text for the kickstart's own `%pre` shell to expand at install time
 - Fixed a missing space (`echo"# First NIC"`) and a stray trailing quote that made the generated first-NIC detection lines invalid shell syntax

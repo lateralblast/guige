@@ -93,7 +93,7 @@ create_ansible () {
     echo "      delegate_to: localhost" >> "${idrac_yaml}"
     echo "    - name: find the URL for the DellOSDeploymentService" >> "${idrac_yaml}"
     echo "      ansible.builtin.set_fact:" >> "${idrac_yaml}"
-    echo "        idrac_osd_service_url: \"{{ result.json.Links.Oem.Dell.DellOSDeploymentService['@odata.id']} }}\"" >> "${idrac_yaml}"
+    echo "        idrac_osd_service_url: \"{{ result.json.Links.Oem.Dell.DellOSDeploymentService['@odata.id'] }}\"" >> "${idrac_yaml}"
     echo "      when:" >> "${idrac_yaml}"
     echo "        - result.json.Links.Oem.Dell.DellOSDeploymentService is defined" >> "${idrac_yaml}"
     echo "    - block:" >> "${idrac_yaml}"
