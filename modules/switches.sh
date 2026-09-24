@@ -24,7 +24,7 @@ get_switches () {
           switchstart="true"
         fi
       fi
-      if [[ "${line}" =~ esac ]] || [[ "${line}" =~ \* ]]; then
+      if [[ "${line}" =~ esac ]] || [[ "${line}" =~ ^[[:space:]]*\*\)[[:space:]]*$ ]]; then
         switchstart="false"
       fi
       if [ "${switchstart}" = "true" ]; then
@@ -36,6 +36,7 @@ get_switches () {
           fi
           switch_name="${switch_name//--/}"
           switch_name="${switch_name// /}"
+          switch_name="${switch_name//\*/}"
           if [ ! "${switch_name}" = "" ]; then
             switches+=("${switch_name}")
           fi

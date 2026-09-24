@@ -3,6 +3,10 @@
 All notable changes to the `guige` project are documented in this file.
 Dates are in `YYYY-MM-DD` format; entries are derived from the project's original `guige.changelog` file.
 
+## [4.9.9] - 2026-09-24
+- Fixed `get_switches` treating any case-arm line containing a bare `*` glob (e.g. `--bmcpass*`) as the end of the switch list, which silently dropped `bmcusername`, `bmcpassword`, `bootserverprotocol`, `bootserverusername`, `bootserverpassword`, `includeusername`, `includepassword`, `checkipmitool`, `checkracadm`, `installrequiredpackages`, `dryrun`, `action`, `option`, `deleteiso`, `listisos`, `listallisos` and `listargs` from ever getting their defaults applied
+- Fixed switch names extracted from single-pattern wildcard case arms (e.g. `--action*)`) retaining a stray trailing `*`
+
 ## [4.9.8] - 2026-09-24
 - Added missing `racadm_powercycle` function so `--action powercycle` works instead of failing with "command not found"
 
