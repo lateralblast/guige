@@ -3,6 +3,9 @@
 All notable changes to the `guige` project are documented in this file.
 Dates are in `YYYY-MM-DD` format; entries are derived from the project's original `guige.changelog` file.
 
+## [5.0.2] - 2026-09-24
+- Fixed the ZFS-with-`zfsfilesystems` storage layout formatting the swap partition onto the same partition (`partition-0`, the EFI System Partition) as the vfat/ESP format entry, instead of the actual dedicated swap partition (`partition-2`); the unused `part_num` variable that caused this (declared as `0`, never incremented) was removed
+
 ## [5.0.1] - 2026-09-24
 - Fixed a mismatched bracket (`"${module]}"` instead of `"${module}"`) in the vfio autoinstall generator that caused a "bad substitution" crash
 - Fixed the guard that gated this code (`options['vifo']` typo for `options['vfio']`) so vfio kernel-module autoinstall entries are actually generated when `--vfio` is used, instead of the block being silently unreachable

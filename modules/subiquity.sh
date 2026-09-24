@@ -548,7 +548,6 @@ prepare_autoinstall_iso () {
           echo "    config:" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
           if [ "${iso_volmgr}" = "zfs" ]; then
             if [ "${options['zfsfilesystems']}" = "true" ]; then
-              part_num=0
               echo "    - ptable: gpt" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
               echo "      path: /dev/${iso['disk']}" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
               echo "      wipe: superblock-recursive" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
@@ -594,7 +593,7 @@ prepare_autoinstall_iso () {
               echo "      type: partition" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
 
               echo "    - fstype: swap" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
-              echo "      volume: partition-${part_num}" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+              echo "      volume: partition-2" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
               echo "      preserve: false" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
               echo "      id: format-1" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
               echo "      type: format" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
