@@ -3,6 +3,11 @@
 All notable changes to the `guige` project are documented in this file.
 Dates are in `YYYY-MM-DD` format; entries are derived from the project's original `guige.changelog` file.
 
+## [5.0.4] - 2026-09-24
+- Fixed `prepare_kickstart_files` generating a broken `%pre` script for the "first disk"/"first NIC" auto-detection path: `\\$FIRST_DISK` was being expanded at ISO-generation time (evaluating to an empty variable plus a stray backslash) instead of surviving as literal `$FIRST_DISK` text for the kickstart's own `%pre` shell to expand at install time
+- Fixed a missing space (`echo"# First NIC"`) and a stray trailing quote that made the generated first-NIC detection lines invalid shell syntax
+- Fixed the generated `network ...` directive for the first-NIC case being written after `%end` (where kickstart doesn't run shell commands) instead of inside `%pre`, so the `%include`d NIC config file was never actually populated; the `network` command string is now built before `%end` and written into the include file from within `%pre`
+
 ## [5.0.3] - 2026-09-24
 - Fixed `prepare_kickstart_files` truncating the kickstart file (`>` instead of `>>`) when writing the `FIRST_DISK` detection line, which wiped out the header, `mediacheck`, install-source and `%pre` lines already written for any non-lvm volume manager
 - Fixed `print_cli_help` (used by `--help`) independently duplicating the `get_switches` wildcard-parsing bug fixed in `5.0.0`/`4.9.9`, so `--help` still failed to list `bmcusername`, `bmcpassword`, `bootserverprotocol`, `checkracadm`, `dryrun`, `action`, `deleteiso`, `option` and the other switches dropped by that bug, and still showed stray trailing `*` characters for single-pattern wildcard switches

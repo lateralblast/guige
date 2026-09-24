@@ -51,16 +51,43 @@ prepare_kickstart_files () {
         if [ ! "${iso_volmgr}" = "lvm" ]; then
           echo "FIRST_DISK=\$( /bin/lsblk -x TYPE |grep disk |grep -v SWAP |sort |head -1 |awk '{print \$1}' )" >> "${iso['ksfile']}"
           echo "echo \"# First Disk\" > ${include_disk_file}" >> "${iso['ksfile']}"
-          echo "echo \"bootloader --timeout=${iso['grubtimeout']} --location=${iso['bootloader']} --append=\\\"${iso['kernelargs']}\\\" --boot-drive=/dev/\\$FIRST_DISK\" >> ${include_disk_file}" >> "${iso['ksfile']}"
-          echo "echo \"clearpart --all --drives=/dev/\\$FIRST_DISK\" >> ${include_disk_file}" >> "${iso['ksfile']}"
-          echo "echo \"part /boot --size=${iso['bootsize']} --fstype=\\\"${iso_volmgr}\\\" --ondisk=/dev/\\$FIRST_DISK\" >> ${include_disk_file}" >> "${iso['ksfile']}"
-          echo "echo \"part ${iso['lvname']} --size=-1 --grow --fstype=\\\"lvmpv\\\" --ondisk=/dev/\\$FIRST_DISK\" >> ${include_disk_file}" >> "${iso['ksfile']}"
-          echo "echo \"part /boot/efi --size=${iso['bootsize']} --asprimary --fstype=\\\"efi\\\" --ondisk=/dev/\\$FIRST_DISK\" >> ${include_disk_file}" >> "${iso['ksfile']}"
+          echo "echo \"bootloader --timeout=${iso['grubtimeout']} --location=${iso['bootloader']} --append=\\\"${iso['kernelargs']}\\\" --boot-drive=/dev/\$FIRST_DISK\" >> ${include_disk_file}" >> "${iso['ksfile']}"
+          echo "echo \"clearpart --all --drives=/dev/\$FIRST_DISK\" >> ${include_disk_file}" >> "${iso['ksfile']}"
+          echo "echo \"part /boot --size=${iso['bootsize']} --fstype=\\\"${iso_volmgr}\\\" --ondisk=/dev/\$FIRST_DISK\" >> ${include_disk_file}" >> "${iso['ksfile']}"
+          echo "echo \"part ${iso['lvname']} --size=-1 --grow --fstype=\\\"lvmpv\\\" --ondisk=/dev/\$FIRST_DISK\" >> ${include_disk_file}" >> "${iso['ksfile']}"
+          echo "echo \"part /boot/efi --size=${iso['bootsize']} --asprimary --fstype=\\\"efi\\\" --ondisk=/dev/\$FIRST_DISK\" >> ${include_disk_file}" >> "${iso['ksfile']}"
         fi
       fi
+      # Build the network kickstart command now (before %end) so it is
+      # available while %pre is still open: the first-nic case needs to
+      # populate its include file inside %pre, before the installer
+      # parses the %include directive later in the main kickstart body
       if [ "${iso['nic']}" = "first-nic" ]; then
-        echo "echo\"# First NIC\" > ${include_nic_file}" >> "${iso['ksfile']}"
-        echo "FIRST_NIC=\$(lshw -class network -short |awk '{print \$2}' |grep ^e |head -1)\" >> ${include_nic_file}" >> "${iso['ksfile']}"
+        network="network --hostname=${iso['hostname']} --bootproto=${iso['bootproto']} --device=\$FIRST_NIC --onboot=${iso['onboot']}"
+      else
+        network="network --hostname=${iso['hostname']} --bootproto=${iso['bootproto']} --device=${iso['nic']} --onboot=${iso['onboot']}"
+      fi
+      if [ "${options['ipv4']}" = "false" ]; then
+        network="${network} --noipv4"
+      fi
+      if [ "${options['ipv6']}" = "false" ]; then
+        network="${network} --noipv6"
+      fi
+      if [ "${options['activate']}" = "true" ]; then
+        network="${network} --activate"
+      else
+        network="${network} --no-activate"
+      fi
+      if [ "${options['defaultroute']}" = "false" ]; then
+        network="${network} --nodefroute"
+      fi
+      if [ "${options['dhcp']}" = "false" ]; then
+        network="${network} --ip=${iso['ip']} --netmask=${iso['netmask']} --gateway=${iso['gateway']} --nameserver=${iso['dns']}"
+      fi
+      if [ "${iso['nic']}" = "first-nic" ]; then
+        echo "FIRST_NIC=\$(lshw -class network -short |awk '{print \$2}' |grep ^e |head -1)" >> "${iso['ksfile']}"
+        echo "echo \"# First NIC\" > ${include_nic_file}" >> "${iso['ksfile']}"
+        echo "echo \"${network}\" >> ${include_nic_file}" >> "${iso['ksfile']}"
       fi
       echo "%end" >> "${iso['ksfile']}"
       echo "lang ${iso['locale']}" >> "${iso['ksfile']}"
@@ -91,30 +118,7 @@ prepare_kickstart_files () {
         echo "firewall --${iso['firewall']}" >> "${iso['ksfile']}"
       fi
       if [ "${iso['nic']}" = "first-nic" ]; then
-        network="network --hostname=${iso['hostname']} --bootproto=${iso['bootproto']} --device=\$FIRST_NIC --onboot=${iso['onboot']}"
-      else
-        network="network --hostname=${iso['hostname']} --bootproto=${iso['bootproto']} --device=${iso['nic']} --onboot=${iso['onboot']}"
-      fi
-      if [ "${options['ipv4']}" = "false" ]; then
-        network="${network} --noipv4"
-      fi
-      if [ "${options['ipv6']}" = "false" ]; then
-        network="${network} --noipv6"
-      fi
-      if [ "${options['activate']}" = "true" ]; then
-        network="${network} --activate"
-      else
-        network="${network} --no-activate"
-      fi
-      if [ "${options['defaultroute']}" = "false" ]; then
-        network="${network} --nodefroute"
-      fi
-      if [ "${options['dhcp']}" = "false" ]; then
-        network="${network} --ip=${iso['ip']} --netmask=${iso['netmask']} --gateway=${iso['gateway']} --nameserver=${iso['dns']}"
-      fi
-      if [ "${iso['nic']}" = "first-nic" ]; then
         echo "%include ${include_nic_file}" >> "${iso['ksfile']}"
-        echo "echo \"${network}\" >> ${include_nic_file}" >> "${iso['ksfile']}"
       else
         echo "$network" >> "${iso['ksfile']}"
       fi
