@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Name:         guige (Generic Ubuntu/Unix ISO Generation Engine)
-# Version:      5.1.0
+# Version:      5.2.0
 # Release:      1
 # License:      CC-BA (Creative Commons By Attribution)
 #               http://creativecommons.org/licenses/by/4.0/legalcode
@@ -82,14 +82,43 @@ check_shellcheck () {
 }
 
 # Handle verbose and debug early so it's enabled early
+#
+# Scan the raw arguments for an explicit --verbose/--debug switch, or a
+# --option(s) value that includes "verbose"/"debug" as one of its
+# comma-separated tokens. This is a token match rather than a substring
+# match on the whole argument list, so a value like a hostname of
+# "debugbox" or an option of "noverbose" is not mistaken for a request
+# to enable debug/verbose mode.
 
-if [[ "$*" =~ "verbose" ]]; then
-  options['verbose']="true"
-else
-  options['verbose']="false"
-fi
+options['verbose']="false"
+want_debug="false"
+skip_next_value="false"
+for early_arg in "$@"; do
+  if [ "${skip_next_value}" = "true" ]; then
+    skip_next_value="false"
+    IFS=',' read -r -a early_tokens <<< "${early_arg}"
+    for early_token in "${early_tokens[@]}"; do
+      case "${early_token}" in
+        verbose) options['verbose']="true" ;;
+        debug) want_debug="true" ;;
+      esac
+    done
+    continue
+  fi
+  case "${early_arg}" in
+    --verbose)
+      options['verbose']="true"
+      ;;
+    --debug)
+      want_debug="true"
+      ;;
+    --option|--options)
+      skip_next_value="true"
+      ;;
+  esac
+done
 
-if [[ "$*" =~ "debug" ]]; then
+if [ "${want_debug}" = "true" ]; then
   options['verbose']="true"
   set -x
   if [ ! -f "/.dockerenv" ]; then
@@ -417,7 +446,7 @@ do
       actions_list+=(createexport)
       shift
       ;;
-    --createiso|--fullsiso)
+    --createiso|--fulliso)
       # Create ISO
       actions_list+=(createiso)
       shift
@@ -743,12 +772,12 @@ do
       ;;
     --includeusername|--includeuser*)
       # Include username in output filename
-      iso['includeusername']="true"
+      options['includeusername']="true"
       shift
       ;;
     --includepassword|--includepass*)
       # Include username in output filename
-      iso['includepassword']="true"
+      options['includepassword']="true"
       shift
       ;;
     --inputci|--vmci)
@@ -781,7 +810,7 @@ do
       # Temporary install password for remote access during install
       shift 2
       ;;
-    --installrequiredpackages|installreq*|--checkreq*)
+    --installrequiredpackages|--installreq*|--checkreq*)
       # Install/Check required packages
       actions_list+=(installrequiredpackages)
       shift
@@ -877,7 +906,7 @@ do
       actions_list+=(listisos)
       shift
       ;;
-    --listargs|listallargs*|--listargs*)
+    --listargs|--listallargs*|--listargs*)
       # List args
       actions_list+=(listargs)
       shift
@@ -1358,7 +1387,7 @@ do
     --zfsroot)
       # ZFS root name
       check_value "${1}" "${2}"
-      options['zfsroot']="${2}"
+      iso['zfsroot']="${2}"
       shift 2
       ;;
     --)
@@ -1606,9 +1635,11 @@ else
     create_iso
   fi
   if [ "${options['unmount']}" = "true" ]; then
-    options['help']="false"
-    unmount_iso
-    unmount_squashfs
+    if [ "${options['runchrootscript']}" = "true" ] || [ "${options['createautoinstall']}" = "true" ] || [ "${options['justiso']}" = "true" ]; then
+      options['help']="false"
+      unmount_iso
+      unmount_squashfs
+    fi
   fi
 fi
 

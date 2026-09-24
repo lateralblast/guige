@@ -129,6 +129,7 @@ process_actions () {
       listswitches)                 # action - List switches
         get_switches
         list_switches
+        do_exit
         ;;
       listvm)                       # action - List VMs
         options['listvms']="true"
@@ -178,7 +179,7 @@ process_actions () {
         print_usage
         ;;
       *)
-        warning_message "Action \"${iso['action']}\" is not a valid action"
+        warning_message "Action \"${action_name}\" is not a valid action"
         exit
         ;;
     esac
@@ -190,8 +191,5 @@ process_actions () {
     all)
       options['forceall']="true"
       ;;
-    *)
-      options['force']="false"
-      options['forceall']="false"
   esac
 }

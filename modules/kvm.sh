@@ -29,9 +29,10 @@ check_kvm_vm_exists () {
 check_kvm_user () {
   iso['kvmgroups']="kvm libvirt libvirt-qemu libvirt-dnsmasq"
   for kvm_group in ${iso['kvmgroups']}; do
-    group_members=$( grep "^${kvm_group}" /etc/group |cut -f2 -d: )
-    if [ -n "${group_members}" ]; then
-      if ! [[ "${kvm_group}" =~ $USER ]]; then
+    group_line=$( grep "^${kvm_group}:" /etc/group )
+    if [ -n "${group_line}" ]; then
+      group_members=$( echo "${group_line}" |cut -f4 -d: )
+      if [[ ! ",${group_members}," =~ ,${USER}, ]]; then
         sudo usermod -a -G "${kvm_group}" "$USER"
       fi
     fi
@@ -534,9 +535,9 @@ delete_kvm_vm () {
     install_required_kvm_packages
   fi
   if [ "${options['testmode']}" = "false" ]; then
-    iso['status']=$( virsh list --all |grep -c "shut off" )
     if [ "${os['name']}" = "Darwin" ]; then
-      if [ "${iso['status']}" = "0" ]; then
+      iso['status']=$( virsh -c "qemu:///session" domstate "${iso['name']}" 2> /dev/null )
+      if [ "${iso['status']}" = "running" ]; then
         information_message "Stopping KVM VM ${iso['name']}"
         execute_command "virsh -c \"qemu:///session\" destroy ${iso['name']} 2> /dev/null"
       fi
@@ -544,7 +545,8 @@ delete_kvm_vm () {
       execute_command "virsh -c \"qemu:///session\" shutdown ${iso['name']} 2> /dev/null"
       execute_command "virsh -c \"qemu:///session\" undefine ${iso['name']} --nvram 2> /dev/null"
     else
-      if [ "${iso['status']}" = "0" ]; then
+      iso['status']=$( sudo virsh domstate "${iso['name']}" 2> /dev/null )
+      if [ "${iso['status']}" = "running" ]; then
         information_message "Stopping KVM VM ${iso['name']}"
         execute_command "sudo virsh shutdown ${iso['name']} 2> /dev/null"
         execute_command "sudo virsh destroy ${iso['name']} 2> /dev/null"

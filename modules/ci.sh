@@ -29,8 +29,9 @@ get_input_ci () {
 # Get Output CI
 
 get_output_ci () {
-  iso['outputcibase']=$( basename "${iso['inputci']}" )
-  iso['outputci']="${iso['workdir']}/file/${iso['outputcibase']}"
+  iso['outputcibase']=$( basename "${iso['inputci']}" .img )
+  iso['outputci']="${iso['workdir']}/files/${iso['outputcibase']}-${iso['boottype']}-autoinstall.img"
+  iso['outputcibase']=$( basename "${iso['outputci']}" )
 }
 
 # Funtion update_ci_url

@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
 # shellcheck disable=SC2004
+# shellcheck disable=SC2016
 # shellcheck disable=SC2034
 # shellcheck disable=SC2129
 # shellcheck disable=SC2154
@@ -17,28 +18,39 @@ get_switches () {
       input_file="${script['file']}"
     fi
     switchstart="false"
+    # Nothing before the main "case "${1}" in" line is a real switch
+    # definition, no matter what it contains: this stops any earlier
+    # comment or code that happens to mention "--something" (which is
+    # otherwise indistinguishable from a real switch definition line)
+    # from being mistaken for the start of the switch list
+    reached_main_case="false"
     while read -r line; do
       switch_name=""
-      if [[ "${line}" =~ -- ]]; then
-        if [[ ! "${line}" =~ ^regex ]]; then
-          switchstart="true"
-        fi
+      if [[ "${line}" == *'case "${1}" in'* ]]; then
+        reached_main_case="true"
       fi
-      if [[ "${line}" =~ esac ]] || [[ "${line}" =~ ^[[:space:]]*\*\)[[:space:]]*$ ]]; then
-        switchstart="false"
-      fi
-      if [ "${switchstart}" = "true" ]; then
-        if [[ "${line}" =~ -- ]] && [[ "${line}" =~ [a-z] ]]; then
-          if [[ "${line}" =~ \| ]]; then
-            switch_name=$( echo "${line}" |cut -f1 -d "|" )
-          else
-            switch_name=$( echo "${line}" |cut -f1 -d ")" )
+      if [ "${reached_main_case}" = "true" ]; then
+        if [[ "${line}" =~ -- ]]; then
+          if [[ ! "${line}" =~ ^regex ]]; then
+            switchstart="true"
           fi
-          switch_name="${switch_name//--/}"
-          switch_name="${switch_name// /}"
-          switch_name="${switch_name//\*/}"
-          if [ ! "${switch_name}" = "" ]; then
-            switches+=("${switch_name}")
+        fi
+        if [[ "${line}" =~ esac ]] || [[ "${line}" =~ ^[[:space:]]*\*\)[[:space:]]*$ ]]; then
+          switchstart="false"
+        fi
+        if [ "${switchstart}" = "true" ]; then
+          if [[ "${line}" =~ -- ]] && [[ "${line}" =~ [a-z] ]]; then
+            if [[ "${line}" =~ \| ]]; then
+              switch_name=$( echo "${line}" |cut -f1 -d "|" )
+            else
+              switch_name=$( echo "${line}" |cut -f1 -d ")" )
+            fi
+            switch_name="${switch_name//--/}"
+            switch_name="${switch_name// /}"
+            switch_name="${switch_name//\*/}"
+            if [ ! "${switch_name}" = "" ]; then
+              switches+=("${switch_name}")
+            fi
           fi
         fi
       fi
@@ -131,7 +143,7 @@ process_switches () {
             if [ "${iso['osname']}" = "rocky" ]; then
               case "${iso['release']}" in
                 "9")
-                  iso['release']="${current['release9']}"
+                  iso['release']="${current['release']}"
                   ;;
                 *)
                   iso['release']="${current['release']}"
@@ -210,11 +222,9 @@ process_switches () {
   fi
   reset_volmgrs
   if [ "${iso['kernel']}" = "" ]; then
-    if [ "${options['createisovm']}" = "true" ]; then
-      iso['kernel']="${defaults['vmtype']}"
-    else
-      iso['kernel']="${defaults['kernel']}"
-    fi
+    # defaults['vmtype'] does not exist; defaults['kernel'] is the only
+    # real default available here, for createisovm and otherwise alike
+    iso['kernel']="${defaults['kernel']}"
   fi
   if [[ "${iso['action']}" =~ "iso" ]]; then
     if [ "${iso['codename']}" = "" ]; then

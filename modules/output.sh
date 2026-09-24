@@ -155,7 +155,7 @@ delete_dir () {
     if [[ ${delete_dir} =~ [0-9a-zA-Z] ]]; then
       if [ -d "${delete_dir}" ]; then
         if [ "${options['testmode']}" = "false" ]; then
-          sudo rm -f "${delete_dir}"
+          sudo rm -rf "${delete_dir}"
         fi
       fi
     fi
@@ -297,7 +297,7 @@ update_output_file_name () {
       add_to_output_file_name "${param}"
     fi
   done
-  for param in boottype autoinstall hostname username disk nic bridge ip cidr gateway dns prefix suffix; do
+  for param in boottype autoinstall hostname username password disk nic bridge ip cidr gateway dns prefix suffix; do
     case "${param}" in
       ip|gateway|dns)
         if [ "${options['dhcp']}" = "false" ]; then

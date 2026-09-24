@@ -23,10 +23,10 @@ check_ip () {
 check_value () {
   param="$1"
   value="$2"
-  if [[ "${value}" =~ "--" ]]; then
+  if [[ "${value}" =~ ^-- ]]; then
     verbose_message "Value '${value}' for parameter '${param}' looks like a parameter" "verbose"
     echo ""
-    if [ "${do_force}" = "false" ]; then
+    if [ "${options['force']}" = "false" ]; then
       do_exit
     fi
   else
@@ -60,7 +60,7 @@ get_password_crypt () {
   iso['password']="$1"
   if [ "${os['name']}" = "Darwin" ]; then
     if [ "${options['testmode']}" = "false" ]; then
-      iso['passwordcrypt']=$( echo -n "${iso['password']}" |openssl sha512 | awk '{ print $2 }' )
+      iso['passwordcrypt']=$( echo -n "${iso['password']}" |openssl passwd -6 -stdin )
     fi
   else
     if [ ! -f "/usr/bin/mkpasswd" ]; then

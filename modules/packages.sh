@@ -117,11 +117,8 @@ process_post_install () {
     options['distupgrade']="true"
     options['installpackages']="true"
   fi
-  if [ "${iso['postinstall']}" = "none" ]; then
-    options['networkupdates']="false"
-    options['packageupdates']="false"
-    options['packageupgrades']="false"
-    options['distupgrade']="false"
-    options['installpackages']="false"
-  fi
+  # "none" (the default) intentionally does nothing here: these options
+  # already default to false, and forcing them false again would undo
+  # an explicit --options installpackages/networkupdates/... requested
+  # separately from --postinstall
 }

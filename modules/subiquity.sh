@@ -358,7 +358,7 @@ prepare_autoinstall_iso () {
         else
           echo "    password: \"grubpassword\"" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
         fi
-        if [ ! "${iso['build']}" = "desktop" ]; then
+        if [[ ! "${iso['build']}" =~ desktop ]]; then
           echo "  apt:" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
           echo "    preserve_sources_list: ${options['preservesources']}" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
           echo "    preferences:" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
@@ -399,7 +399,7 @@ prepare_autoinstall_iso () {
           if [ "${iso['grublayout']}" = "" ]; then
             echo "    layout: ${iso['layout']}" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
           else
-            echo "    package: grublayout" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+            echo "    layout: grublayout" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
           fi
           if [ "${iso['grublocale']}" = "" ]; then
             echo "  locale: ${iso['locale']}" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
@@ -869,7 +869,7 @@ prepare_autoinstall_iso () {
 
             # Logical Volume for Swap
 
-            if [ "${options['swap']}" = "true" ]; then
+            if [ ! "${iso['swapsize']}" = "" ]; then
               echo "    - volgroup: ${iso['vgname']}" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
               echo "      name: ${iso['lvname']}-swap" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
               echo "      size: ${iso['swapsize']}" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
@@ -900,7 +900,7 @@ prepare_autoinstall_iso () {
 
             # Format and Mount Swap
 
-            if [ "${options['swap']}" = "true" ]; then
+            if [ ! "${iso['swapsize']}" = "" ]; then
               echo "    - fstype: swap" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
               echo "      volume: ${iso['lvname']}-swap" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
               echo "      preserve: false" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
@@ -925,9 +925,12 @@ prepare_autoinstall_iso () {
             grub_param="grub${param}"
             if [ ! "${iso[${grub_param}]}" = "" ]; then
               if [ "${param}" = "password" ]; then
-                echo "    - \"sed -i \\\"s/${grub_param}/\$(cat /proc/cmdline |awk -F'${param}=' '{print \$2}' |awk '{print \$1}' |/usr/bin/openssl passwd -1 -stdin)/g\\\" /autoinstall.yaml\"" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+                # Use "#" as the sed delimiter: the replacement is a
+                # crypt(3) hash, which can itself contain "/", and that
+                # would otherwise prematurely terminate the s/// command
+                echo "    - \"sed -i \\\"s#${grub_param}#\$(cat /proc/cmdline |awk -F'${param}=' '{print \$2}' |awk '{print \$1}' |/usr/bin/openssl passwd -1 -stdin)#g\\\" /autoinstall.yaml\"" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
               else
-                echo "    - \"sed -i \\\"s/${grub_param}/\$(cat /proc/cmdline |awk -F'${param}=' '{print \$2}' |awk '{print \$1}')/g\\\" /autoinstall.yaml\"" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+                echo "    - \"sed -i \\\"s#${grub_param}#\$(cat /proc/cmdline |awk -F'${param}=' '{print \$2}' |awk '{print \$1}')#g\\\" /autoinstall.yaml\"" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
               fi
             fi
           done
@@ -944,7 +947,7 @@ prepare_autoinstall_iso () {
               echo "    - \"modprobe ${module}\"" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
             done
           else
-            echo "    - \"echo '${iso['whitelist']}' > /etc/modules-load.d/${iso['blacklist']}.conf\"" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+            echo "    - \"echo '${iso['whitelist']}' > /etc/modules-load.d/${iso['whitelist']}.conf\"" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
             echo "    - \"modprobe ${iso['whitelist']}\"" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
           fi
         fi
@@ -1003,8 +1006,11 @@ prepare_autoinstall_iso () {
           if [ "${iso_volmgr}" = "btrfs" ] && [ "${options['compression']}" = "true" ]; then
             echo "    - \"mount -o remount,compress=${iso['compression']},ssd /\`mount |grep ${iso_volmgr} |awk '{ print \$1 }'\` /target -t ${iso_volmgr}\"" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
             echo "    - \"sed -i \\\"s/${iso_volmgr} defaults/${iso_volmgr} compress=${iso['compression']},ssd/g\\\" ${iso['targetmount']}/etc/fstab\"" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
-            echo "    - \"echo '#!/bin/bash' > ${iso['targetmount']}/tmp/post.sh\"" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
-            echo "    - \"echo '${iso_volmgr} filesystem defragment -rc${iso['compression']} /' > ${iso['targetmount']}/tmp/post.sh\"" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+            # Append (not overwrite): if latepackages already created
+            # post.sh above with the dpkg install command, that content
+            # must be preserved, not wiped out by this block
+            echo "    - \"echo '#!/bin/bash' >> ${iso['targetmount']}/tmp/post.sh\"" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+            echo "    - \"echo '${iso_volmgr} filesystem defragment -rc${iso['compression']} /' >> ${iso['targetmount']}/tmp/post.sh\"" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
             echo "    - \"chmod +x ${iso['targetmount']}/tmp/post.sh\"" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
           fi
         fi
@@ -1016,16 +1022,14 @@ prepare_autoinstall_iso () {
         fi
         if [ ! "${num_debs}" = "0" ]; then
           if [ "${options['latepackages']}" = "true" ]; then
-            if [ ! "${iso_volmgr}" = "btrfs" ] && [ ! "${iso_volmgr}" = "xfs" ]; then
+            echo "    - \"curtin in-target --target=${iso['targetmount']} -- /tmp/post.sh\"" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+          else
+            if [ "${iso_volmgr}" = "btrfs" ] && [ "${options['compression']}" = "true" ]; then
               echo "    - \"curtin in-target --target=${iso['targetmount']} -- /tmp/post.sh\"" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
-            else
-              if [ "${iso_volmgr}" = "btrfs" ] && [ "${options['compression']}" = "true" ]; then
-                echo "    - \"curtin in-target --target=${iso['targetmount']} -- /tmp/post.sh\"" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
-              fi
             fi
           fi
         fi
-        if [ ! "${iso['build']}" = "desktop" ]; then
+        if [[ ! "${iso['build']}" =~ desktop ]]; then
           if [ "${options['serial']}" = "true" ]; then
             echo "    - \"echo 'GRUB_TERMINAL=\\\"serial console\\\"' >> ${iso['targetmount']}/etc/default/grub\"" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
             echo "    - \"echo 'GRUB_SERIAL_COMMAND=\\\"serial --speed=${iso['serialportspeeda']} --port=${iso['serialportaddressa']}\\\"' >> ${iso['targetmount']}/etc/default/grub\"" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
@@ -1034,7 +1038,7 @@ prepare_autoinstall_iso () {
           fi
           echo "    - \"echo 'GRUB_CMDLINE_LINUX=\\\"console=tty0 ${iso['kernelargs']}\\\"' >> ${iso['targetmount']}/etc/default/grub\"" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
           echo "    - \"echo 'GRUB_TIMEOUT=\\\"${iso['grubtimeout']}\\\"' >> ${iso['targetmount']}/etc/default/grub\"" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
-          echo "    - \"echo '${iso['username']} ALL=(ALL) NOPASSWD: ALL' >> ${iso['targetmount']}/etc/sudoers.d/${iso['username']}\"" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+          echo "    - \"echo '${iso['username']} ${iso['sudoers']}' >> ${iso['targetmount']}/etc/sudoers.d/${iso['username']}\"" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
           if [ "${options['autoupgrade']}" = "false" ]; then
             echo "    - \"echo 'APT::Periodic::Update-Package-Lists \\\"0\\\";' > ${iso['targetmount']}/etc/apt/apt.conf.d/20auto-upgrades\"" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
             echo "    - \"echo 'APT::Periodic::Download-Upgradeable-Packages \\\"0\\\";' >> ${iso['targetmount']}/etc/apt/apt.conf.d/20auto-upgrades\"" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"

@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 
+# shellcheck disable=SC2016
 # shellcheck disable=SC2034
 # shellcheck disable=SC2129
 # shellcheck disable=SC2154
@@ -14,46 +15,57 @@ print_cli_help () {
   echo "Usage: ${script['name']} --action [action] --options [options]"
   echo ""
   switchstart="false"
+  # Nothing before the main "case "${1}" in" line is a real switch
+  # definition, no matter what it contains: this stops any earlier
+  # comment or code that happens to mention "--something" (which is
+  # otherwise indistinguishable from a real switch definition line)
+  # from being mistaken for the start of the switch list
+  reached_main_case="false"
   while read -r line; do
-    if [[ "${line}" =~ -- ]] && [[ ! "${line}" =~ regex ]]; then
-      switchstart="true"
+    if [[ "${line}" == *'case "${1}" in'* ]]; then
+      reached_main_case="true"
     fi
-    if [[ "${line}" =~ esac ]] || [[ "${line}" =~ ^[[:space:]]*\*\)[[:space:]]*$ ]]; then
-      switchstart="false"
-    fi
-    if [ "${switchstart}" = "true" ]; then
-      if [[ "${line}" =~ -- ]] && [[ "${line}" =~ [a-z] ]]; then
-        if [[ "${line}" =~ \| ]]; then
-          switch_name=$( echo "${line}" |cut -f1 -d "|" )
-        else
-          switch_name=$( echo "${line}" |cut -f1 -d ")" )
-        fi
-        switch_name="${switch_name//--/}"
-        switch_name="${switch_name// /}"
-        switch_name="${switch_name//\*/}"
-        switch_default="${defaults[$switch_name]}"
+    if [ "${reached_main_case}" = "true" ]; then
+      if [[ "${line}" =~ -- ]] && [[ ! "${line}" =~ regex ]]; then
+        switchstart="true"
       fi
-      if [[ "${line}" =~ \# ]]; then
-        if [[ "${switch_name}" =~ [a-z] ]]; then
-          switch_length="${#switch_name}"
-          if [ "${switch_length}" -lt 6 ]; then
-            tab_space="\t\t\t\t"
+      if [[ "${line}" =~ esac ]] || [[ "${line}" =~ ^[[:space:]]*\*\)[[:space:]]*$ ]]; then
+        switchstart="false"
+      fi
+      if [ "${switchstart}" = "true" ]; then
+        if [[ "${line}" =~ -- ]] && [[ "${line}" =~ [a-z] ]]; then
+          if [[ "${line}" =~ \| ]]; then
+            switch_name=$( echo "${line}" |cut -f1 -d "|" )
           else
-            if [ "${switch_length}" -lt 14 ]; then
-              tab_space="\t\t\t"
+            switch_name=$( echo "${line}" |cut -f1 -d ")" )
+          fi
+          switch_name="${switch_name//--/}"
+          switch_name="${switch_name// /}"
+          switch_name="${switch_name//\*/}"
+          switch_default="${defaults[$switch_name]}"
+        fi
+        if [[ "${line}" =~ \# ]]; then
+          if [[ "${switch_name}" =~ [a-z] ]]; then
+            switch_length="${#switch_name}"
+            if [ "${switch_length}" -lt 6 ]; then
+              tab_space="\t\t\t\t"
             else
-              if [ "${switch_length}" -lt 22 ]; then
-                tab_space="\t\t"
+              if [ "${switch_length}" -lt 14 ]; then
+                tab_space="\t\t\t"
               else
-                tab_space="\t"
+                if [ "${switch_length}" -lt 22 ]; then
+                  tab_space="\t\t"
+                else
+                  tab_space="\t"
+                fi
               fi
             fi
-          fi
-          switch_comment=$( echo "${line}" |cut -f2 -d"#" )
-          if [ ! "${switch_default}" = "" ]; then
-            echo -e  "--${switch_name}${tab_space}${switch_comment} (default: ${switch_default})"
-          else
-            echo -e "--${switch_name}${tab_space}${switch_comment}"
+            switch_comment=$( echo "${line}" |cut -f2 -d"#" )
+            if [ ! "${switch_default}" = "" ]; then
+              echo -e  "--${switch_name}${tab_space}${switch_comment} (default: ${switch_default})"
+            else
+              echo -e "--${switch_name}${tab_space}${switch_comment}"
+            fi
           fi
         fi
       fi

@@ -8,7 +8,7 @@
 # Check if ipmitool is installed
 
 check_ipmitool () {
-  check_ipmitool=$( command -v ipmitool | grep -c ipmitool )
+  check_ipmitool=$( command -v ipmitool )
   if [ -z "${check_ipmitool}" ]; then
     warning_message "ipmitool not found"
     do_exit
