@@ -113,10 +113,10 @@ process_switches () {
           ;;
         vgname)
           if [ "${iso['pvname']}" = "" ]; then
-            iso['pvname']="${iso['vgname']}}-pv"
+            iso['pvname']="${iso['vgname']}-pv"
           fi
           if [ "${iso['lvname']}" = "" ]; then
-            iso['lvname']="${iso['vgname']}}-lv"
+            iso['lvname']="${iso['vgname']}-lv"
           fi
           ;;
         "release")
@@ -142,8 +142,8 @@ process_switches () {
           ;;
         "serialport")
           if [[ "${iso['serialport']}" =~ , ]]; then
-            iso['serialporta']=$(echo "${iso['serialporta']}" |cut -f1 -d,)
-            iso['serialportb']=$(echo "${iso['serialportb']}" |cut -f2 -d,)
+            iso['serialporta']=$(echo "${iso['serialport']}" |cut -f1 -d,)
+            iso['serialportb']=$(echo "${iso['serialport']}" |cut -f2 -d,)
           else
             iso['serialporta']="${iso['serialport']}"
             iso['serialportb']="${defaults['serialportb']}"
@@ -151,17 +151,17 @@ process_switches () {
           ;;
         "serialportaddress")
           if [[ "${iso['serialportaddress']}" =~ , ]]; then
-            iso['serialportaddressa']=$(echo "${iso['serialportaddressa']}" |cut -f1 -d,)
-            iso['serialportaddressb']=$(echo "${iso['serialportaddressb']}" |cut -f2 -d,)
+            iso['serialportaddressa']=$(echo "${iso['serialportaddress']}" |cut -f1 -d,)
+            iso['serialportaddressb']=$(echo "${iso['serialportaddress']}" |cut -f2 -d,)
           else
             iso['serialportaddressa']="${iso['serialportaddress']}"
             iso['serialportaddressb']="${defaults['serialportaddressb']}"
           fi
           ;;
         "serialportspeed")
-          if [[ "${iso['serialportspeeda']}" =~ , ]]; then
-            iso['serialportspeeda']=$(echo "${defaults['serialportspeeda']}" |cut -f1 -d,)
-            iso['serialportspeedb']=$(echo "${defaults['serialportspeedb']}" |cut -f2 -d,)
+          if [[ "${iso['serialportspeed']}" =~ , ]]; then
+            iso['serialportspeeda']=$(echo "${iso['serialportspeed']}" |cut -f1 -d,)
+            iso['serialportspeedb']=$(echo "${iso['serialportspeed']}" |cut -f2 -d,)
           else
             iso['serialportspeeda']="${iso['serialportspeed']}"
             iso['serialportspeedb']="${defaults['serialportspeedb']}"
@@ -196,7 +196,7 @@ process_switches () {
     iso['dockerworkdir']="/root/${script['name']}/${iso['osname']}/${iso['build']}/${iso['release']}"
   fi
   if [ "${iso['outputfile']}" = "${defaults['outputfile']}" ]; then
-    build_name=${iso['build']//\/-}
+    build_name=${iso['build']//\//-}
     iso['outputfile']="${iso['workdir']}/files/${iso['osname']}-${iso['release']}-${build_name}-${iso['arch']}-${iso['boottype']}-autoinstall.iso"
   fi
   if [ "${options['autoinstall']}" = "true" ]; then
@@ -293,14 +293,14 @@ process_switches () {
       IFS=',' read -r -a nics <<< "${nics[0]},${iso['nics']}"
     fi
   fi
-  if [ "${iso['cdir']}" != "" ]; then
-    cdirs[0]="${iso['cdir']}"
+  if [ "${iso['cidr']}" != "" ]; then
+    cidrs[0]="${iso['cidr']}"
   fi
-  if [ "${iso['cdirs']}" != "" ]; then
-    if [ "${cdirs[0]}" = "" ]; then
-      IFS=',' read -r -a cdirs <<< "${iso['cdirs']}"
+  if [ "${iso['cidrs']}" != "" ]; then
+    if [ "${cidrs[0]}" = "" ]; then
+      IFS=',' read -r -a cidrs <<< "${iso['cidrs']}"
     else
-      IFS=',' read -r -a cdirs <<< "${cdirs[0]},${iso['cdirs']}"
+      IFS=',' read -r -a cidrs <<< "${cidrs[0]},${iso['cidrs']}"
     fi
   fi
   if [ "${iso['ip']}" != "" ]; then

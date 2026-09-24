@@ -115,7 +115,7 @@ update_ubuntu_iso_squashfs () {
       sudo echo -n $( sudo du -s --block-size=1 "${iso['newdir']}/custom" | tail -1 | awk '{print $1}') | sudo tee "${iso['newdir']}/mksquash/filesystem.size"
       sudo cp "${iso['newdir']}/mksquash/filesystem.size" "${iso['sourcedir']}/casper/filesystem.size"
       sudo chmod 0444 "${iso['sourcedir']}/casper/filesystem.size"
-      sudo find "${iso['sourcedir']}" -type f -print0 | xargs -0 md5sum | sed "s@${iso['newdir']}}@.@" | grep -v md5sum.txt | sudo tee "${iso['sourcedir']}/md5sum.txt"
+      sudo find "${iso['sourcedir']}" -type f -print0 | xargs -0 md5sum | sed "s@${iso['sourcedir']}@.@" | grep -v md5sum.txt | sudo tee "${iso['sourcedir']}/md5sum.txt"
     fi
   fi
 }

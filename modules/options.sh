@@ -137,7 +137,7 @@ process_options () {
         ;;
       cluster)
         options['clusterpackages']="true"
-        defaults['packages']="${defaults['packages']} pcs pacemaker cockpit cockpit-iso['machine']}s resource-agents-extra resource-agents-common resource-agents-base glusterfs-server"
+        iso['packages']="${iso['packages']} pcs pacemaker cockpit cockpit-machines resource-agents-extra resource-agents-common resource-agents-base glusterfs-server"
         ;;
       confdef)
         iso['dpkgconf']="--force-confdef"
@@ -165,14 +165,13 @@ process_options () {
         options['hwekernel']="true"
         ;;
       kvm)
-        options['clusterpackages']="true"
-        defaults['packages']="${defaults['packages']} cpu-checker qemu-kvm libvirt-daemon-system libvirt-clients bridge-utils virt-manager cloud-image-utils"
+        options['kvmpackages']="true"
+        iso['packages']="${iso['packages']} cpu-checker qemu-kvm libvirt-daemon-system libvirt-clients bridge-utils virt-manager cloud-image-utils"
         ;;
       noansible)
         options['ansible']="false"
         ;;
       nomultipath)
-        iso['blocklist']="md_multipath"
         if [ "${iso['blocklist']}" = "" ]; then
           iso['blocklist']="md_multipath"
         else

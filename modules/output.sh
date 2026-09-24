@@ -260,11 +260,7 @@ add_to_output_file_name () {
     fi
   else
     if [ "${iso[${param}]}" != "${defaults[${param}]}" ] || [[ "${param}" =~ ip|cidr|bridge|nic|hostname|disk|boottype|gateway|autoinstall ]]; then
-      if [[ "${param}" =~ cidr|bridge|boottype|disk|ip|nic|hostname|gateway ]]; then
-        test_value="${iso[${param}]}"
-      else
-        test_value="${param}"
-      fi
+      test_value="${iso[${param}]}"
     else
       test_value="${iso[${param}]}"
     fi
@@ -383,7 +379,7 @@ update_output_file_name () {
           iso['name']="${script['name']}-iso-${iso['osname']}-${iso['release']}-${iso['boottype']}-${iso['arch']}"
         fi
       else
-        build_name=${iso['build']//\/-}
+        build_name=${iso['build']//\//-}
         if [[ "${iso['action']}" =~ "ci" ]]; then
           iso['name']="${script['name']}-ci-${iso['osname']}-${build_name}-${iso['release']}-${iso['boottype']}-${iso['arch']}"
         else

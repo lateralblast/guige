@@ -153,7 +153,7 @@ CDROM_DEVICE
 
 get_kvm_vm_name () {
   if [ "${iso['name']}" = "${script['name']}" ]; then
-    build_name=${iso['build']//\/-}
+    build_name=${iso['build']//\//-}
     iso['name']="${script['name']}-${iso['osname']}-${iso['release']}-${build_name}-${iso['arch']}"
   fi
   iso['name']=${iso['name']//\-live\/desktop\-/-live-desktop-}
@@ -288,7 +288,7 @@ create_kvm_iso_vm () {
     fi
     echo "  </features>" >> "${iso['xmlfile']}"
     echo "  <cpu mode='custom' match='exact' check='partial'>" >> "${iso['xmlfile']}"
-    echo "    <model fallback='forbid'>${iso['cpufallback']}=</model>" >> "${iso['xmlfile']}"
+    echo "    <model fallback='forbid'>${iso['cpufallback']}</model>" >> "${iso['xmlfile']}"
     echo "  </cpu>" >> "${iso['xmlfile']}"
     echo "  <clock offset='utc'/>" >> "${iso['xmlfile']}"
     echo "  <on_poweroff>destroy</on_poweroff>" >> "${iso['xmlfile']}"
@@ -324,7 +324,7 @@ create_kvm_iso_vm () {
   if [ "${os['name']}" = "Darwin" ]; then
     echo "    <disk type='file' device='cdrom'>" >> "${iso['xmlfile']}"
     echo "      <driver name='qemu' type='raw'/>" >> "${iso['xmlfile']}"
-    echo "      <source file='${iso['inputfile']}'/>" >> "${iso['xmlfile']}"
+    echo "      <source file='${iso['vmiso']}'/>" >> "${iso['xmlfile']}"
     echo "      <backingStore/>" >> "${iso['xmlfile']}"
     echo "      <target dev='sda' bus='${iso['cdbus']}'/>" >> "${iso['xmlfile']}"
     echo "      <readonly/>" >> "${iso['xmlfile']}"
@@ -341,7 +341,7 @@ create_kvm_iso_vm () {
   else
     echo "    <disk type='file' device='cdrom'>" >> "${iso['xmlfile']}"
     echo "      <driver name='qemu' type='raw'/>" >> "${iso['xmlfile']}"
-    echo "      <source file='${vm['inputfile']}'/>" >> "${iso['xmlfile']}"
+    echo "      <source file='${iso['vmiso']}'/>" >> "${iso['xmlfile']}"
     echo "      <target dev='sda' bus='${iso['cdbus']}'/>" >> "${iso['xmlfile']}"
     echo "      <readonly/>" >> "${iso['xmlfile']}"
     echo "      <address type='drive' controller='0' bus='0' target='0' unit='0'/>" >> "${iso['xmlfile']}"

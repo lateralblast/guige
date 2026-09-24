@@ -67,8 +67,8 @@ update_iso_url () {
   if [ "${iso['osname']}" = "ubuntu" ]; then
     case "${iso['build']}" in
       daily-live|daily-live-server|daily-server|daily/server)
-        if [ "${iso['release']}" = "${current['devrelease']}" ] || [ "${iso['osname']}" = "${current['codename']}" ]; then
-          iso['url']="https://cdimage.ubuntu.com/ubuntu-server/daily-live/current/${iso['osname']}-live-server-${iso['arch']}.iso"
+        if [ "${iso['release']}" = "${current['devrelease']}" ] || [ "${iso['codename']}" = "${current['codename']}" ]; then
+          iso['url']="https://cdimage.ubuntu.com/ubuntu-server/daily-live/current/${iso['codename']}-live-server-${iso['arch']}.iso"
         else
           iso['url']="https://cdimage.ubuntu.com/ubuntu-server/${iso['codename']}/daily-live/current/${iso['inputfilebase']}"
         fi
@@ -492,7 +492,13 @@ get_info_from_iso () {
     handle_output "# Analysing ${iso['inputfile']}" "TEXT"
     test_file=$( basename "${iso['inputfile']}" )
     test_name=$( echo "${test_file}" | cut -f1 -d- )
-    test_type=$( echo "${test_file}" | cut -f2 -d- )
+    if [ "${test_name}" = "ubuntu" ]; then
+      # ubuntu-<release>-<type>-<arch>.iso has an extra release field, so
+      # the type is one field further along than for codename-based names
+      test_type=$( echo "${test_file}" | cut -f3 -d- )
+    else
+      test_type=$( echo "${test_file}" | cut -f2 -d- )
+    fi
     case "${test_name}" in
       "bionic")
         iso['release']="${current['release1804']}"

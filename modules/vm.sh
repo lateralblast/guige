@@ -38,9 +38,9 @@ create_ci_vm () {
 # Create a VM for testing an ISO
 
 create_iso_vm () {
-  if [ "${vm['inputfile']}" = "" ]; then
+  if [ "${iso['vmiso']}" = "" ]; then
     if ! [ "${iso['outputfile']}" = "" ]; then
-     iso['inputfile']="${iso['outputfile']}"
+      iso['vmiso']="${iso['outputfile']}"
     fi
   fi
   if [ "${iso['type']}" = "kvm" ]; then

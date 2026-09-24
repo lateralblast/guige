@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Name:         guige (Generic Ubuntu/Unix ISO Generation Engine)
-# Version:      5.0.6
+# Version:      5.1.0
 # Release:      1
 # License:      CC-BA (Creative Commons By Attribution)
 #               http://creativecommons.org/licenses/by/4.0/legalcode
@@ -39,7 +39,7 @@ declare -A defaults
 
 declare -a ips
 declare -a nics
-declare -a cdirs
+declare -a cidrs
 declare -a bridges
 declare -a switches
 declare -a nodhcpnics
@@ -1406,6 +1406,7 @@ if [ "${#options_list[@]}" -gt 0 ]; then
   option_names="${options_list[*]}"
   IFS="${old_ifs}"
 fi
+iso['options']="${option_names}"
 process_options "${option_names}"
 
 reset_defaults

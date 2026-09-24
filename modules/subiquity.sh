@@ -289,8 +289,8 @@ prepare_autoinstall_iso () {
               fi
             done
           fi
+          echo "  ${grub_string} ---" >> "${iso['sourcedir']}/boot/grub/grub.cfg"
         fi
-        echo "  ${grub_string} ---" >> "${iso['sourcedir']}/boot/grub/grub.cfg"
         echo "  initrd  /casper/initrd" >> "${iso['sourcedir']}/boot/grub/grub.cfg"
         echo "}" >> "${iso['sourcedir']}/boot/grub/grub.cfg"
       done
@@ -367,7 +367,8 @@ prepare_autoinstall_iso () {
           echo "        pin-priority: 200" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
           echo "    primary:" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
           echo "    - arches:" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
-          echo "      - ${iso['arch']}" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+          echo "      - amd64" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+          echo "      - i386" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
           echo "      uri: http://archive.ubuntu.com/ubuntu" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
           echo "    - arches:" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
           echo "      - default" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
@@ -376,10 +377,11 @@ prepare_autoinstall_iso () {
           echo "    geoip: ${options['geoip']}" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
           echo "    security:" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
           echo "    - arches:" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
-          echo "      - ${iso['arch']}" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+          echo "      - amd64" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+          echo "      - i386" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
           echo "      uri: http://security.ubuntu.com/ubuntu/" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
           echo "    - arches:" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
-          echo "      - ${iso['arch']}" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
+          echo "      - default" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
           echo "      uri: http://ports.ubuntu.com/ubuntu-ports" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
           echo "    package_update: ${options['packageupdates']}" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"
           echo "    package_upgrade: ${options['packageupgrades']}" >> "${iso['configdir']}/${iso_volmgr}/${iso['disk']}/user-data"

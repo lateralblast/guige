@@ -428,7 +428,7 @@ reset_default_dirs () {
 # Set default file names/locations
 
 set_default_files () {
-  build_name=${defaults['build']//\/-}
+  build_name=${defaults['build']//\//-}
   if [[ ${build_name} =~ live ]]; then
     defaults['inputfile']="${defaults['workdir']}/files/ubuntu-${defaults['release']}-${defaults['build']}-${defaults['arch']}.iso"
     defaults['oldinputfile']="${defaults['oldworkdir']}/files/ubuntu-${defaults['oldrelease']}-${build_name}-${defaults['arch']}.iso"

@@ -103,7 +103,7 @@ prepare_kickstart_files () {
           echo "bootloader --timeout=${iso['grubtimeout']} --location=${iso['bootloader']} --append=\"${iso['kernelargs']}\" --boot-drive=${iso['disk']}" >> "${iso['ksfile']}"
           echo "clearpart --all --drives=${iso['disk']}" >> "${iso['ksfile']}"
           echo "part /boot --size=${iso['bootsize']} --fstype=\"${iso_volmgr}\" --ondisk=${iso['disk']}" >> "${iso['ksfile']}"
-          echo "part ${iso['lvname']} --size=-1 --grow --fstype=\"${iso_volmgr}\" --ondisk=${iso['disk']}" >> "${iso['ksfile']}"
+          echo "part ${iso['lvname']} --size=-1 --grow --fstype=\"lvmpv\" --ondisk=${iso['disk']}" >> "${iso['ksfile']}"
           echo "part /boot/efi --size=${iso['bootsize']} --asprimary --fstype=\"efi\" --ondisk=${iso['disk']}" >> "${iso['ksfile']}"
         fi
         echo "volgroup ${iso['vgname']} --pesize=${iso['pesize']} ${iso['lvname']}" >> "${iso['ksfile']}"
@@ -125,12 +125,12 @@ prepare_kickstart_files () {
       echo "services --enabled=${iso['enableservice']} --disabled=${iso['disableservice']}" >> "${iso['ksfile']}"
       if [ "${options['plaintextpassword']}" = "true" ]; then
         root_pw="rootpw --plaintext ${iso['password']}"
-        user_pw="user --name=${iso['username']} --group=${iso['groups']} --password=${iso['password']} --plaintext --gecos=\"${iso['gecos']}\"" >> "${iso['ksfile']}"
-        ssh_pw="sshpw --username=${iso['installusername']} ${iso['installpassword']}"
+        user_pw="user --name=${iso['username']} --groups=${iso['groups']} --password=${iso['password']} --plaintext --gecos=\"${iso['gecos']}\""
+        ssh_pw="sshpw --username=${iso['installusername']} --plaintext ${iso['installpassword']}"
       else
-        root_pw="rootpw --iscrypted ${iso['passwordcrypt']}" >> "${iso['ksfile']}"
-        user_pw="user --name=${iso['username']} --group=${iso['groups']} --password=${iso['passwordcrypt']} --iscrypted --gecos=\"${iso['gecos']}\"" >> "${iso['ksfile']}"
-        ssh_pw="sshpw --username=${iso['installusername']} --iscrypted --password=${iso['installpasswordcrypt']}"
+        root_pw="rootpw --iscrypted ${iso['passwordcrypt']}"
+        user_pw="user --name=${iso['username']} --groups=${iso['groups']} --password=${iso['passwordcrypt']} --iscrypted --gecos=\"${iso['gecos']}\""
+        ssh_pw="sshpw --username=${iso['installusername']} --iscrypted ${iso['installpasswordcrypt']}"
       fi
       if [ "${options['lockroot']}" = "true" ]; then
         root_pw="$root_pw --lock"

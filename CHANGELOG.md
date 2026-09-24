@@ -3,6 +3,24 @@
 All notable changes to the `guige` project are documented in this file.
 Dates are in `YYYY-MM-DD` format; entries are derived from the project's original `guige.changelog` file.
 
+## [5.1.0] - 2026-09-24
+- Fixed multi-NIC static IP netplan config never getting a CIDR prefix: `switches.sh` read/wrote `iso['cdir']`/`iso['cdirs']`/`cdirs[]` (typo) instead of `iso['cidr']`/`iso['cidrs']`/`cidrs[]`, so the array `subiquity.sh` actually reads was always empty
+- Fixed the apt `primary`/`security` mirror mapping in generated autoinstall configs listing the build's own arch (e.g. `arm64`) for `archive.ubuntu.com`/`security.ubuntu.com` instead of `amd64`/`i386`, which don't host non-x86 packages, breaking apt on non-amd64 builds
+- Fixed a stray/stale `grub_string` line being emitted into `custom` grub menu entries (which already write their own complete `linux` line), producing an invalid extra `---` line or a leftover line from a previous, unrelated volume manager
+- Fixed a stray `=` in the generated libvirt XML CPU model (`<model fallback='forbid'>qemu64=</model>`), which `virsh define` rejects as an unknown CPU model
+- Fixed `${var//\/-}` (deletes `/-`) instead of `${var//\//-}` (replaces `/` with `-`) in four places (`kvm.sh`, `switches.sh`, `output.sh`, `defaults.sh`), so build names like `daily/server` kept a literal `/`, breaking libvirt VM names and file paths
+- Fixed the KVM ISO VM's cdrom source always being empty on Linux (referenced the never-set `vm['inputfile']`) and inconsistent on Darwin; both platforms and `vm.sh`'s `create_iso_vm` now consistently use `iso['vmiso']`
+- Fixed the daily-server ISO download URL comparing `iso['osname']` to `current['codename']` and building the URL from `osname` instead of `codename`, 404ing on dev-release daily downloads
+- Fixed `get_info_from_iso` misparsing `ubuntu-<release>-desktop-<arch>.iso` filenames (it read the release number as the install type), leaving `arch` empty and mislabeling desktop ISOs as `live-server`
+- Fixed the post-squashfs `md5sum.txt` path rewrite (`sed "s@${iso['newdir']}}@.@"`, stray `}` and wrong directory) never matching, leaving absolute host paths in place and failing casper's integrity check; now correctly strips `${iso['sourcedir']}` to `.`
+- Fixed serial port/address/speed switch parsing cutting from the nonexistent `iso['serialporta']`/`serialportaddressa`/`serialportspeeda'` instead of the actual CLI values (`iso['serialport']`/`serialportaddress`/`serialportspeed`), making `--serialport`, `--serialportaddress` and `--serialportspeed` no-ops
+- Fixed a stray `}` in the `--vgname` handler producing `<name>}-pv`/`<name>}-lv` instead of `<name>-pv`/`<name>-lv`
+- Fixed `cluster`/`kvm` extra packages being appended to `defaults['packages']` *after* `process_switches` had already copied it into `iso['packages']`, so they never reached the ISO; also fixed a corrupted package name (`cockpit-iso['machine']}s` → `cockpit-machines`) and `kvm` incorrectly setting `options['clusterpackages']` instead of `options['kvmpackages']`
+- Fixed `nomultipath` unconditionally overwriting `iso['blocklist']` before checking it, which discarded any existing blocklist and always produced a duplicated `md_multipath,md_multipath`
+- Fixed `add_to_output_file_name` appending the parameter *name* (e.g. `-suffix`) to the output filename instead of its actual value (e.g. `-myfoo`) for parameters like `suffix`/`prefix`/`dns`
+- Fixed `iso['options']` never being populated, so `--options ...` was silently dropped when forwarding the command to the dockerized build (and two related `iso['options']` checks in `switches.sh`/`chroot.sh` were always false)
+- Fixed the Rocky/kickstart LVM physical-volume partition being formatted with the chosen filesystem type (e.g. `xfs`) instead of `lvmpv`, which breaks `volgroup`/`pvcreate`; fixed `user --group=` to the correct `--groups=`; fixed `sshpw`'s password being passed with an incorrect `--password=`/missing `--plaintext` flag instead of the correct positional-password form used by Anaconda; removed three dead `>> file` redirects left on plain variable assignments
+
 ## [5.0.6] - 2026-09-24
 - Fixed `get_interactive_input` (`--options interactivemode`) corrupting every answer: `iso['x']=${new['x']}:-${iso['x']}` was plain word concatenation, not a parameter-expansion default, so every value became the literal string `"<answer>:-<old value>"` regardless of what was typed; changed to `iso['x']="${new['x']:-${iso['x']}}"` throughout (84 prompts)
 - Fixed `NEW_options` never being declared as an associative array, which made every `NEW_options['name']` a plain arithmetic-indexed subscript (crashing on bash 5 with "arithmetic syntax error"), so sequential option prompts such as dhcp/updatesquashfs/installpackages/networkupdates/sshkey all collided into the same slot
