@@ -3,6 +3,14 @@
 All notable changes to the `guige` project are documented in this file.
 Dates are in `YYYY-MM-DD` format; entries are derived from the project's original `guige.changelog` file.
 
+## [5.0.6] - 2026-09-24
+- Fixed `get_interactive_input` (`--options interactivemode`) corrupting every answer: `iso['x']=${new['x']}:-${iso['x']}` was plain word concatenation, not a parameter-expansion default, so every value became the literal string `"<answer>:-<old value>"` regardless of what was typed; changed to `iso['x']="${new['x']:-${iso['x']}}"` throughout (84 prompts)
+- Fixed `NEW_options` never being declared as an associative array, which made every `NEW_options['name']` a plain arithmetic-indexed subscript (crashing on bash 5 with "arithmetic syntax error"), so sequential option prompts such as dhcp/updatesquashfs/installpackages/networkupdates/sshkey all collided into the same slot
+- Fixed the Architecture prompt's `read` having no target variable, silently discarding whatever was typed
+- Fixed the Kernel Arguments prompt falling back to `iso['kernel']` instead of `iso['kernelargs']` when left blank
+- Fixed the second Swap Size prompt writing into `iso['swap']` (the swap device from the prompt above it) instead of `iso['swapsize']`
+- Fixed a missing `]` in the Codename prompt's text
+
 ## [5.0.5] - 2026-09-24
 - Fixed a stray `}` in the generated iDRAC ansible playbook's `idrac_osd_service_url` Jinja expression (`...['@odata.id']} }}`) that made the template fail to parse; confirmed with Jinja2 directly (`unexpected '}'` before the fix, parses cleanly after)
 
